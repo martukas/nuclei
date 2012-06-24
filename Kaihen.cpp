@@ -375,7 +375,7 @@ void Kaihen::zoomIn()
         ui->decayView->scale(1.25, 1.25);
     }
     else {
-        if ((zoomer->zoomRectIndex() + 1) >= zoomer->zoomStack().size()) {
+        if (int(zoomer->zoomRectIndex() + 1) >= zoomer->zoomStack().size()) {
             const QwtScaleDiv *xs = plot->axisScaleDiv(QwtPlot::xBottom);
             const QwtScaleDiv *ys = plot->axisScaleDiv(QwtPlot::yLeft);
             QRectF cr(xs->lowerBound(), ys->lowerBound(), xs->range(), ys->range());

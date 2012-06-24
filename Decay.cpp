@@ -983,12 +983,14 @@ void Decay::processENSDFLevels() const
             // Q
             QString qstr(crecs.value(crecs.indexOf(QRegExp("^MOME2.*$"))));
             qstr.replace(QRegExp("^MOME2\\s*=\\s*([\\S]+).*"), "\\1");
+            qstr.remove('(').remove(')');
             Q = clocale.toDouble(qstr, &convok);
             if (!convok)
                 Q = std::numeric_limits<double>::quiet_NaN();
             // µ
             QString mustr(crecs.value(crecs.indexOf(QRegExp("^MOMM1.*$"))));
             mustr.replace(QRegExp("^MOMM1\\s*=\\s*([\\S]+).*"), "\\1");
+            mustr.remove('(').remove(')');
             mu = clocale.toDouble(mustr, &convok);
             if (!convok)
                 mu = std::numeric_limits<double>::quiet_NaN();
