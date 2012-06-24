@@ -62,7 +62,7 @@ Decay::Decay(const QStringList &ensdfData, const QStringList &ensdfAdoptedLevels
         t = BetaMinus;
     else if (type == "IT")
         t = IsomericTransition;
-    else if (type == "A ")
+    else if (type == " A")
         t = Alpha;
     // create daughter nuclide
     Nuclide d(head.left(3).trimmed().toUInt(), head.mid(3, 2).trimmed());
@@ -112,7 +112,7 @@ QString Decay::decayTypeAsText() const
     case IsomericTransition:
         return "Isomeric Transition";
     case Alpha:
-        return "Alpha";
+        return QString::fromUtf8("α");
     }
     return "";
 }

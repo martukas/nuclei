@@ -82,7 +82,7 @@ QList< QSharedPointer<Decay> > ENSDF::decays(const QString &daughterNuclide) con
     // find decay blocks
     QList< QSharedPointer<Decay> > result;
     int start = -1, stop = 0;
-    QRegExp re("^" + nucid + "\\s{4,4}[0-9]{1,3}[\\sA-Z]{1,2}\\s(B-|B\\+|EC|IT|A\\s)\\sDECAY.*");
+    QRegExp re("^" + nucid + "\\s{4,4}[0-9]{1,3}[A-Z]{1,2}\\s+(B-|B\\+|EC|IT|A)\\sDECAY.*");
     while ((start = contents.indexOf(re, stop)), start >= 0) {
         stop = contents.indexOf(QRegExp("^\\s*$"), start);
         if (stop < 0)
