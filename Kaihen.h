@@ -8,7 +8,7 @@ namespace Ui {
 class KaihenMainWindow;
 class PreferencesDialog;
 }
-class ENSDF;
+class ENSDFMassChain;
 class QListWidgetItem;
 class QwtPlot;
 class QwtPlotCurve;
@@ -51,7 +51,7 @@ private:
     QDialog *pdd;
     Ui::PreferencesDialog *pd;
 
-    ENSDF *currentMassChain;
+    ENSDFMassChain *currentMassChain;
     QList< QSharedPointer<Decay> > decays;
     QSharedPointer<Decay> decay;
 

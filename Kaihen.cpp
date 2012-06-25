@@ -22,7 +22,7 @@
 #include <qwt_plot_renderer.h>
 #include "version.h"
 
-#include "ENSDF.h"
+#include "ENSDFMassChain.h"
 #include "ENSDFDownloader.h"
 
 Q_DECLARE_METATYPE( QSharedPointer<Decay> )
@@ -163,7 +163,7 @@ void Kaihen::initialize()
     s.endGroup();
 
     // load available mass numbers (i.e. search for available ENSDF files)
-    QStringList a(ENSDF::aValues());
+    QStringList a(ENSDFMassChain::aValues());
     bool firsttry = true;
     while (a.isEmpty()) {
         if (!firsttry)
@@ -175,7 +175,7 @@ void Kaihen::initialize()
             return;
         }
 
-        a = ENSDF::aValues();
+        a = ENSDFMassChain::aValues();
         firsttry = false;
     }
     ui->aListWidget->addItems(a);
@@ -215,7 +215,7 @@ void Kaihen::selectedA(const QString &a)
     ui->decayView->setScene(0);
 
     delete currentMassChain;
-    currentMassChain = new ENSDF(a.toInt());
+    currentMassChain = new ENSDFMassChain(a.toInt());
 
     ui->nuclideListWidget->clear();
 

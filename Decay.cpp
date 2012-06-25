@@ -16,6 +16,8 @@
 #include "ui_Kaihen.h"
 #include "Kaihen.h"
 
+#include "ENSDFMassChain.h" /// \todo remove!
+
 const double Decay::outerGammaMargin = 50.0;
 const double Decay::outerLevelTextMargin = 4.0; // level lines extend beyond the beginning/end of the level texts by this value
 const double Decay::maxExtraLevelDistance = 120.0;
@@ -82,7 +84,7 @@ Decay::Decay(const QStringList &ensdfData, const QStringList &ensdfAdoptedLevels
 
         // determine decaying level
         QLocale clocale("C");
-        parentDecayStartEnergyEv = parseEnsdfEnergy(prec.mid(9, 10));
+        parentDecayStartEnergyEv = ENSDFMassChain::parseEnsdfEnergy(prec.mid(9, 10)); /// \todo remove!
 
         // determine parent level's spin
         parentDecayStartSpin = SpinParity(prec.mid(21, 18));
@@ -100,9 +102,9 @@ Decay::~Decay()
     levels.clear();
 }
 
-QString Decay::decayTypeAsText() const
+QString Decay::decayTypeAsText(Type type)
 {
-    switch (t) {
+    switch (type) {
     case ElectronCapture:
         return "Electron Capture";
     case BetaPlus:
@@ -287,7 +289,7 @@ QString Decay::toText() const
     QString result;
     result.append(QString("%1-%2, %3").arg(pNuc.element())
                   .arg(pNuc.a())
-                  .arg(decayTypeAsText()));
+                  .arg(decayTypeAsText(t)));
     if (!pNuc.halfLife().isStable())
         result.append(", " + pNuc.halfLife().toString());
     return result;
@@ -861,7 +863,7 @@ void Decay::setFuzzyLimits(double levelLimit, double gammaLimit)
     gammaMaxDifference = gammaLimit;
 }
 
-void Decay::processENSDFLevels() const
+void Decay::processENSDFLevels() const /// \todo remove!
 {
     double normalizeDecIntensToPercentParentDecay = 1.0;
     double normalizeGammaIntensToPercentParentDecay = 1.0;
@@ -884,7 +886,7 @@ void Decay::processENSDFLevels() const
             Q_ASSERT(!levels.isEmpty());
 
             // determine energy
-            double e = parseEnsdfEnergy(line.mid(9, 10));
+            double e = ENSDFMassChain::parseEnsdfEnergy(line.mid(9, 10));
 
             // determine intensity
             QString instr(line.mid(21,8));
@@ -945,7 +947,7 @@ void Decay::processENSDFLevels() const
         // process new level
         else if (line.startsWith(dNuc.nucid() + "  L ")) {
             // determine energy
-            double e = parseEnsdfEnergy(line.mid(9, 10));
+            double e = ENSDFMassChain::parseEnsdfEnergy(line.mid(9, 10));
             // determine spin
             SpinParity spin(line.mid(21, 18));
             // determine isomer number
@@ -1067,7 +1069,7 @@ void Decay::processENSDFLevels() const
     }
 }
 
-void Decay::splitAdoptedLevelsData() const
+void Decay::splitAdoptedLevelsData() const /// \todo remove!
 {
     // create index for adopted levels
     int laststart = -1;
@@ -1075,13 +1077,13 @@ void Decay::splitAdoptedLevelsData() const
         const QString &line = adopt.at(i);
         if (line.startsWith(dNuc.nucid() + "  L ")) {
             if (laststart > 0)
-                adoptblocks.insert(parseEnsdfEnergy(adopt.at(laststart).mid(9, 10)),
+                adoptblocks.insert(ENSDFMassChain::parseEnsdfEnergy(adopt.at(laststart).mid(9, 10)),
                                    QStringList(adopt.mid(laststart, i-laststart)));
             laststart = i;
         }
     }
     if (laststart > 0)
-        adoptblocks.insert(parseEnsdfEnergy(adopt.at(laststart).mid(9, 10)),
+        adoptblocks.insert(ENSDFMassChain::parseEnsdfEnergy(adopt.at(laststart).mid(9, 10)),
                            QStringList(adopt.mid(laststart, adopt.size()-laststart)));
 }
 
@@ -1097,13 +1099,6 @@ QStringList Decay::selectAdoptedLevelsDataBlock(double energy) const
         return QStringList();
 
     return adoptblocks.value(idx);
-}
-
-double Decay::parseEnsdfEnergy(QString estr) const
-{
-    QLocale clocale("C");
-    estr.remove('(').remove(')');
-    return clocale.toDouble(estr.trimmed());
 }
 
 double Decay::parseEnsdfMixing(const QString &str, const QString &multipolarity, GammaTransition::DeltaState *state) const

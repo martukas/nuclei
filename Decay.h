@@ -38,7 +38,7 @@ public:
 
     ~Decay();
 
-    QString decayTypeAsText() const;
+    static QString decayTypeAsText(Type type);
 
     void setStyle(const QFont &fontfamily, unsigned int sizePx);
     void setFuzzyLimits(double levelLimit, double gammaLimit);
@@ -66,7 +66,6 @@ private:
     void processENSDFLevels() const;
     void splitAdoptedLevelsData() const; // initializes adoptblocks
     QStringList selectAdoptedLevelsDataBlock(double energy) const;
-    double parseEnsdfEnergy(QString estr) const;
     double parseEnsdfMixing(const QString &s, const QString &multipolarity, GammaTransition::DeltaState *state) const;
     template <typename T> double findNearest(const QMap<double, T> &map, double val) const;
     double gauss(const double x, const double sigma) const;

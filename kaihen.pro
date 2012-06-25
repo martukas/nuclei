@@ -5,7 +5,6 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-    ENSDF.cpp \
     Decay.cpp \
     EnergyLevel.cpp \
     Nuclide.cpp \
@@ -18,10 +17,10 @@ SOURCES += main.cpp\
     ClickableItem.cpp \
     qxtgroupbox.cpp \
     ENSDFDownloader.cpp \
-    Kaihen.cpp
+    Kaihen.cpp \
+    ENSDFMassChain.cpp
 
 HEADERS  += \
-    ENSDF.h \
     Decay.h \
     EnergyLevel.h \
     Nuclide.h \
@@ -35,7 +34,8 @@ HEADERS  += \
     version.h \
     qxtgroupbox.h \
     ENSDFDownloader.h \
-    Kaihen.h
+    Kaihen.h \
+    ENSDFMassChain.h
 
 INCLUDEPATH += ../../libakk/src
 LIBS += -lakk -L../../libakk
