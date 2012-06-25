@@ -752,10 +752,16 @@
        </item>
        <item>
         <widget class="QListWidget" name="aListWidget">
-         <property name="maximumSize">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
           <size>
-           <width>16777215</width>
-           <height>100</height>
+           <width>0</width>
+           <height>70</height>
           </size>
          </property>
         </widget>
@@ -795,10 +801,16 @@
        </item>
        <item>
         <widget class="QListWidget" name="nuclideListWidget">
-         <property name="maximumSize">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
           <size>
-           <width>16777215</width>
-           <height>100</height>
+           <width>0</width>
+           <height>70</height>
           </size>
          </property>
         </widget>
@@ -838,10 +850,16 @@
        </item>
        <item>
         <widget class="QListWidget" name="decayListWidget">
-         <property name="maximumSize">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
           <size>
-           <width>16777215</width>
-           <height>100</height>
+           <width>0</width>
+           <height>70</height>
           </size>
          </property>
         </widget>
