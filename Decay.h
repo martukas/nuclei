@@ -51,6 +51,8 @@ public:
 
     QVector<QPointF> gammaSpectrum(double fwhm) const;
 
+    friend class ENSDFMassChain; /// \todo remove!
+
 signals:
     void enableShadow(bool enable);
     
@@ -76,11 +78,11 @@ private:
     double parentDecayStartEnergyEv;
     SpinParity parentDecayStartSpin;
 
-    QStringList ensdf, adopt;
+    QStringList ensdf, adopt; /// \todo remove!
     mutable QMap<double, EnergyLevel*> levels;
     QGraphicsScene *scene;
     Ui::KaihenMainWindow *ui;
-    mutable QMap<double, QStringList> adoptblocks;
+    mutable QMap<double, QStringList> adoptblocks; /// \todo remove!
 
     // graphics items
     QGraphicsLineItem *pNucBaseLevel, *pNucStartLevel;

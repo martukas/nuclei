@@ -13,8 +13,10 @@ public:
     explicit ENSDFMassChain(int A);
 
     static QStringList aValues();
+
     QStringList daughterNuclides() const;
     QStringList decays(const QString &daughterNuclideName) const;
+
     QSharedPointer<Decay> decay(const QString &daughterNuclideName, const QString &decayName);
 
     friend class Decay;  /// \todo remove!

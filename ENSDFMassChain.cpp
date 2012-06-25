@@ -56,7 +56,225 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
 {
     BlockIndices al = m_adoptedlevels.value(daughterNuclideName);
     BlockIndices de = m_decays.value(daughterNuclideName).value(decayName);
-    return QSharedPointer<Decay>(new Decay(contents.mid(de.first, de.second), contents.mid(al.first, al.second)));
+    return QSharedPointer<Decay> dec(new Decay);
+
+    double normalizeDecIntensToPercentParentDecay = 1.0;
+    double normalizeGammaIntensToPercentParentDecay = 1.0;
+
+    // process all level sub-blocks
+    EnergyLevel *currentLevel = 0;
+    QLocale clocale("C");
+    bool convok;
+
+    // create index for adopted levels
+    QMap<double, QStringList> adoptblocks;
+    int laststart = -1;
+    for (int i=al.first; i < al.first+al.second; i++) {
+        const QString &line = contents.at(i);
+        if (line.startsWith(dNuc.nucid() + "  L ")) {
+            if (laststart > 0)
+                adoptblocks.insert(parseEnsdfEnergy(contents.at(laststart).mid(9, 10)),
+                                   QStringList(contents.mid(laststart, i-laststart)));
+            laststart = i;
+        }
+    }
+    if (laststart > 0)
+        adoptblocks.insert(ENSDFMassChain::parseEnsdfEnergy(contents.at(laststart).mid(9, 10)),
+                           QStringList(contents.mid(laststart, al.second-laststart)));
+
+
+    foreach (const QString &line, QStringList(contents.mid(de.first, de.second))) {
+
+        // process new gamma
+        if (!dec->levels.isEmpty() && line.startsWith(dNuc.nucid() + "  G ")) {
+
+            Q_ASSERT(!levels.isEmpty());
+
+            // determine energy
+            double e = ENSDFMassChain::parseEnsdfEnergy(line.mid(9, 10));
+
+            // determine intensity
+            QString instr(line.mid(21,8));
+            instr.remove('(').remove(')');
+            double in = clocale.toDouble(instr, &convok);
+            if (!convok)
+                in = std::numeric_limits<double>::quiet_NaN();
+            else
+                in *= normalizeGammaIntensToPercentParentDecay;
+
+            // determine multipolarity
+            QString mpol(line.mid(31, 10).trimmed());
+
+            // determine delta
+            GammaTransition::DeltaState deltastate = GammaTransition::UnknownDelta;
+
+            double delta = parseEnsdfMixing(line.mid(41, 8).trimmed(), mpol, &deltastate);
+
+            // parse adopted levels if necessary
+            if (deltastate != GammaTransition::SignMagnitudeDefined || mpol.isEmpty()) {
+                // Get adopted levels block for current level
+                QStringList adptlvl(selectAdoptedLevelsDataBlock(currentLevel->energyKeV()));
+                // filter gamma records
+                QRegExp gammare("^" + dNuc.nucid() + "  G (.*)$");
+                adptlvl = adptlvl.filter(gammare);
+                // create gamma map
+                QMap<double, QString> e2g;
+                foreach (QString g, adptlvl) {
+                    double gk = clocale.toDouble(g.mid(9, 10), &convok);
+                    if (convok)
+                        e2g.insert(gk, g);
+                }
+                // find gamma
+                double gidx = findNearest(e2g, e);
+                if ((e-gidx < gammaMaxDifference/1000.0*e) && std::isfinite(gidx)) {
+                    if (mpol.isEmpty())
+                        mpol = e2g.value(gidx).mid(31, 10).trimmed();
+
+                    if (deltastate != GammaTransition::SignMagnitudeDefined) {
+                        GammaTransition::DeltaState adptdeltastate = GammaTransition::UnknownDelta;
+                        double adptdelta = parseEnsdfMixing(e2g.value(gidx).mid(41, 8).trimmed(), mpol, &adptdeltastate);
+                        if (adptdeltastate > deltastate) {
+                            delta = adptdelta;
+                            deltastate = adptdeltastate;
+                        }
+                    }
+                }
+            }
+
+            // determine levels
+            EnergyLevel *start = currentLevel;
+            double destlvlidx = findNearest(levels, start->energyKeV() - e);
+            Q_ASSERT(levels.contains(destlvlidx));
+
+            // gamma registers itself with the start and dest levels
+            new GammaTransition(e, in, mpol, delta, deltastate, start, levels[destlvlidx]);
+        }
+        // process new level
+        else if (line.startsWith(dNuc.nucid() + "  L ")) {
+            // determine energy
+            double e = ENSDFMassChain::parseEnsdfEnergy(line.mid(9, 10));
+            // determine spin
+            SpinParity spin(line.mid(21, 18));
+            // determine isomer number
+            QString isostr(line.mid(77,2));
+            unsigned int isonum = isostr.mid(1,1).toUInt(&convok);
+            if (!convok && isostr.at(0) == 'M')
+                isonum = 1;
+            // determine half-life
+            HalfLife hl(line.mid(39, 10));
+
+            // get additional data from adopted leves record
+            //   find closest entry
+            double Q = std::numeric_limits<double>::quiet_NaN();
+            double mu = std::numeric_limits<double>::quiet_NaN();
+
+            QStringList adptlvl(selectAdoptedLevelsDataBlock(e));
+
+            // if an appropriate entry was found, read its contents
+            // set half life if necessary
+            if (!adptlvl.isEmpty() && !hl.isValid())
+                hl = HalfLife(adptlvl.at(0).mid(39, 10));
+
+            // parse continuation records
+            // fetch records
+            QRegExp crecre("^" + dNuc.nucid() + "[A-RT-Z0-9] L (.*)$");
+            QStringList crecs(adptlvl.filter(crecre));
+            // remove record id
+            crecs.replaceInStrings(crecre, "\\1");
+            // join lines and then split records
+            QString tmp(crecs.join("$"));
+            crecs = tmp.split('$');
+            for (int i=0; i<crecs.size(); i++)
+                crecs[i] = crecs[i].trimmed();
+            // search and parse Q and µ fields
+            // Q
+            QString qstr(crecs.value(crecs.indexOf(QRegExp("^MOME2.*$"))));
+            qstr.replace(QRegExp("^MOME2\\s*=\\s*([\\S]+).*"), "\\1");
+            qstr.remove('(').remove(')');
+            Q = clocale.toDouble(qstr, &convok);
+            if (!convok)
+                Q = std::numeric_limits<double>::quiet_NaN();
+            // µ
+            QString mustr(crecs.value(crecs.indexOf(QRegExp("^MOMM1.*$"))));
+            mustr.replace(QRegExp("^MOMM1\\s*=\\s*([\\S]+).*"), "\\1");
+            mustr.remove('(').remove(')');
+            mu = clocale.toDouble(mustr, &convok);
+            if (!convok)
+                mu = std::numeric_limits<double>::quiet_NaN();
+
+            currentLevel = new EnergyLevel(e, spin, hl, isonum, Q, mu);
+            levels.insert(e, currentLevel);
+        }
+        // process decay information
+        else if (!levels.isEmpty() && line.startsWith(dNuc.nucid() + "  E ")) {
+            double intensity = 0.0;
+            bool cok1, cok2;
+            QString iestr(line.mid(31, 8));
+            iestr.remove('(').remove(')');
+            double ie = clocale.toDouble(iestr.trimmed(), &cok1);
+            if (cok1)
+                intensity += ie * normalizeDecIntensToPercentParentDecay;
+            QString ibstr(line.mid(21, 8));
+            ibstr.remove('(').remove(')');
+            double ib = clocale.toDouble(ibstr.trimmed(), &cok2);
+            if (cok2)
+                intensity += ib * normalizeDecIntensToPercentParentDecay;
+            if (cok1 || cok2)
+                currentLevel->feedintens = intensity;
+        }
+        else if (!levels.isEmpty() && line.startsWith(dNuc.nucid() + "  B ")) {
+            QString ibstr(line.mid(21, 8));
+            ibstr.remove('(').remove(')');
+            double ib = clocale.toDouble(ibstr.trimmed(), &convok);
+            if (convok)
+                currentLevel->feedintens = ib * normalizeDecIntensToPercentParentDecay;
+        }
+        else if (!levels.isEmpty() && line.startsWith(dNuc.nucid() + "  A ")) {
+            QString iastr(line.mid(21, 8));
+            iastr.remove('(').remove(')');
+            double ia = clocale.toDouble(iastr.trimmed(), &convok);
+            if (convok)
+                currentLevel->feedintens = ia * normalizeDecIntensToPercentParentDecay;
+        }
+        // process normalization records
+        else if (line.startsWith(dNuc.nucid() + "  N ")) {
+            QString brstr(line.mid(31, 8));
+            brstr.remove('(').remove(')');
+            double br = clocale.toDouble(brstr.trimmed(), &convok);
+            if (!convok)
+                br = 1.0;
+
+            QString nbstr(line.mid(41, 8));
+            nbstr.remove('(').remove(')');
+            double nb = clocale.toDouble(nbstr.trimmed(), &convok);
+            if (!convok)
+                nb = 1.0;
+            normalizeDecIntensToPercentParentDecay = nb * br;
+
+            QString nrstr(line.mid(9, 10));
+            nrstr.remove('(').remove(')');
+            double nr = clocale.toDouble(nrstr.trimmed(), &convok);
+            if (!convok)
+                nr = 1.0;
+            normalizeGammaIntensToPercentParentDecay = nr * br;
+        }
+        else if (line.startsWith(dNuc.nucid() + " PN ")) {
+            QString nbbrstr(line.mid(41, 8));
+            nbbrstr.remove('(').remove(')');
+            double nbbr = clocale.toDouble(nbbrstr.trimmed(), &convok);
+            if (convok)
+                normalizeDecIntensToPercentParentDecay = nbbr;
+
+            QString nrbrstr(line.mid(9, 10));
+            nrbrstr.remove('(').remove(')');
+            double nrbr = clocale.toDouble(nrbrstr.trimmed(), &convok);
+            if (convok)
+                normalizeGammaIntensToPercentParentDecay = nrbr;
+        }
+    }
+
+
+
 }
 
 QString ENSDFMassChain::nuclideToNucid(const QString &nuclide)
