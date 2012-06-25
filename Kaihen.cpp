@@ -25,8 +25,6 @@
 #include "ENSDFMassChain.h"
 #include "ENSDFDownloader.h"
 
-Q_DECLARE_METATYPE( QSharedPointer<Decay> )
-
 class PlotZoomer : public QwtPlotZoomer
 {
 public:
@@ -93,7 +91,7 @@ Kaihen::Kaihen(QWidget *parent) :
 
     connect(ui->aListWidget, SIGNAL(currentTextChanged(QString)), this, SLOT(selectedA(QString)));
     connect(ui->nuclideListWidget, SIGNAL(currentTextChanged(QString)), this, SLOT(selectedNuclide(QString)));
-    connect(ui->decayListWidget, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(selectedDecay(QListWidgetItem*,QListWidgetItem*)));
+    connect(ui->decayListWidget, SIGNAL(currentTextChanged(QString)), this, SLOT(selectedDecay(QString)));
 
     connect(ui->actionSVG_Export, SIGNAL(triggered()), this, SLOT(svgExport()));
     connect(ui->actionPDF_Export, SIGNAL(triggered()), this, SLOT(pdfExport()));
@@ -208,42 +206,39 @@ void Kaihen::initialize()
 
 }
 
-void Kaihen::selectedA(const QString &a)
+void Kaihen::selectedA(const QString &aName)
 {
-    ui->decayListWidget->clear();
-    decays.clear();
     ui->decayView->setScene(0);
-
-    delete currentMassChain;
-    currentMassChain = new ENSDFMassChain(a.toInt());
+    ui->decayListWidget->clear();
 
     ui->nuclideListWidget->clear();
+
+    delete currentMassChain;
+    currentMassChain = new ENSDFMassChain(aName.toInt());
 
     ui->nuclideListWidget->addItems(currentMassChain->daughterNuclides());
 }
 
-void Kaihen::selectedNuclide(const QString &nuclide)
+void Kaihen::selectedNuclide(const QString &nuclideName)
 {
     if (!currentMassChain)
         return;
 
-    ui->decayListWidget->clear();
-    decays.clear();
     ui->decayView->setScene(0);
+    ui->decayListWidget->clear();
 
-    decays = currentMassChain->decays(nuclide);
-    for (int i=0; i<decays.size(); i++) {
-        QListWidgetItem *item = new QListWidgetItem(decays.at(i)->toText(), ui->decayListWidget);
-        item->setData(Qt::UserRole, QVariant::fromValue(decays.at(i)));
-    }
+    ui->decayListWidget->addItems(currentMassChain->decays(nuclideName));
 }
 
-void Kaihen::selectedDecay(QListWidgetItem* newitem, QListWidgetItem*)
+void Kaihen::selectedDecay(const QString &decayName)
 {
-    if (!newitem)
+    if (!currentMassChain)
         return;
 
-    decay = newitem->data(Qt::UserRole).value< QSharedPointer<Decay> >();
+    if (decayName.isEmpty())
+        return;
+
+    decay = currentMassChain->decay(ui->nuclideListWidget->currentItem()->text(), decayName);
     decay->setUpdateableUi(ui);
     decay->setStyle(pd->fontFamily->currentFont(), pd->fontSize->value());
     decay->setFuzzyLimits(pd->levelDiff->value(), pd->gammaDiff->value());

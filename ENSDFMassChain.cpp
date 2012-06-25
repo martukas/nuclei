@@ -18,7 +18,7 @@ ENSDFMassChain::ENSDFMassChain(int A)
 
     contents = c.split('\n');
 
-    parseContents();
+    parseBlocks();
 }
 
 QStringList ENSDFMassChain::aValues() // static
@@ -40,52 +40,23 @@ QStringList ENSDFMassChain::aValues() // static
 
 QStringList ENSDFMassChain::daughterNuclides() const
 {
-    QStringList result = contents.filter(QRegExp("^.{5,5}    .*(B-|B\\+|EC|IT|A\\s)\\sDECAY.*$"));
-    for (int i=0; i<result.size(); i++) {
-        result[i][4] = (result[i][4]).toLower();
-        result[i] = result[i].replace(QRegExp("^\\s*([0-9]+)([A-Za-z]+).*$"), "\\2-\\1");
-    }
-
+    QStringList result(m_decays.keys());
     result.removeDuplicates();
     return result;
 }
 
-QList< QSharedPointer<Decay> > ENSDFMassChain::decays(const QString &daughterNuclide) const
+QStringList ENSDFMassChain::decays(const QString &daughterNuclideName) const
 {
-    // recover nuclide identification (NUCID)
-    QString nucid(nuclideToNucid(daughterNuclide));
-    nucid.replace(' ', "\\s");
-
-    // find adopted levels block
-    QStringList al;
-    QString alregexp("^" + nucid + "    ADOPTED LEVELS.*$");
-    int alstart = contents.indexOf(QRegExp(alregexp));
-    if (alstart >= 0) {
-        int alstop = contents.indexOf(QRegExp("^\\s*$"), alstart);
-        if (alstop < 0)
-            alstop = contents.size();
-        al = contents.mid(alstart, alstop-alstart);
-    }
-
-    // find decay blocks
-    QList< QSharedPointer<Decay> > result;
-    int start = -1, stop = 0;
-    QRegExp re("^" + nucid + "\\s{4,4}[0-9]{1,3}[A-Z]{1,2}\\s+(B-|B\\+|EC|IT|A)\\sDECAY.*");
-    while ((start = contents.indexOf(re, stop)), start >= 0) {
-        stop = contents.indexOf(QRegExp("^\\s*$"), start);
-        if (stop < 0)
-            stop = contents.size();
-        QStringList dec(contents.mid(start, stop-start));
-        if (dec.isEmpty())
-            continue;
-        result.append(QSharedPointer<Decay>(new Decay(dec, al)));
-    }
+    QStringList result(m_decays.value(daughterNuclideName).keys());
+    result.removeDuplicates();
     return result;
 }
 
-QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclide, const QString &decay)
+QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, const QString &decayName)
 {
-
+    BlockIndices al = m_adoptedlevels.value(daughterNuclideName);
+    BlockIndices de = m_decays.value(daughterNuclideName).value(decayName);
+    return QSharedPointer<Decay>(new Decay(contents.mid(de.first, de.second), contents.mid(al.first, al.second)));
 }
 
 QString ENSDFMassChain::nuclideToNucid(const QString &nuclide)
@@ -155,7 +126,7 @@ ENSDFMassChain::ParentRecord ENSDFMassChain::parseParentRecord(const QString &pr
     return prec;
 }
 
-void ENSDFMassChain::parseContents()
+void ENSDFMassChain::parseBlocks()
 {
     // create list of block boundaries
     // end index points behind last line of block!
@@ -165,7 +136,7 @@ void ENSDFMassChain::parseContents()
     int bidx = contents.indexOf(emptyline, from);
     while (bidx > 0) {
         if (bidx-from > 1)
-            bb.append(BlockIndices(from, bidx));
+            bb.append(BlockIndices(from, bidx-from));
         from = bidx + 1;
         bidx = contents.indexOf(emptyline, from);
     }
@@ -196,7 +167,7 @@ void ENSDFMassChain::parseContents()
             // create decay name
             const QString dtypename(Decay::decayTypeAsText(parseDecayType(decre.capturedTexts().at(2))));
 
-            QStringList precstrings = QStringList(contents.mid(block.first, block.second - block.first)).filter(QRegExp("^[\\s0-9A-Z]{5,5}\\s\\sP[\\s0-9].*$"));
+            QStringList precstrings = QStringList(contents.mid(block.first, block.second)).filter(QRegExp("^[\\s0-9A-Z]{5,5}\\s\\sP[\\s0-9].*$"));
             QList<ParentRecord> precs;
             foreach (const QString &precstr, precstrings)
                 precs.append(parseParentRecord(precstr));

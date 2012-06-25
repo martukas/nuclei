@@ -26,9 +26,9 @@ public:
 private slots:
     void initialize();
 
-    void selectedA(const QString &a);
-    void selectedNuclide(const QString &nuclide);
-    void selectedDecay(QListWidgetItem* newitem, QListWidgetItem*);
+    void selectedA(const QString &aName);
+    void selectedNuclide(const QString &nuclideName);
+    void selectedDecay(const QString &decayName);
 
     void updateEnergySpectrum();
 
@@ -52,7 +52,6 @@ private:
     Ui::PreferencesDialog *pd;
 
     ENSDFMassChain *currentMassChain;
-    QList< QSharedPointer<Decay> > decays;
     QSharedPointer<Decay> decay;
 
     QDoubleSpinBox *eres;

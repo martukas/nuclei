@@ -14,13 +14,13 @@ public:
 
     static QStringList aValues();
     QStringList daughterNuclides() const;
-    QList< QSharedPointer<Decay> > decays(const QString &daughterNuclide) const;
-    QSharedPointer<Decay> decay(const QString &daughterNuclide, const QString &decay);
+    QStringList decays(const QString &daughterNuclideName) const;
+    QSharedPointer<Decay> decay(const QString &daughterNuclideName, const QString &decayName);
 
     friend class Decay;  /// \todo remove!
 
 private:
-    typedef QPair<int,int> BlockIndices;
+    typedef QPair<int,int> BlockIndices; // [startidx, size]
 
     struct ParentRecord {
         QString nuclideName;
@@ -35,13 +35,13 @@ private:
     static double parseEnsdfEnergy(const QString &estr);
     static ParentRecord parseParentRecord(const QString &precstr);
 
-    void parseContents();
+    void parseBlocks();
 
     const int a;
 
     QStringList contents;
-    QMap< QString, BlockIndices > m_adoptedlevels; // daughter name: [startidx, stopidx]
-    QMap< QString, QMap<QString, BlockIndices > > m_decays; // daughter name: (decay name: [startidx, stopidx])
+    QMap< QString, BlockIndices > m_adoptedlevels; // daughter name: [startidx, size]
+    QMap< QString, QMap<QString, BlockIndices > > m_decays; // daughter name: (decay name: [startidx, size])
 };
 
 #endif // ENSDF_H
