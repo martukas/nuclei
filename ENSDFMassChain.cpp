@@ -5,7 +5,12 @@
 #include <QMap>
 #include <QLocale>
 #include <QSettings>
+#include <cmath>
+
 #include "Decay.h"
+#include "Nuclide.h"
+#include "EnergyLevel.h"
+#include "GammaTransition.h"
 
 ENSDFMassChain::ENSDFMassChain(int A)
     : a(A)
@@ -52,26 +57,27 @@ QStringList ENSDFMassChain::decays(const QString &daughterNuclideName) const
     return result;
 }
 
-QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, const QString &decayName)
+QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, const QString &decayName,
+                                            double adoptedLevelMaxDifference, double gammaMaxDifference)
 {
-    BlockIndices al = m_adoptedlevels.value(daughterNuclideName);
-    BlockIndices de = m_decays.value(daughterNuclideName).value(decayName);
-    return QSharedPointer<Decay> dec(new Decay);
+    QMap<double, EnergyLevel*> levels;
 
+    BlockIndices alpos = m_adoptedlevels.value(daughterNuclideName);
+    BasicDecayData decaydata = m_decays.value(daughterNuclideName).value(decayName);
     double normalizeDecIntensToPercentParentDecay = 1.0;
     double normalizeGammaIntensToPercentParentDecay = 1.0;
+    QString dNucid = nuclideToNucid(daughterNuclideName);
 
-    // process all level sub-blocks
+    // process all adopted level sub-blocks
     EnergyLevel *currentLevel = 0;
     QLocale clocale("C");
     bool convok;
-
-    // create index for adopted levels
+    // create index map for adopted levels
     QMap<double, QStringList> adoptblocks;
     int laststart = -1;
-    for (int i=al.first; i < al.first+al.second; i++) {
+    for (int i=alpos.first; i < alpos.first+alpos.second; i++) {
         const QString &line = contents.at(i);
-        if (line.startsWith(dNuc.nucid() + "  L ")) {
+        if (line.startsWith(dNucid + "  L ")) {
             if (laststart > 0)
                 adoptblocks.insert(parseEnsdfEnergy(contents.at(laststart).mid(9, 10)),
                                    QStringList(contents.mid(laststart, i-laststart)));
@@ -80,18 +86,19 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
     }
     if (laststart > 0)
         adoptblocks.insert(ENSDFMassChain::parseEnsdfEnergy(contents.at(laststart).mid(9, 10)),
-                           QStringList(contents.mid(laststart, al.second-laststart)));
+                           QStringList(contents.mid(laststart, alpos.second-laststart)));
 
-
-    foreach (const QString &line, QStringList(contents.mid(de.first, de.second))) {
+    // process decay block
+    const QStringList decaylines(contents.mid(decaydata.block.first, decaydata.block.second));
+    foreach (const QString &line, decaylines) {
 
         // process new gamma
-        if (!dec->levels.isEmpty() && line.startsWith(dNuc.nucid() + "  G ")) {
+        if ((levels.size() > 1) && line.startsWith(dNucid + "  G ")) {
 
             Q_ASSERT(!levels.isEmpty());
 
             // determine energy
-            double e = ENSDFMassChain::parseEnsdfEnergy(line.mid(9, 10));
+            double e = parseEnsdfEnergy(line.mid(9, 10));
 
             // determine intensity
             QString instr(line.mid(21,8));
@@ -113,9 +120,14 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
             // parse adopted levels if necessary
             if (deltastate != GammaTransition::SignMagnitudeDefined || mpol.isEmpty()) {
                 // Get adopted levels block for current level
-                QStringList adptlvl(selectAdoptedLevelsDataBlock(currentLevel->energyKeV()));
+                QStringList adptlvl;
+                if (!adoptblocks.isEmpty()) {
+                    double idx = findNearest(adoptblocks, currentLevel->energyKeV());
+                    if (qAbs(currentLevel->energyKeV() - idx) <= (adoptedLevelMaxDifference/1000.0*currentLevel->energyKeV()))
+                        adptlvl = adoptblocks.value(idx);
+                }
                 // filter gamma records
-                QRegExp gammare("^" + dNuc.nucid() + "  G (.*)$");
+                QRegExp gammare("^" + dNucid + "  G (.*)$");
                 adptlvl = adptlvl.filter(gammare);
                 // create gamma map
                 QMap<double, QString> e2g;
@@ -150,7 +162,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
             new GammaTransition(e, in, mpol, delta, deltastate, start, levels[destlvlidx]);
         }
         // process new level
-        else if (line.startsWith(dNuc.nucid() + "  L ")) {
+        else if (line.startsWith(dNucid + "  L ")) {
             // determine energy
             double e = ENSDFMassChain::parseEnsdfEnergy(line.mid(9, 10));
             // determine spin
@@ -168,7 +180,12 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
             double Q = std::numeric_limits<double>::quiet_NaN();
             double mu = std::numeric_limits<double>::quiet_NaN();
 
-            QStringList adptlvl(selectAdoptedLevelsDataBlock(e));
+            QStringList adptlvl;
+            if (!adoptblocks.isEmpty()) {
+                double idx = findNearest(adoptblocks, e);
+                if (qAbs(e - idx) <= (adoptedLevelMaxDifference/1000.0*e))
+                    adptlvl = adoptblocks.value(idx);
+            }
 
             // if an appropriate entry was found, read its contents
             // set half life if necessary
@@ -177,7 +194,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
 
             // parse continuation records
             // fetch records
-            QRegExp crecre("^" + dNuc.nucid() + "[A-RT-Z0-9] L (.*)$");
+            QRegExp crecre("^" + dNucid + "[A-RT-Z0-9] L (.*)$");
             QStringList crecs(adptlvl.filter(crecre));
             // remove record id
             crecs.replaceInStrings(crecre, "\\1");
@@ -206,7 +223,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
             levels.insert(e, currentLevel);
         }
         // process decay information
-        else if (!levels.isEmpty() && line.startsWith(dNuc.nucid() + "  E ")) {
+        else if (!levels.isEmpty() && line.startsWith(dNucid + "  E ")) {
             double intensity = 0.0;
             bool cok1, cok2;
             QString iestr(line.mid(31, 8));
@@ -220,24 +237,24 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
             if (cok2)
                 intensity += ib * normalizeDecIntensToPercentParentDecay;
             if (cok1 || cok2)
-                currentLevel->feedintens = intensity;
+                currentLevel->setFeedIntensity(intensity);
         }
-        else if (!levels.isEmpty() && line.startsWith(dNuc.nucid() + "  B ")) {
+        else if (!levels.isEmpty() && line.startsWith(dNucid + "  B ")) {
             QString ibstr(line.mid(21, 8));
             ibstr.remove('(').remove(')');
             double ib = clocale.toDouble(ibstr.trimmed(), &convok);
             if (convok)
-                currentLevel->feedintens = ib * normalizeDecIntensToPercentParentDecay;
+                currentLevel->setFeedIntensity(ib * normalizeDecIntensToPercentParentDecay);
         }
-        else if (!levels.isEmpty() && line.startsWith(dNuc.nucid() + "  A ")) {
+        else if (!levels.isEmpty() && line.startsWith(dNucid + "  A ")) {
             QString iastr(line.mid(21, 8));
             iastr.remove('(').remove(')');
             double ia = clocale.toDouble(iastr.trimmed(), &convok);
             if (convok)
-                currentLevel->feedintens = ia * normalizeDecIntensToPercentParentDecay;
+                currentLevel->setFeedIntensity(ia * normalizeDecIntensToPercentParentDecay);
         }
         // process normalization records
-        else if (line.startsWith(dNuc.nucid() + "  N ")) {
+        else if (line.startsWith(dNucid + "  N ")) {
             QString brstr(line.mid(31, 8));
             brstr.remove('(').remove(')');
             double br = clocale.toDouble(brstr.trimmed(), &convok);
@@ -258,7 +275,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
                 nr = 1.0;
             normalizeGammaIntensToPercentParentDecay = nr * br;
         }
-        else if (line.startsWith(dNuc.nucid() + " PN ")) {
+        else if (line.startsWith(dNucid + " PN ")) {
             QString nbbrstr(line.mid(41, 8));
             nbbrstr.remove('(').remove(')');
             double nbbr = clocale.toDouble(nbbrstr.trimmed(), &convok);
@@ -273,8 +290,29 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
         }
     }
 
+    // create relevant parent levels and collect parent half-lifes
+    QMap<double, EnergyLevel*> plevels;
+    QList<HalfLife> pHl;
+    foreach (ParentRecord p, decaydata.parents) {
+        pHl.append(p.hl);
 
+        EnergyLevel *plv = new EnergyLevel(p.energy, p.spin, p.hl);
+        plv->setFeedingLevel(true);
+        plevels.insert(p.energy, plv);
+    }
+    if (!plevels.isEmpty()) {
+        if (plevels.begin().value()->energyKeV() > 0.0) {
+            EnergyLevel *plv = new EnergyLevel(0.0, SpinParity(), HalfLife());
+            plv->setFeedingLevel(false);
+            plevels.insert(0.0, plv);
+        }
+    }
 
+    Nuclide *pNuc = new Nuclide(A(decaydata.parents.value(0).nuclideName), element(decaydata.parents.value(0).nuclideName), pHl);
+    pNuc->addLevels(plevels);
+    Nuclide *dNuc = new Nuclide(A(decaydata.daughterName), element(decaydata.daughterName));
+    dNuc->addLevels(levels);
+    return QSharedPointer<Decay>(new Decay(decayName, pNuc, dNuc, decaydata.decayType));
 }
 
 QString ENSDFMassChain::nuclideToNucid(const QString &nuclide)
@@ -301,6 +339,16 @@ QString ENSDFMassChain::nucidToNuclide(const QString &nucid)
     return nuclide;
 }
 
+unsigned int ENSDFMassChain::A(const QString &nuclide)
+{
+    return nuclide.split("-").value(1).toUInt();
+}
+
+QString ENSDFMassChain::element(const QString &nuclide)
+{
+    return nuclide.split("-").value(0);
+}
+
 Decay::Type ENSDFMassChain::parseDecayType(const QString &tstring)
 {
     if (tstring == "EC DECAY")
@@ -313,6 +361,7 @@ Decay::Type ENSDFMassChain::parseDecayType(const QString &tstring)
         return Decay::IsomericTransition;
     if (tstring == "A DECAY")
         return Decay::Alpha;
+    return Decay::Undefined;
 }
 
 double ENSDFMassChain::parseEnsdfEnergy(const QString &estr)
@@ -321,6 +370,32 @@ double ENSDFMassChain::parseEnsdfEnergy(const QString &estr)
     QString tmp(estr);
     tmp.remove('(').remove(')');
     return clocale.toDouble(tmp.trimmed());
+}
+
+double ENSDFMassChain::parseEnsdfMixing(const QString &mstr, const QString &multipolarity, GammaTransition::DeltaState *state)
+{
+    QLocale clocale("C");
+    bool convok = false;
+    double delta = 0.0;
+    if (mstr.isEmpty()) {
+        QString tmp(multipolarity);
+        tmp.remove('(').remove(')');
+        if (tmp.count() == 2)
+            *state = GammaTransition::SignMagnitudeDefined;
+        // else leave deltastate UnknownDelta
+    }
+    else {
+        double tmp = clocale.toDouble(mstr, &convok);
+        if (convok) {
+            delta = tmp;
+            if (mstr.contains('+') || mstr.contains('-'))
+                *state = GammaTransition::SignMagnitudeDefined;
+            else
+                *state = GammaTransition::MagnitudeDefined;
+        }
+        // else leave deltastate UnknownDelta
+    }
+    return delta;
 }
 
 ENSDFMassChain::ParentRecord ENSDFMassChain::parseParentRecord(const QString &precstr)
@@ -342,6 +417,23 @@ ENSDFMassChain::ParentRecord ENSDFMassChain::parseParentRecord(const QString &pr
     prec.spin = SpinParity(precstr.mid(21, 18));
 
     return prec;
+}
+
+template <typename T>
+double ENSDFMassChain::findNearest(const QMap<double, T> &map, double val)
+{
+    if (map.isEmpty())
+        return std::numeric_limits<double>::quiet_NaN();
+
+    typename QMap<double, T>::const_iterator i = map.lowerBound(val);
+
+    if (i == map.begin())
+        return i.key();
+
+    if (qAbs(val - (i-1).key()) < qAbs(val - i.key()))
+        return (i-1).key();
+
+    return i.key();
 }
 
 void ENSDFMassChain::parseBlocks()
@@ -375,38 +467,43 @@ void ENSDFMassChain::parseBlocks()
 
         // decays
         else if (decre.exactMatch(head)) {
+            BasicDecayData decaydata;
 
-            // get daughter name
-            const QString daughtername(nucidToNuclide(decre.capturedTexts().at(1)));
-
-            // get reference to daughter map to work with (create and insert if necessary)
-            QMap<QString, QPair<int, int> > &decmap(m_decays[daughtername]);
-
-            // create decay name
-            const QString dtypename(Decay::decayTypeAsText(parseDecayType(decre.capturedTexts().at(2))));
+            decaydata.daughterName = nucidToNuclide(decre.capturedTexts().at(1));
+            decaydata.decayType = parseDecayType(decre.capturedTexts().at(2));
+            decaydata.block = block;
 
             QStringList precstrings = QStringList(contents.mid(block.first, block.second)).filter(QRegExp("^[\\s0-9A-Z]{5,5}\\s\\sP[\\s0-9].*$"));
-            QList<ParentRecord> precs;
             foreach (const QString &precstr, precstrings)
-                precs.append(parseParentRecord(precstr));
+                decaydata.parents.append(parseParentRecord(precstr));
 
-            Q_ASSERT(!precs.isEmpty());
-            if (precs.isEmpty())
+            Q_ASSERT(!decaydata.parents.isEmpty());
+            if (decaydata.parents.isEmpty())
                 continue;
 
-            QStringList hlstrings;
-            foreach (const ParentRecord &prec, precs)
-                hlstrings.append(prec.hl.toString());
+            // create decay string
+            //   get reference to daughter map to work with (create and insert if necessary)
+            QMap<QString, BasicDecayData > &decmap(m_decays[decaydata.daughterName]);
 
-            const ParentRecord &prec(precs.at(0));
+            QStringList hlstrings;
+            foreach (const ParentRecord &prec, decaydata.parents) {
+                Q_ASSERT(prec.nuclideName == decaydata.parents.at(0).nuclideName);
+                hlstrings.append(prec.hl.toString());
+            }
+
+            const ParentRecord &prec(decaydata.parents.at(0));
             QString decayname(prec.nuclideName);
             if (prec.energy > 0)
                 decayname.append("m");
-            decayname.append(", ").append(dtypename).append(", ").append(hlstrings.join(" + "));
+            decayname.append(", ")
+                    .append(Decay::decayTypeAsText(decaydata.decayType))
+                    .append(", ")
+                    .append(hlstrings.join(" + "));
 
-            // insert
-            Q_ASSERT(!decmap.contains(decayname));
-            decmap.insert(decayname, block);
+            // insert into decay map
+            while (decmap.contains(decayname))
+                decayname.append(" (alt.)");
+            decmap.insert(decayname, decaydata);
         }
     }
 }

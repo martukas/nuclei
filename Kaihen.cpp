@@ -238,10 +238,9 @@ void Kaihen::selectedDecay(const QString &decayName)
     if (decayName.isEmpty())
         return;
 
-    decay = currentMassChain->decay(ui->nuclideListWidget->currentItem()->text(), decayName);
+    decay = currentMassChain->decay(ui->nuclideListWidget->currentItem()->text(), decayName, pd->levelDiff->value(), pd->gammaDiff->value());
     decay->setUpdateableUi(ui);
     decay->setStyle(pd->fontFamily->currentFont(), pd->fontSize->value());
-    decay->setFuzzyLimits(pd->levelDiff->value(), pd->gammaDiff->value());
     QGraphicsScene *scene = decay->levelPlot();
     ui->decayView->setScene(scene);
     ui->decayView->setSceneRect(scene->sceneRect().adjusted(-20, -20, 20, 20));
@@ -284,7 +283,7 @@ void Kaihen::svgExport()
         svgGen.setFileName(fn);
         svgGen.setSize(outrect.toRect().size());
         svgGen.setViewBox(outrect);
-        svgGen.setTitle("Decay Level Scheme for the decay " + decay->toText());
+        svgGen.setTitle("Decay Level Scheme for the decay " + decay->name());
         svgGen.setDescription(QString::fromUtf8("This scheme was created using Kaihen (" KAIHENURL ")"));
 
         decay->setShadowEnabled(false);
@@ -326,7 +325,7 @@ void Kaihen::pdfExport()
         p.setPageMargins(margin, margin, margin, margin, QPrinter::Millimeter);
         p.setOutputFormat(QPrinter::PdfFormat);
         p.setPaperSize(outrect.toRect().size() / scalefactor, QPrinter::Millimeter);
-        p.setDocName("Decay Level Scheme for the decay " + decay->toText());
+        p.setDocName("Decay Level Scheme for the decay " + decay->name());
         p.setCreator(QString("%1 %2 (%3)").arg(QCoreApplication::applicationName(), QCoreApplication::applicationVersion(), KAIHENURL));
 
         decay->setShadowEnabled(false);

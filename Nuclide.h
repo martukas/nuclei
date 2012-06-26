@@ -9,19 +9,24 @@
 
 class QGraphicsItem;
 class QGraphicsItemGroup;
+class EnergyLevel;
 
 class Nuclide
 {
 public:
     Nuclide();
-    Nuclide(unsigned int A, const QString &element, HalfLife halfLife = HalfLife(std::numeric_limits<double>::infinity()));
+    Nuclide(unsigned int A, const QString &element, const HalfLife &halfLife = HalfLife(std::numeric_limits<double>::infinity()));
+    Nuclide(unsigned int A, const QString &element, const QList<HalfLife> &halfLifes);
 
     unsigned int a() const;
     unsigned int z() const;
     QString element() const;
-    HalfLife halfLife() const;
     QString name() const;
-    QString nucid() const;
+
+    void addLevels(const QMap<double, EnergyLevel*> &levels);
+    QMap<double, EnergyLevel*> levels() const;
+
+    QString halfLifeAsText() const;
 
     QGraphicsItem * createNuclideGraphicsItem(const QFont &nucFont, const QFont &nucIndexFont);
     QGraphicsItem * nuclideGraphicsItem() const;
@@ -29,7 +34,9 @@ public:
 private:
     unsigned int m_A;
     QString el;
-    HalfLife hl;
+    QList <HalfLife> hl;
+
+    QMap<double, EnergyLevel*> m_levels;
 
     static const QMap<QString, unsigned int> elToZ;
     static QMap<QString, unsigned int> initElToZ();

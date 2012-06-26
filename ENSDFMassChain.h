@@ -17,7 +17,16 @@ public:
     QStringList daughterNuclides() const;
     QStringList decays(const QString &daughterNuclideName) const;
 
-    QSharedPointer<Decay> decay(const QString &daughterNuclideName, const QString &decayName);
+    /**
+     * @brief decay
+     * @param daughterNuclideName
+     * @param decayName
+     * @param adoptedLevelMaxDifference Maximal acceptable difference between energy levels (in eV) in decay and adopted level blocks
+     * @param gammaMaxDifference Maximal difference between the energy of gammas in decay records and adopted levels
+     * @return
+     */
+    QSharedPointer<Decay> decay(const QString &daughterNuclideName, const QString &decayName,
+                                double adoptedLevelMaxDifference = 0.0, double gammaMaxDifference = 0.0);
 
     friend class Decay;  /// \todo remove!
 
@@ -29,13 +38,26 @@ private:
         double energy;
         HalfLife hl;
         SpinParity spin;
+
+    };
+
+    struct BasicDecayData {
+        QList<ParentRecord> parents;
+        QString daughterName;
+        Decay::Type decayType;
+        BlockIndices block;
     };
 
     static QString nuclideToNucid(const QString &nuclide);
     static QString nucidToNuclide(const QString &nucid);
+    static unsigned int A(const QString &nuclide);
+    static QString element(const QString &nuclide);
     static Decay::Type parseDecayType(const QString &tstring);
     static double parseEnsdfEnergy(const QString &estr);
+    static double parseEnsdfMixing(const QString &s, const QString &multipolarity, GammaTransition::DeltaState *state);
     static ParentRecord parseParentRecord(const QString &precstr);
+
+    template <typename T> static double findNearest(const QMap<double, T> &map, double val);
 
     void parseBlocks();
 
@@ -43,7 +65,7 @@ private:
 
     QStringList contents;
     QMap< QString, BlockIndices > m_adoptedlevels; // daughter name: [startidx, size]
-    QMap< QString, QMap<QString, BlockIndices > > m_decays; // daughter name: (decay name: [startidx, size])
+    QMap< QString, QMap<QString, BasicDecayData > > m_decays; // daughter name: (decay name: [startidx, size])
 };
 
 #endif // ENSDF_H

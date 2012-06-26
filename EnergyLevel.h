@@ -42,6 +42,11 @@ public:
     QString qAsText() const;
     QString momentaAsText() const;
 
+    void setFeedIntensity(double intensity);
+    void setFeedingLevel(bool isfeeding);
+
+    bool isFeedingLevel() const;
+
     friend class Decay;
     friend class GammaTransition;
 
@@ -53,6 +58,7 @@ private:
     HalfLife hl;
     unsigned int isonum; // >0 for isomeric levels (counted from low energy to high), 0 otherwise
     double feedintens; // says how often this level is directly fed per 100 parent decays
+    bool feedinglevel; // true if this is belonging to a parent nuclide and is a starting point for decays
 
     double m_Q, m_mu; // quadrupole and magnetic moments
 

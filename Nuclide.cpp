@@ -5,16 +5,22 @@
 #include <QBrush>
 
 Nuclide::Nuclide()
-    : hl(HalfLife(std::numeric_limits<double>::infinity())), item(0)
+    : m_A(0), item(0)
 {
 }
 
-Nuclide::Nuclide(unsigned int A, const QString &element, HalfLife halfLife)
-    : m_A(A), hl(halfLife), item(0)
+Nuclide::Nuclide(unsigned int A, const QString &element, const HalfLife &halfLife)
+    : m_A(A), el(element), item(0)
 {
+    hl.append(halfLife);
     el = element.toLower();
     if (!el.isEmpty())
         el[0] = el[0].toUpper();
+}
+
+Nuclide::Nuclide(unsigned int A, const QString &element, const QList<HalfLife> &halfLifes)
+    : m_A(A), el(element), hl(halfLifes), item(0)
+{
 }
 
 unsigned int Nuclide::a() const
@@ -32,23 +38,28 @@ QString Nuclide::element() const
     return el;
 }
 
-HalfLife Nuclide::halfLife() const
-{
-    return hl;
-}
-
 QString Nuclide::name() const
 {
     return el + "-" + QString::number(m_A);
 }
 
-/**
- * Returns the NUCID as defined in the ENSDF manual
- * \return Always returns 5 characters
- */
-QString Nuclide::nucid() const
+void Nuclide::addLevels(const QMap<double, EnergyLevel *> &levels)
 {
-    return QString("%1%2").arg(m_A, 3, 10, QChar(' ')).arg(el.leftJustified(2, ' ').toUpper());
+    m_levels = levels;
+}
+
+QMap<double, EnergyLevel *> Nuclide::levels() const
+{
+    return m_levels;
+}
+
+QString Nuclide::halfLifeAsText() const
+{
+    QStringList result;
+    foreach (HalfLife h, hl)
+        if (h.isValid() && !h.isStable())
+        result.append(h.toString());
+    return result.join(", ");
 }
 
 QGraphicsItem *Nuclide::createNuclideGraphicsItem(const QFont &nucFont, const QFont &nucIndexFont)

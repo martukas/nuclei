@@ -26,6 +26,7 @@ class Decay : public QObject
     Q_OBJECT
 public:
     enum Type {
+        Undefined,
         ElectronCapture,
         BetaPlus,
         BetaMinus,
@@ -33,25 +34,21 @@ public:
         Alpha
     };
 
-    explicit Decay(Nuclide parentNuclide, Nuclide daughterNuclide, Type decayType, QObject *parent = 0);
-    explicit Decay(const QStringList &ensdfData, const QStringList &ensdfAdoptedLevels, QObject *parent = 0);
+    explicit Decay(const QString &name, Nuclide *parentNuclide, Nuclide *daughterNuclide, Type decayType, QObject *parent = 0);
 
     ~Decay();
 
     static QString decayTypeAsText(Type type);
 
     void setStyle(const QFont &fontfamily, unsigned int sizePx);
-    void setFuzzyLimits(double levelLimit, double gammaLimit);
     QGraphicsScene * levelPlot();
 
     void setUpdateableUi(Ui::KaihenMainWindow *updui);
     void setShadowEnabled(bool enable);
 
-    QString toText() const;
+    QString name() const;
 
     QVector<QPointF> gammaSpectrum(double fwhm) const;
-
-    friend class ENSDFMassChain; /// \todo remove!
 
 signals:
     void enableShadow(bool enable);
@@ -65,29 +62,19 @@ private:
     void updateDecayDataLabels();
     void resetAnisotropyLabels();
     void alignGraphicsItems();
-    void processENSDFLevels() const;
-    void splitAdoptedLevelsData() const; // initializes adoptblocks
-    QStringList selectAdoptedLevelsDataBlock(double energy) const;
-    double parseEnsdfMixing(const QString &s, const QString &multipolarity, GammaTransition::DeltaState *state) const;
-    template <typename T> double findNearest(const QMap<double, T> &map, double val) const;
     double gauss(const double x, const double sigma) const;
 
-    Nuclide pNuc, dNuc;
+    const QString m_name;
+
+    Nuclide *pNuc, *dNuc;
     Type t;
 
-    double parentDecayStartEnergyEv;
-    SpinParity parentDecayStartSpin;
-
-    QStringList ensdf, adopt; /// \todo remove!
-    mutable QMap<double, EnergyLevel*> levels;
     QGraphicsScene *scene;
     Ui::KaihenMainWindow *ui;
-    mutable QMap<double, QStringList> adoptblocks; /// \todo remove!
 
     // graphics items
-    QGraphicsLineItem *pNucBaseLevel, *pNucStartLevel;
     QGraphicsLineItem *pNucVerticalArrow;
-    QGraphicsSimpleTextItem *pNucHl, *pNucBaseEnergy, *pNucEnergy, *pNucSpin;
+    QGraphicsSimpleTextItem *pNucHl;
 
     // style
     QFont stdFont, stdBoldFont, nucFont, nucIndexFont, parentHlFont, feedIntensityFont, gammaFont;
@@ -97,15 +84,13 @@ private:
     GammaTransition *firstSelectedGamma, *secondSelectedGamma;
     EnergyLevel *selectedEnergyLevel;
 
-    double adoptedLevelMaxDifference; // maximal acceptable difference between energy levels (in eV) in decay and adopted level blocks
-    double gammaMaxDifference; // maximal difference between the energy of gammas in decay records and adopted levels
-
     static const double outerGammaMargin; // margin between level texts (spin, energy) and gammas
     static const double outerLevelTextMargin; // level lines extend beyond the beginning/end of the level texts by this value
     static const double maxExtraLevelDistance; // maximal additional distance between two level lines
     static const double levelToHalfLifeDistance; // distance between level line and half life text
     static const double parentNuclideLevelLineLength;
     static const double parentNuclideLevelLineExtraLength; // additional length of the decaying level
+    static const double parentNuclideMinSpinEnergyDistance; // Minumal distance between spin and energy texts on parent level lines
     static const double arrowHeadLength;
     static const double arrowHeadWidth;
     static const double arrowGap;

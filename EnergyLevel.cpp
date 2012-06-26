@@ -5,7 +5,8 @@
 
 EnergyLevel::EnergyLevel(double energyKeV, SpinParity spin, HalfLife halfLife, unsigned int isomerNum, double Q, double mu)
     : ClickableItem(ClickableItem::EnergyLevelType),
-      m_e(energyKeV), sp(spin), hl(halfLife), isonum(isomerNum), feedintens(std::numeric_limits<double>::quiet_NaN()),
+      m_e(energyKeV), sp(spin), hl(halfLife), isonum(isomerNum),
+      feedintens(std::numeric_limits<double>::quiet_NaN()), feedinglevel(false),
       m_Q(Q), m_mu(mu),
       graline(0), grafeedarrow(0), graarrowhead(0), graetext(0), graspintext(0), grafeedintens(0), grahltext(0),
       graclickarea(0), grahighlighthelper(0), graYPos(0.0)
@@ -83,6 +84,21 @@ QString EnergyLevel::momentaAsText() const
     if (std::isfinite(m_Q))
         r.append(QString("Q=%1").arg(m_Q));
     return r.join(", ");
+}
+
+void EnergyLevel::setFeedIntensity(double intensity)
+{
+    feedintens = intensity;
+}
+
+void EnergyLevel::setFeedingLevel(bool isfeeding)
+{
+    feedinglevel = isfeeding;
+}
+
+bool EnergyLevel::isFeedingLevel() const
+{
+    return feedinglevel;
 }
 
 bool EnergyLevel::gammaSmallerThan(const GammaTransition *const g1, const GammaTransition *const g2)
