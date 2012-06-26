@@ -15,8 +15,7 @@ public:
     SpinParity();
 
     SpinParity(unsigned int numerator, unsigned int denominator,
-               Parity parity = Undefined, bool weakarguments = false);
-    SpinParity(const QString &ensdfData);
+               Parity parity = Undefined, bool weakarguments = false, bool valid = true);
 
     bool isValid() const;
 

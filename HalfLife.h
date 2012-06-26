@@ -8,7 +8,6 @@ class HalfLife
 public:
     HalfLife();
     HalfLife(double seconds, bool uncertain = false);
-    HalfLife(const QString &ensdfData);
 
     bool isValid() const;
     double seconds() const;

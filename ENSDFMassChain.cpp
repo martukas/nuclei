@@ -166,14 +166,14 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
             // determine energy
             double e = ENSDFMassChain::parseEnsdfEnergy(line.mid(9, 10));
             // determine spin
-            SpinParity spin(line.mid(21, 18));
+            SpinParity spin(parseSpinParity(line.mid(21, 18)));
             // determine isomer number
             QString isostr(line.mid(77,2));
             unsigned int isonum = isostr.mid(1,1).toUInt(&convok);
             if (!convok && isostr.at(0) == 'M')
                 isonum = 1;
             // determine half-life
-            HalfLife hl(line.mid(39, 10));
+            HalfLife hl(parseHalfLife(line.mid(39, 10)));
 
             // get additional data from adopted leves record
             //   find closest entry
@@ -190,7 +190,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
             // if an appropriate entry was found, read its contents
             // set half life if necessary
             if (!adptlvl.isEmpty() && !hl.isValid())
-                hl = HalfLife(adptlvl.at(0).mid(39, 10));
+                hl = HalfLife(parseHalfLife(adptlvl.at(0).mid(39, 10)));
 
             // parse continuation records
             // fetch records
@@ -372,6 +372,84 @@ double ENSDFMassChain::parseEnsdfEnergy(const QString &estr)
     return clocale.toDouble(tmp.trimmed());
 }
 
+HalfLife ENSDFMassChain::parseHalfLife(const QString &hlstr)
+{
+    double sec = std::numeric_limits<double>::quiet_NaN();
+    bool uncert = false;
+
+    QString tstr(hlstr);
+    if (tstr.contains('?'))
+        uncert = true;
+    tstr.remove('?');
+    tstr.remove('(').remove(')');
+    QStringList timeparts = tstr.trimmed().split(' ');
+    if (tstr.contains("STABLE", Qt::CaseInsensitive)) {
+        sec = std::numeric_limits<double>::infinity();
+    }
+    else if (tstr.contains("EV")) {
+        sec = std::numeric_limits<double>::quiet_NaN();
+    }
+    else if (timeparts.size() >= 2) {
+        QLocale clocale("C");
+        bool ok = false;
+        sec = clocale.toDouble(timeparts.at(0), &ok);
+        if (!ok)
+            sec = std::numeric_limits<double>::infinity();
+        else if (timeparts.at(1) == "Y")
+            sec *= 365. * 86400.;
+        else if (timeparts.at(1) == "D")
+            sec *= 86400.;
+        else if (timeparts.at(1) == "H")
+            sec *= 3600.;
+        else if (timeparts.at(1) == "M")
+            sec *= 60.;
+        else if (timeparts.at(1) == "MS")
+            sec *= 1.E-3;
+        else if (timeparts.at(1) == "US")
+            sec *= 1.E-6;
+        else if (timeparts.at(1) == "NS")
+            sec *= 1.E-9;
+        else if (timeparts.at(1) == "PS")
+            sec *= 1.E-12;
+        else if (timeparts.at(1) == "FS")
+            sec *= 1.E-15;
+        else if (timeparts.at(1) == "AS")
+            sec *= 1.E-18;
+    }
+
+    return HalfLife(sec, uncert);
+}
+
+SpinParity ENSDFMassChain::parseSpinParity(const QString &sstr)
+{
+    bool weakarg = false;
+    SpinParity::Parity p = SpinParity::Undefined;
+    unsigned int num = 0, denom = 1;
+    bool valid = false;
+
+    QString spstr(sstr.trimmed());
+    if (spstr.contains('('))
+        weakarg = true;
+    spstr.remove('(').remove(')');
+    spstr = spstr.trimmed();
+    if (spstr.right(1) == "+")
+        p = SpinParity::Plus;
+    else if (spstr.right(1) == "-")
+        p = SpinParity::Minus;
+    spstr.remove('+').remove('-');
+    QStringList fract(spstr.split('/'));
+    if (!fract.isEmpty()) {
+        num = fract.at(0).toUInt();
+        if (fract.size() > 1)
+            denom = fract.at(1).toUInt();
+        if (denom == 0)
+            denom = 1;
+        valid = true;
+    }
+
+    return SpinParity(num, denom, p, weakarg, valid);
+}
+
 double ENSDFMassChain::parseEnsdfMixing(const QString &mstr, const QString &multipolarity, GammaTransition::DeltaState *state)
 {
     QLocale clocale("C");
@@ -408,13 +486,13 @@ ENSDFMassChain::ParentRecord ENSDFMassChain::parseParentRecord(const QString &pr
     prec.nuclideName = nucidToNuclide(precstr.left(5));
 
     // determine parent's half-life
-    prec.hl = HalfLife(precstr.mid(39, 10));
+    prec.hl = HalfLife(parseHalfLife(precstr.mid(39, 10)));
 
     // determine decaying level's energy
     prec.energy = parseEnsdfEnergy(precstr.mid(9, 10));
 
     // determine parent level's spin
-    prec.spin = SpinParity(precstr.mid(21, 18));
+    prec.spin = SpinParity(parseSpinParity(precstr.mid(21, 18)));
 
     return prec;
 }

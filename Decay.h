@@ -17,10 +17,6 @@ class QGraphicsLineItem;
 class QGraphicsSimpleTextItem;
 class ClickableItem;
 
-namespace Ui {
-class KaihenMainWindow;
-}
-
 class Decay : public QObject
 {
     Q_OBJECT
@@ -43,15 +39,46 @@ public:
     void setStyle(const QFont &fontfamily, unsigned int sizePx);
     QGraphicsScene * levelPlot();
 
-    void setUpdateableUi(Ui::KaihenMainWindow *updui);
     void setShadowEnabled(bool enable);
 
     QString name() const;
 
     QVector<QPointF> gammaSpectrum(double fwhm) const;
 
+    struct DecayDataSet {
+        DecayDataSet();
+
+        QString startEnergy;
+        QString startSpin;
+
+        QString popEnergy;
+        QString popIntensity;
+        QString popMultipolarity;
+        QString popMixing;
+
+        QString intEnergy;
+        QString intHalfLife;
+        QString intSpin;
+        QString intMu;
+        QString intQ;
+
+        QString depopEnergy;
+        QString depopIntensity;
+        QString depopMultipolarity;
+        QString depopMixing;
+
+        QString endEnergy;
+        QString endSpin;
+
+        QString a22;
+        QString a24;
+        QString a42;
+        QString a44;
+    };
+
 signals:
-    void enableShadow(bool enable);
+    void enabledShadow(bool enable);
+    void updatedDecayData(Decay::DecayDataSet data);
     
 private slots:
     void itemClicked(ClickableItem *item);
@@ -59,8 +86,7 @@ private slots:
 private:
     void clickedGamma(GammaTransition *g);
     void clickedEnergyLevel(EnergyLevel *e);
-    void updateDecayDataLabels();
-    void resetAnisotropyLabels();
+    void sendDecayDataUpdate();
     void alignGraphicsItems();
     double gauss(const double x, const double sigma) const;
 
@@ -70,7 +96,6 @@ private:
     Type t;
 
     QGraphicsScene *scene;
-    Ui::KaihenMainWindow *ui;
 
     // graphics items
     QGraphicsLineItem *pNucVerticalArrow;

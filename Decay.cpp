@@ -13,10 +13,6 @@
 #include "ActiveGraphicsItemGroup.h"
 #include "GammaTransition.h"
 #include "GraphicsHighlightItem.h"
-#include "ui_Kaihen.h"
-#include "Kaihen.h"
-
-#include "ENSDFMassChain.h" /// \todo remove!
 
 const double Decay::outerGammaMargin = 50.0;
 const double Decay::outerLevelTextMargin = 4.0; // level lines extend beyond the beginning/end of the level texts by this value
@@ -34,7 +30,7 @@ const double Decay::highlightWidth = 5.0;
 
 Decay::Decay(const QString &name, Nuclide *parentNuclide, Nuclide *daughterNuclide, Type decayType, QObject *parent)
     : QObject(parent), m_name(name), pNuc(parentNuclide), dNuc(daughterNuclide), t(decayType),
-      scene(0), ui(0),
+      scene(0),
       pNucVerticalArrow(0), pNucHl(0),
       firstSelectedGamma(0), secondSelectedGamma(0), selectedEnergyLevel(0)
 {
@@ -88,7 +84,7 @@ QGraphicsScene * Decay::levelPlot()
             QFontMetrics stdBoldFontMetrics(stdBoldFont);
 
             level->item = new ActiveGraphicsItemGroup(level);
-            connect(this, SIGNAL(enableShadow(bool)), level->item, SLOT(setShadowEnabled(bool)));
+            connect(this, SIGNAL(enabledShadow(bool)), level->item, SLOT(setShadowEnabled(bool)));
             level->item->setActiveColor(QColor(224, 186, 100, 180));
             connect(level->item, SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
 
@@ -156,7 +152,7 @@ QGraphicsScene * Decay::levelPlot()
             QList<GammaTransition*> levelgammas = level->depopulatingTransitions();
             foreach (GammaTransition *gamma, levelgammas) {
                 ActiveGraphicsItemGroup *item = gamma->createGammaGraphicsItem(gammaFont, gammaPen, intenseGammaPen);
-                connect(this, SIGNAL(enableShadow(bool)), item, SLOT(setShadowEnabled(bool)));
+                connect(this, SIGNAL(enabledShadow(bool)), item, SLOT(setShadowEnabled(bool)));
                 connect(item, SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
                 scene->addItem(item);
             }
@@ -207,14 +203,9 @@ QGraphicsScene * Decay::levelPlot()
     return scene;
 }
 
-void Decay::setUpdateableUi(Ui::KaihenMainWindow *updui)
-{
-    ui = updui;
-}
-
 void Decay::setShadowEnabled(bool enable)
 {
-    emit enableShadow(enable);
+    emit enabledShadow(enable);
 }
 
 QString Decay::name() const
@@ -345,7 +336,7 @@ void Decay::clickedGamma(GammaTransition *g)
         }
     }
 
-    updateDecayDataLabels();
+    sendDecayDataUpdate();
 }
 
 void Decay::clickedEnergyLevel(EnergyLevel *e)
@@ -390,28 +381,27 @@ void Decay::clickedEnergyLevel(EnergyLevel *e)
         secondSelectedGamma = 0;
     }
 
-    updateDecayDataLabels();
+    sendDecayDataUpdate();
 }
 
-void Decay::updateDecayDataLabels()
+void Decay::sendDecayDataUpdate()
 {
-    if (!ui)
-        return;
+    DecayDataSet dataset;
 
     // intermediate level
     if (selectedEnergyLevel) {
-        ui->intEnergy->setText(selectedEnergyLevel->energyAsText());
-        ui->intHalfLife->setText(selectedEnergyLevel->halfLife().toString());
-        ui->intSpin->setText(selectedEnergyLevel->spin().toString());
-        ui->intMu->setText(selectedEnergyLevel->muAsText());
-        ui->intQ->setText(selectedEnergyLevel->qAsText());
+        dataset.intEnergy = selectedEnergyLevel->energyAsText();;
+        dataset.intHalfLife = selectedEnergyLevel->halfLife().toString();;
+        dataset.intSpin = selectedEnergyLevel->spin().toString();;
+        dataset.intMu = selectedEnergyLevel->muAsText();;
+        dataset.intQ = selectedEnergyLevel->qAsText();;
     }
     else {
-        ui->intEnergy->setText("- keV");
-        ui->intHalfLife->setText("- ns");
-        ui->intSpin->setText("/");
-        ui->intMu->setText("-");
-        ui->intQ->setText("-");
+        dataset.intEnergy = "- keV";;
+        dataset.intHalfLife = "- ns";;
+        dataset.intSpin = "/";;
+        dataset.intMu = "-";;
+        dataset.intQ = "-";;
     }
 
     // gammas
@@ -431,44 +421,44 @@ void Decay::updateDecayDataLabels()
 
     // populating
     if (pop) {
-        ui->popEnergy->setText(pop->energyAsText());
-        ui->popIntensity->setText(pop->intensityAsText());
-        ui->popMultipolarity->setText(pop->multipolarityAsText());
-        ui->popMixing->setText(pop->deltaAsText());
+        dataset.popEnergy = pop->energyAsText();;
+        dataset.popIntensity = pop->intensityAsText();;
+        dataset.popMultipolarity = pop->multipolarityAsText();;
+        dataset.popMixing = pop->deltaAsText();;
     }
     else {
-        ui->popEnergy->setText("- keV");
-        ui->popIntensity->setText("- %");
-        ui->popMultipolarity->setText("<i>unknown</i>");
-        ui->popMixing->setText("<i>unknown</i>");
+        dataset.popEnergy = "- keV";;
+        dataset.popIntensity = "- %";;
+        dataset.popMultipolarity = "<i>unknown</i>";;
+        dataset.popMixing = "<i>unknown</i>";;
     }
 
     // depopulating
     if (depop) {
-        ui->depopEnergy->setText(depop->energyAsText());
-        ui->depopIntensity->setText(depop->intensityAsText());
-        ui->depopMultipolarity->setText(depop->multipolarityAsText());
-        ui->depopMixing->setText(depop->deltaAsText());
+        dataset.depopEnergy = depop->energyAsText();;
+        dataset.depopIntensity = depop->intensityAsText();;
+        dataset.depopMultipolarity = depop->multipolarityAsText();;
+        dataset.depopMixing = depop->deltaAsText();;
     }
     else {
-        ui->depopEnergy->setText("- keV");
-        ui->depopIntensity->setText("- %");
-        ui->depopMultipolarity->setText("<i>unknown</i>");
-        ui->depopMixing->setText("<i>unknown</i>");
+        dataset.depopEnergy = "- keV";;
+        dataset.depopIntensity = "- %";;
+        dataset.depopMultipolarity = "<i>unknown</i>";;
+        dataset.depopMixing = "<i>unknown</i>";;
     }
 
     // start and end level
     if (firstSelectedGamma && secondSelectedGamma) {
-        ui->startEnergy->setText(pop->depopulatedLevel()->energyAsText());
-        ui->startSpin->setText(pop->depopulatedLevel()->spin().toString());
-        ui->endEnergy->setText(depop->populatedLevel()->energyAsText());
-        ui->endSpin->setText(depop->populatedLevel()->spin().toString());
+        dataset.startEnergy = pop->depopulatedLevel()->energyAsText();;
+        dataset.startSpin = pop->depopulatedLevel()->spin().toString();;
+        dataset.endEnergy = depop->populatedLevel()->energyAsText();;
+        dataset.endSpin = depop->populatedLevel()->spin().toString();;
     }
     else {
-        ui->startEnergy->setText("- keV");
-        ui->startSpin->setText("/");
-        ui->endEnergy->setText("- keV");
-        ui->endSpin->setText("/");
+        dataset.startEnergy = "- keV";;
+        dataset.startSpin = "/";;
+        dataset.endEnergy = "- keV";;
+        dataset.endSpin = "/";;
     }
 
     // calculate anisotropies
@@ -525,29 +515,14 @@ void Decay::updateDecayDataLabels()
                 a44.append(QString("%1%2").arg(prfx).arg(calc.a44()));
             }
 
-            ui->a22->setText(a22.join(", "));
-            ui->a24->setText(a24.join(", "));
-            ui->a42->setText(a42.join(", "));
-            ui->a44->setText(a44.join(", "));
-        }
-        else {
-            resetAnisotropyLabels();
+            dataset.a22 = a22.join(", ");;
+            dataset.a24 = a24.join(", ");;
+            dataset.a42 = a42.join(", ");;
+            dataset.a44 = a44.join(", ");;
         }
     }
-    else {
-        resetAnisotropyLabels();
-    }
-}
 
-void Decay::resetAnisotropyLabels()
-{
-    if (!ui)
-        return;
-
-    ui->a22->setText("-");
-    ui->a24->setText("-");
-    ui->a42->setText("-");
-    ui->a44->setText("-");
+    emit updatedDecayData(dataset);
 }
 
 void Decay::alignGraphicsItems()
@@ -788,5 +763,10 @@ double Decay::gauss(const double x, const double sigma) const
     double u = x / fabs(sigma);
     double p = (1 / (sqrt(2 * M_PI) * fabs(sigma))) * exp(-u * u / 2);
     return p;
+}
+
+Decay::DecayDataSet::DecayDataSet()
+    : a22("-"), a24("-"), a42("-"), a44("-")
+{
 }
 

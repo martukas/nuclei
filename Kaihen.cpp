@@ -239,7 +239,7 @@ void Kaihen::selectedDecay(const QString &decayName)
         return;
 
     decay = currentMassChain->decay(ui->nuclideListWidget->currentItem()->text(), decayName, pd->levelDiff->value(), pd->gammaDiff->value());
-    decay->setUpdateableUi(ui);
+    connect(decay.data(), SIGNAL(updatedDecayData(Decay::DecayDataSet)), this, SLOT(updateDecayData(Decay::DecayDataSet)));
     decay->setStyle(pd->fontFamily->currentFont(), pd->fontSize->value());
     QGraphicsScene *scene = decay->levelPlot();
     ui->decayView->setScene(scene);
@@ -247,6 +247,36 @@ void Kaihen::selectedDecay(const QString &decayName)
 
     // update plot
     updateEnergySpectrum();
+}
+
+void Kaihen::updateDecayData(Decay::DecayDataSet data)
+{
+    ui->startEnergy->setText(data.startEnergy);
+    ui->startSpin->setText(data.startSpin);
+
+    ui->popEnergy->setText(data.popEnergy);
+    ui->popIntensity->setText(data.popIntensity);
+    ui->popMultipolarity->setText(data.popMultipolarity);
+    ui->popMixing->setText(data.popMixing);
+
+    ui->intEnergy->setText(data.intEnergy);
+    ui->intHalfLife->setText(data.intHalfLife);
+    ui->intSpin->setText(data.intSpin);
+    ui->intMu->setText(data.intMu);
+    ui->intQ->setText(data.intQ);
+
+    ui->depopEnergy->setText(data.depopEnergy);
+    ui->depopIntensity->setText(data.depopIntensity);
+    ui->depopMultipolarity->setText(data.depopMultipolarity);
+    ui->depopMixing->setText(data.depopMixing);
+
+    ui->endEnergy->setText(data.endEnergy);
+    ui->endSpin->setText(data.endSpin);
+
+    ui->a22->setText(data.a22);
+    ui->a24->setText(data.a24);
+    ui->a42->setText(data.a42);
+    ui->a44->setText(data.a44);
 }
 
 void Kaihen::updateEnergySpectrum()

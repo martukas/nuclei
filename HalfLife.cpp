@@ -15,50 +15,6 @@ HalfLife::HalfLife(double seconds, bool uncertain)
 {
 }
 
-HalfLife::HalfLife(const QString &ensdfData)
-    : sec(std::numeric_limits<double>::quiet_NaN()), uncert(false)
-{
-    QString tstr(ensdfData);
-    if (tstr.contains('?'))
-        uncert = true;
-    tstr.remove('?');
-    tstr.remove('(').remove(')');
-    QStringList timeparts = tstr.trimmed().split(' ');
-    if (tstr.contains("STABLE", Qt::CaseInsensitive)) {
-        sec = std::numeric_limits<double>::infinity();
-    }
-    else if (tstr.contains("EV")) {
-        sec = std::numeric_limits<double>::quiet_NaN();
-    }
-    else if (timeparts.size() >= 2) {
-        QLocale clocale("C");
-        bool ok = false;
-        sec = clocale.toDouble(timeparts.at(0), &ok);
-        if (!ok)
-            sec = std::numeric_limits<double>::infinity();
-        else if (timeparts.at(1) == "Y")
-            sec *= 365. * 86400.;
-        else if (timeparts.at(1) == "D")
-            sec *= 86400.;
-        else if (timeparts.at(1) == "H")
-            sec *= 3600.;
-        else if (timeparts.at(1) == "M")
-            sec *= 60.;
-        else if (timeparts.at(1) == "MS")
-            sec *= 1.E-3;
-        else if (timeparts.at(1) == "US")
-            sec *= 1.E-6;
-        else if (timeparts.at(1) == "NS")
-            sec *= 1.E-9;
-        else if (timeparts.at(1) == "PS")
-            sec *= 1.E-12;
-        else if (timeparts.at(1) == "FS")
-            sec *= 1.E-15;
-        else if (timeparts.at(1) == "AS")
-            sec *= 1.E-18;
-    }
-}
-
 bool HalfLife::isValid() const
 {
     return !std::isnan(sec);

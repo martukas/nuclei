@@ -30,6 +30,7 @@ private slots:
     void selectedNuclide(const QString &nuclideName);
     void selectedDecay(const QString &decayName);
 
+    void updateDecayData(Decay::DecayDataSet data);
     void updateEnergySpectrum();
 
     void svgExport();

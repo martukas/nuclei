@@ -28,8 +28,6 @@ public:
     QSharedPointer<Decay> decay(const QString &daughterNuclideName, const QString &decayName,
                                 double adoptedLevelMaxDifference = 0.0, double gammaMaxDifference = 0.0);
 
-    friend class Decay;  /// \todo remove!
-
 private:
     typedef QPair<int,int> BlockIndices; // [startidx, size]
 
@@ -54,6 +52,8 @@ private:
     static QString element(const QString &nuclide);
     static Decay::Type parseDecayType(const QString &tstring);
     static double parseEnsdfEnergy(const QString &estr);
+    static HalfLife parseHalfLife(const QString &hlstr);
+    static SpinParity parseSpinParity(const QString &sstr);
     static double parseEnsdfMixing(const QString &s, const QString &multipolarity, GammaTransition::DeltaState *state);
     static ParentRecord parseParentRecord(const QString &precstr);
 
