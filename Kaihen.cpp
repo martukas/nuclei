@@ -63,6 +63,18 @@ Kaihen::Kaihen(QWidget *parent) :
     connect(eres, SIGNAL(valueChanged(double)), this, SLOT(updateEnergySpectrum()));
     ui->energySpectrumBar->addWidget(eres);
 
+    QAction *toggleSelector = ui->decaySelectorDock->toggleViewAction();
+    toggleSelector->setToolTip(toggleSelector->toolTip().prepend("Show/Hide "));
+    toggleSelector->setIcon(QIcon(":/checkbox.png"));
+    ui->mainToolBar->insertAction(ui->actionZoom_In, toggleSelector);
+
+    QAction *toggleInfo = ui->decayInfoDock->toggleViewAction();
+    toggleInfo->setToolTip(toggleInfo->toolTip().prepend("Show/Hide "));
+    toggleInfo->setIcon(QIcon(":/format-justify-fill.png"));
+    ui->mainToolBar->insertAction(ui->actionZoom_In, toggleInfo);
+
+    ui->mainToolBar->insertSeparator(ui->actionZoom_In);
+
     plot = new QwtPlot(ui->energySpectrumTab);
     plot->setCanvasBackground(Qt::white);
     ui->energySpectrumLayout->addWidget(plot);

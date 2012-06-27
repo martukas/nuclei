@@ -250,6 +250,7 @@
    <addaction name="actionZoom_Out"/>
    <addaction name="actionOriginal_Size"/>
    <addaction name="actionShow_all"/>
+   <addaction name="separator"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="decaySelectorDock">
@@ -276,6 +277,14 @@
         <number>0</number>
        </property>
        <widget class="QWidget" name="aPage">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>256</width>
+          <height>116</height>
+         </rect>
+        </property>
         <attribute name="label">
          <string>Daughter Mass (A)</string>
         </attribute>
@@ -299,6 +308,14 @@
         </layout>
        </widget>
        <widget class="QWidget" name="nuclidePage">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>256</width>
+          <height>116</height>
+         </rect>
+        </property>
         <attribute name="label">
          <string>Daughter Nuclide</string>
         </attribute>
@@ -322,6 +339,14 @@
         </layout>
        </widget>
        <widget class="QWidget" name="decayPage">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>256</width>
+          <height>116</height>
+         </rect>
+        </property>
         <attribute name="label">
          <string>Decay</string>
         </attribute>
@@ -965,6 +990,30 @@
    </property>
    <property name="toolTip">
     <string>Change application preferences</string>
+   </property>
+  </action>
+  <action name="actionDecay_Selection_Dock">
+   <property name="icon">
+    <iconset resource="kaihen.qrc">
+     <normaloff>:/checkbox.png</normaloff>:/checkbox.png</iconset>
+   </property>
+   <property name="text">
+    <string>Decay Selection Dock</string>
+   </property>
+   <property name="toolTip">
+    <string>Show/Hide Decay Selection Dock</string>
+   </property>
+  </action>
+  <action name="actionDecay_Info_Dock">
+   <property name="icon">
+    <iconset resource="kaihen.qrc">
+     <normaloff>:/format-justify-fill.png</normaloff>:/format-justify-fill.png</iconset>
+   </property>
+   <property name="text">
+    <string>Decay Info Dock</string>
+   </property>
+   <property name="toolTip">
+    <string>Show/Hide Decay Information Dock</string>
    </property>
   </action>
  </widget>

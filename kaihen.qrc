@@ -1,19 +1,21 @@
 <RCC>
-    <qresource prefix="/">
-        <file>application-pdf.png</file>
-        <file>image-svg+xml.png</file>
-        <file>zoom-fit-best.png</file>
-        <file>zoom-in.png</file>
-        <file>zoom-original.png</file>
-        <file>zoom-out.png</file>
-        <file>help-about.png</file>
-        <file>download.png</file>
-        <file>configure.png</file>
-        <file>document-open-folder.png</file>
-        <file>document-export.png</file>
-        <file>dialog-cancel.png</file>
-        <file>dialog-close.png</file>
-        <file>dialog-ok.png</file>
-        <file>kaihen.png</file>
-    </qresource>
+  <qresource prefix="/">
+    <file>checkbox.png</file>
+    <file>format-justify-fill.png</file>
+    <file>application-pdf.png</file>
+    <file>image-svg+xml.png</file>
+    <file>zoom-fit-best.png</file>
+    <file>zoom-in.png</file>
+    <file>zoom-original.png</file>
+    <file>zoom-out.png</file>
+    <file>help-about.png</file>
+    <file>download.png</file>
+    <file>configure.png</file>
+    <file>document-open-folder.png</file>
+    <file>document-export.png</file>
+    <file>dialog-cancel.png</file>
+    <file>dialog-close.png</file>
+    <file>dialog-ok.png</file>
+    <file>kaihen.png</file>
+  </qresource>
 </RCC>
