@@ -3,6 +3,9 @@
 
 #define VERSION "2.0"
 
+// used to save windows state. must be incremented if window layout changes!
+#define UIVERSION 0
+
 #define KAIHENURL "http://???.sf.net"
 
 #define KAIHENABOUT "\

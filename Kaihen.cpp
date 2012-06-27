@@ -10,8 +10,9 @@
 #include <QSvgGenerator>
 #include <QFileDialog>
 #include <QPrinter>
+#include <QDesktopWidget>
 #include <qwt_plot.h>
-#include <qwt_plot_curve.h>
+#include <qwt_plot_intervalcurve.h>
 #include <qwt_plot_grid.h>
 #include <qwt_plot_zoomer.h>
 #include <qwt_plot_magnifier.h>
@@ -20,6 +21,9 @@
 #include <qwt_scale_engine.h>
 #include <qwt_text.h>
 #include <qwt_plot_renderer.h>
+#include <algorithm>
+#include <functional>
+
 #include "version.h"
 
 #include "ENSDFMassChain.h"
@@ -82,23 +86,23 @@ Kaihen::Kaihen(QWidget *parent) :
     grid->enableXMin(true);
     grid->enableYMin(true);
 
-    curve = new QwtPlotCurve;
+    curve = new QwtPlotIntervalCurve;
     curve->attach(plot);
-    curve->setStyle(QwtPlotCurve::Lines);
+    curve->setStyle(QwtPlotIntervalCurve::Tube);
     curve->setPen(Qt::NoPen);
     curve->setBrush(QBrush(QColor(68, 68, 68)));
     curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 
-    g1curve = new QwtPlotCurve;
+    g1curve = new QwtPlotIntervalCurve;
     g1curve->attach(plot);
-    g1curve->setStyle(QwtPlotCurve::Lines);
+    g1curve->setStyle(QwtPlotIntervalCurve::Tube);
     g1curve->setPen(Qt::NoPen);
     g1curve->setBrush(QBrush(QColor(126, 201, 80)));
     g1curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 
-    g2curve = new QwtPlotCurve;
+    g2curve = new QwtPlotIntervalCurve;
     g2curve->attach(plot);
-    g2curve->setStyle(QwtPlotCurve::Lines);
+    g2curve->setStyle(QwtPlotIntervalCurve::Tube);
     g2curve->setPen(Qt::NoPen);
     g2curve->setBrush(QBrush(QColor(232, 95, 92)));
     g2curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
@@ -218,6 +222,17 @@ void Kaihen::initialize()
     if (!decayItems.isEmpty())
         ui->decayListWidget->setCurrentItem(decayItems.at(0));
 
+    restoreGeometry(s.value("geometry").toByteArray());
+    restoreState(s.value("windowState").toByteArray());
+
+    QSize wsize = size();
+    if (wsize.width() > QApplication::desktop()->availableGeometry().width())
+        wsize.setWidth(QApplication::desktop()->availableGeometry().width());
+    if (wsize.height() > QApplication::desktop()->availableGeometry().height()) {
+        wsize.setHeight(QApplication::desktop()->availableGeometry().width());
+        addDockWidget(Qt::LeftDockWidgetArea, ui->decaySelectorDock);
+    }
+    this->resize(wsize);
 }
 
 void Kaihen::selectedA(const QString &aName)
@@ -236,6 +251,8 @@ void Kaihen::selectedA(const QString &aName)
     currentMassChain = new ENSDFMassChain(aName.toInt());
 
     ui->nuclideListWidget->addItems(currentMassChain->daughterNuclides());
+
+    ui->decayToolBox->setCurrentWidget(ui->nuclidePage);
 }
 
 void Kaihen::selectedNuclide(const QString &nuclideName)
@@ -252,6 +269,8 @@ void Kaihen::selectedNuclide(const QString &nuclideName)
     updateEnergySpectrum();
 
     ui->decayListWidget->addItems(currentMassChain->decays(nuclideName));
+
+    ui->decayToolBox->setCurrentWidget(ui->decayPage);
 }
 
 void Kaihen::selectedDecay(const QString &decayName)
@@ -306,22 +325,8 @@ void Kaihen::updateDecayData(Decay::DecayDataSet data)
     g1curve->setVisible(false);
     g2curve->setVisible(false);
 
-    if (!decay.isNull()) {
-        double fwhm = eres->value()/100.0 * 662.0;
-        QVector<double> x(decay->gammaSpectrumX(fwhm));
-        QVector<double> y1(decay->firstSelectedGammaSpectrumY(fwhm));
-        QVector<double> y2(decay->secondSelectedGammaSpectrumY(fwhm));
-        if (!y1.isEmpty()) {
-            g1curve->setSamples(x, y1);
-            g1curve->setVisible(true);
-        }
-        if (!y2.isEmpty()) {
-            g2curve->setSamples(x, y2);
-            g2curve->setVisible(true);
-        }
-    }
-
-    plot->replot();
+    if (!decay.isNull())
+        updateEnergySpectrum();
 }
 
 void Kaihen::updateEnergySpectrum()
@@ -336,8 +341,38 @@ void Kaihen::updateEnergySpectrum()
     curve->setVisible(true);
 
     double fwhm = eres->value()/100.0 * 662.0;
+
     QVector<double> x(decay->gammaSpectrumX(fwhm));
-    curve->setSamples(x, decay->gammaSpectrumY(fwhm));
+    QVector<double> y(decay->gammaSpectrumY(fwhm));
+
+    QVector<double> y1(x.size());
+    QVector<double> y2(x.size());
+    if (!decay.isNull()) {
+        y1 = decay->firstSelectedGammaSpectrumY(fwhm);
+        y2 = decay->secondSelectedGammaSpectrumY(fwhm);
+        if (!y1.isEmpty()) {
+            QVector<double> y1lower(x.size());
+            g1curve->setSamples(mergeIntervalData(x, y1lower, y1));
+            g1curve->setVisible(true);
+        }
+        else {
+            y1.resize(x.size());
+        }
+        if (!y2.isEmpty()) {
+            std::transform(y2.begin(), y2.end(), y1.begin(), y2.begin(), std::plus<double>());
+            g2curve->setSamples(mergeIntervalData(x, y1, y2));
+            g2curve->setVisible(true);
+        }
+        else {
+            y2.resize(x.size());
+        }
+    }
+
+    // create curve interval
+    QVector<QwtIntervalSample> curvedata(mergeIntervalData(x, y2, y));
+
+    curve->setSamples(curvedata);
+
     if (ui->actionLinear->isChecked())
         plot->setAxisAutoScale(QwtPlot::yLeft);
     else
@@ -527,3 +562,20 @@ void Kaihen::showAbout()
                        QString::fromUtf8(KAIHENABOUT "<hr />" LIBAKKABOUT "<hr />" GPL)
                        );
 }
+
+void Kaihen::closeEvent(QCloseEvent *event)
+{
+    QSettings s;
+    s.setValue("geometry", saveGeometry());
+    s.setValue("windowState", saveState());
+    QMainWindow::closeEvent(event);
+}
+
+QVector<QwtIntervalSample> Kaihen::mergeIntervalData(const QVector<double> &x, const QVector<double> &y1, const QVector<double> &y2)
+{
+    QVector<QwtIntervalSample> result(x.size());
+    for (int i=0; i<x.size(); i++)
+        result[i] = QwtIntervalSample(x.at(i), y1.at(i), y2.at(i));
+    return result;
+}
+

@@ -11,8 +11,9 @@ class PreferencesDialog;
 class ENSDFMassChain;
 class QListWidgetItem;
 class QwtPlot;
-class QwtPlotCurve;
+class QwtPlotIntervalCurve;
 class QwtPlotZoomer;
+class QwtIntervalSample;
 class QDoubleSpinBox;
 
 class Kaihen : public QMainWindow
@@ -47,7 +48,12 @@ private slots:
     void showPreferences();
     void showAbout();
     
+protected:
+    void closeEvent(QCloseEvent * event);
+
 private:
+    static QVector<QwtIntervalSample> mergeIntervalData(const QVector<double> &x, const QVector<double> &y1, const QVector<double> &y2);
+
     Ui::KaihenMainWindow *ui;
     QDialog *pdd;
     Ui::PreferencesDialog *pd;
@@ -58,7 +64,7 @@ private:
     QDoubleSpinBox *eres;
     QwtPlot *plot;
     QwtPlotZoomer *zoomer;
-    QwtPlotCurve *curve, *g1curve, *g2curve;
+    QwtPlotIntervalCurve *curve, *g1curve, *g2curve;
 };
 
 #endif // KAIHEN_H
