@@ -122,9 +122,10 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
                 // Get adopted levels block for current level
                 QStringList adptlvl;
                 if (!adoptblocks.isEmpty()) {
-                    double idx = findNearest(adoptblocks, currentLevel->energyKeV());
-                    if (qAbs(currentLevel->energyKeV() - idx) <= (adoptedLevelMaxDifference/1000.0*currentLevel->energyKeV()))
-                        adptlvl = adoptblocks.value(idx);
+                    double foundE = 0.0;
+                    QStringList adoptblock = findNearest(adoptblocks, currentLevel->energyKeV(), &foundE);
+                    if (qAbs(currentLevel->energyKeV() - foundE) <= (adoptedLevelMaxDifference/1000.0*currentLevel->energyKeV()))
+                        adptlvl = adoptblock;
                 }
                 // filter gamma records
                 QRegExp gammare("^" + dNucid + "  G (.*)$");
@@ -132,34 +133,38 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
                 // create gamma map
                 QMap<double, QString> e2g;
                 foreach (QString g, adptlvl) {
-                    double gk = clocale.toDouble(g.mid(9, 10), &convok);
-                    if (convok)
+                    double gk = parseEnsdfEnergy(g.mid(9, 10));
+                    if (std::isfinite(gk))
                         e2g.insert(gk, g);
                 }
                 // find gamma
-                double gidx = findNearest(e2g, e);
-                if ((e-gidx < gammaMaxDifference/1000.0*e) && std::isfinite(gidx)) {
-                    if (mpol.isEmpty())
-                        mpol = e2g.value(gidx).mid(31, 10).trimmed();
+                if (!e2g.isEmpty()) {
+                    double foundE = 0.0;
+                    const QString gamma = findNearest(e2g, e, &foundE);
+                    if (e-foundE < gammaMaxDifference/1000.0*e) {
+                        if (mpol.isEmpty())
+                            mpol = gamma.mid(31, 10).trimmed();
 
-                    if (deltastate != GammaTransition::SignMagnitudeDefined) {
-                        GammaTransition::DeltaState adptdeltastate = GammaTransition::UnknownDelta;
-                        double adptdelta = parseEnsdfMixing(e2g.value(gidx).mid(41, 8).trimmed(), mpol, &adptdeltastate);
-                        if (adptdeltastate > deltastate) {
-                            delta = adptdelta;
-                            deltastate = adptdeltastate;
+                        if (deltastate != GammaTransition::SignMagnitudeDefined) {
+                            GammaTransition::DeltaState adptdeltastate = GammaTransition::UnknownDelta;
+                            double adptdelta = parseEnsdfMixing(gamma.mid(41, 8).trimmed(), mpol, &adptdeltastate);
+                            if (adptdeltastate > deltastate) {
+                                delta = adptdelta;
+                                deltastate = adptdeltastate;
+                            }
                         }
                     }
                 }
             }
 
             // determine levels
-            EnergyLevel *start = currentLevel;
-            double destlvlidx = findNearest(levels, start->energyKeV() - e);
-            Q_ASSERT(levels.contains(destlvlidx));
+            if (!levels.isEmpty()) {
+                EnergyLevel *start = currentLevel;
+                EnergyLevel *destlvl = findNearest(levels, start->energyKeV() - e);
 
-            // gamma registers itself with the start and dest levels
-            new GammaTransition(e, in, mpol, delta, deltastate, start, levels[destlvlidx]);
+                // gamma registers itself with the start and dest levels
+                new GammaTransition(e, in, mpol, delta, deltastate, start, destlvl);
+            }
         }
         // process new level
         else if (line.startsWith(dNucid + "  L ")) {
@@ -182,9 +187,10 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
 
             QStringList adptlvl;
             if (!adoptblocks.isEmpty()) {
-                double idx = findNearest(adoptblocks, e);
-                if (qAbs(e - idx) <= (adoptedLevelMaxDifference/1000.0*e))
-                    adptlvl = adoptblocks.value(idx);
+                double foundE = 0.0;
+                const QStringList adoptblock = findNearest(adoptblocks, e, &foundE);
+                if (qAbs(e - foundE) <= (adoptedLevelMaxDifference/1000.0*e))
+                    adptlvl = adoptblock;
             }
 
             // if an appropriate entry was found, read its contents
@@ -369,7 +375,11 @@ double ENSDFMassChain::parseEnsdfEnergy(const QString &estr)
     QLocale clocale("C");
     QString tmp(estr);
     tmp.remove('(').remove(')');
-    return clocale.toDouble(tmp.trimmed());
+    bool convok = false;
+    double result = clocale.toDouble(tmp.trimmed(), &convok);
+    if (!convok)
+        result = std::numeric_limits<double>::quiet_NaN();
+    return result;
 }
 
 HalfLife ENSDFMassChain::parseHalfLife(const QString &hlstr)
@@ -498,20 +508,22 @@ ENSDFMassChain::ParentRecord ENSDFMassChain::parseParentRecord(const QString &pr
 }
 
 template <typename T>
-double ENSDFMassChain::findNearest(const QMap<double, T> &map, double val)
+T & ENSDFMassChain::findNearest(QMap<double, T> &map, double val, double *foundVal)
 {
-    if (map.isEmpty())
-        return std::numeric_limits<double>::quiet_NaN();
+    Q_ASSERT(!map.isEmpty());
 
-    typename QMap<double, T>::const_iterator i = map.lowerBound(val);
+    typename QMap<double, T>::iterator i = map.lowerBound(val);
 
     if (i == map.begin())
-        return i.key();
+        return i.value();
 
     if (qAbs(val - (i-1).key()) < qAbs(val - i.key()))
-        return (i-1).key();
+        return (i-1).value();
 
-    return i.key();
+    if (foundVal)
+        *foundVal = i.key();
+
+    return i.value();
 }
 
 void ENSDFMassChain::parseBlocks()

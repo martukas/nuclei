@@ -48,7 +48,7 @@ void Nuclide::addLevels(const QMap<double, EnergyLevel *> &levels)
     m_levels = levels;
 }
 
-QMap<double, EnergyLevel *> Nuclide::levels() const
+QMap<double, EnergyLevel *> & Nuclide::levels()
 {
     return m_levels;
 }

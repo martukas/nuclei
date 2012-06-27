@@ -527,6 +527,7 @@ void Decay::sendDecayDataUpdate()
 
 void Decay::alignGraphicsItems()
 {
+    QMap<double, EnergyLevel*> &levels(dNuc->levels());
     // decide if parent nuclide should be printed on the left side (beta-),
     // on the right side (EC, beta+, alpha) or not at all (isomeric)
     enum ParentPosition {
@@ -548,7 +549,7 @@ void Decay::alignGraphicsItems()
     double maxEnergyLabelWidth = 0.0;
     double maxSpinLabelWidth = 0.0;
 
-    foreach (EnergyLevel *level, dNuc->levels()) {
+    foreach (EnergyLevel *level, levels) {
         if (stdBoldFontMetrics.width(level->graspintext->text()) > maxSpinLabelWidth)
             maxSpinLabelWidth = stdBoldFontMetrics.width(level->graspintext->text());
         if (stdBoldFontMetrics.width(level->graetext->text()) > maxEnergyLabelWidth)
@@ -557,7 +558,6 @@ void Decay::alignGraphicsItems()
 
     // determine y coordinates for all levels
     double maxEnergyGap = 0.0;
-    QMap<double, EnergyLevel*> levels(dNuc->levels());
     for (QMap<double, EnergyLevel*>::const_iterator i=levels.begin()+1; i!=levels.end(); i++) {
         double diff = i.key() - (i-1).key();
         maxEnergyGap = qMax(maxEnergyGap, diff);
@@ -570,7 +570,7 @@ void Decay::alignGraphicsItems()
 
     // determine space needed for gammas
     double gammaspace = std::numeric_limits<double>::quiet_NaN();
-    foreach (EnergyLevel *level, dNuc->levels()) {
+    foreach (EnergyLevel *level, levels) {
         QList<GammaTransition*> levelgammas = level->depopulatingTransitions();
         foreach (GammaTransition *gamma, levelgammas) {
             if (std::isnan(gammaspace))

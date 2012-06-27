@@ -24,7 +24,7 @@ public:
     QString name() const;
 
     void addLevels(const QMap<double, EnergyLevel*> &levels);
-    QMap<double, EnergyLevel*> levels() const;
+    QMap<double, EnergyLevel*> & levels();
 
     QString halfLifeAsText() const;
 
