@@ -58,7 +58,7 @@ private:
     QDoubleSpinBox *eres;
     QwtPlot *plot;
     QwtPlotZoomer *zoomer;
-    QwtPlotCurve *curve;
+    QwtPlotCurve *curve, *g1curve, *g2curve;
 };
 
 #endif // KAIHEN_H

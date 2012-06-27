@@ -86,8 +86,22 @@ Kaihen::Kaihen(QWidget *parent) :
     curve->attach(plot);
     curve->setStyle(QwtPlotCurve::Lines);
     curve->setPen(Qt::NoPen);
-    curve->setBrush(QBrush(QColor(64, 166, 255)));
+    curve->setBrush(QBrush(QColor(68, 68, 68)));
     curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+
+    g1curve = new QwtPlotCurve;
+    g1curve->attach(plot);
+    g1curve->setStyle(QwtPlotCurve::Lines);
+    g1curve->setPen(Qt::NoPen);
+    g1curve->setBrush(QBrush(QColor(126, 201, 80)));
+    g1curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+
+    g2curve = new QwtPlotCurve;
+    g2curve->attach(plot);
+    g2curve->setStyle(QwtPlotCurve::Lines);
+    g2curve->setPen(Qt::NoPen);
+    g2curve->setBrush(QBrush(QColor(232, 95, 92)));
+    g2curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 
     connect(ui->aListWidget, SIGNAL(currentTextChanged(QString)), this, SLOT(selectedA(QString)));
     connect(ui->nuclideListWidget, SIGNAL(currentTextChanged(QString)), this, SLOT(selectedNuclide(QString)));
@@ -208,10 +222,15 @@ void Kaihen::initialize()
 
 void Kaihen::selectedA(const QString &aName)
 {
+    ui->nuclideListWidget->clear();
+
     ui->decayView->setScene(0);
     ui->decayListWidget->clear();
 
-    ui->nuclideListWidget->clear();
+    decay.clear();
+
+    updateDecayData(Decay::DecayDataSet());
+    updateEnergySpectrum();
 
     delete currentMassChain;
     currentMassChain = new ENSDFMassChain(aName.toInt());
@@ -226,6 +245,11 @@ void Kaihen::selectedNuclide(const QString &nuclideName)
 
     ui->decayView->setScene(0);
     ui->decayListWidget->clear();
+
+    decay.clear();
+
+    updateDecayData(Decay::DecayDataSet());
+    updateEnergySpectrum();
 
     ui->decayListWidget->addItems(currentMassChain->decays(nuclideName));
 }
@@ -247,6 +271,7 @@ void Kaihen::selectedDecay(const QString &decayName)
 
     // update plot
     updateEnergySpectrum();
+    decay->triggerDecayDataUpdate();
 }
 
 void Kaihen::updateDecayData(Decay::DecayDataSet data)
@@ -277,20 +302,48 @@ void Kaihen::updateDecayData(Decay::DecayDataSet data)
     ui->a24->setText(data.a24);
     ui->a42->setText(data.a42);
     ui->a44->setText(data.a44);
+
+    g1curve->setVisible(false);
+    g2curve->setVisible(false);
+
+    if (!decay.isNull()) {
+        double fwhm = eres->value()/100.0 * 662.0;
+        QVector<double> x(decay->gammaSpectrumX(fwhm));
+        QVector<double> y1(decay->firstSelectedGammaSpectrumY(fwhm));
+        QVector<double> y2(decay->secondSelectedGammaSpectrumY(fwhm));
+        if (!y1.isEmpty()) {
+            g1curve->setSamples(x, y1);
+            g1curve->setVisible(true);
+        }
+        if (!y2.isEmpty()) {
+            g2curve->setSamples(x, y2);
+            g2curve->setVisible(true);
+        }
+    }
+
+    plot->replot();
 }
 
 void Kaihen::updateEnergySpectrum()
 {
-    if (decay.isNull())
+    if (decay.isNull()) {
+        curve->setVisible(false);
+        g1curve->setVisible(false);
+        g2curve->setVisible(false);
         return;
-    QVector<QPointF> data(decay->gammaSpectrum(662.0*eres->value()/100.0));
-    curve->setData(new QwtPointSeriesData(data));
+    }
+
+    curve->setVisible(true);
+
+    double fwhm = eres->value()/100.0 * 662.0;
+    QVector<double> x(decay->gammaSpectrumX(fwhm));
+    curve->setSamples(x, decay->gammaSpectrumY(fwhm));
     if (ui->actionLinear->isChecked())
         plot->setAxisAutoScale(QwtPlot::yLeft);
     else
         plot->setAxisScale(QwtPlot::yLeft, 1E-8, 10.0);
-    if (!data.isEmpty())
-        plot->setAxisScale(QwtPlot::xBottom, 0.0, data.last().x());
+    if (!x.isEmpty())
+        plot->setAxisScale(QwtPlot::xBottom, 0.0, x.last());
     zoomer->setZoomBase();
 }
 

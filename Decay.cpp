@@ -8,6 +8,8 @@
 #include <QFontMetrics>
 #include <QVector>
 #include <cmath>
+#include <algorithm>
+#include <functional>
 #include <Akk.h>
 #include "EnergyLevel.h"
 #include "ActiveGraphicsItemGroup.h"
@@ -30,7 +32,8 @@ const double Decay::highlightWidth = 5.0;
 
 Decay::Decay(const QString &name, Nuclide *parentNuclide, Nuclide *daughterNuclide, Type decayType, QObject *parent)
     : QObject(parent), m_name(name), pNuc(parentNuclide), dNuc(daughterNuclide), t(decayType),
-      scene(0),
+      scene(0), m_lastFwhm(std::numeric_limits<double>::quiet_NaN()),
+      m_upperSpectrumLimit(std::numeric_limits<double>::quiet_NaN()),
       pNucVerticalArrow(0), pNucHl(0),
       firstSelectedGamma(0), secondSelectedGamma(0), selectedEnergyLevel(0)
 {
@@ -63,142 +66,142 @@ QString Decay::decayTypeAsText(Type type)
 
 QGraphicsScene * Decay::levelPlot()
 {
-    if (!scene) {
+    if (scene)
+        return scene;
 
-        scene = new QGraphicsScene(this);
+    scene = new QGraphicsScene(this);
 
-        // decide if parent nuclide should be printed on the left side (beta-),
-        // on the right side (EC, beta+, alpha) or not at all (isomeric)
-        enum ParentPosition {
-            NoParent,
-            LeftParent,
-            RightParent
-        } parentpos = RightParent;
-        if (t == IsomericTransition)
-            parentpos = NoParent;
-        else if (t == BetaMinus)
-            parentpos = LeftParent;
+    // decide if parent nuclide should be printed on the left side (beta-),
+    // on the right side (EC, beta+, alpha) or not at all (isomeric)
+    enum ParentPosition {
+        NoParent,
+        LeftParent,
+        RightParent
+    } parentpos = RightParent;
+    if (t == IsomericTransition)
+        parentpos = NoParent;
+    else if (t == BetaMinus)
+        parentpos = LeftParent;
+
+    // create level items
+    foreach (EnergyLevel *level, dNuc->levels()) {
+        QFontMetrics stdBoldFontMetrics(stdBoldFont);
+
+        level->item = new ActiveGraphicsItemGroup(level);
+        connect(this, SIGNAL(enabledShadow(bool)), level->item, SLOT(setShadowEnabled(bool)));
+        level->item->setActiveColor(QColor(224, 186, 100, 180));
+        connect(level->item, SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
+
+        level->graline = new QGraphicsLineItem(-outerGammaMargin, 0.0, outerGammaMargin, 0.0, level->item);
+        level->graline->setPen(levelPen);
+        // thick line for stable/isomeric levels
+        if (level->halfLife().isStable() || level->isomerNum() > 0)
+            level->graline->setPen(stableLevelPen);
+
+        level->graclickarea = new QGraphicsRectItem(-outerGammaMargin, -0.5*stdBoldFontMetrics.height(), 2.0*outerGammaMargin, stdBoldFontMetrics.height());
+        level->graclickarea->setPen(Qt::NoPen);
+        level->graclickarea->setBrush(Qt::NoBrush);
+
+        level->grahighlighthelper = new GraphicsHighlightItem(-outerGammaMargin, -0.5*highlightWidth, 2.0*outerGammaMargin, highlightWidth);
+        level->grahighlighthelper->setOpacity(0.0);
+
+        QString etext = level->energyAsText();
+        level->graetext = new QGraphicsSimpleTextItem(etext, level->item);
+        level->graetext->setFont(stdBoldFont);
+        level->graetext->setPos(0.0, -stdBoldFontMetrics.height());
+
+        QString spintext = level->spin().toString();
+        level->graspintext = new QGraphicsSimpleTextItem(spintext, level->item);
+        level->graspintext->setFont(stdBoldFont);
+        level->graspintext->setPos(0.0, -stdBoldFontMetrics.height());
+
+        QString hltext = level->halfLife().toString();
+        level->grahltext = new QGraphicsSimpleTextItem(hltext, level->item);
+        level->grahltext->setFont(stdFont);
+        level->grahltext->setPos(0.0, -0.5*stdBoldFontMetrics.height());
+
+        level->item->addHighlightHelper(level->grahighlighthelper);
+        level->item->addToGroup(level->graline);
+        level->item->addToGroup(level->graclickarea);
+        level->item->addToGroup(level->graetext);
+        level->item->addToGroup(level->graspintext);
+        level->item->addToGroup(level->grahltext);
+        scene->addItem(level->item);
+
+        // plot level feeding arrow if necessary
+        double feedintensity = level->normalizedFeedIntensity();
+        if (std::isfinite(feedintensity)) {
+            // create line
+            level->grafeedarrow = new QGraphicsLineItem;
+            level->grafeedarrow->setPen((level->feedintens >= 10.0) ? intenseFeedArrowPen : feedArrowPen);
+            scene->addItem(level->grafeedarrow);
+            // create arrow head
+            QPolygonF arrowpol;
+            arrowpol << QPointF(0.0, 0.0);
+            arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * arrowHeadLength, 0.5*arrowHeadWidth);
+            arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * arrowHeadLength, -0.5*arrowHeadWidth);
+            level->graarrowhead = new QGraphicsPolygonItem(arrowpol);
+            level->graarrowhead->setBrush(QColor(level->grafeedarrow->pen().color()));
+            level->graarrowhead->setPen(Qt::NoPen);
+            scene->addItem(level->graarrowhead);
+            // create intensity label
+            level->grafeedintens = new QGraphicsSimpleTextItem(QString("%1 %").arg(feedintensity));
+            level->grafeedintens->setFont(feedIntensityFont);
+            scene->addItem(level->grafeedintens);
+        }
+    }
+
+    // create gammas
+    foreach (EnergyLevel *level, dNuc->levels()) {
+        QList<GammaTransition*> levelgammas = level->depopulatingTransitions();
+        foreach (GammaTransition *gamma, levelgammas) {
+            ActiveGraphicsItemGroup *item = gamma->createGammaGraphicsItem(gammaFont, gammaPen, intenseGammaPen);
+            connect(this, SIGNAL(enabledShadow(bool)), item, SLOT(setShadowEnabled(bool)));
+            connect(item, SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
+            scene->addItem(item);
+        }
+    }
+
+    // create parent nuclide label and level(s)
+    if (parentpos == LeftParent || parentpos == RightParent) {
+        // create nuclide label
+        QGraphicsItem *pNucGra = pNuc->createNuclideGraphicsItem(nucFont, nucIndexFont);
+        scene->addItem(pNucGra);
+
+        // create half-life label
+        pNucHl = new QGraphicsSimpleTextItem(pNuc->halfLifeAsText());
+        pNucHl->setFont(parentHlFont);
+        scene->addItem(pNucHl);
+
+        // create vertical arrow component
+        pNucVerticalArrow = new QGraphicsLineItem;
+        pNucVerticalArrow->setPen(feedArrowPen);
+        scene->addItem(pNucVerticalArrow);
 
         // create level items
-        foreach (EnergyLevel *level, dNuc->levels()) {
+        foreach (EnergyLevel *level, pNuc->levels()) {
             QFontMetrics stdBoldFontMetrics(stdBoldFont);
 
-            level->item = new ActiveGraphicsItemGroup(level);
-            connect(this, SIGNAL(enabledShadow(bool)), level->item, SLOT(setShadowEnabled(bool)));
-            level->item->setActiveColor(QColor(224, 186, 100, 180));
-            connect(level->item, SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
+            level->graline = new QGraphicsLineItem;
+            level->graline->setPen(stableLevelPen);
+            scene->addItem(level->graline);
 
-            level->graline = new QGraphicsLineItem(-outerGammaMargin, 0.0, outerGammaMargin, 0.0, level->item);
-            level->graline->setPen(levelPen);
-            // thick line for stable/isomeric levels
-            if (level->halfLife().isStable() || level->isomerNum() > 0)
-                level->graline->setPen(stableLevelPen);
-
-            level->graclickarea = new QGraphicsRectItem(-outerGammaMargin, -0.5*stdBoldFontMetrics.height(), 2.0*outerGammaMargin, stdBoldFontMetrics.height());
-            level->graclickarea->setPen(Qt::NoPen);
-            level->graclickarea->setBrush(Qt::NoBrush);
-
-            level->grahighlighthelper = new GraphicsHighlightItem(-outerGammaMargin, -0.5*highlightWidth, 2.0*outerGammaMargin, highlightWidth);
-            level->grahighlighthelper->setOpacity(0.0);
-
-            QString etext = level->energyAsText();
-            level->graetext = new QGraphicsSimpleTextItem(etext, level->item);
+            level->graetext = new QGraphicsSimpleTextItem(level->energyAsText());
             level->graetext->setFont(stdBoldFont);
-            level->graetext->setPos(0.0, -stdBoldFontMetrics.height());
+            scene->addItem(level->graetext);
 
-            QString spintext = level->spin().toString();
-            level->graspintext = new QGraphicsSimpleTextItem(spintext, level->item);
+            level->graspintext = new QGraphicsSimpleTextItem(level->spin().toString());
             level->graspintext->setFont(stdBoldFont);
-            level->graspintext->setPos(0.0, -stdBoldFontMetrics.height());
-
-            QString hltext = level->halfLife().toString();
-            level->grahltext = new QGraphicsSimpleTextItem(hltext, level->item);
-            level->grahltext->setFont(stdFont);
-            level->grahltext->setPos(0.0, -0.5*stdBoldFontMetrics.height());
-
-            level->item->addHighlightHelper(level->grahighlighthelper);
-            level->item->addToGroup(level->graline);
-            level->item->addToGroup(level->graclickarea);
-            level->item->addToGroup(level->graetext);
-            level->item->addToGroup(level->graspintext);
-            level->item->addToGroup(level->grahltext);
-            scene->addItem(level->item);
-
-            // plot level feeding arrow if necessary
-            double feedintensity = level->normalizedFeedIntensity();
-            if (std::isfinite(feedintensity)) {
-                // create line
-                level->grafeedarrow = new QGraphicsLineItem;
-                level->grafeedarrow->setPen((level->feedintens >= 10.0) ? intenseFeedArrowPen : feedArrowPen);
-                scene->addItem(level->grafeedarrow);
-                // create arrow head
-                QPolygonF arrowpol;
-                arrowpol << QPointF(0.0, 0.0);
-                arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * arrowHeadLength, 0.5*arrowHeadWidth);
-                arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * arrowHeadLength, -0.5*arrowHeadWidth);
-                level->graarrowhead = new QGraphicsPolygonItem(arrowpol);
-                level->graarrowhead->setBrush(QColor(level->grafeedarrow->pen().color()));
-                level->graarrowhead->setPen(Qt::NoPen);
-                scene->addItem(level->graarrowhead);
-                // create intensity label
-                level->grafeedintens = new QGraphicsSimpleTextItem(QString("%1 %").arg(feedintensity));
-                level->grafeedintens->setFont(feedIntensityFont);
-                scene->addItem(level->grafeedintens);
-            }
+            scene->addItem(level->graspintext);
         }
 
-        // create gammas
-        foreach (EnergyLevel *level, dNuc->levels()) {
-            QList<GammaTransition*> levelgammas = level->depopulatingTransitions();
-            foreach (GammaTransition *gamma, levelgammas) {
-                ActiveGraphicsItemGroup *item = gamma->createGammaGraphicsItem(gammaFont, gammaPen, intenseGammaPen);
-                connect(this, SIGNAL(enabledShadow(bool)), item, SLOT(setShadowEnabled(bool)));
-                connect(item, SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
-                scene->addItem(item);
-            }
-        }
-
-        // create parent nuclide label and level(s)
-        if (parentpos == LeftParent || parentpos == RightParent) {
-            // create nuclide label
-            QGraphicsItem *pNucGra = pNuc->createNuclideGraphicsItem(nucFont, nucIndexFont);
-            scene->addItem(pNucGra);
-
-            // create half-life label
-            pNucHl = new QGraphicsSimpleTextItem(pNuc->halfLifeAsText());
-            pNucHl->setFont(parentHlFont);
-            scene->addItem(pNucHl);
-
-            // create vertical arrow component
-            pNucVerticalArrow = new QGraphicsLineItem;
-            pNucVerticalArrow->setPen(feedArrowPen);
-            scene->addItem(pNucVerticalArrow);
-
-            // create level items
-            foreach (EnergyLevel *level, pNuc->levels()) {
-                QFontMetrics stdBoldFontMetrics(stdBoldFont);
-
-                level->graline = new QGraphicsLineItem;
-                level->graline->setPen(stableLevelPen);
-                scene->addItem(level->graline);
-
-                level->graetext = new QGraphicsSimpleTextItem(level->energyAsText());
-                level->graetext->setFont(stdBoldFont);
-                scene->addItem(level->graetext);
-
-                level->graspintext = new QGraphicsSimpleTextItem(level->spin().toString());
-                level->graspintext->setFont(stdBoldFont);
-                scene->addItem(level->graspintext);
-            }
-
-        }
-
-        // create daughter nuclide label
-        QGraphicsItem *dNucGra = dNuc->createNuclideGraphicsItem(nucFont, nucIndexFont);
-        scene->addItem(dNucGra);
-
-        alignGraphicsItems();
     }
+
+    // create daughter nuclide label
+    QGraphicsItem *dNucGra = dNuc->createNuclideGraphicsItem(nucFont, nucIndexFont);
+    scene->addItem(dNucGra);
+
+    alignGraphicsItems();
 
     return scene;
 }
@@ -213,37 +216,71 @@ QString Decay::name() const
     return m_name;
 }
 
-QVector<QPointF> Decay::gammaSpectrum(double fwhm) const
+QVector<double> Decay::gammaSpectrumX(double fwhm) const
 {
-    // collect gammas
-    QMap<double, double> gammas;
+    if (fwhm == m_lastFwhm && !spectX.isEmpty())
+        return spectX;
+
+    // determine highest energy (updates m_lastFwhm as side effect)
+    double max = upperSpectrumLimit(fwhm);
+
+    const int numsamples = 1000;
+
+    // create result vector
+    spectX.resize(numsamples);
+
+    const double interval = max / double(numsamples);
+    for (int i=0; i<numsamples; i++)
+        spectX[i] = interval*double(i)+0.5*interval;
+
+    return spectX;
+}
+
+QVector<double> Decay::gammaSpectrumY(double fwhm) const
+{
+    const int numsamples = 1000;
+
+    // determine highest energy (updates m_lastFwhm and clears spectX if necessary as side effect)
+    double max = upperSpectrumLimit(fwhm);
+
+    // create result vector
+    QVector<double> yResult(numsamples);
+
+    // add single gamma results
     foreach (EnergyLevel *level, dNuc->levels())
         foreach (GammaTransition *g, level->depopulatingTransitions())
-            if (std::isfinite(g->intensity()))
-                gammas.insert(g->energyKeV(), g->intensity());
+            if (std::isfinite(g->intensity())) {
+                QVector<double> &spect = g->spectrum(fwhm, max, numsamples);
+                std::transform(yResult.begin(), yResult.end(), spect.begin(), yResult.begin(), std::plus<double>());
+            }
 
-    // determine highest energy
-    double max = 0.0;
-    if (!gammas.isEmpty())
-        max = (gammas.end()-1).key();
+    return yResult;
+}
 
-    // determine sigma @ 662 keV
-    double sigma = fwhm / (2.0*sqrt(2.0*M_LN2));
-    double var = sigma * sigma;
+QVector<double> Decay::firstSelectedGammaSpectrumY(double fwhm) const
+{
+    if (!firstSelectedGamma)
+        return QVector<double>();
 
-    // create result vector (on interval [0, max+2*fwhm], stepwidth: 2keV)
-    QVector<QPointF> result(std::ceil(max/2.) + qRound(2.0*fwhm));
+    // determine highest energy (updates m_lastFwhm and clears spectX if necessary as side effect)
+    double max = upperSpectrumLimit(fwhm);
 
-    // compute values
-    for (int i=0; i<result.size(); i++) {
-        result[i].setX(double(i*2+1));
-        for (QMap<double, double>::const_iterator gamma=gammas.begin(); gamma!=gammas.end(); gamma++) {
-            double eGamma = gamma.key();
-            result[i].ry() += gamma.value() * gauss(result[i].x() - eGamma, sqrt(eGamma/662.0*var));
-        }
-    }
+    const int numsamples = 1000;
 
-    return result;
+    return firstSelectedGamma->spectrum(fwhm, max, numsamples);
+}
+
+QVector<double> Decay::secondSelectedGammaSpectrumY(double fwhm) const
+{
+    if (!secondSelectedGamma)
+        return QVector<double>();
+
+    // determine highest energy (updates m_lastFwhm and clears spectX if necessary as side effect)
+    double max = upperSpectrumLimit(fwhm);
+
+    const int numsamples = 1000;
+
+    return secondSelectedGamma->spectrum(fwhm, max, numsamples);
 }
 
 void Decay::itemClicked(ClickableItem *item)
@@ -336,7 +373,7 @@ void Decay::clickedGamma(GammaTransition *g)
         }
     }
 
-    sendDecayDataUpdate();
+    triggerDecayDataUpdate();
 }
 
 void Decay::clickedEnergyLevel(EnergyLevel *e)
@@ -381,27 +418,20 @@ void Decay::clickedEnergyLevel(EnergyLevel *e)
         secondSelectedGamma = 0;
     }
 
-    sendDecayDataUpdate();
+    triggerDecayDataUpdate();
 }
 
-void Decay::sendDecayDataUpdate()
+void Decay::triggerDecayDataUpdate()
 {
     DecayDataSet dataset;
 
     // intermediate level
     if (selectedEnergyLevel) {
-        dataset.intEnergy = selectedEnergyLevel->energyAsText();;
-        dataset.intHalfLife = selectedEnergyLevel->halfLife().toString();;
-        dataset.intSpin = selectedEnergyLevel->spin().toString();;
-        dataset.intMu = selectedEnergyLevel->muAsText();;
-        dataset.intQ = selectedEnergyLevel->qAsText();;
-    }
-    else {
-        dataset.intEnergy = "- keV";;
-        dataset.intHalfLife = "- ns";;
-        dataset.intSpin = "/";;
-        dataset.intMu = "-";;
-        dataset.intQ = "-";;
+        dataset.intEnergy = selectedEnergyLevel->energyAsText();
+        dataset.intHalfLife = selectedEnergyLevel->halfLife().toString();
+        dataset.intSpin = selectedEnergyLevel->spin().toString();
+        dataset.intMu = selectedEnergyLevel->muAsText();
+        dataset.intQ = selectedEnergyLevel->qAsText();
     }
 
     // gammas
@@ -421,44 +451,26 @@ void Decay::sendDecayDataUpdate()
 
     // populating
     if (pop) {
-        dataset.popEnergy = pop->energyAsText();;
-        dataset.popIntensity = pop->intensityAsText();;
-        dataset.popMultipolarity = pop->multipolarityAsText();;
-        dataset.popMixing = pop->deltaAsText();;
-    }
-    else {
-        dataset.popEnergy = "- keV";;
-        dataset.popIntensity = "- %";;
-        dataset.popMultipolarity = "<i>unknown</i>";;
-        dataset.popMixing = "<i>unknown</i>";;
+        dataset.popEnergy = pop->energyAsText();
+        dataset.popIntensity = pop->intensityAsText();
+        dataset.popMultipolarity = pop->multipolarityAsText();
+        dataset.popMixing = pop->deltaAsText();
     }
 
     // depopulating
     if (depop) {
-        dataset.depopEnergy = depop->energyAsText();;
-        dataset.depopIntensity = depop->intensityAsText();;
-        dataset.depopMultipolarity = depop->multipolarityAsText();;
-        dataset.depopMixing = depop->deltaAsText();;
-    }
-    else {
-        dataset.depopEnergy = "- keV";;
-        dataset.depopIntensity = "- %";;
-        dataset.depopMultipolarity = "<i>unknown</i>";;
-        dataset.depopMixing = "<i>unknown</i>";;
+        dataset.depopEnergy = depop->energyAsText();
+        dataset.depopIntensity = depop->intensityAsText();
+        dataset.depopMultipolarity = depop->multipolarityAsText();
+        dataset.depopMixing = depop->deltaAsText();
     }
 
     // start and end level
     if (firstSelectedGamma && secondSelectedGamma) {
-        dataset.startEnergy = pop->depopulatedLevel()->energyAsText();;
-        dataset.startSpin = pop->depopulatedLevel()->spin().toString();;
-        dataset.endEnergy = depop->populatedLevel()->energyAsText();;
-        dataset.endSpin = depop->populatedLevel()->spin().toString();;
-    }
-    else {
-        dataset.startEnergy = "- keV";;
-        dataset.startSpin = "/";;
-        dataset.endEnergy = "- keV";;
-        dataset.endSpin = "/";;
+        dataset.startEnergy = pop->depopulatedLevel()->energyAsText();
+        dataset.startSpin = pop->depopulatedLevel()->spin().toString();
+        dataset.endEnergy = depop->populatedLevel()->energyAsText();
+        dataset.endSpin = depop->populatedLevel()->spin().toString();
     }
 
     // calculate anisotropies
@@ -719,6 +731,25 @@ void Decay::alignGraphicsItems()
     }
 }
 
+double Decay::upperSpectrumLimit(double fwhm) const
+{
+    if (fwhm == m_lastFwhm && std::isfinite(m_upperSpectrumLimit))
+        return m_upperSpectrumLimit;
+
+    spectX.clear();
+    m_lastFwhm = fwhm;
+
+    // determine highest energy
+    m_upperSpectrumLimit = 0.0;
+    foreach (EnergyLevel *level, dNuc->levels())
+        foreach (GammaTransition *g, level->depopulatingTransitions())
+            if (std::isfinite(g->intensity()))
+                m_upperSpectrumLimit = qMax(m_upperSpectrumLimit, g->energyKeV());
+    m_upperSpectrumLimit += 2*fwhm;
+
+    return m_upperSpectrumLimit;
+}
+
 void Decay::setStyle(const QFont &fontfamily, unsigned int sizePx)
 {
     // prepare fonts and their metrics
@@ -758,15 +789,13 @@ void Decay::setStyle(const QFont &fontfamily, unsigned int sizePx)
     intenseGammaPen.setCapStyle(Qt::FlatCap);
 }
 
-double Decay::gauss(const double x, const double sigma) const
-{
-    double u = x / fabs(sigma);
-    double p = (1 / (sqrt(2 * M_PI) * fabs(sigma))) * exp(-u * u / 2);
-    return p;
-}
-
 Decay::DecayDataSet::DecayDataSet()
-    : a22("-"), a24("-"), a42("-"), a44("-")
+    : startEnergy("- keV"), startSpin("/"),
+      popEnergy("- keV"), popIntensity("- %"), popMultipolarity("<i>unknown</i>"), popMixing("<i>unknown</i>"),
+      intEnergy("- keV"), intHalfLife("- ns"), intSpin("/"), intMu("-"), intQ("-"),
+      depopEnergy("- keV"), depopIntensity("- %"), depopMultipolarity("<i>unknown</i>"), depopMixing("<i>unknown</i>"),
+      endEnergy("- keV"), endSpin("/"),
+      a22("-"), a24("-"), a42("-"), a44("-")
 {
 }
 

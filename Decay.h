@@ -43,7 +43,10 @@ public:
 
     QString name() const;
 
-    QVector<QPointF> gammaSpectrum(double fwhm) const;
+    QVector<double> gammaSpectrumX(double fwhm) const;
+    QVector<double> gammaSpectrumY(double fwhm) const;
+    QVector<double> firstSelectedGammaSpectrumY(double fwhm) const;
+    QVector<double> secondSelectedGammaSpectrumY(double fwhm) const;
 
     struct DecayDataSet {
         DecayDataSet();
@@ -76,6 +79,8 @@ public:
         QString a44;
     };
 
+    void triggerDecayDataUpdate();
+
 signals:
     void enabledShadow(bool enable);
     void updatedDecayData(Decay::DecayDataSet data);
@@ -86,9 +91,8 @@ private slots:
 private:
     void clickedGamma(GammaTransition *g);
     void clickedEnergyLevel(EnergyLevel *e);
-    void sendDecayDataUpdate();
     void alignGraphicsItems();
-    double gauss(const double x, const double sigma) const;
+    double upperSpectrumLimit(double fwhm) const;
 
     const QString m_name;
 
@@ -96,6 +100,10 @@ private:
     Type t;
 
     QGraphicsScene *scene;
+
+    mutable double m_lastFwhm;
+    mutable double m_upperSpectrumLimit;
+    mutable QVector<double> spectX;
 
     // graphics items
     QGraphicsLineItem *pNucVerticalArrow;

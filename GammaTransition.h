@@ -43,6 +43,8 @@ public:
     EnergyLevel * depopulatedLevel() const;
     EnergyLevel * populatedLevel() const;
 
+    QVector<double> & spectrum(double fwhm, double emax, int samples) const;
+
     ActiveGraphicsItemGroup * createGammaGraphicsItem(const QFont &gammaFont, const QPen &gammaPen, const QPen &intenseGammaPen);
     void updateArrow();
     double minimalXDistance() const;
@@ -54,6 +56,8 @@ public:
     QPen pen() const;
 
 private:
+    static double gauss(const double x, const double sigma);
+
     double m_e;
     double intens;
     QString m_mpol;
@@ -68,6 +72,11 @@ private:
     GraphicsHighlightItem *highlightHelper;
     double mindist;
     QPen m_pen;
+
+    mutable double m_lastFwhm;
+    mutable double m_lastEmax;
+    mutable int m_lastSamples;
+    mutable QVector<double> m_spectrum;
 
     static const double textAngle;
     static const double arrowHeadLength;

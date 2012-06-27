@@ -24,7 +24,10 @@ GammaTransition::GammaTransition(double energyKeV, double intensity,
                                  EnergyLevel *start, EnergyLevel *dest)
     : ClickableItem(ClickableItem::GammaTransitionType),
       m_e(energyKeV), intens(intensity), m_mpol(multipol), m_delta(delta), m_deltastate(deltastate), m_start(start), m_dest(dest),
-      arrow(0), text(0), arrowhead(0), arrowbase(0), clickarea(0), highlightHelper(0), mindist(0.0)
+      arrow(0), text(0), arrowhead(0), arrowbase(0), clickarea(0), highlightHelper(0), mindist(0.0),
+      m_lastFwhm(std::numeric_limits<double>::quiet_NaN()),
+      m_lastEmax(std::numeric_limits<double>::quiet_NaN()),
+      m_lastSamples(std::numeric_limits<double>::quiet_NaN())
 {
     start->m_depopulatingTransitions.append(this);
     dest->m_populatingTransitions.append(this);
@@ -94,6 +97,31 @@ EnergyLevel *GammaTransition::depopulatedLevel() const
 EnergyLevel *GammaTransition::populatedLevel() const
 {
     return m_dest;
+}
+
+QVector<double> & GammaTransition::spectrum(double fwhm, double emax, int samples) const
+{
+    if (fwhm == m_lastFwhm && emax == m_lastEmax && samples == m_lastSamples)
+        return m_spectrum;
+
+    m_spectrum.clear();
+    m_lastFwhm = fwhm;
+    m_lastEmax = emax;
+    m_lastSamples = samples;
+
+    // determine sigma @ 662 keV
+    double sigma = fwhm / (2.0*sqrt(2.0*M_LN2));
+    // determine local sigma
+    double localstd = sqrt(m_e/662.0 * sigma*sigma);
+
+    m_spectrum.resize(samples);
+
+    const double interval = emax / double(samples);
+
+    for (int i=0; i<m_spectrum.size(); i++)
+        m_spectrum[i] = intens * gauss(interval*double(i)+0.5*interval - m_e, localstd);
+
+    return m_spectrum;
 }
 
 ActiveGraphicsItemGroup *GammaTransition::createGammaGraphicsItem(const QFont &gammaFont, const QPen &gammaPen, const QPen &intenseGammaPen)
@@ -187,6 +215,13 @@ double GammaTransition::widthFromOrigin() const
 QPen GammaTransition::pen() const
 {
     return m_pen;
+}
+
+double GammaTransition::gauss(const double x, const double sigma)
+{
+    double u = x / fabs(sigma);
+    double p = (1 / (sqrt(2 * M_PI) * fabs(sigma))) * exp(-u * u / 2);
+    return p;
 }
 
 QPolygonF GammaTransition::initArrowHead()
