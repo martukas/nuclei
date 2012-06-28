@@ -13,6 +13,7 @@ public:
     double seconds() const;
     bool isStable() const;
     QString toString() const;
+    static QString secsToString(double secs, bool tagUncertain);
 
 private:
     double sec;

@@ -45,10 +45,30 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QSpinBox" name="minA"/>
+       <widget class="QSpinBox" name="minA">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>299</number>
+        </property>
+        <property name="value">
+         <number>100</number>
+        </property>
+       </widget>
       </item>
       <item row="1" column="3">
-       <widget class="QSpinBox" name="maxA"/>
+       <widget class="QSpinBox" name="maxA">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>299</number>
+        </property>
+        <property name="value">
+         <number>200</number>
+        </property>
+       </widget>
       </item>
       <item row="1" column="2">
        <widget class="QLabel" name="maxALabel">
@@ -99,12 +119,24 @@
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="minParentHalfLife">
+         <widget class="HalfLifeSpinBox" name="minParentHalfLife">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="decimals">
+           <number>8</number>
+          </property>
+          <property name="maximum">
+           <double>999999999.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>86400.000000000000000</double>
           </property>
          </widget>
         </item>
@@ -120,12 +152,24 @@
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="maxParentHalfLife">
+         <widget class="HalfLifeSpinBox" name="maxParentHalfLife">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="decimals">
+           <number>8</number>
+          </property>
+          <property name="maximum">
+           <double>999999999.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>2592000.000000000000000</double>
           </property>
          </widget>
         </item>
@@ -148,10 +192,23 @@
         <property name="text">
          <string>Minimal Gamma Intensity:</string>
         </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QDoubleSpinBox" name="minIntens"/>
+       <widget class="QDoubleSpinBox" name="minIntens">
+        <property name="suffix">
+         <string notr="true"> %</string>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>5.000000000000000</double>
+        </property>
+       </widget>
       </item>
       <item row="0" column="0" colspan="2">
        <widget class="Line" name="line_3">
@@ -193,15 +250,27 @@
           <property name="text">
            <string>Min.</string>
           </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="minIntHalfLife">
+         <widget class="HalfLifeSpinBox" name="minIntHalfLife">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="decimals">
+           <number>8</number>
+          </property>
+          <property name="maximum">
+           <double>999999999.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.000001000000000</double>
           </property>
          </widget>
         </item>
@@ -217,12 +286,21 @@
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="maxIntHalfLife">
+         <widget class="HalfLifeSpinBox" name="maxIntHalfLife">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="decimals">
+           <number>8</number>
+          </property>
+          <property name="value">
+           <double>0.000010000000000</double>
           </property>
          </widget>
         </item>
@@ -243,7 +321,14 @@
        </widget>
       </item>
       <item row="4" column="1">
-       <widget class="QDoubleSpinBox" name="muVal"/>
+       <widget class="QDoubleSpinBox" name="muVal">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="decimals">
+         <number>3</number>
+        </property>
+       </widget>
       </item>
       <item row="5" column="0">
        <widget class="QCheckBox" name="qValCheck">
@@ -253,7 +338,14 @@
        </widget>
       </item>
       <item row="5" column="1">
-       <widget class="QDoubleSpinBox" name="qVal"/>
+       <widget class="QDoubleSpinBox" name="qVal">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="decimals">
+         <number>3</number>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -290,6 +382,9 @@
           <property name="text">
            <string/>
           </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item>
@@ -305,7 +400,23 @@
        </layout>
       </item>
       <item row="1" column="1">
-       <widget class="QDoubleSpinBox" name="a22"/>
+       <widget class="QDoubleSpinBox" name="a22">
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="minimum">
+         <double>-100.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.100000000000000</double>
+        </property>
+       </widget>
       </item>
       <item row="2" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -345,7 +456,26 @@
        </layout>
       </item>
       <item row="2" column="1">
-       <widget class="QDoubleSpinBox" name="a24"/>
+       <widget class="QDoubleSpinBox" name="a24">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="minimum">
+         <double>-100.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.100000000000000</double>
+        </property>
+       </widget>
       </item>
       <item row="3" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -385,7 +515,26 @@
        </layout>
       </item>
       <item row="3" column="1">
-       <widget class="QDoubleSpinBox" name="a42"/>
+       <widget class="QDoubleSpinBox" name="a42">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="minimum">
+         <double>-100.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.100000000000000</double>
+        </property>
+       </widget>
       </item>
       <item row="4" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -425,7 +574,26 @@
        </layout>
       </item>
       <item row="4" column="1">
-       <widget class="QDoubleSpinBox" name="a44"/>
+       <widget class="QDoubleSpinBox" name="a44">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="minimum">
+         <double>-100.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.100000000000000</double>
+        </property>
+       </widget>
       </item>
       <item row="0" column="0" colspan="2">
        <widget class="Line" name="line_5">
@@ -462,6 +630,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>HalfLifeSpinBox</class>
+   <extends>QDoubleSpinBox</extends>
+   <header>HalfLifeSpinBox.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>minA</tabstop>
   <tabstop>maxA</tabstop>

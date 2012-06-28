@@ -32,40 +32,45 @@ bool HalfLife::isStable() const
 
 QString HalfLife::toString() const
 {
-    QString result;
+    return secsToString(sec, uncert);
+}
 
-    if (std::isnan(sec))
+QString HalfLife::secsToString(double secs, bool tagUncertain)
+{
+    if (std::isnan(secs))
         return "";
 
-    if (std::isinf(sec))
+    if (std::isinf(secs))
         return "stable";
 
-    if (sec > 86400. * 365. * 2.)
-        result = QString("%1 a").arg(sec / (86400. * 365.));
-    else if (sec > 86400.* 2.)
-        result = QString("%1 d").arg(sec / 86400.);
-    else if (sec > 3600.* 2.)
-        result = QString("%1 h").arg(sec / 3600.);
-    else if (sec > 60.* 2.)
-        result = QString("%1 m").arg(sec / 60.);
+    QString result;
 
-    else if (sec < 1.E-15)
-        result = QString("%1 as").arg(sec * 1.E18);
-    else if (sec < 1.E-12)
-        result = QString("%1 fs").arg(sec * 1.E15);
-    else if (sec < 1.E-9)
-        result = QString("%1 ps").arg(sec * 1.E12);
-    else if (sec < 1.E-6)
-        result = QString("%1 ns").arg(sec * 1.E9);
-    else if (sec < 1.E-3)
-        result = QString::fromUtf8("%1 µs").arg(sec * 1.E6);
-    else if (sec < 1.)
-        result = QString("%1 ms").arg(sec * 1.E3);
+    if (secs > 86400. * 365. * 2.)
+        result = QString("%1 a").arg(secs / (86400. * 365.));
+    else if (secs > 86400.* 2.)
+        result = QString("%1 d").arg(secs / 86400.);
+    else if (secs > 3600.* 2.)
+        result = QString("%1 h").arg(secs / 3600.);
+    else if (secs > 60.* 2.)
+        result = QString("%1 m").arg(secs / 60.);
+
+    else if (secs < 1.E-15)
+        result = QString("%1 as").arg(secs * 1.E18);
+    else if (secs < 1.E-12)
+        result = QString("%1 fs").arg(secs * 1.E15);
+    else if (secs < 1.E-9)
+        result = QString("%1 ps").arg(secs * 1.E12);
+    else if (secs < 1.E-6)
+        result = QString("%1 ns").arg(secs * 1.E9);
+    else if (secs < 1.E-3)
+        result = QString::fromUtf8("%1 µs").arg(secs * 1.E6);
+    else if (secs < 1.)
+        result = QString("%1 ms").arg(secs * 1.E3);
 
     else
-        result = QString("%1 s").arg(sec);
+        result = QString("%1 s").arg(secs);
 
-    if (uncert)
+    if (tagUncertain)
         result += " ?";
 
     return result;

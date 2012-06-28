@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     ENSDFDownloader.cpp \
     Kaihen.cpp \
     ENSDFMassChain.cpp \
-    SearchDialog.cpp
+    SearchDialog.cpp \
+    HalfLifeSpinBox.cpp
 
 HEADERS  += \
     Decay.h \
@@ -37,7 +38,8 @@ HEADERS  += \
     ENSDFDownloader.h \
     Kaihen.h \
     ENSDFMassChain.h \
-    SearchDialog.h
+    SearchDialog.h \
+    HalfLifeSpinBox.h
 
 INCLUDEPATH += ../../libakk/src
 LIBS += -lakk -L../../libakk
