@@ -517,7 +517,7 @@ void Decay::triggerDecayDataUpdate()
                 // determine prefix
                 QString prfx;
                 if (variants.size() > 1) {
-                    prfx = "%1: ";
+                    prfx = QString::fromUtf8("%1: ");
                     prfx = prfx.arg(QString(variant.first < 0 ? "-" : "+") + QString(variant.second < 0 ? "-" : "+"));
                 }
 

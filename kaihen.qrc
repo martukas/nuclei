@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/">
+    <file>edit-find.png</file>
     <file>checkbox.png</file>
     <file>format-justify-fill.png</file>
     <file>application-pdf.png</file>

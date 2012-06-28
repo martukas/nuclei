@@ -65,8 +65,11 @@
           <property name="title">
            <string>Anisotropies</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout">
-           <item row="0" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <property name="margin">
+            <number>2</number>
+           </property>
+           <item>
             <widget class="QLabel" name="a22Label">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -82,7 +85,29 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="2">
+           <item>
+            <widget class="QLabel" name="a22">
+             <property name="font">
+              <font>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;22&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>-</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="textInteractionFlags">
+              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QLabel" name="a24Label">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -104,26 +129,7 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="a22">
-             <property name="font">
-              <font>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;22&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>-</string>
-             </property>
-             <property name="textInteractionFlags">
-              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
+           <item>
             <widget class="QLabel" name="a24">
              <property name="font">
               <font>
@@ -137,18 +143,27 @@
              <property name="text">
               <string>-</string>
              </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
              <property name="textInteractionFlags">
               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
+           <item>
             <widget class="QLabel" name="a42Label">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>50</width>
+               <height>0</height>
+              </size>
              </property>
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;42&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -158,7 +173,7 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
+           <item>
             <widget class="QLabel" name="a42">
              <property name="font">
               <font>
@@ -172,12 +187,15 @@
              <property name="text">
               <string>-</string>
              </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
              <property name="textInteractionFlags">
               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
              </property>
             </widget>
            </item>
-           <item row="1" column="2">
+           <item>
             <widget class="QLabel" name="a44Label">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -199,7 +217,7 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="3">
+           <item>
             <widget class="QLabel" name="a44">
              <property name="font">
               <font>
@@ -212,6 +230,9 @@
              </property>
              <property name="text">
               <string>-</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
              </property>
              <property name="textInteractionFlags">
               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -251,6 +272,7 @@
    <addaction name="actionOriginal_Size"/>
    <addaction name="actionShow_all"/>
    <addaction name="separator"/>
+   <addaction name="actionFind_Decay"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="decaySelectorDock">
@@ -979,6 +1001,9 @@
    <property name="toolTip">
     <string>Export as PDF File</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
   </action>
   <action name="actionPreferences">
    <property name="icon">
@@ -992,28 +1017,19 @@
     <string>Change application preferences</string>
    </property>
   </action>
-  <action name="actionDecay_Selection_Dock">
+  <action name="actionFind_Decay">
    <property name="icon">
     <iconset resource="kaihen.qrc">
-     <normaloff>:/checkbox.png</normaloff>:/checkbox.png</iconset>
+     <normaloff>:/edit-find.png</normaloff>:/edit-find.png</iconset>
    </property>
    <property name="text">
-    <string>Decay Selection Dock</string>
+    <string>Find Decay</string>
    </property>
    <property name="toolTip">
-    <string>Show/Hide Decay Selection Dock</string>
+    <string>Parametric decay cascade search</string>
    </property>
-  </action>
-  <action name="actionDecay_Info_Dock">
-   <property name="icon">
-    <iconset resource="kaihen.qrc">
-     <normaloff>:/format-justify-fill.png</normaloff>:/format-justify-fill.png</iconset>
-   </property>
-   <property name="text">
-    <string>Decay Info Dock</string>
-   </property>
-   <property name="toolTip">
-    <string>Show/Hide Decay Information Dock</string>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
    </property>
   </action>
  </widget>
