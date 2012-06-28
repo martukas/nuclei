@@ -586,8 +586,9 @@ void Kaihen::closeEvent(QCloseEvent *event)
 QVector<QwtIntervalSample> Kaihen::mergeIntervalData(const QVector<double> &x, const QVector<double> &y1, const QVector<double> &y2)
 {
     QVector<QwtIntervalSample> result(x.size());
+    // replace 0 with min() to avoid display errors in log plot
     for (int i=0; i<x.size(); i++)
-        result[i] = QwtIntervalSample(x.at(i), y1.at(i), y2.at(i));
+        result[i] = QwtIntervalSample(x.at(i), qMax(y1.at(i), std::numeric_limits<double>::min()), qMax(y2.at(i), std::numeric_limits<double>::min()));
     return result;
 }
 
