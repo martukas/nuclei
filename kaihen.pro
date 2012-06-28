@@ -18,7 +18,8 @@ SOURCES += main.cpp\
     qxtgroupbox.cpp \
     ENSDFDownloader.cpp \
     Kaihen.cpp \
-    ENSDFMassChain.cpp
+    ENSDFMassChain.cpp \
+    SearchDialog.cpp
 
 HEADERS  += \
     Decay.h \
@@ -35,7 +36,8 @@ HEADERS  += \
     qxtgroupbox.h \
     ENSDFDownloader.h \
     Kaihen.h \
-    ENSDFMassChain.h
+    ENSDFMassChain.h \
+    SearchDialog.h
 
 INCLUDEPATH += ../../libakk/src
 LIBS += -lakk -L../../libakk
@@ -45,7 +47,8 @@ FORMS    += \
     ENSDFDownloader.ui \
     ENSDFDownloaderSettings.ui \
     Kaihen.ui \
-    PreferencesDialog.ui
+    PreferencesDialog.ui \
+    SearchDialog.ui
 
 RESOURCES += \
     kaihen.qrc

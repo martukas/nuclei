@@ -140,7 +140,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
                 // find gamma
                 if (!e2g.isEmpty()) {
                     double foundE = 0.0;
-                    const QString gamma = findNearest(e2g, e, &foundE);
+                    const QString gamma(findNearest(e2g, e, &foundE));
                     if (e-foundE < gammaMaxDifference/1000.0*e) {
                         if (mpol.isEmpty())
                             mpol = gamma.mid(31, 10).trimmed();

@@ -28,6 +28,7 @@
 
 #include "ENSDFMassChain.h"
 #include "ENSDFDownloader.h"
+#include "SearchDialog.h"
 
 class PlotZoomer : public QwtPlotZoomer
 {
@@ -47,6 +48,7 @@ Kaihen::Kaihen(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::KaihenMainWindow),
     pdd(new QDialog(this)), pd(new Ui::PreferencesDialog),
+    m_search(new SearchDialog(this)),
     currentMassChain(0), zoomer(0)
 {
     ui->setupUi(this);
@@ -65,12 +67,12 @@ Kaihen::Kaihen(QWidget *parent) :
 
     QAction *toggleSelector = ui->decaySelectorDock->toggleViewAction();
     toggleSelector->setToolTip(toggleSelector->toolTip().prepend("Show/Hide "));
-    toggleSelector->setIcon(QIcon(":/checkbox.png"));
+    toggleSelector->setIcon(QIcon(":/toolbar/checkbox.png"));
     ui->mainToolBar->insertAction(ui->actionZoom_In, toggleSelector);
 
     QAction *toggleInfo = ui->decayInfoDock->toggleViewAction();
     toggleInfo->setToolTip(toggleInfo->toolTip().prepend("Show/Hide "));
-    toggleInfo->setIcon(QIcon(":/format-justify-fill.png"));
+    toggleInfo->setIcon(QIcon(":/toolbar/view-list-text.png"));
     ui->mainToolBar->insertAction(ui->actionZoom_In, toggleInfo);
 
     ui->mainToolBar->insertSeparator(ui->actionZoom_In);
@@ -130,6 +132,8 @@ Kaihen::Kaihen(QWidget *parent) :
     connect(ui->actionOriginal_Size, SIGNAL(triggered()), this, SLOT(showOriginalSize()));
     connect(ui->actionZoom_In, SIGNAL(triggered()), this, SLOT(zoomIn()));
     connect(ui->actionZoom_Out, SIGNAL(triggered()), this, SLOT(zoomOut()));
+
+    connect(ui->actionFind_Decay, SIGNAL(triggered()), this, SLOT(search()));
 
     connect(ui->actionLinear, SIGNAL(triggered()), this, SLOT(setPlotLin()));
     connect(ui->actionLogarithmic, SIGNAL(triggered()), this, SLOT(setPlotLog()));
@@ -518,6 +522,11 @@ void Kaihen::zoomOut()
         ui->decayView->scale(0.8, 0.8);
     else
         zoomer->zoom(-1);
+}
+
+void Kaihen::search()
+{
+    m_search->show();
 }
 
 void Kaihen::setPlotLin()

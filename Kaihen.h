@@ -15,6 +15,7 @@ class QwtPlotIntervalCurve;
 class QwtPlotZoomer;
 class QwtIntervalSample;
 class QDoubleSpinBox;
+class SearchDialog;
 
 class Kaihen : public QMainWindow
 {
@@ -42,6 +43,8 @@ private slots:
     void zoomIn();
     void zoomOut();
 
+    void search();
+
     void setPlotLin();
     void setPlotLog();
 
@@ -57,6 +60,8 @@ private:
     Ui::KaihenMainWindow *ui;
     QDialog *pdd;
     Ui::PreferencesDialog *pd;
+
+    SearchDialog *m_search;
 
     ENSDFMassChain *currentMassChain;
     QSharedPointer<Decay> decay;

@@ -1,22 +1,24 @@
 <RCC>
-  <qresource prefix="/">
-    <file>edit-find.png</file>
-    <file>checkbox.png</file>
-    <file>format-justify-fill.png</file>
-    <file>application-pdf.png</file>
-    <file>image-svg+xml.png</file>
-    <file>zoom-fit-best.png</file>
-    <file>zoom-in.png</file>
-    <file>zoom-original.png</file>
-    <file>zoom-out.png</file>
-    <file>help-about.png</file>
-    <file>download.png</file>
-    <file>configure.png</file>
-    <file>document-open-folder.png</file>
-    <file>document-export.png</file>
-    <file>dialog-cancel.png</file>
-    <file>dialog-close.png</file>
-    <file>dialog-ok.png</file>
-    <file>kaihen.png</file>
-  </qresource>
+    <qresource prefix="/">
+        <file>toolbar/application-pdf.png</file>
+        <file>toolbar/checkbox.png</file>
+        <file>toolbar/configure.png</file>
+        <file>toolbar/edit-find.png</file>
+        <file>toolbar/help-about.png</file>
+        <file>toolbar/image-svg+xml.png</file>
+        <file>toolbar/view-list-text.png</file>
+        <file>toolbar/zoom-fit-best.png</file>
+        <file>toolbar/zoom-in.png</file>
+        <file>toolbar/zoom-original.png</file>
+        <file>toolbar/zoom-out.png</file>
+        <file>edit-find.png</file>
+        <file>help-about.png</file>
+        <file>download.png</file>
+        <file>configure.png</file>
+        <file>document-open-folder.png</file>
+        <file>dialog-cancel.png</file>
+        <file>dialog-close.png</file>
+        <file>dialog-ok.png</file>
+        <file>kaihen.png</file>
+    </qresource>
 </RCC>
