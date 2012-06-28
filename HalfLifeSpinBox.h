@@ -14,6 +14,8 @@ public:
 
     virtual QValidator::State validate(QString &text, int &pos) const;
 
+    virtual void stepBy(int steps);
+
 signals:
     
 public slots:

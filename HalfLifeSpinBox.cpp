@@ -30,6 +30,39 @@ QValidator::State HalfLifeSpinBox::validate(QString &text, int &pos) const
     return state;
 }
 
+void HalfLifeSpinBox::stepBy(int steps)
+{
+    for (int i=std::abs(steps); i>0; i--) {
+        double val = value();
+        double step = 1.0;
+        // log10 stepping for values below 1 min.
+        if (val <= 10.0) {
+            double logval = std::log10(val);
+            double exponent = std::floor(logval);
+            if (steps < 0 && logval - exponent < std::log10(1.1))
+                exponent--;
+            step = pow(10.0, exponent);
+        }
+        // special stepping for longer values
+        else {
+            if ((steps > 0 && val >= 365. * 86400.) || val > 365. * 86400.)
+                step = 365. * 86400.;
+            else if ((steps > 0 && val >= 86400.) || val > 86400.)
+                step = 86400.;
+            else if ((steps > 0 && val >= 3600.) || val > 3600.)
+                step = 3600.;
+            else if ((steps > 0 && val >= 600.) || val > 600.)
+                step = 600.;
+            else if ((steps > 0 && val >= 60.) || val > 60.)
+                step = 60.;
+            else
+                step = 10.;
+        }
+        setSingleStep(step);
+        QDoubleSpinBox::stepBy(steps > 0 ? 1 : -1);
+    }
+}
+
 double HalfLifeSpinBox::validateAndInterpret(QString &input, int &pos, QValidator::State &state) const
 {
     QLocale locale;
@@ -46,7 +79,7 @@ double HalfLifeSpinBox::validateAndInterpret(QString &input, int &pos, QValidato
         QString copy(input);
 
         // find unit suffix and remove it from copy
-        QRegExp unitre("^(.+)\\s*([a-zA-Z]+)$");
+        QRegExp unitre("^([^a-zA-Z]+)\\s*([a-zA-Z]+)$");
         QString unit;
         if (unitre.exactMatch(copy)) {
             unit = unitre.capturedTexts().value(2);
