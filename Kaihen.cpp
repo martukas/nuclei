@@ -154,8 +154,6 @@ Kaihen::~Kaihen()
     s.beginGroup("preferences");
     s.setValue("fontFamily", pd->fontFamily->currentFont().family());
     s.setValue("fontSize", pd->fontSize->value());
-    s.setValue("levelTolerance", pd->levelDiff->value());
-    s.setValue("gammaTolerance", pd->gammaDiff->value());
     s.endGroup();
 
     s.setValue("activeTab", (ui->tabWidget->currentWidget() == ui->decayCascadeTab) ? "decay" : "energy");
@@ -271,7 +269,7 @@ void Kaihen::selectedA(const QString &aName)
     updateEnergySpectrum();
 
     delete currentMassChain;
-    currentMassChain = new ENSDFMassChain(aName.toInt());
+    currentMassChain = new ENSDFMassChain(aName);
 
     ui->nuclideListWidget->addItems(currentMassChain->daughterNuclides());
 
@@ -304,7 +302,12 @@ void Kaihen::selectedDecay(const QString &decayName)
     if (decayName.isEmpty())
         return;
 
-    decay = currentMassChain->decay(ui->nuclideListWidget->currentItem()->text(), decayName, pd->levelDiff->value(), pd->gammaDiff->value());
+    QSettings s;
+    s.setValue("preferences/levelTolerance", pd->levelDiff->value());
+    s.setValue("preferences/gammaTolerance", pd->gammaDiff->value());
+    s.sync();
+
+    decay = currentMassChain->decay(ui->nuclideListWidget->currentItem()->text(), decayName);
     connect(decay.data(), SIGNAL(updatedDecayData(Decay::DecayDataSet)), this, SLOT(updateDecayData(Decay::DecayDataSet)));
     decay->setStyle(pd->fontFamily->currentFont(), pd->fontSize->value());
     QGraphicsScene *scene = decay->levelPlot();

@@ -12,12 +12,12 @@
 #include "EnergyLevel.h"
 #include "GammaTransition.h"
 
-ENSDFMassChain::ENSDFMassChain(int A)
-    : a(A)
+ENSDFMassChain::ENSDFMassChain(const QString &A)
+    : a(A.toInt())
 {
     QSettings s;
     // read data
-            QFile f(s.value("ensdfPath", ".").toString() + QString("/ensdf.%1").arg(A, int(3), int(10), QChar('0')));
+    QFile f(s.value("ensdfPath", ".").toString() + QString("/ensdf.%1").arg(a, int(3), int(10), QChar('0')));
     f.open(QIODevice::ReadOnly | QIODevice::Text);
     QString c = QString::fromUtf8(f.readAll());
 
@@ -57,9 +57,12 @@ QStringList ENSDFMassChain::decays(const QString &daughterNuclideName) const
     return result;
 }
 
-QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, const QString &decayName,
-                                            double adoptedLevelMaxDifference, double gammaMaxDifference)
+QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, const QString &decayName)
 {
+    QSettings s;
+    double adoptedLevelMaxDifference = s.value("preferences/levelTolerance", 1.0).toDouble();
+    double gammaMaxDifference = s.value("preferences/gammaTolerance", 1.0).toDouble();
+
     QMap<Energy, EnergyLevel*> levels;
 
     BlockIndices alpos = m_adoptedlevels.value(daughterNuclideName);

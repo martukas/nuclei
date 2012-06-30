@@ -63,7 +63,7 @@ void HalfLifeSpinBox::stepBy(int steps)
     }
 }
 
-double HalfLifeSpinBox::validateAndInterpret(QString &input, int &pos, QValidator::State &state) const
+double HalfLifeSpinBox::validateAndInterpret(QString &input, int &, QValidator::State &state) const
 {
     QLocale locale;
     double num = 0.0;

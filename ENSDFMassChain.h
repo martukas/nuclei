@@ -11,7 +11,7 @@ class HalfLife;
 class ENSDFMassChain
 {
 public:
-    explicit ENSDFMassChain(int A);
+    explicit ENSDFMassChain(const QString &A);
 
     static QStringList aValues();
 
@@ -26,8 +26,7 @@ public:
      * @param gammaMaxDifference Maximal difference between the energy of gammas in decay records and adopted levels
      * @return
      */
-    QSharedPointer<Decay> decay(const QString &daughterNuclideName, const QString &decayName,
-                                double adoptedLevelMaxDifference = 0.0, double gammaMaxDifference = 0.0);
+    QSharedPointer<Decay> decay(const QString &daughterNuclideName, const QString &decayName);
 
 private:
     typedef QPair<int,int> BlockIndices; // [startidx, size]
