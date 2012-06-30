@@ -60,7 +60,7 @@ QStringList ENSDFMassChain::decays(const QString &daughterNuclideName) const
 QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, const QString &decayName,
                                             double adoptedLevelMaxDifference, double gammaMaxDifference)
 {
-    QMap<double, EnergyLevel*> levels;
+    QMap<Energy, EnergyLevel*> levels;
 
     BlockIndices alpos = m_adoptedlevels.value(daughterNuclideName);
     BasicDecayData decaydata = m_decays.value(daughterNuclideName).value(decayName);
@@ -73,7 +73,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
     QLocale clocale("C");
     bool convok;
     // create index map for adopted levels
-    QMap<double, QStringList> adoptblocks;
+    QMap<Energy, QStringList> adoptblocks;
     int laststart = -1;
     for (int i=alpos.first; i < alpos.first+alpos.second; i++) {
         const QString &line = contents.at(i);
@@ -85,7 +85,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
         }
     }
     if (laststart > 0)
-        adoptblocks.insert(ENSDFMassChain::parseEnsdfEnergy(contents.at(laststart).mid(9, 10)),
+        adoptblocks.insert(parseEnsdfEnergy(contents.at(laststart).mid(9, 10)),
                            QStringList(contents.mid(laststart, alpos.second-laststart)));
 
     // process decay block
@@ -98,7 +98,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
             Q_ASSERT(!levels.isEmpty());
 
             // determine energy
-            double e = parseEnsdfEnergy(line.mid(9, 10));
+            Energy e = parseEnsdfEnergy(line.mid(9, 10));
 
             // determine intensity
             QString instr(line.mid(21,8));
@@ -122,24 +122,24 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
                 // Get adopted levels block for current level
                 QStringList adptlvl;
                 if (!adoptblocks.isEmpty()) {
-                    double foundE = 0.0;
-                    QStringList adoptblock = findNearest(adoptblocks, currentLevel->energyKeV(), &foundE);
-                    if (qAbs(currentLevel->energyKeV() - foundE) <= (adoptedLevelMaxDifference/1000.0*currentLevel->energyKeV()))
+                    Energy foundE(0.0);
+                    QStringList adoptblock = findNearest(adoptblocks, currentLevel->energy(), &foundE);
+                    if (qAbs(currentLevel->energy() - foundE) <= (adoptedLevelMaxDifference/1000.0*currentLevel->energy()))
                         adptlvl = adoptblock;
                 }
                 // filter gamma records
                 QRegExp gammare("^" + dNucid + "  G (.*)$");
                 adptlvl = adptlvl.filter(gammare);
                 // create gamma map
-                QMap<double, QString> e2g;
+                QMap<Energy, QString> e2g;
                 foreach (QString g, adptlvl) {
-                    double gk = parseEnsdfEnergy(g.mid(9, 10));
-                    if (std::isfinite(gk))
+                    Energy gk(parseEnsdfEnergy(g.mid(9, 10)));
+                    if (gk.isValid())
                         e2g.insert(gk, g);
                 }
                 // find gamma
                 if (!e2g.isEmpty()) {
-                    double foundE = 0.0;
+                    Energy foundE(0.0);
                     const QString gamma(findNearest(e2g, e, &foundE));
                     if (e-foundE < gammaMaxDifference/1000.0*e) {
                         if (mpol.isEmpty())
@@ -160,7 +160,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
             // determine levels
             if (!levels.isEmpty()) {
                 EnergyLevel *start = currentLevel;
-                EnergyLevel *destlvl = findNearest(levels, start->energyKeV() - e);
+                EnergyLevel *destlvl = findNearest(levels, Energy(start->energy() - e));
 
                 // gamma registers itself with the start and dest levels
                 new GammaTransition(e, in, mpol, delta, deltastate, start, destlvl);
@@ -169,7 +169,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
         // process new level
         else if (line.startsWith(dNucid + "  L ")) {
             // determine energy
-            double e = ENSDFMassChain::parseEnsdfEnergy(line.mid(9, 10));
+            Energy e = ENSDFMassChain::parseEnsdfEnergy(line.mid(9, 10));
             // determine spin
             SpinParity spin(parseSpinParity(line.mid(21, 18)));
             // determine isomer number
@@ -187,7 +187,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
 
             QStringList adptlvl;
             if (!adoptblocks.isEmpty()) {
-                double foundE = 0.0;
+                Energy foundE(0.0);
                 const QStringList adoptblock = findNearest(adoptblocks, e, &foundE);
                 if (qAbs(e - foundE) <= (adoptedLevelMaxDifference/1000.0*e))
                     adptlvl = adoptblock;
@@ -297,7 +297,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
     }
 
     // create relevant parent levels and collect parent half-lifes
-    QMap<double, EnergyLevel*> plevels;
+    QMap<Energy, EnergyLevel*> plevels;
     QList<HalfLife> pHl;
     foreach (ParentRecord p, decaydata.parents) {
         pHl.append(p.hl);
@@ -307,10 +307,10 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
         plevels.insert(p.energy, plv);
     }
     if (!plevels.isEmpty()) {
-        if (plevels.begin().value()->energyKeV() > 0.0) {
-            EnergyLevel *plv = new EnergyLevel(0.0, SpinParity(), HalfLife());
+        if (plevels.begin().value()->energy() > 0.0) {
+            EnergyLevel *plv = new EnergyLevel(Energy(0.0), SpinParity(), HalfLife());
             plv->setFeedingLevel(false);
-            plevels.insert(0.0, plv);
+            plevels.insert(Energy(0.0), plv);
         }
     }
 
@@ -370,7 +370,7 @@ Decay::Type ENSDFMassChain::parseDecayType(const QString &tstring)
     return Decay::Undefined;
 }
 
-double ENSDFMassChain::parseEnsdfEnergy(const QString &estr)
+Energy ENSDFMassChain::parseEnsdfEnergy(const QString &estr)
 {
     QLocale clocale("C");
     QString tmp(estr);
@@ -379,7 +379,7 @@ double ENSDFMassChain::parseEnsdfEnergy(const QString &estr)
     double result = clocale.toDouble(tmp.trimmed(), &convok);
     if (!convok)
         result = std::numeric_limits<double>::quiet_NaN();
-    return result;
+    return Energy(result);
 }
 
 HalfLife ENSDFMassChain::parseHalfLife(const QString &hlstr)
@@ -499,7 +499,7 @@ ENSDFMassChain::ParentRecord ENSDFMassChain::parseParentRecord(const QString &pr
     prec.hl = HalfLife(parseHalfLife(precstr.mid(39, 10)));
 
     // determine decaying level's energy
-    prec.energy = parseEnsdfEnergy(precstr.mid(9, 10));
+    prec.energy = Energy(parseEnsdfEnergy(precstr.mid(9, 10)));
 
     // determine parent level's spin
     prec.spin = SpinParity(parseSpinParity(precstr.mid(21, 18)));
@@ -508,11 +508,11 @@ ENSDFMassChain::ParentRecord ENSDFMassChain::parseParentRecord(const QString &pr
 }
 
 template <typename T>
-T & ENSDFMassChain::findNearest(QMap<double, T> &map, double val, double *foundVal)
+T & ENSDFMassChain::findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal)
 {
     Q_ASSERT(!map.isEmpty());
 
-    typename QMap<double, T>::iterator i = map.lowerBound(val);
+    typename QMap<Energy, T>::iterator i = map.lowerBound(val);
 
     if (i == map.begin())
         return i.value();
@@ -583,7 +583,7 @@ void ENSDFMassChain::parseBlocks()
 
             const ParentRecord &prec(decaydata.parents.at(0));
             QString decayname(prec.nuclideName);
-            if (prec.energy > 0)
+            if (prec.energy > 0.0)
                 decayname.append("m");
             decayname.append(", ")
                     .append(Decay::decayTypeAsText(decaydata.decayType))

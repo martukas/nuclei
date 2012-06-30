@@ -5,6 +5,7 @@
 #include <QFont>
 #include <QPen>
 #include "ClickableItem.h"
+#include "Energy.h"
 
 class QGraphicsItem;
 class ActiveGraphicsItemGroup;
@@ -25,18 +26,17 @@ public:
         SignMagnitudeDefined = 0x3
     };
 
-    GammaTransition(double energyKeV, double intensity,
+    GammaTransition(Energy energy, double intensity,
                     const QString &multipol, double delta, DeltaState deltastate,
                     EnergyLevel *start, EnergyLevel *dest);
 
-    double energyKeV() const;
+    Energy energy() const;
     double intensity() const;
     QString multipolarity() const;
     double delta() const;
     DeltaState deltaState() const;
 
     QString intensityAsText() const;
-    QString energyAsText() const;
     QString multipolarityAsText() const;
     QString deltaAsText() const;
 
@@ -58,7 +58,7 @@ public:
 private:
     static double gauss(const double x, const double sigma);
 
-    double m_e;
+    Energy m_e;
     double intens;
     QString m_mpol;
     double m_delta;

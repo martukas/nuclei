@@ -310,7 +310,7 @@
           <x>0</x>
           <y>0</y>
           <width>256</width>
-          <height>106</height>
+          <height>75</height>
          </rect>
         </property>
         <attribute name="label">
@@ -341,7 +341,7 @@
           <x>0</x>
           <y>0</y>
           <width>256</width>
-          <height>116</height>
+          <height>75</height>
          </rect>
         </property>
         <attribute name="label">
@@ -372,7 +372,7 @@
           <x>0</x>
           <y>0</y>
           <width>256</width>
-          <height>116</height>
+          <height>75</height>
          </rect>
         </property>
         <attribute name="label">
@@ -901,6 +901,24 @@
    </attribute>
    <addaction name="actionPreferences"/>
    <addaction name="actionAbout"/>
+  </widget>
+  <widget class="QDockWidget" name="searchResultDock">
+   <property name="allowedAreas">
+    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
+   </property>
+   <property name="windowTitle">
+    <string>Search Results</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_3">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QTreeView" name="treeView"/>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <action name="actionZoom_In">
    <property name="icon">

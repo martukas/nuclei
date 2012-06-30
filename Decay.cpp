@@ -105,7 +105,7 @@ QGraphicsScene * Decay::levelPlot()
         level->grahighlighthelper = new GraphicsHighlightItem(-outerGammaMargin, -0.5*highlightWidth, 2.0*outerGammaMargin, highlightWidth);
         level->grahighlighthelper->setOpacity(0.0);
 
-        QString etext = level->energyAsText();
+        QString etext = level->energy().toString();
         level->graetext = new QGraphicsSimpleTextItem(etext, level->item);
         level->graetext->setFont(stdBoldFont);
         level->graetext->setPos(0.0, -stdBoldFontMetrics.height());
@@ -186,7 +186,7 @@ QGraphicsScene * Decay::levelPlot()
             level->graline->setPen(stableLevelPen);
             scene->addItem(level->graline);
 
-            level->graetext = new QGraphicsSimpleTextItem(level->energyAsText());
+            level->graetext = new QGraphicsSimpleTextItem(level->energy().toString());
             level->graetext->setFont(stdBoldFont);
             scene->addItem(level->graetext);
 
@@ -281,6 +281,81 @@ QVector<double> Decay::secondSelectedGammaSpectrumY(double fwhm) const
     const int numsamples = 1000;
 
     return secondSelectedGamma->spectrum(fwhm, max, numsamples);
+}
+
+Decay::CascadeIdentifier Decay::currentSelection() const
+{
+    CascadeIdentifier ci;
+    if (firstSelectedGamma) {
+        ci.start = firstSelectedGamma->depopulatedLevel()->energy();
+        ci.pop = firstSelectedGamma->energy();
+        ci.intermediate = firstSelectedGamma->populatedLevel()->energy();
+    }
+    if (selectedEnergyLevel) {
+        ci.intermediate = selectedEnergyLevel->energy();
+        ci.highlightIntermediate = true;
+    }
+    if (secondSelectedGamma) {
+        ci.intermediate = secondSelectedGamma->depopulatedLevel()->energy();
+        ci.depop = secondSelectedGamma->energy();
+    }
+
+    return ci;
+}
+
+void Decay::setCurrentSelection(const Decay::CascadeIdentifier &identifier)
+{
+    if (firstSelectedGamma)
+        firstSelectedGamma->graphicsItem()->setHighlighted(false);
+    if (secondSelectedGamma)
+        secondSelectedGamma->graphicsItem()->setHighlighted(false);
+    if (selectedEnergyLevel)
+        selectedEnergyLevel->graphicsItem()->setHighlighted(false);
+
+    EnergyLevel *start = 0;
+    if (identifier.start.isValid())
+        start = dNuc->levels().value(identifier.start);
+
+    EnergyLevel *inter = 0;
+    if (identifier.intermediate.isValid())
+        inter = dNuc->levels().value(identifier.intermediate);
+
+    if (start && identifier.pop) {
+        QList<GammaTransition*> &gammas = start->depopulatingTransitions();
+        GammaTransition *gamma = 0;
+        for (int i=0; i<gammas.size(); i++) {
+            if (gammas.at(i)->energy() == identifier.pop) {
+                gamma = gammas.at(i);
+                break;
+            }
+        }
+        if (gamma) {
+            firstSelectedGamma = gamma;
+            firstSelectedGamma->graphicsItem()->setHighlighted(true);
+        }
+    }
+
+    if (inter && identifier.depop) {
+        QList<GammaTransition*> &gammas = inter->depopulatingTransitions();
+        GammaTransition *gamma = 0;
+        for (int i=0; i<gammas.size(); i++) {
+            if (gammas.at(i)->energy() == identifier.depop) {
+                gamma = gammas.at(i);
+                break;
+            }
+        }
+        if (gamma) {
+            secondSelectedGamma = gamma;
+            secondSelectedGamma->graphicsItem()->setHighlighted(true);
+        }
+    }
+
+    if (inter && identifier.highlightIntermediate) {
+        selectedEnergyLevel = inter;
+        selectedEnergyLevel->graphicsItem()->setHighlighted(true);
+    }
+
+    triggerDecayDataUpdate();
 }
 
 void Decay::itemClicked(ClickableItem *item)
@@ -427,7 +502,7 @@ void Decay::triggerDecayDataUpdate()
 
     // intermediate level
     if (selectedEnergyLevel) {
-        dataset.intEnergy = selectedEnergyLevel->energyAsText();
+        dataset.intEnergy = selectedEnergyLevel->energy().toString();
         dataset.intHalfLife = selectedEnergyLevel->halfLife().toString();
         dataset.intSpin = selectedEnergyLevel->spin().toString();
         dataset.intMu = selectedEnergyLevel->muAsText();
@@ -451,7 +526,7 @@ void Decay::triggerDecayDataUpdate()
 
     // populating
     if (pop) {
-        dataset.popEnergy = pop->energyAsText();
+        dataset.popEnergy = pop->energy().toString();
         dataset.popIntensity = pop->intensityAsText();
         dataset.popMultipolarity = pop->multipolarityAsText();
         dataset.popMixing = pop->deltaAsText();
@@ -459,7 +534,7 @@ void Decay::triggerDecayDataUpdate()
 
     // depopulating
     if (depop) {
-        dataset.depopEnergy = depop->energyAsText();
+        dataset.depopEnergy = depop->energy().toString();
         dataset.depopIntensity = depop->intensityAsText();
         dataset.depopMultipolarity = depop->multipolarityAsText();
         dataset.depopMixing = depop->deltaAsText();
@@ -467,9 +542,9 @@ void Decay::triggerDecayDataUpdate()
 
     // start and end level
     if (firstSelectedGamma && secondSelectedGamma) {
-        dataset.startEnergy = pop->depopulatedLevel()->energyAsText();
+        dataset.startEnergy = pop->depopulatedLevel()->energy().toString();
         dataset.startSpin = pop->depopulatedLevel()->spin().toString();
-        dataset.endEnergy = depop->populatedLevel()->energyAsText();
+        dataset.endEnergy = depop->populatedLevel()->energy().toString();
         dataset.endSpin = depop->populatedLevel()->spin().toString();
     }
 
@@ -539,7 +614,7 @@ void Decay::triggerDecayDataUpdate()
 
 void Decay::alignGraphicsItems()
 {
-    QMap<double, EnergyLevel*> &levels(dNuc->levels());
+    QMap<Energy, EnergyLevel*> &levels(dNuc->levels());
     // decide if parent nuclide should be printed on the left side (beta-),
     // on the right side (EC, beta+, alpha) or not at all (isomeric)
     enum ParentPosition {
@@ -570,11 +645,11 @@ void Decay::alignGraphicsItems()
 
     // determine y coordinates for all levels
     double maxEnergyGap = 0.0;
-    for (QMap<double, EnergyLevel*>::const_iterator i=levels.begin()+1; i!=levels.end(); i++) {
+    for (QMap<Energy, EnergyLevel*>::const_iterator i=levels.begin()+1; i!=levels.end(); i++) {
         double diff = i.key() - (i-1).key();
         maxEnergyGap = qMax(maxEnergyGap, diff);
     }
-    for (QMap<double, EnergyLevel*>::const_iterator i=levels.begin()+1; i!=levels.end(); i++) {
+    for (QMap<Energy, EnergyLevel*>::const_iterator i=levels.begin()+1; i!=levels.end(); i++) {
         double minheight = 0.5*(i.value()->item->boundingRect().height() + (i-1).value()->item->boundingRect().height());
         double extraheight = maxExtraLevelDistance * (i.key() - (i-1).key()) / maxEnergyGap;
         i.value()->graYPos = std::floor((i-1).value()->graYPos - minheight - extraheight) + 0.5*i.value()->graline->pen().widthF();
@@ -690,11 +765,10 @@ void Decay::alignGraphicsItems()
 
     // set position of parent nuclide
     if (parentpos == LeftParent || parentpos == RightParent) {
-        double maxEnergy = (levels.end()-1).key();
         double parentY = std::numeric_limits<double>::quiet_NaN();
         if (!levels.isEmpty())
-            parentY = levels.value(maxEnergy)->item->y() -
-                    levels.value(maxEnergy)->item->boundingRect().height() -
+            parentY = (levels.end()-1).value()->item->y() -
+                    (levels.end()-1).value()->item->boundingRect().height() -
                     pNuc->nuclideGraphicsItem()->boundingRect().height() - parentNuclideToEnergyLevelsDistance;
 
         double parentcenter;
@@ -744,7 +818,7 @@ double Decay::upperSpectrumLimit(double fwhm) const
     foreach (EnergyLevel *level, dNuc->levels())
         foreach (GammaTransition *g, level->depopulatingTransitions())
             if (std::isfinite(g->intensity()))
-                m_upperSpectrumLimit = qMax(m_upperSpectrumLimit, g->energyKeV());
+                m_upperSpectrumLimit = qMax(m_upperSpectrumLimit, double(g->energy()));
     m_upperSpectrumLimit += 2*fwhm;
 
     return m_upperSpectrumLimit;
@@ -789,6 +863,11 @@ void Decay::setStyle(const QFont &fontfamily, unsigned int sizePx)
     intenseGammaPen.setCapStyle(Qt::FlatCap);
 }
 
+Decay::CascadeIdentifier::CascadeIdentifier()
+    : highlightIntermediate(false)
+{
+}
+
 Decay::DecayDataSet::DecayDataSet()
     : startEnergy("- keV"), startSpin("/"),
       popEnergy("- keV"), popIntensity("- %"), popMultipolarity("<i>unknown</i>"), popMixing("<i>unknown</i>"),
@@ -797,5 +876,17 @@ Decay::DecayDataSet::DecayDataSet()
       endEnergy("- keV"), endSpin("/"),
       a22("-"), a24("-"), a42("-"), a44("-")
 {
+}
+
+QDataStream & operator<<(QDataStream &out, const Decay::CascadeIdentifier &ident)
+{
+    out << ident.start << ident.pop << ident.intermediate << ident.depop << ident.highlightIntermediate;
+    return out;
+}
+
+QDataStream & operator>>(QDataStream &in, Decay::CascadeIdentifier &ident)
+{
+    in >> ident.start >> ident.pop >> ident.intermediate >> ident.depop >> ident.highlightIntermediate;
+    return in;
 }
 

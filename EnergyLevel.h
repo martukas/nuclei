@@ -6,6 +6,7 @@
 #include <QString>
 #include <QList>
 #include "HalfLife.h"
+#include "Energy.h"
 #include "SpinParity.h"
 #include "ClickableItem.h"
 
@@ -20,7 +21,7 @@ class GammaTransition;
 class EnergyLevel : public ClickableItem
 {
 public:
-    EnergyLevel(double energyKeV, SpinParity spin,
+    EnergyLevel(Energy energy, SpinParity spin,
                 HalfLife halfLife = HalfLife(std::numeric_limits<double>::infinity()),
                 unsigned int isomerNum = 0,
                 double Q = std::numeric_limits<double>::quiet_NaN(),
@@ -29,15 +30,14 @@ public:
 
     ~EnergyLevel();
 
-    double energyKeV() const;
+    Energy energy() const;
     SpinParity spin() const;
     HalfLife halfLife() const;
     unsigned int isomerNum() const;
     double normalizedFeedIntensity() const;
 
-    QList<GammaTransition*> depopulatingTransitions();
+    QList<GammaTransition*> & depopulatingTransitions();
 
-    QString energyAsText() const;
     QString muAsText() const;
     QString qAsText() const;
     QString momentaAsText() const;
@@ -53,7 +53,7 @@ public:
 private:
     static bool gammaSmallerThan(const GammaTransition * const g1, const GammaTransition * const g2);
 
-    double m_e;
+    Energy m_e;
     SpinParity sp;
     HalfLife hl;
     unsigned int isonum; // >0 for isomeric levels (counted from low energy to high), 0 otherwise

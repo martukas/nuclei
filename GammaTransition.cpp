@@ -19,11 +19,11 @@ const QPolygonF GammaTransition::arrowHeadShape = initArrowHead();
 const QPolygonF GammaTransition::arrowBaseShape = initArrowBase();
 
 
-GammaTransition::GammaTransition(double energyKeV, double intensity,
+GammaTransition::GammaTransition(Energy energy, double intensity,
                                  const QString &multipol, double delta, DeltaState deltastate,
                                  EnergyLevel *start, EnergyLevel *dest)
     : ClickableItem(ClickableItem::GammaTransitionType),
-      m_e(energyKeV), intens(intensity), m_mpol(multipol), m_delta(delta), m_deltastate(deltastate), m_start(start), m_dest(dest),
+      m_e(energy), intens(intensity), m_mpol(multipol), m_delta(delta), m_deltastate(deltastate), m_start(start), m_dest(dest),
       arrow(0), text(0), arrowhead(0), arrowbase(0), clickarea(0), highlightHelper(0), mindist(0.0),
       m_lastFwhm(std::numeric_limits<double>::quiet_NaN()),
       m_lastEmax(std::numeric_limits<double>::quiet_NaN()),
@@ -33,7 +33,7 @@ GammaTransition::GammaTransition(double energyKeV, double intensity,
     dest->m_populatingTransitions.append(this);
 }
 
-double GammaTransition::energyKeV() const
+Energy GammaTransition::energy() const
 {
     return m_e;
 }
@@ -64,11 +64,6 @@ QString GammaTransition::intensityAsText() const
     if (!std::isnan(intens))
         intensstr = QString("%1 %").arg(intens, 0, 'g', 3);
     return intensstr;
-}
-
-QString GammaTransition::energyAsText() const
-{
-    return QString("%1 keV").arg(m_e);
 }
 
 QString GammaTransition::multipolarityAsText() const
@@ -152,7 +147,7 @@ ActiveGraphicsItemGroup *GammaTransition::createGammaGraphicsItem(const QFont &g
     QString intensstr = intensityAsText();
     if (!intensstr.isEmpty())
         intensstr += " ";
-    QString textstr = QString("<html><body bgcolor=\"white\">%1<b>%2</b> %3</body></html>").arg(intensstr).arg(energyAsText()).arg(m_mpol);
+    QString textstr = QString("<html><body bgcolor=\"white\">%1<b>%2</b> %3</body></html>").arg(intensstr).arg(energy().toString()).arg(m_mpol);
     text = new QGraphicsTextItem;
     text->setFont(gammaFont);
     text->document()->setDocumentMargin(0.0);

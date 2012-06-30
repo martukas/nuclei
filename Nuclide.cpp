@@ -43,12 +43,12 @@ QString Nuclide::name() const
     return el + "-" + QString::number(m_A);
 }
 
-void Nuclide::addLevels(const QMap<double, EnergyLevel *> &levels)
+void Nuclide::addLevels(const QMap<Energy, EnergyLevel *> &levels)
 {
-    m_levels = levels;
+    m_levels.unite(levels);
 }
 
-QMap<double, EnergyLevel *> & Nuclide::levels()
+QMap<Energy, EnergyLevel *> &Nuclide::levels()
 {
     return m_levels;
 }

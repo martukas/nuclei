@@ -7,6 +7,7 @@
 #include <QMap>
 #include <QFont>
 #include <QPen>
+#include <QMetaType>
 #include "Nuclide.h"
 #include "SpinParity.h"
 #include "GammaTransition.h"
@@ -47,6 +48,18 @@ public:
     QVector<double> gammaSpectrumY(double fwhm) const;
     QVector<double> firstSelectedGammaSpectrumY(double fwhm) const;
     QVector<double> secondSelectedGammaSpectrumY(double fwhm) const;
+
+    struct CascadeIdentifier {
+        CascadeIdentifier();
+        Energy start;
+        Energy pop;
+        Energy intermediate;
+        bool highlightIntermediate;
+        Energy depop;
+    };
+
+    CascadeIdentifier currentSelection() const;
+    void setCurrentSelection(const CascadeIdentifier &identifier);
 
     struct DecayDataSet {
         DecayDataSet();
@@ -130,5 +143,10 @@ private:
     static const double parentNuclideToEnergyLevelsDistance;
     static const double highlightWidth;
 };
+
+Q_DECLARE_METATYPE(Decay::CascadeIdentifier)
+
+QDataStream & operator<<(QDataStream &out, const Decay::CascadeIdentifier &ident);
+QDataStream & operator>>(QDataStream &in, Decay::CascadeIdentifier &ident);
 
 #endif // DECAY_H

@@ -3,9 +3,9 @@
 #include <cmath>
 #include "GammaTransition.h"
 
-EnergyLevel::EnergyLevel(double energyKeV, SpinParity spin, HalfLife halfLife, unsigned int isomerNum, double Q, double mu)
+EnergyLevel::EnergyLevel(Energy energy, SpinParity spin, HalfLife halfLife, unsigned int isomerNum, double Q, double mu)
     : ClickableItem(ClickableItem::EnergyLevelType),
-      m_e(energyKeV), sp(spin), hl(halfLife), isonum(isomerNum),
+      m_e(energy), sp(spin), hl(halfLife), isonum(isomerNum),
       feedintens(std::numeric_limits<double>::quiet_NaN()), feedinglevel(false),
       m_Q(Q), m_mu(mu),
       graline(0), grafeedarrow(0), graarrowhead(0), graetext(0), graspintext(0), grafeedintens(0), grahltext(0),
@@ -21,7 +21,7 @@ EnergyLevel::~EnergyLevel()
     m_populatingTransitions.clear();
 }
 
-double EnergyLevel::energyKeV() const
+Energy EnergyLevel::energy() const
 {
     return m_e;
 }
@@ -49,17 +49,10 @@ double EnergyLevel::normalizedFeedIntensity() const
 /**
   * \return Sorted list of transitions, lowest energy gamma first
   */
-QList<GammaTransition *> EnergyLevel::depopulatingTransitions()
+QList<GammaTransition *> & EnergyLevel::depopulatingTransitions()
 {
     qSort(m_depopulatingTransitions.begin(), m_depopulatingTransitions.end(), gammaSmallerThan);
     return m_depopulatingTransitions;
-}
-
-QString EnergyLevel::energyAsText() const
-{
-    if (m_e >= 10000.0)
-        return QString::number(m_e / 1.E3) + " MeV";
-    return QString::number(m_e) + " keV";
 }
 
 QString EnergyLevel::muAsText() const
@@ -103,5 +96,5 @@ bool EnergyLevel::isFeedingLevel() const
 
 bool EnergyLevel::gammaSmallerThan(const GammaTransition *const g1, const GammaTransition *const g2)
 {
-    return g1->energyKeV() < g2->energyKeV();
+    return g1->energy() < g2->energy();
 }

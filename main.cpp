@@ -4,6 +4,9 @@
 
 int main(int argc, char *argv[])
 {
+    qRegisterMetaType<Decay::CascadeIdentifier>("CascadeIdentifier");
+    qRegisterMetaTypeStreamOperators<Decay::CascadeIdentifier>("CascadeIdentifier");
+
     QApplication a(argc, argv);
     QCoreApplication::setOrganizationName(QString::fromUtf8("Uni-Göttingen"));
     QCoreApplication::setOrganizationDomain("physik.uni-goettingen.de");

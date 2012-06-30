@@ -4,6 +4,7 @@
 #include <QSharedPointer>
 #include <QPair>
 #include "Decay.h"
+#include "Energy.h"
 
 class HalfLife;
 
@@ -33,7 +34,7 @@ private:
 
     struct ParentRecord {
         QString nuclideName;
-        double energy;
+        Energy energy;
         HalfLife hl;
         SpinParity spin;
 
@@ -51,13 +52,13 @@ private:
     static unsigned int A(const QString &nuclide);
     static QString element(const QString &nuclide);
     static Decay::Type parseDecayType(const QString &tstring);
-    static double parseEnsdfEnergy(const QString &estr);
+    static Energy parseEnsdfEnergy(const QString &estr);
     static HalfLife parseHalfLife(const QString &hlstr);
     static SpinParity parseSpinParity(const QString &sstr);
     static double parseEnsdfMixing(const QString &s, const QString &multipolarity, GammaTransition::DeltaState *state);
     static ParentRecord parseParentRecord(const QString &precstr);
 
-    template <typename T> static T & findNearest(QMap<double, T> &map, double val, double *foundVal = 0);
+    template <typename T> static T & findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal = 0);
 
     void parseBlocks();
 

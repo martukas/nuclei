@@ -6,6 +6,7 @@
 #include <QFont>
 #include <limits>
 #include "HalfLife.h"
+#include "Energy.h"
 
 class QGraphicsItem;
 class QGraphicsItemGroup;
@@ -23,8 +24,8 @@ public:
     QString element() const;
     QString name() const;
 
-    void addLevels(const QMap<double, EnergyLevel*> &levels);
-    QMap<double, EnergyLevel*> & levels();
+    void addLevels(const QMap<Energy, EnergyLevel*> &levels);
+    QMap<Energy, EnergyLevel*> & levels();
 
     QString halfLifeAsText() const;
 
@@ -36,7 +37,7 @@ private:
     QString el;
     QList <HalfLife> hl;
 
-    QMap<double, EnergyLevel*> m_levels;
+    QMap<Energy, EnergyLevel*> m_levels;
 
     static const QMap<QString, unsigned int> elToZ;
     static QMap<QString, unsigned int> initElToZ();

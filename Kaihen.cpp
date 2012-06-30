@@ -176,6 +176,9 @@ Kaihen::~Kaihen()
     if (decayItem)
         s.setValue("selectedDecay", decayItem->text());
 
+    if (decay)
+        s.setValue("selectedCascade", QVariant::fromValue(decay->currentSelection()));
+
     delete pd;
     delete ui;
 }
@@ -183,6 +186,19 @@ Kaihen::~Kaihen()
 void Kaihen::initialize()
 {
     QSettings s;
+
+    restoreGeometry(s.value("geometry").toByteArray());
+    restoreState(s.value("windowState").toByteArray());
+
+    QSize wsize = size();
+    if (wsize.width() > QApplication::desktop()->availableGeometry().width())
+        wsize.setWidth(QApplication::desktop()->availableGeometry().width());
+    if (wsize.height() > QApplication::desktop()->availableGeometry().height()) {
+        wsize.setHeight(QApplication::desktop()->availableGeometry().width());
+        addDockWidget(Qt::LeftDockWidgetArea, ui->decaySelectorDock);
+    }
+    this->resize(wsize);
+
     // initialize settings if necessary
     if (!s.contains("exportDir"))
         s.setValue("exportDir", QDir::homePath());
@@ -238,17 +254,8 @@ void Kaihen::initialize()
     if (!decayItems.isEmpty())
         ui->decayListWidget->setCurrentItem(decayItems.at(0));
 
-    restoreGeometry(s.value("geometry").toByteArray());
-    restoreState(s.value("windowState").toByteArray());
-
-    QSize wsize = size();
-    if (wsize.width() > QApplication::desktop()->availableGeometry().width())
-        wsize.setWidth(QApplication::desktop()->availableGeometry().width());
-    if (wsize.height() > QApplication::desktop()->availableGeometry().height()) {
-        wsize.setHeight(QApplication::desktop()->availableGeometry().width());
-        addDockWidget(Qt::LeftDockWidgetArea, ui->decaySelectorDock);
-    }
-    this->resize(wsize);
+    if (decay)
+        decay->setCurrentSelection(s.value("selectedCascade", QVariant::fromValue(Decay::CascadeIdentifier())).value<Decay::CascadeIdentifier>());
 }
 
 void Kaihen::selectedA(const QString &aName)
