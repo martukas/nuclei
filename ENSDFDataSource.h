@@ -4,26 +4,50 @@
 #include <QStringList>
 #include <QSharedPointer>
 #include <QMap>
+#include <QMetaType>
+#include <QVariant>
 
-#include "DataSource.h"
+#include "AbstractDataSource.h"
 
 class ENSDFMassChain;
 
-class ENSDFDataSource : public DataSource
+class ENSDFTreeItem : public AbstractTreeItem
 {
 public:
-    explicit ENSDFDataSource();
+    explicit ENSDFTreeItem(AbstractTreeItem *parent = 0);
+    explicit ENSDFTreeItem(const QList<QVariant> &data, unsigned int A, bool isdecay, AbstractTreeItem *parent = 0);
 
-    virtual int numLevels() const;
-    virtual QStringList firstLevel() const;
-    virtual QStringList secondLevel(const QString &firstlevel) const;
-    virtual QStringList thirdLevel(const QString &firstlevel, const QString &secondlevel) const;
+    unsigned int A() const;
 
-    virtual QSharedPointer<Decay> decay(const QString &firstlevel, const QString &secondlevel,
-                                        const QString &thirdlevel) const;
+    friend QDataStream & operator<<(QDataStream &out, const ENSDFTreeItem &treeitem);
+    friend QDataStream & operator>>(QDataStream &in, ENSDFTreeItem &treeitem);
 
 private:
-    mutable QMap<QString, ENSDFMassChain*> masschains;
+    unsigned int m_A;
+};
+
+Q_DECLARE_METATYPE(ENSDFTreeItem)
+
+class ENSDFDataSource : public AbstractDataSource
+{
+public:
+    explicit ENSDFDataSource(QObject *parent = 0);
+    virtual ~ENSDFDataSource();
+
+    virtual AbstractTreeItem * rootItem() const;
+
+    virtual QSharedPointer<Decay> decay(const AbstractTreeItem *item) const;
+
+private:
+    static const quint32 magicNumber;
+    static const quint32 cacheVersion;
+
+    bool loadENSDFCache();
+    void createENSDFCache();
+
+    ENSDFTreeItem *root;
+
+    mutable ENSDFMassChain *mccache;
 };
 
 #endif // ENSDFDATASOURCE_H

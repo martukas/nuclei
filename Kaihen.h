@@ -28,8 +28,6 @@ public:
 private slots:
     void initialize();
 
-    void selectedA(const QString &aName);
-    void selectedNuclide(const QString &nuclideName);
     void selectedDecay(const QString &decayName);
 
     void updateDecayData(Decay::DecayDataSet data);

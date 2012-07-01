@@ -12,8 +12,10 @@
 #include "EnergyLevel.h"
 #include "GammaTransition.h"
 
-ENSDFMassChain::ENSDFMassChain(const QString &A)
-    : a(A.toInt())
+QList<unsigned int> ENSDFMassChain::aList;
+
+ENSDFMassChain::ENSDFMassChain(unsigned int A)
+    : a(A)
 {
     QSettings s;
     // read data
@@ -26,35 +28,41 @@ ENSDFMassChain::ENSDFMassChain(const QString &A)
     parseBlocks();
 }
 
-QStringList ENSDFMassChain::aValues() // static
+const QList<unsigned int> &ENSDFMassChain::aValues() // static
 {
+    if (!aList.isEmpty())
+        return aList;
+
     QSettings s;
     if (!s.contains("ensdfPath"))
-        return QStringList();
+        return aList;
 
     QDir dir(s.value("ensdfPath").toString());
     if (!dir.exists())
-        return QStringList();
+        return aList;
 
-    QStringList files = dir.entryList(QStringList("ensdf.???"), QDir::Files | QDir::Readable, QDir::Name);
+    QStringList tmp(dir.entryList(QStringList("ensdf.???"), QDir::Files | QDir::Readable, QDir::Name));
 
-    for (int i=0; i<files.size(); i++)
-        files[i] = files.at(i).right(3).remove(QRegExp("^0+"));
-    return files;
+    for (int i=0; i<tmp.size(); i++) {
+        const QString aStr(tmp.at(i).right(3).remove(QRegExp("^0+")));
+        aList.append(aStr.toUInt());
+    }
+    return aList;
 }
 
-QStringList ENSDFMassChain::daughterNuclides() const
+unsigned int ENSDFMassChain::aValue() const
 {
-    QStringList result(m_decays.keys());
-    result.removeDuplicates();
-    return result;
+    return a;
 }
 
-QStringList ENSDFMassChain::decays(const QString &daughterNuclideName) const
+const QStringList & ENSDFMassChain::daughterNuclides() const
 {
-    QStringList result(m_decays.value(daughterNuclideName).keys());
-    result.removeDuplicates();
-    return result;
+    return m_daughterNames;
+}
+
+const QStringList & ENSDFMassChain::decays(const QString &daughterNuclideName) const
+{
+    return m_decayNames[daughterNuclideName];
 }
 
 QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, const QString &decayName)
@@ -570,8 +578,7 @@ void ENSDFMassChain::parseBlocks()
             foreach (const QString &precstr, precstrings)
                 decaydata.parents.append(parseParentRecord(precstr));
 
-            Q_ASSERT(!decaydata.parents.isEmpty());
-            if (decaydata.parents.isEmpty())
+            if (decaydata.parents.isEmpty()) // broken records. skipping
                 continue;
 
             // create decay string
@@ -598,6 +605,17 @@ void ENSDFMassChain::parseBlocks()
                 decayname.append(" (alt.)");
             decmap.insert(decayname, decaydata);
         }
+    }
+
+    // create daughter name cache map
+    m_daughterNames = m_decays.keys();
+    m_daughterNames.removeDuplicates();
+
+    // create decay name cache map
+    foreach (QString daughter, m_daughterNames) {
+        QStringList decays(m_decays.value(daughter).keys());
+        decays.removeDuplicates();
+        m_decayNames.insert(daughter, decays);
     }
 }
 

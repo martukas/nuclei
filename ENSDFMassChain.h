@@ -11,12 +11,13 @@ class HalfLife;
 class ENSDFMassChain
 {
 public:
-    explicit ENSDFMassChain(const QString &A);
+    explicit ENSDFMassChain(unsigned int A);
 
-    static QStringList aValues();
+    static const QList<unsigned int> &aValues();
 
-    QStringList daughterNuclides() const;
-    QStringList decays(const QString &daughterNuclideName) const;
+    unsigned int aValue() const;
+    const QStringList & daughterNuclides() const;
+    const QStringList & decays(const QString &daughterNuclideName) const;
 
     /**
      * @brief decay
@@ -27,6 +28,8 @@ public:
      * @return
      */
     QSharedPointer<Decay> decay(const QString &daughterNuclideName, const QString &decayName);
+
+    static unsigned int A(const QString &nuclide);
 
 private:
     typedef QPair<int,int> BlockIndices; // [startidx, size]
@@ -46,9 +49,10 @@ private:
         BlockIndices block;
     };
 
+    static QList<unsigned int> aList;
+
     static QString nuclideToNucid(const QString &nuclide);
     static QString nucidToNuclide(const QString &nucid);
-    static unsigned int A(const QString &nuclide);
     static QString element(const QString &nuclide);
     static Decay::Type parseDecayType(const QString &tstring);
     static Energy parseEnsdfEnergy(const QString &estr);
@@ -61,11 +65,13 @@ private:
 
     void parseBlocks();
 
-    const int a;
+    const unsigned int a;
 
     QStringList contents;
     QMap< QString, BlockIndices > m_adoptedlevels; // daughter name: [startidx, size]
     QMap< QString, QMap<QString, BasicDecayData > > m_decays; // daughter name: (decay name: [startidx, size])
+    QStringList m_daughterNames;
+    mutable QMap< QString, QStringList > m_decayNames;
 };
 
 #endif // ENSDF_H

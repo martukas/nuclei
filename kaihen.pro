@@ -22,7 +22,9 @@ SOURCES += main.cpp\
     SearchDialog.cpp \
     HalfLifeSpinBox.cpp \
     Energy.cpp \
-    ENSDFDataSource.cpp
+    ENSDFDataSource.cpp \
+    DecayCascadeItemModel.cpp \
+    AbstractDataSource.cpp
 
 HEADERS  += \
     Decay.h \
@@ -43,8 +45,9 @@ HEADERS  += \
     SearchDialog.h \
     HalfLifeSpinBox.h \
     Energy.h \
-    DataSource.h \
-    ENSDFDataSource.h
+    ENSDFDataSource.h \
+    AbstractDataSource.h \
+    DecayCascadeItemModel.h
 
 INCLUDEPATH += ../../libakk/src
 LIBS += -lakk -L../../libakk

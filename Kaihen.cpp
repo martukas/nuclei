@@ -11,6 +11,7 @@
 #include <QFileDialog>
 #include <QPrinter>
 #include <QDesktopWidget>
+#include <QSortFilterProxyModel>
 #include <qwt_plot.h>
 #include <qwt_plot_intervalcurve.h>
 #include <qwt_plot_grid.h>
@@ -26,8 +27,10 @@
 
 #include "version.h"
 
-#include "ENSDFMassChain.h"
+#include "ENSDFMassChain.h" /// \todo remove!
+#include "ENSDFDataSource.h"
 #include "ENSDFDownloader.h"
+#include "DecayCascadeItemModel.h"
 #include "SearchDialog.h"
 
 class PlotZoomer : public QwtPlotZoomer
@@ -121,10 +124,6 @@ Kaihen::Kaihen(QWidget *parent) :
     g2curve->setBrush(QBrush(QColor(232, 95, 92)));
     g2curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 
-    connect(ui->aListWidget, SIGNAL(currentTextChanged(QString)), this, SLOT(selectedA(QString)));
-    connect(ui->nuclideListWidget, SIGNAL(currentTextChanged(QString)), this, SLOT(selectedNuclide(QString)));
-    connect(ui->decayListWidget, SIGNAL(currentTextChanged(QString)), this, SLOT(selectedDecay(QString)));
-
     connect(ui->actionSVG_Export, SIGNAL(triggered()), this, SLOT(svgExport()));
     connect(ui->actionPDF_Export, SIGNAL(triggered()), this, SLOT(pdfExport()));
 
@@ -162,17 +161,7 @@ Kaihen::~Kaihen()
 
     s.setValue("fwhmResolution", eres->value());
 
-    QListWidgetItem *aItem = ui->aListWidget->currentItem();
-    if (aItem)
-        s.setValue("selectedA", aItem->text());
-
-    QListWidgetItem *nuclideItem = ui->nuclideListWidget->currentItem();
-    if (nuclideItem)
-        s.setValue("selectedNuclide", nuclideItem->text());
-
-    QListWidgetItem *decayItem = ui->decayListWidget->currentItem();
-    if (decayItem)
-        s.setValue("selectedDecay", decayItem->text());
+    /// \todo reimplement selection saving with changed selector!
 
     if (decay)
         s.setValue("selectedCascade", QVariant::fromValue(decay->currentSelection()));
@@ -208,23 +197,14 @@ void Kaihen::initialize()
     pd->gammaDiff->setValue(s.value("gammaTolerance", 1.0).toDouble());
     s.endGroup();
 
-    // load available mass numbers (i.e. search for available ENSDF files)
-    QStringList a(ENSDFMassChain::aValues());
-    bool firsttry = true;
-    while (a.isEmpty()) {
-        if (!firsttry)
-            if (QMessageBox::Close == QMessageBox::warning(this, "Selected Folder is Empty", "Please select a folder containing the ENSDF database or use the download feature!", QMessageBox::Ok | QMessageBox::Close, QMessageBox::Ok))
-                qApp->quit();
-        ENSDFDownloader downloader(this);
-        if (downloader.exec() != QDialog::Accepted) {
-            qApp->quit();
-            return;
-        }
+    //ui->aListWidget->addItems(a);
+    /// \todo reimplement above with changed class structure!
 
-        a = ENSDFMassChain::aValues();
-        firsttry = false;
-    }
-    ui->aListWidget->addItems(a);
+    DecayCascadeItemModel *selectionmodel = new DecayCascadeItemModel(new ENSDFDataSource(this), this);
+    QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
+    connect(ui->decayFilterLineEdit, SIGNAL(textChanged(QString)), proxyModel, SLOT(setFilterWildcard(QString)));
+    proxyModel->setSourceModel(selectionmodel);
+    ui->decayTreeView->setModel(proxyModel);
 
     // restore last session
     eres->setValue(s.value("fwhmResolution", 5.0).toDouble());
@@ -237,61 +217,10 @@ void Kaihen::initialize()
     else
         ui->tabWidget->setCurrentWidget(ui->energySpectrumTab);
 
-    QString selectedA(s.value("selectedA").toString());
-    QList<QListWidgetItem *> aItems(ui->aListWidget->findItems(selectedA, Qt::MatchExactly));
-    if (!aItems.isEmpty())
-        ui->aListWidget->setCurrentItem(aItems.at(0));
-
-    QString selectedNuclide(s.value("selectedNuclide").toString());
-    QList<QListWidgetItem *> nuclideItems(ui->nuclideListWidget->findItems(selectedNuclide, Qt::MatchExactly));
-    if (!nuclideItems.isEmpty())
-        ui->nuclideListWidget->setCurrentItem(nuclideItems.at(0));
-
-    QString selectedDecay(s.value("selectedDecay").toString());
-    QList<QListWidgetItem *> decayItems(ui->decayListWidget->findItems(selectedDecay, Qt::MatchExactly));
-    if (!decayItems.isEmpty())
-        ui->decayListWidget->setCurrentItem(decayItems.at(0));
+    /// \todo reimplement selection of former selected item with changed selector!
 
     if (decay)
         decay->setCurrentSelection(s.value("selectedCascade", QVariant::fromValue(Decay::CascadeIdentifier())).value<Decay::CascadeIdentifier>());
-}
-
-void Kaihen::selectedA(const QString &aName)
-{
-    ui->nuclideListWidget->clear();
-
-    ui->decayView->setScene(0);
-    ui->decayListWidget->clear();
-
-    decay.clear();
-
-    updateDecayData(Decay::DecayDataSet());
-    updateEnergySpectrum();
-
-    delete currentMassChain;
-    currentMassChain = new ENSDFMassChain(aName);
-
-    ui->nuclideListWidget->addItems(currentMassChain->daughterNuclides());
-
-    ui->decayToolBox->setCurrentWidget(ui->nuclidePage);
-}
-
-void Kaihen::selectedNuclide(const QString &nuclideName)
-{
-    if (!currentMassChain)
-        return;
-
-    ui->decayView->setScene(0);
-    ui->decayListWidget->clear();
-
-    decay.clear();
-
-    updateDecayData(Decay::DecayDataSet());
-    updateEnergySpectrum();
-
-    ui->decayListWidget->addItems(currentMassChain->decays(nuclideName));
-
-    ui->decayToolBox->setCurrentWidget(ui->decayPage);
 }
 
 void Kaihen::selectedDecay(const QString &decayName)
@@ -307,7 +236,7 @@ void Kaihen::selectedDecay(const QString &decayName)
     s.setValue("preferences/gammaTolerance", pd->gammaDiff->value());
     s.sync();
 
-    decay = currentMassChain->decay(ui->nuclideListWidget->currentItem()->text(), decayName);
+    //decay = currentMassChain->decay(ui->nuclideListWidget->currentItem()->text(), decayName);
     connect(decay.data(), SIGNAL(updatedDecayData(Decay::DecayDataSet)), this, SLOT(updateDecayData(Decay::DecayDataSet)));
     decay->setStyle(pd->fontFamily->currentFont(), pd->fontSize->value());
     QGraphicsScene *scene = decay->levelPlot();
@@ -563,31 +492,12 @@ void Kaihen::showPreferences()
 {
     pdd->exec();
 
-    // save current selection
-    QString aString, nuclideString, decayString;
-    QListWidgetItem * aItem = ui->aListWidget->currentItem();
-    if (aItem)
-        aString = aItem->text();
-    QListWidgetItem * nuclideItem = ui->nuclideListWidget->currentItem();
-    if (nuclideItem)
-        nuclideString = nuclideItem->text();
-    QListWidgetItem * decayItem = ui->decayListWidget->currentItem();
-    if (decayItem)
-        decayString = decayItem->text();
     Decay::CascadeIdentifier ci;
     if (decay)
         ci = decay->currentSelection();
 
+    /// \todo reimplement with changed selector!
 
-    selectedA(aString);
-
-    QList<QListWidgetItem*> nuclideItems(ui->nuclideListWidget->findItems(nuclideString, Qt::MatchExactly));
-    if (!nuclideItems.isEmpty())
-        ui->nuclideListWidget->setCurrentItem(nuclideItems.at(0));
-
-    QList<QListWidgetItem*> decayItems(ui->decayListWidget->findItems(decayString, Qt::MatchExactly));
-    if (!decayItems.isEmpty())
-        ui->decayListWidget->setCurrentItem(decayItems.at(0));
     if (decay)
         decay->setCurrentSelection(ci);
 }
