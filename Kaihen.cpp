@@ -574,6 +574,10 @@ void Kaihen::showPreferences()
     QListWidgetItem * decayItem = ui->decayListWidget->currentItem();
     if (decayItem)
         decayString = decayItem->text();
+    Decay::CascadeIdentifier ci;
+    if (decay)
+        ci = decay->currentSelection();
+
 
     selectedA(aString);
 
@@ -584,6 +588,8 @@ void Kaihen::showPreferences()
     QList<QListWidgetItem*> decayItems(ui->decayListWidget->findItems(decayString, Qt::MatchExactly));
     if (!decayItems.isEmpty())
         ui->decayListWidget->setCurrentItem(decayItems.at(0));
+    if (decay)
+        decay->setCurrentSelection(ci);
 }
 
 void Kaihen::showAbout()
