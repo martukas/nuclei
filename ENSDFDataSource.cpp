@@ -152,6 +152,10 @@ ENSDFTreeItem::ENSDFTreeItem(const QList<QVariant> &data, unsigned int A, bool i
 {
 }
 
+ENSDFTreeItem::~ENSDFTreeItem()
+{
+}
+
 unsigned int ENSDFTreeItem::A() const
 {
     return m_A;

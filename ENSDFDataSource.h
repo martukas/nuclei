@@ -16,6 +16,7 @@ class ENSDFTreeItem : public AbstractTreeItem
 public:
     explicit ENSDFTreeItem(AbstractTreeItem *parent = 0);
     explicit ENSDFTreeItem(const QList<QVariant> &data, unsigned int A, bool isdecay, AbstractTreeItem *parent = 0);
+    virtual ~ENSDFTreeItem();
 
     unsigned int A() const;
 

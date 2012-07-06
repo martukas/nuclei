@@ -2,8 +2,10 @@
 #define DECAYCASCADEITEMMODEL_H
 
 #include <QAbstractItemModel>
+#include <QSharedPointer>
 
 class AbstractDataSource;
+class Decay;
 
 class DecayCascadeItemModel : public QAbstractItemModel
 {
@@ -19,6 +21,8 @@ public:
     virtual QModelIndex parent(const QModelIndex & index ) const;
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
+
+    virtual QSharedPointer<Decay> decay(const QModelIndex &index) const;
     
 signals:
     

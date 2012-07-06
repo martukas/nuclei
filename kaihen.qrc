@@ -20,5 +20,7 @@
         <file>dialog-close.png</file>
         <file>dialog-ok.png</file>
         <file>kaihen.png</file>
+        <file>format-indent-more.png</file>
+        <file>format-justify-fill.png</file>
     </qresource>
 </RCC>

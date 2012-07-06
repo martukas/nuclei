@@ -2,6 +2,7 @@
 
 #include <QModelIndex>
 #include <QString>
+#include <Decay.h>
 
 #include "AbstractDataSource.h"
 
@@ -32,7 +33,15 @@ QVariant DecayCascadeItemModel::data(const QModelIndex &index, int role) const
 
     AbstractTreeItem *item = static_cast<AbstractTreeItem*>(index.internalPointer());
 
-    return item->data(index.column());
+    if (role == Qt::DisplayRole)
+        return item->data(index.column());
+
+    if (role == Qt::ToolTipRole) {
+        if (index.parent().isValid())
+            return item->data(index.column()).toString();
+        else
+            return "Parent Nuclide: " + item->data(index.column()).toString();
+    }
 }
 
 QModelIndex DecayCascadeItemModel::index(int row, int column, const QModelIndex &parent) const
@@ -82,6 +91,16 @@ Qt::ItemFlags DecayCascadeItemModel::flags(const QModelIndex &index) const
 
 
     return result;
+}
+
+QSharedPointer<Decay> DecayCascadeItemModel::decay(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return QSharedPointer<Decay>();
+
+    AbstractTreeItem *item = static_cast<AbstractTreeItem*>(index.internalPointer());
+
+    return ds->decay(item);
 }
 
 

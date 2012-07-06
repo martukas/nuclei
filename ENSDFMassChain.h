@@ -61,7 +61,7 @@ private:
     static double parseEnsdfMixing(const QString &s, const QString &multipolarity, GammaTransition::DeltaState *state);
     static ParentRecord parseParentRecord(const QString &precstr);
 
-    template <typename T> static T & findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal = 0);
+    template <typename T> static T findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal = 0);
 
     void parseBlocks();
 

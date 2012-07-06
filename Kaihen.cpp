@@ -26,9 +26,7 @@
 
 #include "version.h"
 
-#include "ENSDFMassChain.h" /// \todo remove!
 #include "ENSDFDataSource.h"
-#include "ENSDFDownloader.h"
 #include "DecayCascadeItemModel.h"
 #include "DecayCascadeFilterProxyModel.h"
 #include "SearchDialog.h"
@@ -52,7 +50,9 @@ Kaihen::Kaihen(QWidget *parent) :
     ui(new Ui::KaihenMainWindow),
     pdd(new QDialog(this)), pd(new Ui::PreferencesDialog),
     m_search(new SearchDialog(this)),
-    currentMassChain(0), zoomer(0)
+    decaySelectionModel(0),
+    decayProxyModel(0),
+    zoomer(0)
 {
     ui->setupUi(this);
     setWindowTitle(QCoreApplication::applicationName() + QString(" ") + QCoreApplication::applicationVersion());
@@ -124,6 +124,9 @@ Kaihen::Kaihen(QWidget *parent) :
     g2curve->setBrush(QBrush(QColor(232, 95, 92)));
     g2curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 
+    connect(ui->decayTreeCollapseButton, SIGNAL(clicked()), ui->decayTreeView, SLOT(collapseAll()));
+    connect(ui->decayTreeExpandButton, SIGNAL(clicked()), ui->decayTreeView, SLOT(expandAll()));
+
     connect(ui->actionSVG_Export, SIGNAL(triggered()), this, SLOT(svgExport()));
     connect(ui->actionPDF_Export, SIGNAL(triggered()), this, SLOT(pdfExport()));
 
@@ -161,7 +164,15 @@ Kaihen::~Kaihen()
 
     s.setValue("fwhmResolution", eres->value());
 
-    /// \todo reimplement selection saving with changed selector!
+    s.setValue("decayFilter", ui->decayFilterLineEdit->text());
+    QModelIndex mi = ui->decayTreeView->currentIndex();
+    QList<QVariant> selectionIndices;
+    while (mi.isValid()) {
+        selectionIndices.prepend(mi.row());
+        mi = mi.parent();
+    }
+    s.setValue("decaySelection", selectionIndices);
+
 
     if (decay)
         s.setValue("selectedCascade", QVariant::fromValue(decay->currentSelection()));
@@ -197,14 +208,13 @@ void Kaihen::initialize()
     pd->gammaDiff->setValue(s.value("gammaTolerance", 1.0).toDouble());
     s.endGroup();
 
-    //ui->aListWidget->addItems(a);
-    /// \todo reimplement above with changed class structure!
+    decaySelectionModel = new DecayCascadeItemModel(new ENSDFDataSource(this), this);
+    decayProxyModel = new DecayCascadeFilterProxyModel(this);
+    connect(ui->decayFilterLineEdit, SIGNAL(textChanged(QString)), decayProxyModel, SLOT(setFilterWildcard(QString)));
+    decayProxyModel->setSourceModel(decaySelectionModel);
+    ui->decayTreeView->setModel(decayProxyModel);
 
-    DecayCascadeItemModel *selectionmodel = new DecayCascadeItemModel(new ENSDFDataSource(this), this);
-    DecayCascadeFilterProxyModel *proxyModel = new DecayCascadeFilterProxyModel(this);
-    connect(ui->decayFilterLineEdit, SIGNAL(textChanged(QString)), proxyModel, SLOT(setFilterWildcard(QString)));
-    proxyModel->setSourceModel(selectionmodel);
-    ui->decayTreeView->setModel(proxyModel);
+    connect(ui->decayTreeView, SIGNAL(clicked(QModelIndex)), this, SLOT(selectedDecay(QModelIndex)));
 
     // restore last session
     eres->setValue(s.value("fwhmResolution", 5.0).toDouble());
@@ -217,18 +227,31 @@ void Kaihen::initialize()
     else
         ui->tabWidget->setCurrentWidget(ui->energySpectrumTab);
 
-    /// \todo reimplement selection of former selected item with changed selector!
+    ui->decayFilterLineEdit->setText(s.value("decayFilter", "").toString());
+    QList<QVariant> selectionIndices(s.value("decaySelection").toList());
+    if (!selectionIndices.isEmpty()) {
+        QModelIndex mi = decayProxyModel->index(selectionIndices.at(0).toInt(), 0);
+        for (int i=1; i<selectionIndices.size(); i++)
+            mi = mi.child(selectionIndices.at(i).toInt(), 0);
+        ui->decayTreeView->setCurrentIndex(mi);
+        selectedDecay(mi);
+    }
 
     if (decay)
         decay->setCurrentSelection(s.value("selectedCascade", QVariant::fromValue(Decay::CascadeIdentifier())).value<Decay::CascadeIdentifier>());
 }
 
-void Kaihen::selectedDecay(const QString &decayName)
+void Kaihen::selectedDecay(const QModelIndex &index)
 {
-    if (!currentMassChain)
+    if (!index.isValid())
         return;
 
-    if (decayName.isEmpty())
+    if (!decaySelectionModel)
+        return;
+
+    QSharedPointer<Decay> tmp(decaySelectionModel->decay(decayProxyModel->mapToSource(index)));
+
+    if (!tmp)
         return;
 
     QSettings s;
@@ -236,7 +259,8 @@ void Kaihen::selectedDecay(const QString &decayName)
     s.setValue("preferences/gammaTolerance", pd->gammaDiff->value());
     s.sync();
 
-    //decay = currentMassChain->decay(ui->nuclideListWidget->currentItem()->text(), decayName);
+    decay = tmp;
+
     connect(decay.data(), SIGNAL(updatedDecayData(Decay::DecayDataSet)), this, SLOT(updateDecayData(Decay::DecayDataSet)));
     decay->setStyle(pd->fontFamily->currentFont(), pd->fontSize->value());
     QGraphicsScene *scene = decay->levelPlot();

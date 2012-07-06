@@ -8,14 +8,16 @@ namespace Ui {
 class KaihenMainWindow;
 class PreferencesDialog;
 }
-class ENSDFMassChain;
 class QListWidgetItem;
+class QModelIndex;
 class QwtPlot;
 class QwtPlotIntervalCurve;
 class QwtPlotZoomer;
 class QwtIntervalSample;
 class QDoubleSpinBox;
 class SearchDialog;
+class DecayCascadeItemModel;
+class DecayCascadeFilterProxyModel;
 
 class Kaihen : public QMainWindow
 {
@@ -28,7 +30,7 @@ public:
 private slots:
     void initialize();
 
-    void selectedDecay(const QString &decayName);
+    void selectedDecay(const QModelIndex &index);
 
     void updateDecayData(Decay::DecayDataSet data);
     void updateEnergySpectrum();
@@ -61,7 +63,8 @@ private:
 
     SearchDialog *m_search;
 
-    ENSDFMassChain *currentMassChain;
+    DecayCascadeItemModel *decaySelectionModel;
+    DecayCascadeFilterProxyModel *decayProxyModel;
     QSharedPointer<Decay> decay;
 
     QDoubleSpinBox *eres;

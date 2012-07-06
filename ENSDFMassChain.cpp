@@ -519,7 +519,7 @@ ENSDFMassChain::ParentRecord ENSDFMassChain::parseParentRecord(const QString &pr
 }
 
 template <typename T>
-T & ENSDFMassChain::findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal)
+T ENSDFMassChain::findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal)
 {
     Q_ASSERT(!map.isEmpty());
 
