@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     Energy.cpp \
     ENSDFDataSource.cpp \
     DecayCascadeItemModel.cpp \
-    AbstractDataSource.cpp
+    AbstractDataSource.cpp \
+    DecayCascadeFilterProxyModel.cpp
 
 HEADERS  += \
     Decay.h \
@@ -47,7 +48,8 @@ HEADERS  += \
     Energy.h \
     ENSDFDataSource.h \
     AbstractDataSource.h \
-    DecayCascadeItemModel.h
+    DecayCascadeItemModel.h \
+    DecayCascadeFilterProxyModel.h
 
 INCLUDEPATH += ../../libakk/src
 LIBS += -lakk -L../../libakk

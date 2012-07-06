@@ -11,7 +11,6 @@
 #include <QFileDialog>
 #include <QPrinter>
 #include <QDesktopWidget>
-#include <QSortFilterProxyModel>
 #include <qwt_plot.h>
 #include <qwt_plot_intervalcurve.h>
 #include <qwt_plot_grid.h>
@@ -31,6 +30,7 @@
 #include "ENSDFDataSource.h"
 #include "ENSDFDownloader.h"
 #include "DecayCascadeItemModel.h"
+#include "DecayCascadeFilterProxyModel.h"
 #include "SearchDialog.h"
 
 class PlotZoomer : public QwtPlotZoomer
@@ -201,7 +201,7 @@ void Kaihen::initialize()
     /// \todo reimplement above with changed class structure!
 
     DecayCascadeItemModel *selectionmodel = new DecayCascadeItemModel(new ENSDFDataSource(this), this);
-    QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(this);
+    DecayCascadeFilterProxyModel *proxyModel = new DecayCascadeFilterProxyModel(this);
     connect(ui->decayFilterLineEdit, SIGNAL(textChanged(QString)), proxyModel, SLOT(setFilterWildcard(QString)));
     proxyModel->setSourceModel(selectionmodel);
     ui->decayTreeView->setModel(proxyModel);
