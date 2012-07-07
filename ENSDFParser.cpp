@@ -1,4 +1,4 @@
-#include "ENSDFMassChain.h"
+#include "ENSDFParser.h"
 #include <QDir>
 #include <QFile>
 #include <QChar>
@@ -12,9 +12,9 @@
 #include "EnergyLevel.h"
 #include "GammaTransition.h"
 
-QList<unsigned int> ENSDFMassChain::aList;
+QList<unsigned int> ENSDFParser::aList;
 
-ENSDFMassChain::ENSDFMassChain(unsigned int A)
+ENSDFParser::ENSDFParser(unsigned int A)
     : a(A)
 {
     QSettings s;
@@ -28,7 +28,7 @@ ENSDFMassChain::ENSDFMassChain(unsigned int A)
     parseBlocks();
 }
 
-const QList<unsigned int> &ENSDFMassChain::aValues() // static
+const QList<unsigned int> &ENSDFParser::aValues() // static
 {
     if (!aList.isEmpty())
         return aList;
@@ -50,22 +50,22 @@ const QList<unsigned int> &ENSDFMassChain::aValues() // static
     return aList;
 }
 
-unsigned int ENSDFMassChain::aValue() const
+unsigned int ENSDFParser::aValue() const
 {
     return a;
 }
 
-const QStringList & ENSDFMassChain::daughterNuclides() const
+const QStringList & ENSDFParser::daughterNuclides() const
 {
     return m_daughterNames;
 }
 
-const QStringList & ENSDFMassChain::decays(const QString &daughterNuclideName) const
+const QStringList & ENSDFParser::decays(const QString &daughterNuclideName) const
 {
     return m_decayNames[daughterNuclideName];
 }
 
-QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, const QString &decayName)
+QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, const QString &decayName)
 {
     QSettings s;
     double adoptedLevelMaxDifference = s.value("preferences/levelTolerance", 1.0).toDouble();
@@ -180,7 +180,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
         // process new level
         else if (line.startsWith(dNucid + "  L ")) {
             // determine energy
-            Energy e = ENSDFMassChain::parseEnsdfEnergy(line.mid(9, 10));
+            Energy e = ENSDFParser::parseEnsdfEnergy(line.mid(9, 10));
             // determine spin
             SpinParity spin(parseSpinParity(line.mid(21, 18)));
             // determine isomer number
@@ -332,7 +332,7 @@ QSharedPointer<Decay> ENSDFMassChain::decay(const QString &daughterNuclideName, 
     return QSharedPointer<Decay>(new Decay(decayName, pNuc, dNuc, decaydata.decayType));
 }
 
-QString ENSDFMassChain::nuclideToNucid(const QString &nuclide)
+QString ENSDFParser::nuclideToNucid(const QString &nuclide)
 {
     QStringList parts = nuclide.split('-');
     if (parts.size() < 2)
@@ -343,7 +343,7 @@ QString ENSDFMassChain::nuclideToNucid(const QString &nuclide)
     return nucid;
 }
 
-QString ENSDFMassChain::nucidToNuclide(const QString &nucid)
+QString ENSDFParser::nucidToNuclide(const QString &nucid)
 {
     if (nucid.size() != 5)
         return QString();
@@ -356,17 +356,17 @@ QString ENSDFMassChain::nucidToNuclide(const QString &nucid)
     return nuclide;
 }
 
-unsigned int ENSDFMassChain::A(const QString &nuclide)
+unsigned int ENSDFParser::A(const QString &nuclide)
 {
     return nuclide.split("-").value(1).toUInt();
 }
 
-QString ENSDFMassChain::element(const QString &nuclide)
+QString ENSDFParser::element(const QString &nuclide)
 {
     return nuclide.split("-").value(0);
 }
 
-Decay::Type ENSDFMassChain::parseDecayType(const QString &tstring)
+Decay::Type ENSDFParser::parseDecayType(const QString &tstring)
 {
     if (tstring == "EC DECAY")
         return Decay::ElectronCapture;
@@ -381,7 +381,7 @@ Decay::Type ENSDFMassChain::parseDecayType(const QString &tstring)
     return Decay::Undefined;
 }
 
-Energy ENSDFMassChain::parseEnsdfEnergy(const QString &estr)
+Energy ENSDFParser::parseEnsdfEnergy(const QString &estr)
 {
     QLocale clocale("C");
     QString tmp(estr);
@@ -393,7 +393,7 @@ Energy ENSDFMassChain::parseEnsdfEnergy(const QString &estr)
     return Energy(result);
 }
 
-HalfLife ENSDFMassChain::parseHalfLife(const QString &hlstr)
+HalfLife ENSDFParser::parseHalfLife(const QString &hlstr)
 {
     double sec = std::numeric_limits<double>::quiet_NaN();
     bool uncert = false;
@@ -441,7 +441,7 @@ HalfLife ENSDFMassChain::parseHalfLife(const QString &hlstr)
     return HalfLife(sec, uncert);
 }
 
-SpinParity ENSDFMassChain::parseSpinParity(const QString &sstr)
+SpinParity ENSDFParser::parseSpinParity(const QString &sstr)
 {
     bool weakarg = false;
     SpinParity::Parity p = SpinParity::Undefined;
@@ -471,7 +471,7 @@ SpinParity ENSDFMassChain::parseSpinParity(const QString &sstr)
     return SpinParity(num, denom, p, weakarg, valid);
 }
 
-double ENSDFMassChain::parseEnsdfMixing(const QString &mstr, const QString &multipolarity, GammaTransition::DeltaState *state)
+double ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipolarity, GammaTransition::DeltaState *state)
 {
     QLocale clocale("C");
     bool convok = false;
@@ -497,7 +497,7 @@ double ENSDFMassChain::parseEnsdfMixing(const QString &mstr, const QString &mult
     return delta;
 }
 
-ENSDFMassChain::ParentRecord ENSDFMassChain::parseParentRecord(const QString &precstr)
+ENSDFParser::ParentRecord ENSDFParser::parseParentRecord(const QString &precstr)
 {
     Q_ASSERT(precstr.size() >= 50);
 
@@ -519,7 +519,7 @@ ENSDFMassChain::ParentRecord ENSDFMassChain::parseParentRecord(const QString &pr
 }
 
 template <typename T>
-T ENSDFMassChain::findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal)
+T ENSDFParser::findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal)
 {
     Q_ASSERT(!map.isEmpty());
 
@@ -537,7 +537,7 @@ T ENSDFMassChain::findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal
     return i.value();
 }
 
-void ENSDFMassChain::parseBlocks()
+void ENSDFParser::parseBlocks()
 {
     // create list of block boundaries
     // end index points behind last line of block!
@@ -595,7 +595,7 @@ void ENSDFMassChain::parseBlocks()
             QString decayname(prec.nuclideName);
             if (prec.energy > 0.0)
                 decayname.append("m");
-            decayname.append(", ")
+            decayname.append(QString::fromUtf8(" → "))
                     .append(Decay::decayTypeAsText(decaydata.decayType))
                     .append(", ")
                     .append(hlstrings.join(" + "));

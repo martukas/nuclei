@@ -9,7 +9,7 @@
 
 #include "AbstractDataSource.h"
 
-class ENSDFMassChain;
+class ENSDFParser;
 
 class ENSDFTreeItem : public AbstractTreeItem
 {
@@ -48,7 +48,7 @@ private:
 
     ENSDFTreeItem *root;
 
-    mutable ENSDFMassChain *mccache;
+    mutable ENSDFParser *mccache;
 };
 
 #endif // ENSDFDATASOURCE_H

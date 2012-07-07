@@ -28,9 +28,6 @@ QVariant DecayCascadeItemModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return QVariant();
 
-    if (role != Qt::DisplayRole && role != Qt::ToolTipRole)
-        return QVariant();
-
     AbstractTreeItem *item = static_cast<AbstractTreeItem*>(index.internalPointer());
 
     if (role == Qt::DisplayRole)
@@ -42,6 +39,8 @@ QVariant DecayCascadeItemModel::data(const QModelIndex &index, int role) const
         else
             return "Parent Nuclide: " + item->data(index.column()).toString();
     }
+
+    return QVariant();
 }
 
 QModelIndex DecayCascadeItemModel::index(int row, int column, const QModelIndex &parent) const

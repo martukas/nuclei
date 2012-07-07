@@ -292,56 +292,133 @@
     <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QGridLayout" name="gridLayout">
-     <property name="horizontalSpacing">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="margin">
       <number>1</number>
      </property>
-     <item row="0" column="2">
-      <widget class="QToolButton" name="decayTreeExpandButton">
-       <property name="toolTip">
-        <string>Expand Tree</string>
+     <item>
+      <widget class="QTabWidget" name="searchTreeExpandButton">
+       <property name="currentIndex">
+        <number>0</number>
        </property>
-       <property name="text">
-        <string>X</string>
-       </property>
-       <property name="icon">
-        <iconset resource="kaihen.qrc">
-         <normaloff>:/format-indent-more.png</normaloff>:/format-indent-more.png</iconset>
-       </property>
-       <property name="autoRaise">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0" colspan="3">
-      <widget class="QTreeView" name="decayTreeView">
-       <attribute name="headerVisible">
-        <bool>false</bool>
-       </attribute>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLineEdit" name="decayFilterLineEdit">
-       <property name="placeholderText">
-        <string>Enter Filter Text</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QToolButton" name="decayTreeCollapseButton">
-       <property name="toolTip">
-        <string>Collapse Tree</string>
-       </property>
-       <property name="text">
-        <string>C</string>
-       </property>
-       <property name="icon">
-        <iconset resource="kaihen.qrc">
-         <normaloff>:/format-justify-fill.png</normaloff>:/format-justify-fill.png</iconset>
-       </property>
-       <property name="autoRaise">
-        <bool>true</bool>
-       </property>
+       <widget class="QWidget" name="allDecayTab">
+        <attribute name="title">
+         <string>All Decays</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <property name="horizontalSpacing">
+          <number>1</number>
+         </property>
+         <property name="margin">
+          <number>1</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="LineEdit" name="decayFilterLineEdit">
+           <property name="placeholderText">
+            <string>Enter Filter Text</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QToolButton" name="decayTreeExpandButton">
+           <property name="toolTip">
+            <string>Expand Tree</string>
+           </property>
+           <property name="text">
+            <string>X</string>
+           </property>
+           <property name="icon">
+            <iconset resource="kaihen.qrc">
+             <normaloff>:/format-indent-more.png</normaloff>:/format-indent-more.png</iconset>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QToolButton" name="decayTreeCollapseButton">
+           <property name="toolTip">
+            <string>Collapse Tree</string>
+           </property>
+           <property name="text">
+            <string>C</string>
+           </property>
+           <property name="icon">
+            <iconset resource="kaihen.qrc">
+             <normaloff>:/format-justify-fill.png</normaloff>:/format-justify-fill.png</iconset>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" colspan="3">
+          <widget class="QTreeView" name="decayTreeView">
+           <attribute name="headerVisible">
+            <bool>false</bool>
+           </attribute>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="searchResultTab">
+        <attribute name="title">
+         <string>Search Results</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout">
+         <property name="horizontalSpacing">
+          <number>1</number>
+         </property>
+         <property name="margin">
+          <number>1</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="LineEdit" name="searchFilterLineEdit">
+           <property name="placeholderText">
+            <string>Enter Filter Text</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QToolButton" name="searchTreeCollapseButton">
+           <property name="toolTip">
+            <string>Collapse Tree</string>
+           </property>
+           <property name="text">
+            <string>C</string>
+           </property>
+           <property name="icon">
+            <iconset resource="kaihen.qrc">
+             <normaloff>:/format-justify-fill.png</normaloff>:/format-justify-fill.png</iconset>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QToolButton" name="toolButton_2">
+           <property name="toolTip">
+            <string>Expand Tree</string>
+           </property>
+           <property name="text">
+            <string>X</string>
+           </property>
+           <property name="icon">
+            <iconset resource="kaihen.qrc">
+             <normaloff>:/format-indent-more.png</normaloff>:/format-indent-more.png</iconset>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" colspan="3">
+          <widget class="QTreeView" name="searchTreeView"/>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </item>
     </layout>
@@ -847,24 +924,6 @@
    <addaction name="actionPreferences"/>
    <addaction name="actionAbout"/>
   </widget>
-  <widget class="QDockWidget" name="searchResultDock">
-   <property name="allowedAreas">
-    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
-   </property>
-   <property name="windowTitle">
-    <string>Search Results</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_3">
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <item>
-      <widget class="QTreeView" name="treeView"/>
-     </item>
-    </layout>
-   </widget>
-  </widget>
   <action name="actionZoom_In">
    <property name="icon">
     <iconset resource="kaihen.qrc">
@@ -1021,6 +1080,11 @@
    <extends>QGroupBox</extends>
    <header>qxtgroupbox.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>LineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>LineEdit.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

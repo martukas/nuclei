@@ -22,5 +22,6 @@
         <file>kaihen.png</file>
         <file>format-indent-more.png</file>
         <file>format-justify-fill.png</file>
+        <file>edit-clear-locationbar-rtl.png</file>
     </qresource>
 </RCC>

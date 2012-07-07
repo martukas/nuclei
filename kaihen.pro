@@ -18,14 +18,15 @@ SOURCES += main.cpp\
     qxtgroupbox.cpp \
     ENSDFDownloader.cpp \
     Kaihen.cpp \
-    ENSDFMassChain.cpp \
     SearchDialog.cpp \
     HalfLifeSpinBox.cpp \
     Energy.cpp \
     ENSDFDataSource.cpp \
     DecayCascadeItemModel.cpp \
     AbstractDataSource.cpp \
-    DecayCascadeFilterProxyModel.cpp
+    DecayCascadeFilterProxyModel.cpp \
+    LineEdit.cpp \
+    ENSDFParser.cpp
 
 HEADERS  += \
     Decay.h \
@@ -42,14 +43,15 @@ HEADERS  += \
     qxtgroupbox.h \
     ENSDFDownloader.h \
     Kaihen.h \
-    ENSDFMassChain.h \
     SearchDialog.h \
     HalfLifeSpinBox.h \
     Energy.h \
     ENSDFDataSource.h \
     AbstractDataSource.h \
     DecayCascadeItemModel.h \
-    DecayCascadeFilterProxyModel.h
+    DecayCascadeFilterProxyModel.h \
+    LineEdit.h \
+    ENSDFParser.h
 
 INCLUDEPATH += ../../libakk/src
 LIBS += -lakk -L../../libakk

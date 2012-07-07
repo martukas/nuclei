@@ -7,7 +7,7 @@
 #include <QProgressDialog>
 
 #include "ENSDFDownloader.h"
-#include "ENSDFMassChain.h"
+#include "ENSDFParser.h"
 
 const quint32 ENSDFDataSource::magicNumber = 0x4b616945;
 const quint32 ENSDFDataSource::cacheVersion = 1;
@@ -43,7 +43,7 @@ QSharedPointer<Decay> ENSDFDataSource::decay(const AbstractTreeItem *item) const
         return mccache->decay(eitem->parent()->data(0).toString(), eitem->data(0).toString());
 
     delete mccache;
-    mccache = new ENSDFMassChain(eitem->A());
+    mccache = new ENSDFParser(eitem->A());
     return mccache->decay(eitem->parent()->data(0).toString(), eitem->data(0).toString());
 }
 
@@ -82,7 +82,7 @@ void ENSDFDataSource::createENSDFCache()
     QWidget *pwid = qobject_cast<QWidget*>(parent());
 
     // get A (mass number) strings or exit application
-    QList<unsigned int> aList(ENSDFMassChain::aValues());
+    QList<unsigned int> aList(ENSDFParser::aValues());
     bool firsttry = true;
     while (aList.isEmpty()) {
         if (!firsttry)
@@ -94,7 +94,7 @@ void ENSDFDataSource::createENSDFCache()
             return;
         }
 
-        aList = ENSDFMassChain::aValues();
+        aList = ENSDFParser::aValues();
         firsttry = false;
     }
 
@@ -122,7 +122,7 @@ void ENSDFDataSource::createENSDFCache()
     pd.setWindowModality(Qt::WindowModal);
     pd.setCancelButton(0);
     foreach (unsigned int a, aList) {
-        ENSDFMassChain *mc = new ENSDFMassChain(a);
+        ENSDFParser *mc = new ENSDFParser(a);
 
         foreach (const QString &daughter, mc->daughterNuclides()) {
             ENSDFTreeItem *d = new ENSDFTreeItem(QList<QVariant>() << daughter, a, false, root);

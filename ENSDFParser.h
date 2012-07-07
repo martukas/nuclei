@@ -1,5 +1,5 @@
-#ifndef ENSDFMASSCHAIN_H
-#define ENSDFMASSCHAIN_H
+#ifndef ENSDFPARSER_H
+#define ENSDFPARSER_H
 #include <QStringList>
 #include <QSharedPointer>
 #include <QPair>
@@ -8,10 +8,10 @@
 
 class HalfLife;
 
-class ENSDFMassChain
+class ENSDFParser
 {
 public:
-    explicit ENSDFMassChain(unsigned int A);
+    explicit ENSDFParser(unsigned int A);
 
     static const QList<unsigned int> &aValues();
 
