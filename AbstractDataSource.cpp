@@ -3,15 +3,15 @@
 #include <QVariant>
 
 AbstractTreeItem::AbstractTreeItem(AbstractTreeItem *parent)
-    : parentItem(parent), m_isSelectable(false)
+    : m_A(0), parentItem(parent), m_isSelectable(false), m_type(UnknownType)
 {
     itemData.append(QVariant());
     if (parent)
         parent->childItems.append(this);
 }
 
-AbstractTreeItem::AbstractTreeItem(const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent)
-    : itemData(data), parentItem(parent), m_isSelectable(selectable)
+AbstractTreeItem::AbstractTreeItem(ItemType type, unsigned int A, const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent)
+    : m_A(A), itemData(data), parentItem(parent), m_isSelectable(selectable), m_type(type)
 {
     if (parent)
         parent->childItems.append(this);
@@ -63,6 +63,16 @@ int AbstractTreeItem::row() const
         return parentItem->childItems.indexOf(const_cast<AbstractTreeItem*>(this));
 
     return 0;
+}
+
+unsigned int AbstractTreeItem::A() const
+{
+    return m_A;
+}
+
+AbstractTreeItem::ItemType AbstractTreeItem::type() const
+{
+    return m_type;
 }
 
 

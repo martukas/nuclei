@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     AbstractDataSource.cpp \
     DecayCascadeFilterProxyModel.cpp \
     LineEdit.cpp \
-    ENSDFParser.cpp
+    ENSDFParser.cpp \
+    SearchResultDataSource.cpp
 
 HEADERS  += \
     Decay.h \
@@ -51,7 +52,8 @@ HEADERS  += \
     DecayCascadeItemModel.h \
     DecayCascadeFilterProxyModel.h \
     LineEdit.h \
-    ENSDFParser.h
+    ENSDFParser.h \
+    SearchResultDataSource.h
 
 INCLUDEPATH += ../../libakk/src
 LIBS += -lakk -L../../libakk

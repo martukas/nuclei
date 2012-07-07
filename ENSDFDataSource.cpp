@@ -13,7 +13,7 @@ const quint32 ENSDFDataSource::magicNumber = 0x4b616945;
 const quint32 ENSDFDataSource::cacheVersion = 1;
 
 ENSDFDataSource::ENSDFDataSource(QObject *parent)
-    : AbstractDataSource(parent), root(new ENSDFTreeItem(0)), mccache(0)
+    : AbstractDataSource(parent), root(new ENSDFTreeItem), mccache(0)
 {
     // load decay cache
     if (!loadENSDFCache())
@@ -23,6 +23,7 @@ ENSDFDataSource::ENSDFDataSource(QObject *parent)
 ENSDFDataSource::~ENSDFDataSource()
 {
     delete root;
+    delete mccache;
 }
 
 AbstractTreeItem *ENSDFDataSource::rootItem() const
@@ -125,9 +126,9 @@ void ENSDFDataSource::createENSDFCache()
         ENSDFParser *mc = new ENSDFParser(a);
 
         foreach (const QString &daughter, mc->daughterNuclides()) {
-            ENSDFTreeItem *d = new ENSDFTreeItem(QList<QVariant>() << daughter, a, false, root);
+            ENSDFTreeItem *d = new ENSDFTreeItem(AbstractTreeItem::DaughterType, QList<QVariant>() << daughter, a, false, root);
             foreach (const QString decay, mc->decays(daughter))
-                new ENSDFTreeItem(QList<QVariant>() << decay, a, true, d);
+                new ENSDFTreeItem(AbstractTreeItem::DecayType, QList<QVariant>() << decay, a, true, d);
         }
 
         delete mc;
@@ -143,22 +144,17 @@ void ENSDFDataSource::createENSDFCache()
 
 
 ENSDFTreeItem::ENSDFTreeItem(AbstractTreeItem *parent)
-    : AbstractTreeItem(parent), m_A(0)
+    : AbstractTreeItem(parent)
 {
 }
 
-ENSDFTreeItem::ENSDFTreeItem(const QList<QVariant> &data, unsigned int A, bool isdecay, AbstractTreeItem *parent)
-    : AbstractTreeItem(data, isdecay, parent), m_A(A)
+ENSDFTreeItem::ENSDFTreeItem(ItemType type, const QList<QVariant> &data, unsigned int A, bool isdecay, AbstractTreeItem *parent)
+    : AbstractTreeItem(type, A, data, isdecay, parent)
 {
 }
 
 ENSDFTreeItem::~ENSDFTreeItem()
 {
-}
-
-unsigned int ENSDFTreeItem::A() const
-{
-    return m_A;
 }
 
 QDataStream & operator <<(QDataStream &out, const ENSDFTreeItem &treeitem)
