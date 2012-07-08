@@ -2,7 +2,6 @@
 
 #include <QModelIndex>
 #include <QString>
-#include <Decay.h>
 
 #include "AbstractDataSource.h"
 
@@ -15,8 +14,19 @@ DecayCascadeItemModel::~DecayCascadeItemModel()
 {
 }
 
+void DecayCascadeItemModel::setDataSource(AbstractDataSource *datasource)
+{
+    beginResetModel();
+    delete ds;
+    ds = datasource;
+    endResetModel();
+}
+
 int DecayCascadeItemModel::columnCount(const QModelIndex &parent) const
 {
+    if (!ds)
+        return 0;
+
     if (parent.isValid())
         return static_cast<AbstractTreeItem*>(parent.internalPointer())->columnCount();
     else
@@ -48,6 +58,9 @@ QModelIndex DecayCascadeItemModel::index(int row, int column, const QModelIndex 
     if (!hasIndex(row, column, parent))
         return QModelIndex();
 
+    if (!ds)
+        return QModelIndex();
+
     AbstractTreeItem *parentItem;
 
     if (!parent.isValid())
@@ -65,6 +78,9 @@ QModelIndex DecayCascadeItemModel::index(int row, int column, const QModelIndex 
 
 int DecayCascadeItemModel::rowCount(const QModelIndex &parent) const
 {
+    if (!ds)
+        return 0;
+
     AbstractTreeItem *parentItem;
     if (parent.column() > 0)
         return 0;
@@ -100,6 +116,16 @@ QSharedPointer<Decay> DecayCascadeItemModel::decay(const QModelIndex &index) con
     AbstractTreeItem *item = static_cast<AbstractTreeItem*>(index.internalPointer());
 
     return ds->decay(item);
+}
+
+Decay::CascadeIdentifier DecayCascadeItemModel::cascade(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return Decay::CascadeIdentifier();
+
+    AbstractTreeItem *item = static_cast<AbstractTreeItem*>(index.internalPointer());
+
+    return ds->cascade(item);
 }
 
 

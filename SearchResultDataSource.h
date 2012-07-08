@@ -5,29 +5,28 @@
 
 #include "AbstractDataSource.h"
 #include "HalfLife.h"
+#include "SearchConstraints.h"
 
 class QProgressDialog;
 class SearchThread;
 
-class SearchConstraints {
-
+class SearchTreeItem : public AbstractTreeItem
+{
 public:
-    SearchConstraints();
+    explicit SearchTreeItem(AbstractTreeItem::ItemType type = AbstractTreeItem::UnknownType, AbstractTreeItem *parent = 0);
+    explicit SearchTreeItem(ItemType type, unsigned int A, const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent = 0);
+    explicit SearchTreeItem(AbstractTreeItem *original);
+    virtual ~SearchTreeItem();
 
-    bool valid;
+    void setOriginalItem(AbstractTreeItem *original);
+    AbstractTreeItem * originalItem() const;
+    void setCascade(const Decay::CascadeIdentifier &cascade);
+    Decay::CascadeIdentifier cascade() const;
 
-    unsigned int minA, maxA;
-    HalfLife minParentHl, maxParentHl;
-
-    double minGammaIntensity;
-
-    HalfLife minLevelHl, maxLevelHl;
-    double minMu;
-    double minQ;
-
-    double minA22, minA24, minA42, minA44;
+private:
+    AbstractTreeItem *m_original;
+    Decay::CascadeIdentifier m_cascade;
 };
-
 
 
 class SearchResultDataSource : public AbstractDataSource
@@ -41,8 +40,10 @@ public:
     
     virtual AbstractTreeItem * rootItem() const;
     virtual QSharedPointer<Decay> decay(const AbstractTreeItem *item) const;
+    virtual Decay::CascadeIdentifier cascade(const AbstractTreeItem *item) const;
 
 signals:
+    void resultAvailable(SearchResultDataSource *result);
     
 public slots:
 
@@ -55,7 +56,7 @@ private:
     const AbstractDataSource &m_baseDataSource;
     SearchConstraints m_constraints;
 
-    AbstractTreeItem *root;
+    SearchTreeItem *root;
 
     QProgressDialog *pd;
     SearchThread *sthread;
@@ -75,7 +76,7 @@ signals:
 
 protected:
     virtual void run();
-    QList<AbstractTreeItem*> constraintConformingChildren(AbstractTreeItem *parent);
+    AbstractTreeItem * getConstraintConformingSubtree(AbstractTreeItem *baseItem);
 
 private:
     SearchConstraints m_constraints;

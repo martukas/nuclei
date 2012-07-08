@@ -27,7 +27,7 @@ public:
      * @param gammaMaxDifference Maximal difference between the energy of gammas in decay records and adopted levels
      * @return
      */
-    QSharedPointer<Decay> decay(const QString &daughterNuclideName, const QString &decayName);
+    QSharedPointer<Decay> decay(const QString &daughterNuclideName, const QString &decayName) const;
 
     static unsigned int A(const QString &nuclide);
 
@@ -61,7 +61,7 @@ private:
     static double parseEnsdfMixing(const QString &s, const QString &multipolarity, GammaTransition::DeltaState *state);
     static ParentRecord parseParentRecord(const QString &precstr);
 
-    template <typename T> static T findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal = 0);
+    template <typename T> const T & findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;
 
     void parseBlocks();
 

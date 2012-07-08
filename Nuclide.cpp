@@ -53,6 +53,11 @@ QMap<Energy, EnergyLevel *> &Nuclide::levels()
     return m_levels;
 }
 
+QList<HalfLife> Nuclide::halfLifes() const
+{
+    return hl;
+}
+
 QString Nuclide::halfLifeAsText() const
 {
     QStringList result;

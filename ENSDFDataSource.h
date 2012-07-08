@@ -6,6 +6,7 @@
 #include <QMap>
 #include <QMetaType>
 #include <QVariant>
+#include <QMutex>
 
 #include "AbstractDataSource.h"
 
@@ -14,7 +15,7 @@ class ENSDFParser;
 class ENSDFTreeItem : public AbstractTreeItem
 {
 public:
-    explicit ENSDFTreeItem(AbstractTreeItem *parent = 0);
+    explicit ENSDFTreeItem(ItemType type = UnknownType, AbstractTreeItem *parent = 0);
     explicit ENSDFTreeItem(ItemType type, const QList<QVariant> &data, unsigned int A, bool isdecay, AbstractTreeItem *parent = 0);
     virtual ~ENSDFTreeItem();
 
@@ -44,6 +45,7 @@ private:
     ENSDFTreeItem *root;
 
     mutable ENSDFParser *mccache;
+    mutable QMutex m;
 };
 
 #endif // ENSDFDATASOURCE_H

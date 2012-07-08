@@ -44,6 +44,9 @@ public:
 
     QString name() const;
 
+    Nuclide * parentNuclide() const;
+    Nuclide * daughterNuclide() const;
+
     QVector<double> gammaSpectrumX(double fwhm) const;
     QVector<double> gammaSpectrumY(double fwhm) const;
     QVector<double> firstSelectedGammaSpectrumY(double fwhm) const;

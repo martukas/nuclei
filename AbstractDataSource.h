@@ -5,20 +5,26 @@
 #include <QStringList>
 #include <QSharedPointer>
 
-class Decay;
+#include "Decay.h"
 
 class AbstractTreeItem
 {
 public:
     enum ItemType {
         UnknownType,
+        RootType,
         DaughterType,
         DecayType,
         CascadeType
     };
 
-    explicit AbstractTreeItem(AbstractTreeItem *parent = 0);
+    explicit AbstractTreeItem(ItemType type = UnknownType, AbstractTreeItem *parent = 0);
     explicit AbstractTreeItem(ItemType type, unsigned int A, const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent = 0);
+    /**
+     * @brief This copy constructor creates a standalone copy without links to parent or children
+     * @param original
+     */
+    explicit AbstractTreeItem(const AbstractTreeItem &original);
     virtual ~AbstractTreeItem();
 
     virtual AbstractTreeItem *parent() const;
@@ -28,6 +34,10 @@ public:
     virtual int columnCount() const;
     virtual bool hasParent() const;
 
+    virtual void setParent(AbstractTreeItem *parent);
+    virtual void setItemData(const QList<QVariant> &data);
+
+    virtual void setSelectable(bool selectable);
     virtual bool isSelectable() const;
 
     virtual QVariant data(int column) const;
@@ -58,6 +68,7 @@ public:
     virtual AbstractTreeItem * rootItem() const = 0;
 
     virtual QSharedPointer<Decay> decay(const AbstractTreeItem *item) const = 0;
+    virtual Decay::CascadeIdentifier cascade(const AbstractTreeItem *item) const;
 };
 
 #endif // DATASOURCE_H

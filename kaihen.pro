@@ -1,4 +1,5 @@
 QT       += core gui network svg
+CONFIG += warn_on
 
 TARGET = kaihen
 TEMPLATE = app
@@ -27,7 +28,8 @@ SOURCES += main.cpp\
     DecayCascadeFilterProxyModel.cpp \
     LineEdit.cpp \
     ENSDFParser.cpp \
-    SearchResultDataSource.cpp
+    SearchResultDataSource.cpp \
+    SearchConstraints.cpp
 
 HEADERS  += \
     Decay.h \
@@ -53,7 +55,8 @@ HEADERS  += \
     DecayCascadeFilterProxyModel.h \
     LineEdit.h \
     ENSDFParser.h \
-    SearchResultDataSource.h
+    SearchResultDataSource.h \
+    SearchConstraints.h
 
 INCLUDEPATH += ../../libakk/src
 LIBS += -lakk -L../../libakk

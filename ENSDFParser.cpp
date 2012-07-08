@@ -65,7 +65,7 @@ const QStringList & ENSDFParser::decays(const QString &daughterNuclideName) cons
     return m_decayNames[daughterNuclideName];
 }
 
-QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, const QString &decayName)
+QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, const QString &decayName) const
 {
     QSettings s;
     double adoptedLevelMaxDifference = s.value("preferences/levelTolerance", 1.0).toDouble();
@@ -132,18 +132,17 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
             if (deltastate != GammaTransition::SignMagnitudeDefined || mpol.isEmpty()) {
                 // Get adopted levels block for current level
                 QStringList adptlvl;
+                QRegExp gammare("^" + dNucid + "  G (.*)$");
                 if (!adoptblocks.isEmpty()) {
                     Energy foundE(0.0);
-                    QStringList adoptblock = findNearest(adoptblocks, currentLevel->energy(), &foundE);
+                    const QStringList &adoptblock = findNearest(adoptblocks, currentLevel->energy(), &foundE);
+                    // assign filtered gamma records
                     if (qAbs(currentLevel->energy() - foundE) <= (adoptedLevelMaxDifference/1000.0*currentLevel->energy()))
-                        adptlvl = adoptblock;
+                        adptlvl = adoptblock.filter(gammare);
                 }
-                // filter gamma records
-                QRegExp gammare("^" + dNucid + "  G (.*)$");
-                adptlvl = adptlvl.filter(gammare);
                 // create gamma map
                 QMap<Energy, QString> e2g;
-                foreach (QString g, adptlvl) {
+                foreach (const QString &g, adptlvl) {
                     Energy gk(parseEnsdfEnergy(g.mid(9, 10)));
                     if (gk.isValid())
                         e2g.insert(gk, g);
@@ -151,14 +150,14 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
                 // find gamma
                 if (!e2g.isEmpty()) {
                     Energy foundE(0.0);
-                    const QString gamma(findNearest(e2g, e, &foundE));
+                    const QString &gammastr = findNearest(e2g, e, &foundE);
                     if (e-foundE < gammaMaxDifference/1000.0*e) {
                         if (mpol.isEmpty())
-                            mpol = gamma.mid(31, 10).trimmed();
+                            mpol = gammastr.mid(31, 10).trimmed();
 
                         if (deltastate != GammaTransition::SignMagnitudeDefined) {
                             GammaTransition::DeltaState adptdeltastate = GammaTransition::UnknownDelta;
-                            double adptdelta = parseEnsdfMixing(gamma.mid(41, 8).trimmed(), mpol, &adptdeltastate);
+                            double adptdelta = parseEnsdfMixing(gammastr.mid(41, 8).trimmed(), mpol, &adptdeltastate);
                             if (adptdeltastate > deltastate) {
                                 delta = adptdelta;
                                 deltastate = adptdeltastate;
@@ -199,9 +198,9 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
             QStringList adptlvl;
             if (!adoptblocks.isEmpty()) {
                 Energy foundE(0.0);
-                const QStringList adoptblock = findNearest(adoptblocks, e, &foundE);
+                const QStringList &adoptblocklst = findNearest(adoptblocks, e, &foundE);
                 if (qAbs(e - foundE) <= (adoptedLevelMaxDifference/1000.0*e))
-                    adptlvl = adoptblock;
+                    adptlvl = adoptblocklst;
             }
 
             // if an appropriate entry was found, read its contents
@@ -519,11 +518,11 @@ ENSDFParser::ParentRecord ENSDFParser::parseParentRecord(const QString &precstr)
 }
 
 template <typename T>
-T ENSDFParser::findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal)
+const T & ENSDFParser::findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal) const
 {
     Q_ASSERT(!map.isEmpty());
 
-    typename QMap<Energy, T>::iterator i = map.lowerBound(val);
+    typename QMap<Energy, T>::const_iterator i = map.lowerBound(val);
 
     if (i == map.begin())
         return i.value();
@@ -534,7 +533,9 @@ T ENSDFParser::findNearest(QMap<Energy, T> &map, Energy val, Energy *foundVal)
     if (foundVal)
         *foundVal = i.key();
 
-    return i.value();
+    const T &result = i.value();
+
+    return result;
 }
 
 void ENSDFParser::parseBlocks()

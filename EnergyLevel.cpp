@@ -46,10 +46,20 @@ double EnergyLevel::normalizedFeedIntensity() const
     return feedintens;
 }
 
+double EnergyLevel::mu() const
+{
+    return m_mu;
+}
+
+double EnergyLevel::q() const
+{
+    return m_Q;
+}
+
 /**
   * \return Sorted list of transitions, lowest energy gamma first
   */
-QList<GammaTransition *> & EnergyLevel::depopulatingTransitions()
+const QList<GammaTransition *> & EnergyLevel::depopulatingTransitions() const
 {
     qSort(m_depopulatingTransitions.begin(), m_depopulatingTransitions.end(), gammaSmallerThan);
     return m_depopulatingTransitions;

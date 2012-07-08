@@ -1,6 +1,7 @@
 #include <QtGui/QApplication>
 #include "Kaihen.h"
 #include "ENSDFDataSource.h"
+#include "SearchConstraints.h"
 #include "version.h"
 
 int main(int argc, char *argv[])
@@ -10,6 +11,9 @@ int main(int argc, char *argv[])
 
     qRegisterMetaType<ENSDFTreeItem>("ENSDFTreeItem");
     qRegisterMetaTypeStreamOperators<ENSDFTreeItem>("ENSDFTreeItem");
+
+    qRegisterMetaType<SearchConstraints>("SearchConstraints");
+    qRegisterMetaTypeStreamOperators<SearchConstraints>("SearchConstraints");
 
     QApplication a(argc, argv);
     QCoreApplication::setOrganizationName(QString::fromUtf8("Uni-Göttingen"));

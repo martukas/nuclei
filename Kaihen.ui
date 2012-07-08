@@ -297,7 +297,13 @@
       <number>1</number>
      </property>
      <item>
-      <widget class="QTabWidget" name="searchTreeExpandButton">
+      <widget class="QTabWidget" name="selectionTabWidget">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="currentIndex">
         <number>0</number>
        </property>
@@ -355,6 +361,12 @@
          </item>
          <item row="1" column="0" colspan="3">
           <widget class="QTreeView" name="decayTreeView">
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <property name="allColumnsShowFocus">
+            <bool>true</bool>
+           </property>
            <attribute name="headerVisible">
             <bool>false</bool>
            </attribute>
@@ -398,7 +410,7 @@
           </widget>
          </item>
          <item row="0" column="2">
-          <widget class="QToolButton" name="toolButton_2">
+          <widget class="QToolButton" name="searchTreeExpandButton">
            <property name="toolTip">
             <string>Expand Tree</string>
            </property>
@@ -415,7 +427,17 @@
           </widget>
          </item>
          <item row="1" column="0" colspan="3">
-          <widget class="QTreeView" name="searchTreeView"/>
+          <widget class="QTreeView" name="searchTreeView">
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <property name="allColumnsShowFocus">
+            <bool>true</bool>
+           </property>
+           <attribute name="headerVisible">
+            <bool>false</bool>
+           </attribute>
+          </widget>
          </item>
         </layout>
        </widget>

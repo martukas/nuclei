@@ -216,6 +216,16 @@ QString Decay::name() const
     return m_name;
 }
 
+Nuclide *Decay::parentNuclide() const
+{
+    return pNuc;
+}
+
+Nuclide *Decay::daughterNuclide() const
+{
+    return dNuc;
+}
+
 QVector<double> Decay::gammaSpectrumX(double fwhm) const
 {
     if (fwhm == m_lastFwhm && !spectX.isEmpty())
@@ -321,7 +331,7 @@ void Decay::setCurrentSelection(const Decay::CascadeIdentifier &identifier)
         inter = dNuc->levels().value(identifier.intermediate);
 
     if (start && identifier.pop) {
-        QList<GammaTransition*> &gammas = start->depopulatingTransitions();
+        const QList<GammaTransition*> &gammas = start->depopulatingTransitions();
         GammaTransition *gamma = 0;
         for (int i=0; i<gammas.size(); i++) {
             if (gammas.at(i)->energy() == identifier.pop) {
@@ -336,7 +346,7 @@ void Decay::setCurrentSelection(const Decay::CascadeIdentifier &identifier)
     }
 
     if (inter && identifier.depop) {
-        QList<GammaTransition*> &gammas = inter->depopulatingTransitions();
+        const QList<GammaTransition*> &gammas = inter->depopulatingTransitions();
         GammaTransition *gamma = 0;
         for (int i=0; i<gammas.size(); i++) {
             if (gammas.at(i)->energy() == identifier.depop) {

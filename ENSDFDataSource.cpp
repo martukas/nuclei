@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QProgressDialog>
+#include <QMutexLocker>
 
 #include "ENSDFDownloader.h"
 #include "ENSDFParser.h"
@@ -13,7 +14,7 @@ const quint32 ENSDFDataSource::magicNumber = 0x4b616945;
 const quint32 ENSDFDataSource::cacheVersion = 1;
 
 ENSDFDataSource::ENSDFDataSource(QObject *parent)
-    : AbstractDataSource(parent), root(new ENSDFTreeItem), mccache(0)
+    : AbstractDataSource(parent), root(new ENSDFTreeItem(AbstractTreeItem::RootType)), mccache(0)
 {
     // load decay cache
     if (!loadENSDFCache())
@@ -33,6 +34,7 @@ AbstractTreeItem *ENSDFDataSource::rootItem() const
 
 QSharedPointer<Decay> ENSDFDataSource::decay(const AbstractTreeItem *item) const
 {
+    QMutexLocker locker(&m);
     const ENSDFTreeItem *eitem = dynamic_cast<const ENSDFTreeItem*>(item);
     if (!eitem)
         return QSharedPointer<Decay>();
@@ -143,8 +145,8 @@ void ENSDFDataSource::createENSDFCache()
 
 
 
-ENSDFTreeItem::ENSDFTreeItem(AbstractTreeItem *parent)
-    : AbstractTreeItem(parent)
+ENSDFTreeItem::ENSDFTreeItem(ItemType type, AbstractTreeItem *parent)
+    : AbstractTreeItem(type, parent)
 {
 }
 
@@ -162,6 +164,7 @@ QDataStream & operator <<(QDataStream &out, const ENSDFTreeItem &treeitem)
     out << treeitem.itemData;
     out << treeitem.m_A;
     out << treeitem.m_isSelectable;
+    out << int(treeitem.m_type);
     out << quint32(treeitem.childItems.size());
     foreach (const AbstractTreeItem *it, treeitem.childItems) {
         const ENSDFTreeItem *eit = dynamic_cast<const ENSDFTreeItem*>(it);
@@ -177,10 +180,13 @@ QDataStream & operator >>(QDataStream &in, ENSDFTreeItem &treeitem)
     in >> treeitem.itemData;
     in >> treeitem.m_A;
     in >> treeitem.m_isSelectable;
+    int type;
+    in >> type;
+    treeitem.m_type = AbstractTreeItem::ItemType(type);
     quint32 numchildren;
     in >> numchildren;
     for (quint32 i=0; i<numchildren; i++) {
-        ENSDFTreeItem *childitem = new ENSDFTreeItem(&treeitem);
+        ENSDFTreeItem *childitem = new ENSDFTreeItem(AbstractTreeItem::UnknownType, &treeitem);
         in >> (*childitem);
     }
     return in;

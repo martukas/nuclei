@@ -35,8 +35,10 @@ public:
     HalfLife halfLife() const;
     unsigned int isomerNum() const;
     double normalizedFeedIntensity() const;
+    double mu() const;
+    double q() const;
 
-    QList<GammaTransition*> & depopulatingTransitions();
+    const QList<GammaTransition *> &depopulatingTransitions() const;
 
     QString muAsText() const;
     QString qAsText() const;
@@ -62,8 +64,8 @@ private:
 
     double m_Q, m_mu; // quadrupole and magnetic moments
 
-    QList<GammaTransition*> m_populatingTransitions;
-    QList<GammaTransition*> m_depopulatingTransitions;
+    mutable QList<GammaTransition*> m_populatingTransitions;
+    mutable QList<GammaTransition*> m_depopulatingTransitions;
 
     QGraphicsLineItem *graline, *grafeedarrow;
     QGraphicsPolygonItem *graarrowhead;

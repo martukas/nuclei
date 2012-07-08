@@ -27,6 +27,7 @@ public:
     void addLevels(const QMap<Energy, EnergyLevel*> &levels);
     QMap<Energy, EnergyLevel*> & levels();
 
+    QList<HalfLife> halfLifes() const;
     QString halfLifeAsText() const;
 
     QGraphicsItem * createNuclideGraphicsItem(const QFont &nucFont, const QFont &nucIndexFont);
