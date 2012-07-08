@@ -78,7 +78,6 @@ Decay::CascadeIdentifier SearchResultDataSource::cascade(const AbstractTreeItem 
 void SearchResultDataSource::cancelThread()
 {
     sthread->terminate();
-    wait();
 }
 
 void SearchResultDataSource::threadTerminated()
