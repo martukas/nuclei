@@ -108,6 +108,10 @@ SearchThread::SearchThread(SearchConstraints constraints, AbstractTreeItem *root
 {
 }
 
+SearchThread::~SearchThread()
+{
+}
+
 void SearchThread::run()
 {
     // get base data source's root item

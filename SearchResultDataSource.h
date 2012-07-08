@@ -70,6 +70,7 @@ class SearchThread : public QThread
 
 public:
     SearchThread(SearchConstraints constraints, AbstractTreeItem *root, const AbstractDataSource &baseDataSource);
+    virtual ~SearchThread();
 
 signals:
     void percentComplete(int percent);

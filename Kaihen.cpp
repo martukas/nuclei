@@ -200,10 +200,8 @@ void Kaihen::initialize()
     QSize wsize = size();
     if (wsize.width() > QApplication::desktop()->availableGeometry().width())
         wsize.setWidth(QApplication::desktop()->availableGeometry().width());
-    if (wsize.height() > QApplication::desktop()->availableGeometry().height()) {
+    if (wsize.height() > QApplication::desktop()->availableGeometry().height())
         wsize.setHeight(QApplication::desktop()->availableGeometry().width());
-        addDockWidget(Qt::LeftDockWidgetArea, ui->decaySelectorDock);
-    }
     this->resize(wsize);
 
     // initialize settings if necessary
