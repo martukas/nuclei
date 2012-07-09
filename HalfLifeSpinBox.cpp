@@ -8,6 +8,7 @@
 HalfLifeSpinBox::HalfLifeSpinBox(QWidget *parent) :
     QDoubleSpinBox(parent)
 {
+    setDecimals(20);
 }
 
 QString HalfLifeSpinBox::textFromValue(double value) const
@@ -61,6 +62,11 @@ void HalfLifeSpinBox::stepBy(int steps)
         setSingleStep(step);
         QDoubleSpinBox::stepBy(steps > 0 ? 1 : -1);
     }
+}
+
+void HalfLifeSpinBox::setDecimals(int prec)
+{
+    QDoubleSpinBox::setDecimals(20);
 }
 
 double HalfLifeSpinBox::validateAndInterpret(QString &input, int &, QValidator::State &state) const

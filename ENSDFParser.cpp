@@ -101,7 +101,8 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
 
     // process decay block
     const QStringList decaylines(contents.mid(decaydata.block.first, decaydata.block.second));
-    foreach (const QString &line, decaylines) {
+    for (int k=0; k<decaylines.size(); k++) {
+        const QString &line(decaylines.at(k));
 
         // process new gamma
         if ((levels.size() > 1) && line.startsWith(dNucid + "  G ")) {
@@ -134,7 +135,7 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
                 QStringList adptlvl;
                 QRegExp gammare("^" + dNucid + "  G (.*)$");
                 if (!adoptblocks.isEmpty()) {
-                    Energy foundE(0.0);
+                    Energy foundE;
                     const QStringList &adoptblock = findNearest(adoptblocks, currentLevel->energy(), &foundE);
                     // assign filtered gamma records
                     if (qAbs(currentLevel->energy() - foundE) <= (adoptedLevelMaxDifference/1000.0*currentLevel->energy()))
@@ -149,7 +150,7 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
                 }
                 // find gamma
                 if (!e2g.isEmpty()) {
-                    Energy foundE(0.0);
+                    Energy foundE;
                     const QString &gammastr = findNearest(e2g, e, &foundE);
                     if (e-foundE < gammaMaxDifference/1000.0*e) {
                         if (mpol.isEmpty())
@@ -197,7 +198,7 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
 
             QStringList adptlvl;
             if (!adoptblocks.isEmpty()) {
-                Energy foundE(0.0);
+                Energy foundE;
                 const QStringList &adoptblocklst = findNearest(adoptblocks, e, &foundE);
                 if (qAbs(e - foundE) <= (adoptedLevelMaxDifference/1000.0*e))
                     adptlvl = adoptblocklst;
@@ -524,18 +525,14 @@ const T & ENSDFParser::findNearest(const QMap<Energy, T> &map, const Energy &val
 
     typename QMap<Energy, T>::const_iterator i = map.lowerBound(val);
 
-    if (i == map.begin())
-        return i.value();
-
-    if (qAbs(val - (i-1).key()) < qAbs(val - i.key()))
-        return (i-1).value();
+    if (i != map.begin())
+        if (qAbs(val - (i-1).key()) < qAbs(val - i.key()))
+            i--;
 
     if (foundVal)
-        *foundVal = i.key();
+        (*foundVal) = i.key();
 
-    const T &result = i.value();
-
-    return result;
+    return i.value();
 }
 
 void ENSDFParser::parseBlocks()

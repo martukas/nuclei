@@ -16,6 +16,8 @@ public:
 
     virtual void stepBy(int steps);
 
+    void setDecimals(int prec);
+
 signals:
     
 public slots:

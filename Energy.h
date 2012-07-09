@@ -9,11 +9,14 @@ class Energy
 {
 public:
     Energy();
-    Energy(double energy);
+    explicit Energy(double energy);
 
     bool isValid() const;
 
     QString toString() const;
+
+    Energy & operator=(const Energy &energy);
+    Energy & operator=(double energy);
 
     friend bool operator<(const Energy &left, const Energy &right);
     friend bool operator<(const Energy &left, const double &right);

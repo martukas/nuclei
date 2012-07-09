@@ -34,6 +34,18 @@ QString Energy::toString() const
     return QString::number(e) + " keV";
 }
 
+Energy & Energy::operator=(const Energy &energy)
+{
+    e = energy.e;
+    return *this;
+}
+
+Energy & Energy::operator=(double energy)
+{
+    e = energy;
+    return *this;
+}
+
 bool operator<(const Energy &left, const Energy &right)
 {
     return left.e < right.e;
