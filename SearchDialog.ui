@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>369</width>
-    <height>607</height>
+    <height>541</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,7 +31,7 @@
       <string>Daughter Mass Range</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="0">
+      <item row="0" column="0">
        <widget class="QLabel" name="minALabel">
         <property name="text">
          <string>Minimal A:</string>
@@ -44,7 +44,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="0" column="1">
        <widget class="QSpinBox" name="minA">
         <property name="minimum">
          <number>1</number>
@@ -57,7 +57,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="3">
+      <item row="0" column="3">
        <widget class="QSpinBox" name="maxA">
         <property name="minimum">
          <number>1</number>
@@ -70,7 +70,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
+      <item row="0" column="2">
        <widget class="QLabel" name="maxALabel">
         <property name="text">
          <string>Maximal A:</string>
@@ -80,13 +80,6 @@
         </property>
         <property name="buddy">
          <cstring>maxA</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="4">
-       <widget class="Line" name="line_4">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
         </property>
        </widget>
       </item>
@@ -187,7 +180,7 @@
       <property name="fieldGrowthPolicy">
        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
       </property>
-      <item row="1" column="0">
+      <item row="0" column="0">
        <widget class="QCheckBox" name="minIntensCheck">
         <property name="text">
          <string>Minimal Gamma Intensity:</string>
@@ -197,7 +190,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="0" column="1">
        <widget class="QDoubleSpinBox" name="minIntens">
         <property name="suffix">
          <string notr="true"> %</string>
@@ -207,13 +200,6 @@
         </property>
         <property name="value">
          <double>5.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="2">
-       <widget class="Line" name="line_3">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
         </property>
        </widget>
       </item>
@@ -229,21 +215,14 @@
       <property name="fieldGrowthPolicy">
        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
       </property>
-      <item row="0" column="0" colspan="2">
-       <widget class="Line" name="line_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
+      <item row="0" column="0">
        <widget class="QLabel" name="intHalfLifeLabel">
         <property name="text">
          <string>Half Life:</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="0" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
          <widget class="QCheckBox" name="minIntHalfLifeCheck">
@@ -276,7 +255,7 @@
         </item>
        </layout>
       </item>
-      <item row="2" column="1">
+      <item row="1" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
          <widget class="QCheckBox" name="maxIntHalfLifeCheck">
@@ -306,21 +285,21 @@
         </item>
        </layout>
       </item>
-      <item row="3" column="0" colspan="2">
+      <item row="2" column="0" colspan="2">
        <widget class="Line" name="line">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="3" column="0">
        <widget class="QCheckBox" name="muValCheck">
         <property name="text">
          <string>Minimal µ Value:</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="3" column="1">
        <widget class="QDoubleSpinBox" name="muVal">
         <property name="enabled">
          <bool>false</bool>
@@ -333,14 +312,14 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
+      <item row="4" column="0">
        <widget class="QCheckBox" name="qValCheck">
         <property name="text">
          <string>Minimal Q Value:</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item row="4" column="1">
        <widget class="QDoubleSpinBox" name="qVal">
         <property name="enabled">
          <bool>false</bool>
@@ -365,7 +344,7 @@
       <property name="fieldGrowthPolicy">
        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
       </property>
-      <item row="1" column="0">
+      <item row="0" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_6">
         <property name="spacing">
          <number>0</number>
@@ -405,7 +384,7 @@
         </item>
        </layout>
       </item>
-      <item row="1" column="1">
+      <item row="0" column="1">
        <widget class="QDoubleSpinBox" name="a22">
         <property name="decimals">
          <number>4</number>
@@ -424,7 +403,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="1" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <property name="spacing">
          <number>0</number>
@@ -461,7 +440,7 @@
         </item>
        </layout>
       </item>
-      <item row="2" column="1">
+      <item row="1" column="1">
        <widget class="QDoubleSpinBox" name="a24">
         <property name="enabled">
          <bool>false</bool>
@@ -483,7 +462,7 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="2" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <property name="spacing">
          <number>0</number>
@@ -520,7 +499,7 @@
         </item>
        </layout>
       </item>
-      <item row="3" column="1">
+      <item row="2" column="1">
        <widget class="QDoubleSpinBox" name="a42">
         <property name="enabled">
          <bool>false</bool>
@@ -542,7 +521,7 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="3" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_8">
         <property name="spacing">
          <number>0</number>
@@ -579,7 +558,7 @@
         </item>
        </layout>
       </item>
-      <item row="4" column="1">
+      <item row="3" column="1">
        <widget class="QDoubleSpinBox" name="a44">
         <property name="enabled">
          <bool>false</bool>
@@ -598,13 +577,6 @@
         </property>
         <property name="value">
          <double>0.100000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="2">
-       <widget class="Line" name="line_5">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
         </property>
        </widget>
       </item>
