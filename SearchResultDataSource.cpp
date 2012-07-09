@@ -18,6 +18,7 @@ SearchResultDataSource::SearchResultDataSource(const AbstractDataSource &baseDat
       pd(new QProgressDialog("Searching...", "Cancel", 0, 100)),
       sthread(0), searchFinished(false)
 {
+    pd->setWindowTitle("Cascade Search");
     pd->setMinimumDuration(0);
 }
 

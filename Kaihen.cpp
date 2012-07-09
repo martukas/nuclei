@@ -222,7 +222,7 @@ void Kaihen::initialize()
     connect(ui->decayFilterLineEdit, SIGNAL(textChanged(QString)), decayProxyModel, SLOT(setFilterWildcard(QString)));
     decayProxyModel->setSourceModel(decaySelectionModel);
     ui->decayTreeView->setModel(decayProxyModel);
-    connect(ui->decayTreeView, SIGNAL(activated(QModelIndex)), this, SLOT(loadSelectedDecay(QModelIndex)));
+    connect(ui->decayTreeView, SIGNAL(showItem(QModelIndex)), this, SLOT(loadSelectedDecay(QModelIndex)));
 
     searchDialog->setDataSource(ds);
     searchResultSelectionModel = new DecayCascadeItemModel(0, this);
@@ -230,7 +230,7 @@ void Kaihen::initialize()
     connect(ui->searchFilterLineEdit, SIGNAL(textChanged(QString)), searchProxyModel, SLOT(setFilterWildcard(QString)));
     searchProxyModel->setSourceModel(searchResultSelectionModel);
     ui->searchTreeView->setModel(searchProxyModel);
-    connect(ui->searchTreeView, SIGNAL(activated(QModelIndex)), this, SLOT(loadSearchResultCascade(QModelIndex)));
+    connect(ui->searchTreeView, SIGNAL(showItem(QModelIndex)), this, SLOT(loadSearchResultCascade(QModelIndex)));
 
     // restore last session
     if (s.contains("searchSettings"))

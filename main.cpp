@@ -2,6 +2,7 @@
 #include "Kaihen.h"
 #include "ENSDFDataSource.h"
 #include "SearchConstraints.h"
+#include "ProxyStyle.h"
 #include "version.h"
 
 int main(int argc, char *argv[])
@@ -16,6 +17,7 @@ int main(int argc, char *argv[])
     qRegisterMetaTypeStreamOperators<SearchConstraints>("SearchConstraints");
 
     QApplication a(argc, argv);
+    a.setStyle(new ProxyStyle);
     QCoreApplication::setOrganizationName(QString::fromUtf8("Uni-Göttingen"));
     QCoreApplication::setOrganizationDomain("physik.uni-goettingen.de");
     QCoreApplication::setApplicationName("Kaihen");

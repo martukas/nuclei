@@ -360,7 +360,7 @@
           </widget>
          </item>
          <item row="1" column="0" colspan="3">
-          <widget class="QTreeView" name="decayTreeView">
+          <widget class="TreeView" name="decayTreeView">
            <property name="alternatingRowColors">
             <bool>true</bool>
            </property>
@@ -427,7 +427,7 @@
           </widget>
          </item>
          <item row="1" column="0" colspan="3">
-          <widget class="QTreeView" name="searchTreeView">
+          <widget class="TreeView" name="searchTreeView">
            <property name="alternatingRowColors">
             <bool>true</bool>
            </property>
@@ -1107,6 +1107,11 @@
    <class>LineEdit</class>
    <extends>QLineEdit</extends>
    <header>LineEdit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>TreeView</class>
+   <extends>QTreeView</extends>
+   <header>TreeView.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

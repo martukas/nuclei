@@ -29,7 +29,9 @@ SOURCES += main.cpp\
     LineEdit.cpp \
     ENSDFParser.cpp \
     SearchResultDataSource.cpp \
-    SearchConstraints.cpp
+    SearchConstraints.cpp \
+    TreeView.cpp \
+    ProxyStyle.cpp
 
 HEADERS  += \
     Decay.h \
@@ -56,7 +58,9 @@ HEADERS  += \
     LineEdit.h \
     ENSDFParser.h \
     SearchResultDataSource.h \
-    SearchConstraints.h
+    SearchConstraints.h \
+    TreeView.h \
+    ProxyStyle.h
 
 INCLUDEPATH += ../../libakk/src
 LIBS += -lakk -L../../libakk
