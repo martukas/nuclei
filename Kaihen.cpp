@@ -520,6 +520,7 @@ void Kaihen::searchFinished(SearchResultDataSource *result)
 {
     searchResultSelectionModel->setDataSource(result);
     ui->selectionTabWidget->setCurrentWidget(ui->searchResultTab);
+    ui->searchTreeView->resizeColumnToContents(0);
 }
 
 void Kaihen::setPlotLin()

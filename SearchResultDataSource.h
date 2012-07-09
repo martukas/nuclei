@@ -49,8 +49,7 @@ public slots:
 
 private slots:
     void cancelThread();
-    void threadTerminated();
-    void threadFinished();
+    void threadEnded(bool success);
 
 private:
     const AbstractDataSource &m_baseDataSource;
@@ -72,14 +71,21 @@ public:
     SearchThread(SearchConstraints constraints, AbstractTreeItem *root, const AbstractDataSource &baseDataSource);
     virtual ~SearchThread();
 
+    void stopThread();
+
 signals:
+    void threadEnded(bool success);
     void percentComplete(int percent);
 
 protected:
     virtual void run();
     AbstractTreeItem * getConstraintConformingSubtree(AbstractTreeItem *baseItem);
 
+private slots:
+    void processThreadEnd();
+
 private:
+    bool stop;
     SearchConstraints m_constraints;
     AbstractTreeItem *resultRoot;
     const AbstractDataSource &m_baseDataSource;

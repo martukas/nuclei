@@ -1,5 +1,9 @@
-QT       += core gui network svg
+
+QT += core gui network svg
 CONFIG += warn_on
+
+CONFIG += qxt
+QXT += core gui
 
 TARGET = kaihen
 TEMPLATE = app
@@ -16,7 +20,6 @@ SOURCES += main.cpp\
     GraphicsHighlightItem.cpp \
     GraphicsDropShadowEffect.cpp \
     ClickableItem.cpp \
-    qxtgroupbox.cpp \
     ENSDFDownloader.cpp \
     Kaihen.cpp \
     SearchDialog.cpp \
@@ -45,7 +48,6 @@ HEADERS  += \
     GraphicsDropShadowEffect.h \
     ClickableItem.h \
     version.h \
-    qxtgroupbox.h \
     ENSDFDownloader.h \
     Kaihen.h \
     SearchDialog.h \
@@ -76,7 +78,7 @@ FORMS    += \
 RESOURCES += \
     kaihen.qrc
 
-#QMAKE_CXXFLAGS_DEBUG += -Wconversion
+RC_FILE = kaihen.rc
 
 # QWT ####################
 
@@ -101,6 +103,4 @@ exists( C://build//qwt//src//qwt.h ) {
   INCLUDEPATH += C://build//qwt//src
   LIBS += -LC://build//qwt//lib -lqwt
 }
-
-RC_FILE = kaihen.rc
 

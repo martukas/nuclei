@@ -39,8 +39,7 @@ void SearchResultDataSource::populate(SearchConstraints constraints)
 
     // create search thread
     sthread = new SearchThread(constraints, root, m_baseDataSource);
-    connect(sthread, SIGNAL(terminated()), this, SLOT(threadTerminated()), Qt::QueuedConnection);
-    connect(sthread, SIGNAL(finished()), this, SLOT(threadFinished()), Qt::QueuedConnection);
+    connect(sthread, SIGNAL(threadEnded(bool)), this, SLOT(threadEnded(bool)), Qt::QueuedConnection);
 
     // prepare progress bar
     connect(sthread, SIGNAL(percentComplete(int)), pd, SLOT(setValue(int)), Qt::QueuedConnection);
@@ -78,26 +77,23 @@ Decay::CascadeIdentifier SearchResultDataSource::cascade(const AbstractTreeItem 
 
 void SearchResultDataSource::cancelThread()
 {
-    sthread->terminate();
+    sthread->stopThread();
 }
 
-void SearchResultDataSource::threadTerminated()
+void SearchResultDataSource::threadEnded(bool success)
 {
     pd->reset();
     delete sthread;
     sthread = 0;
 
-    delete root;
-    root = new SearchTreeItem(AbstractTreeItem::RootType);
-}
-
-void SearchResultDataSource::threadFinished()
-{
-    pd->reset();
-    delete sthread;
-    sthread = 0;
-    searchFinished = true;
-    emit resultAvailable(this);
+    if (success) {
+        searchFinished = true;
+        emit resultAvailable(this);
+    }
+    else {
+        delete root;
+        root = new SearchTreeItem(AbstractTreeItem::RootType);
+    }
 }
 
 
@@ -105,22 +101,34 @@ void SearchResultDataSource::threadFinished()
 
 
 SearchThread::SearchThread(SearchConstraints constraints, AbstractTreeItem *root, const AbstractDataSource &baseDataSource)
-    : m_constraints(constraints), resultRoot(root), m_baseDataSource(baseDataSource)
+    : stop(false), m_constraints(constraints), resultRoot(root), m_baseDataSource(baseDataSource)
 {
+    connect(this, SIGNAL(finished()), this, SLOT(processThreadEnd()));
+    connect(this, SIGNAL(terminated()), this, SLOT(processThreadEnd()));
 }
 
 SearchThread::~SearchThread()
 {
 }
 
+void SearchThread::stopThread()
+{
+    stop = true;
+}
+
 void SearchThread::run()
 {
+    stop = false;
+
     // get base data source's root item
     AbstractTreeItem *baseRoot = m_baseDataSource.rootItem();
 
     emit percentComplete(0);
 
     for (int i=0; i<baseRoot->childCount(); i++) {
+        if (stop)
+            return;
+
         AbstractTreeItem *child = baseRoot->child(i);
 
         // check if A matches selected interval
@@ -276,7 +284,7 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
 
         // if this point is reached, the decay meets all criteria
         result = new SearchTreeItem(baseItem);
-        result->setSelectable(false);
+        //result->setSelectable(false);
 
         // append cascades
         QMap<QString, Decay::CascadeIdentifier>::const_iterator cascadeit = cascades.begin();
@@ -311,6 +319,11 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
     }
 
     return result;
+}
+
+void SearchThread::processThreadEnd()
+{
+    emit threadEnded(!stop);
 }
 
 

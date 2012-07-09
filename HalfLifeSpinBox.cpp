@@ -64,7 +64,7 @@ void HalfLifeSpinBox::stepBy(int steps)
     }
 }
 
-void HalfLifeSpinBox::setDecimals(int prec)
+void HalfLifeSpinBox::setDecimals(int)
 {
     QDoubleSpinBox::setDecimals(20);
 }
