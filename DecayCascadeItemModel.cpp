@@ -47,7 +47,7 @@ QVariant DecayCascadeItemModel::data(const QModelIndex &index, int role) const
         if (index.parent().isValid())
             return item->data(index.column()).toString();
         else
-            return "Parent Nuclide: " + item->data(index.column()).toString();
+            return "Daughter Nuclide: " + item->data(index.column()).toString();
     }
 
     return QVariant();
