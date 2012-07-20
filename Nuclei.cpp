@@ -1,5 +1,5 @@
-#include "Kaihen.h"
-#include "ui_Kaihen.h"
+#include "Nuclei.h"
+#include "ui_Nuclei.h"
 #include "ui_PreferencesDialog.h"
 
 #include <QResizeEvent>
@@ -46,9 +46,9 @@ protected:
     }
 };
 
-Kaihen::Kaihen(QWidget *parent) :
+Nuclei::Nuclei(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::KaihenMainWindow),
+    ui(new Ui::NucleiMainWindow),
     preferencesDialog(new QDialog(this)), preferencesDialogUi(new Ui::PreferencesDialog),
     searchDialog(new SearchDialog(this)),
     decaySelectionModel(0),
@@ -157,7 +157,7 @@ Kaihen::Kaihen(QWidget *parent) :
     QTimer::singleShot(0, this, SLOT(initialize()));
 }
 
-Kaihen::~Kaihen()
+Nuclei::~Nuclei()
 {
     QSettings s;
 
@@ -190,7 +190,7 @@ Kaihen::~Kaihen()
     delete ui;
 }
 
-void Kaihen::initialize()
+void Nuclei::initialize()
 {
     QSettings s;
 
@@ -219,6 +219,7 @@ void Kaihen::initialize()
 
     decaySelectionModel = new DecayCascadeItemModel(ds, this);
     decayProxyModel = new DecayCascadeFilterProxyModel(this);
+    decayProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     connect(ui->decayFilterLineEdit, SIGNAL(textChanged(QString)), decayProxyModel, SLOT(setFilterWildcard(QString)));
     decayProxyModel->setSourceModel(decaySelectionModel);
     ui->decayTreeView->setModel(decayProxyModel);
@@ -227,6 +228,7 @@ void Kaihen::initialize()
     searchDialog->setDataSource(ds);
     searchResultSelectionModel = new DecayCascadeItemModel(0, this);
     searchProxyModel = new DecayCascadeFilterProxyModel(this);
+    searchProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     connect(ui->searchFilterLineEdit, SIGNAL(textChanged(QString)), searchProxyModel, SLOT(setFilterWildcard(QString)));
     searchProxyModel->setSourceModel(searchResultSelectionModel);
     ui->searchTreeView->setModel(searchProxyModel);
@@ -260,7 +262,7 @@ void Kaihen::initialize()
         m_decay->setCurrentSelection(s.value("selectedCascade", QVariant::fromValue(Decay::CascadeIdentifier())).value<Decay::CascadeIdentifier>());
 }
 
-void Kaihen::loadSelectedDecay(const QModelIndex &index)
+void Nuclei::loadSelectedDecay(const QModelIndex &index)
 {
     if (!index.isValid())
         return;
@@ -276,7 +278,7 @@ void Kaihen::loadSelectedDecay(const QModelIndex &index)
     loadDecay(decay);
 }
 
-void Kaihen::loadSearchResultCascade(const QModelIndex &index)
+void Nuclei::loadSearchResultCascade(const QModelIndex &index)
 {
     if (!index.isValid())
         return;
@@ -296,7 +298,7 @@ void Kaihen::loadSearchResultCascade(const QModelIndex &index)
         m_decay->setCurrentSelection(ci);
 }
 
-void Kaihen::updateDecayData(Decay::DecayDataSet data)
+void Nuclei::updateDecayData(Decay::DecayDataSet data)
 {
     ui->startEnergy->setText(data.startEnergy);
     ui->startSpin->setText(data.startSpin);
@@ -332,7 +334,7 @@ void Kaihen::updateDecayData(Decay::DecayDataSet data)
         updateEnergySpectrum();
 }
 
-void Kaihen::updateEnergySpectrum()
+void Nuclei::updateEnergySpectrum()
 {
     if (m_decay.isNull()) {
         curve->setVisible(false);
@@ -385,7 +387,7 @@ void Kaihen::updateEnergySpectrum()
     zoomer->setZoomBase();
 }
 
-void Kaihen::svgExport()
+void Nuclei::svgExport()
 {
     QSettings s;
 
@@ -405,7 +407,7 @@ void Kaihen::svgExport()
         svgGen.setSize(outrect.toRect().size());
         svgGen.setViewBox(outrect);
         svgGen.setTitle("Decay Level Scheme for the decay " + m_decay->name());
-        svgGen.setDescription(QString::fromUtf8("This scheme was created using Kaihen (" KAIHENURL ")"));
+        svgGen.setDescription(QString::fromUtf8("This scheme was created using Nuclei (" NUCLEIURL ")"));
 
         m_decay->setShadowEnabled(false);
         QPainter painter(&svgGen);
@@ -423,7 +425,7 @@ void Kaihen::svgExport()
     }
 }
 
-void Kaihen::pdfExport()
+void Nuclei::pdfExport()
 {
     QSettings s;
 
@@ -447,7 +449,7 @@ void Kaihen::pdfExport()
         p.setOutputFormat(QPrinter::PdfFormat);
         p.setPaperSize(outrect.toRect().size() / scalefactor, QPrinter::Millimeter);
         p.setDocName("Decay Level Scheme for the decay " + m_decay->name());
-        p.setCreator(QString("%1 %2 (%3)").arg(QCoreApplication::applicationName(), QCoreApplication::applicationVersion(), KAIHENURL));
+        p.setCreator(QString("%1 %2 (%3)").arg(QCoreApplication::applicationName(), QCoreApplication::applicationVersion(), NUCLEIURL));
 
         m_decay->setShadowEnabled(false);
         QPainter painter(&p);
@@ -465,7 +467,7 @@ void Kaihen::pdfExport()
     }
 }
 
-void Kaihen::showAll()
+void Nuclei::showAll()
 {
     if (ui->tabWidget->currentWidget() == ui->decayCascadeTab) {
         QGraphicsScene *scene = ui->decayView->scene();
@@ -479,12 +481,12 @@ void Kaihen::showAll()
     }
 }
 
-void Kaihen::showOriginalSize()
+void Nuclei::showOriginalSize()
 {
     ui->decayView->setTransform(QTransform());
 }
 
-void Kaihen::zoomIn()
+void Nuclei::zoomIn()
 {
     if (ui->tabWidget->currentWidget() == ui->decayCascadeTab) {
         ui->decayView->scale(1.25, 1.25);
@@ -503,7 +505,7 @@ void Kaihen::zoomIn()
     }
 }
 
-void Kaihen::zoomOut()
+void Nuclei::zoomOut()
 {
     if (ui->tabWidget->currentWidget() == ui->decayCascadeTab)
         ui->decayView->scale(0.8, 0.8);
@@ -511,19 +513,19 @@ void Kaihen::zoomOut()
         zoomer->zoom(-1);
 }
 
-void Kaihen::search()
+void Nuclei::search()
 {
     searchDialog->show();
 }
 
-void Kaihen::searchFinished(SearchResultDataSource *result)
+void Nuclei::searchFinished(SearchResultDataSource *result)
 {
     searchResultSelectionModel->setDataSource(result);
     ui->selectionTabWidget->setCurrentWidget(ui->searchResultTab);
     ui->searchTreeView->resizeColumnToContents(0);
 }
 
-void Kaihen::setPlotLin()
+void Nuclei::setPlotLin()
 {
     zoomer->zoom(0);
     ui->actionLogarithmic->setChecked(false);
@@ -533,7 +535,7 @@ void Kaihen::setPlotLin()
     ui->tabWidget->setCurrentWidget(ui->energySpectrumTab);
 }
 
-void Kaihen::setPlotLog()
+void Nuclei::setPlotLog()
 {
     zoomer->zoom(0);
     ui->actionLinear->setChecked(false);
@@ -543,7 +545,7 @@ void Kaihen::setPlotLog()
     ui->tabWidget->setCurrentWidget(ui->energySpectrumTab);
 }
 
-void Kaihen::showPreferences()
+void Nuclei::showPreferences()
 {
     preferencesDialog->exec();
 
@@ -557,15 +559,15 @@ void Kaihen::showPreferences()
         m_decay->setCurrentSelection(ci);
 }
 
-void Kaihen::showAbout()
+void Nuclei::showAbout()
 {
     QMessageBox::about(this,
                        QString("About: %1 %2").arg(QCoreApplication::applicationName(), QCoreApplication::applicationVersion()),
-                       QString::fromUtf8(KAIHENABOUT "<hr />" LIBAKKABOUT "<hr />" GPL)
+                       QString::fromUtf8(NUCLEIABOUT "<hr />" LIBAKKABOUT "<hr />" GPL)
                        );
 }
 
-void Kaihen::closeEvent(QCloseEvent *event)
+void Nuclei::closeEvent(QCloseEvent *event)
 {
     QSettings s;
     s.setValue("geometry", saveGeometry());
@@ -573,7 +575,7 @@ void Kaihen::closeEvent(QCloseEvent *event)
     QMainWindow::closeEvent(event);
 }
 
-QVector<QwtIntervalSample> Kaihen::mergeIntervalData(const QVector<double> &x, const QVector<double> &y1, const QVector<double> &y2)
+QVector<QwtIntervalSample> Nuclei::mergeIntervalData(const QVector<double> &x, const QVector<double> &y1, const QVector<double> &y2)
 {
     QVector<QwtIntervalSample> result(x.size());
     // replace 0 with min() to avoid display errors in log plot
@@ -582,7 +584,7 @@ QVector<QwtIntervalSample> Kaihen::mergeIntervalData(const QVector<double> &x, c
     return result;
 }
 
-void Kaihen::loadDecay(QSharedPointer<Decay> decay)
+void Nuclei::loadDecay(QSharedPointer<Decay> decay)
 {
     QSettings s;
     s.setValue("preferences/levelTolerance", preferencesDialogUi->levelDiff->value());

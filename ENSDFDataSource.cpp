@@ -54,7 +54,7 @@ QSharedPointer<Decay> ENSDFDataSource::decay(const AbstractTreeItem *item) const
 bool ENSDFDataSource::loadENSDFCache()
 {
     QSettings s;
-    QFile f(s.value("ensdfPath", ".").toString() + "/kaihen_ensdf.cache");
+    QFile f(s.value("ensdfPath", ".").toString() + "/nuclei_ensdf.cache");
     if (!f.open(QIODevice::ReadOnly))
         return false;
 
@@ -107,7 +107,7 @@ void ENSDFDataSource::createENSDFCache()
         return;
 
     QSettings s;
-    QFile f(s.value("ensdfPath", ".").toString() + "/kaihen_ensdf.cache");
+    QFile f(s.value("ensdfPath", ".").toString() + "/nuclei_ensdf.cache");
     while (!f.open(QIODevice::WriteOnly))
         if (QMessageBox::Close == QMessageBox::warning(pwid, "ENSDF Folder is not writeable!", "<p>The currently selected folder <br />" + s.value("ensdfPath", ".").toString() + "<br /> is not writeable!</p><p>It must be writeable to create a cache file.</p>", QMessageBox::Ok | QMessageBox::Close, QMessageBox::Retry))
             qApp->quit();
@@ -120,6 +120,7 @@ void ENSDFDataSource::createENSDFCache()
 
     // create cache structures
     QProgressDialog pd(pwid);
+    pd.setWindowTitle("Nuclei Cache");
     pd.setLabelText("Creating Decay Cache...");
     pd.setMaximum(aList.size());
     pd.setWindowModality(Qt::WindowModal);

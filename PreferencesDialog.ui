@@ -14,7 +14,7 @@
    <string>Preferences</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="kaihen.qrc">
+   <iconset resource="nuclei.qrc">
     <normaloff>:/configure.png</normaloff>:/configure.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -137,7 +137,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="kaihen.qrc"/>
+  <include location="nuclei.qrc"/>
  </resources>
  <connections>
   <connection>

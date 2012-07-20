@@ -1,11 +1,11 @@
-#ifndef KAIHEN_H
-#define KAIHEN_H
+#ifndef NUCLEI_H
+#define NUCLEI_H
 
 #include <QMainWindow>
 #include "Decay.h"
 
 namespace Ui {
-class KaihenMainWindow;
+class NucleiMainWindow;
 class PreferencesDialog;
 }
 class QListWidgetItem;
@@ -20,13 +20,13 @@ class DecayCascadeItemModel;
 class DecayCascadeFilterProxyModel;
 class SearchResultDataSource;
 
-class Kaihen : public QMainWindow
+class Nuclei : public QMainWindow
 {
     Q_OBJECT
     
 public:
-    explicit Kaihen(QWidget *parent = 0);
-    ~Kaihen();
+    explicit Nuclei(QWidget *parent = 0);
+    ~Nuclei();
 
 private slots:
     void initialize();
@@ -61,7 +61,7 @@ private:
     static QVector<QwtIntervalSample> mergeIntervalData(const QVector<double> &x, const QVector<double> &y1, const QVector<double> &y2);
     void loadDecay(QSharedPointer<Decay> decay);
 
-    Ui::KaihenMainWindow *ui;
+    Ui::NucleiMainWindow *ui;
     QDialog *preferencesDialog;
     Ui::PreferencesDialog *preferencesDialogUi;
 
@@ -77,4 +77,4 @@ private:
     QwtPlotIntervalCurve *curve, *g1curve, *g2curve;
 };
 
-#endif // KAIHEN_H
+#endif // NUCLEI_H

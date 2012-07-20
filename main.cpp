@@ -1,5 +1,5 @@
 #include <QtGui/QApplication>
-#include "Kaihen.h"
+#include "Nuclei.h"
 #include "ENSDFDataSource.h"
 #include "SearchConstraints.h"
 #include "ProxyStyle.h"
@@ -20,9 +20,9 @@ int main(int argc, char *argv[])
     a.setStyle(new ProxyStyle);
     QCoreApplication::setOrganizationName(QString::fromUtf8("Uni-Göttingen"));
     QCoreApplication::setOrganizationDomain("physik.uni-goettingen.de");
-    QCoreApplication::setApplicationName("Kaihen");
+    QCoreApplication::setApplicationName("Nuclei");
     QCoreApplication::setApplicationVersion(QString("%1").arg(VERSION));
-    Kaihen w;
+    Nuclei w;
     w.show();
     
     return a.exec();

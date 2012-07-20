@@ -19,9 +19,9 @@
         <file>dialog-cancel.png</file>
         <file>dialog-close.png</file>
         <file>dialog-ok.png</file>
-        <file>kaihen.png</file>
         <file>format-indent-more.png</file>
         <file>format-justify-fill.png</file>
         <file>edit-clear-locationbar-rtl.png</file>
+        <file>nuclei.png</file>
     </qresource>
 </RCC>

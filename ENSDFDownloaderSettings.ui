@@ -113,7 +113,7 @@
         <string>OK</string>
        </property>
        <property name="icon">
-        <iconset resource="kaihen.qrc">
+        <iconset resource="nuclei.qrc">
          <normaloff>:/dialog-ok.png</normaloff>:/dialog-ok.png</iconset>
        </property>
       </widget>
@@ -130,7 +130,7 @@
         <string>Cancel</string>
        </property>
        <property name="icon">
-        <iconset resource="kaihen.qrc">
+        <iconset resource="nuclei.qrc">
          <normaloff>:/dialog-cancel.png</normaloff>:/dialog-cancel.png</iconset>
        </property>
       </widget>
@@ -140,7 +140,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="kaihen.qrc"/>
+  <include location="nuclei.qrc"/>
  </resources>
  <connections/>
 </ui>

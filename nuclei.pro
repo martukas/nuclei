@@ -5,7 +5,7 @@ CONFIG += warn_on
 CONFIG += qxt
 QXT += core gui
 
-TARGET = kaihen
+TARGET = nuclei
 TEMPLATE = app
 
 
@@ -21,7 +21,6 @@ SOURCES += main.cpp\
     GraphicsDropShadowEffect.cpp \
     ClickableItem.cpp \
     ENSDFDownloader.cpp \
-    Kaihen.cpp \
     SearchDialog.cpp \
     HalfLifeSpinBox.cpp \
     Energy.cpp \
@@ -34,7 +33,8 @@ SOURCES += main.cpp\
     SearchResultDataSource.cpp \
     SearchConstraints.cpp \
     TreeView.cpp \
-    ProxyStyle.cpp
+    ProxyStyle.cpp \
+    Nuclei.cpp
 
 HEADERS  += \
     Decay.h \
@@ -49,7 +49,6 @@ HEADERS  += \
     ClickableItem.h \
     version.h \
     ENSDFDownloader.h \
-    Kaihen.h \
     SearchDialog.h \
     HalfLifeSpinBox.h \
     Energy.h \
@@ -62,7 +61,8 @@ HEADERS  += \
     SearchResultDataSource.h \
     SearchConstraints.h \
     TreeView.h \
-    ProxyStyle.h
+    ProxyStyle.h \
+    Nuclei.h
 
 INCLUDEPATH += ../../libakk/src
 LIBS += -lakk -L../../libakk
@@ -71,14 +71,14 @@ LIBS += -lquazip
 FORMS    += \
     ENSDFDownloader.ui \
     ENSDFDownloaderSettings.ui \
-    Kaihen.ui \
     PreferencesDialog.ui \
-    SearchDialog.ui
+    SearchDialog.ui \
+    Nuclei.ui
 
 RESOURCES += \
-    kaihen.qrc
+    nuclei.qrc
 
-RC_FILE = kaihen.rc
+RC_FILE = nuclei.rc
 
 # QWT ####################
 

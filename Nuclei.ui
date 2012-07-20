@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>KaihenMainWindow</class>
- <widget class="QMainWindow" name="KaihenMainWindow">
+ <class>NucleiMainWindow</class>
+ <widget class="QMainWindow" name="NucleiMainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Kaihen</string>
+   <string>Nuclei</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="kaihen.qrc">
-    <normaloff>:/kaihen.png</normaloff>:/kaihen.png</iconset>
+   <iconset resource="nuclei.qrc">
+    <normaloff>:/nuclei.png</normaloff>:/nuclei.png</iconset>
   </property>
   <property name="dockNestingEnabled">
    <bool>true</bool>
@@ -32,7 +32,7 @@
       </property>
       <widget class="QWidget" name="decayCascadeTab">
        <attribute name="title">
-        <string>Decay Cascade Selection</string>
+        <string>Decay Level Scheme</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <property name="margin">
@@ -49,20 +49,27 @@
          </widget>
         </item>
         <item>
-         <widget class="QxtGroupBox" name="qxtGroupBox">
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
+         <widget class="QFrame" name="frame">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
           </property>
-          <property name="title">
-           <string>Anisotropies</string>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
-           <property name="margin">
-            <number>2</number>
-           </property>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QLabel" name="anisotropyLabel">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Anisotropies:</string>
+             </property>
+            </widget>
+           </item>
            <item>
             <widget class="QLabel" name="a22Label">
              <property name="sizePolicy">
@@ -70,6 +77,12 @@
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
+             </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
              </property>
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;22&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -115,6 +128,12 @@
                <height>0</height>
               </size>
              </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;24&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -158,6 +177,12 @@
                <width>50</width>
                <height>0</height>
               </size>
+             </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
              </property>
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;42&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -203,6 +228,12 @@
                <height>0</height>
               </size>
              </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;44&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -240,7 +271,7 @@
       </widget>
       <widget class="QWidget" name="energySpectrumTab">
        <attribute name="title">
-        <string>Energy Spectrum</string>
+        <string>Photo Peaks</string>
        </attribute>
        <layout class="QVBoxLayout" name="energySpectrumLayout"/>
       </widget>
@@ -328,7 +359,7 @@
             <string>X</string>
            </property>
            <property name="icon">
-            <iconset resource="kaihen.qrc">
+            <iconset resource="nuclei.qrc">
              <normaloff>:/format-indent-more.png</normaloff>:/format-indent-more.png</iconset>
            </property>
            <property name="autoRaise">
@@ -345,7 +376,7 @@
             <string>C</string>
            </property>
            <property name="icon">
-            <iconset resource="kaihen.qrc">
+            <iconset resource="nuclei.qrc">
              <normaloff>:/format-justify-fill.png</normaloff>:/format-justify-fill.png</iconset>
            </property>
            <property name="autoRaise">
@@ -395,7 +426,7 @@
             <string>C</string>
            </property>
            <property name="icon">
-            <iconset resource="kaihen.qrc">
+            <iconset resource="nuclei.qrc">
              <normaloff>:/format-justify-fill.png</normaloff>:/format-justify-fill.png</iconset>
            </property>
            <property name="autoRaise">
@@ -412,7 +443,7 @@
             <string>X</string>
            </property>
            <property name="icon">
-            <iconset resource="kaihen.qrc">
+            <iconset resource="nuclei.qrc">
              <normaloff>:/format-indent-more.png</normaloff>:/format-indent-more.png</iconset>
            </property>
            <property name="autoRaise">
@@ -942,7 +973,7 @@
   </widget>
   <action name="actionZoom_In">
    <property name="icon">
-    <iconset resource="kaihen.qrc">
+    <iconset resource="nuclei.qrc">
      <normaloff>:/toolbar/zoom-in.png</normaloff>:/toolbar/zoom-in.png</iconset>
    </property>
    <property name="text">
@@ -957,7 +988,7 @@
   </action>
   <action name="actionZoom_Out">
    <property name="icon">
-    <iconset resource="kaihen.qrc">
+    <iconset resource="nuclei.qrc">
      <normaloff>:/toolbar/zoom-out.png</normaloff>:/toolbar/zoom-out.png</iconset>
    </property>
    <property name="text">
@@ -972,7 +1003,7 @@
   </action>
   <action name="actionShow_all">
    <property name="icon">
-    <iconset resource="kaihen.qrc">
+    <iconset resource="nuclei.qrc">
      <normaloff>:/toolbar/zoom-fit-best.png</normaloff>:/toolbar/zoom-fit-best.png</iconset>
    </property>
    <property name="text">
@@ -984,7 +1015,7 @@
   </action>
   <action name="actionOriginal_Size">
    <property name="icon">
-    <iconset resource="kaihen.qrc">
+    <iconset resource="nuclei.qrc">
      <normaloff>:/toolbar/zoom-original.png</normaloff>:/toolbar/zoom-original.png</iconset>
    </property>
    <property name="text">
@@ -996,14 +1027,14 @@
   </action>
   <action name="actionAbout">
    <property name="icon">
-    <iconset resource="kaihen.qrc">
+    <iconset resource="nuclei.qrc">
      <normaloff>:/toolbar/help-about.png</normaloff>:/toolbar/help-about.png</iconset>
    </property>
    <property name="text">
     <string>About</string>
    </property>
    <property name="toolTip">
-    <string>About Kaihen</string>
+    <string>About Nuclei</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+I</string>
@@ -1036,7 +1067,7 @@
   </action>
   <action name="actionSVG_Export">
    <property name="icon">
-    <iconset resource="kaihen.qrc">
+    <iconset resource="nuclei.qrc">
      <normaloff>:/toolbar/image-svg+xml.png</normaloff>:/toolbar/image-svg+xml.png</iconset>
    </property>
    <property name="text">
@@ -1048,7 +1079,7 @@
   </action>
   <action name="actionPDF_Export">
    <property name="icon">
-    <iconset resource="kaihen.qrc">
+    <iconset resource="nuclei.qrc">
      <normaloff>:/toolbar/application-pdf.png</normaloff>:/toolbar/application-pdf.png</iconset>
    </property>
    <property name="text">
@@ -1063,7 +1094,7 @@
   </action>
   <action name="actionPreferences">
    <property name="icon">
-    <iconset resource="kaihen.qrc">
+    <iconset resource="nuclei.qrc">
      <normaloff>:/toolbar/configure.png</normaloff>:/toolbar/configure.png</iconset>
    </property>
    <property name="text">
@@ -1075,7 +1106,7 @@
   </action>
   <action name="actionFind_Decay">
    <property name="icon">
-    <iconset resource="kaihen.qrc">
+    <iconset resource="nuclei.qrc">
      <normaloff>:/toolbar/edit-find.png</normaloff>:/toolbar/edit-find.png</iconset>
    </property>
    <property name="text">
@@ -1092,12 +1123,6 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>QxtGroupBox</class>
-   <extends>QGroupBox</extends>
-   <header>QxtGroupBox</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>LineEdit</class>
    <extends>QLineEdit</extends>
    <header>LineEdit.h</header>
@@ -1113,7 +1138,7 @@
   <tabstop>decayView</tabstop>
  </tabstops>
  <resources>
-  <include location="kaihen.qrc"/>
+  <include location="nuclei.qrc"/>
  </resources>
  <connections/>
 </ui>

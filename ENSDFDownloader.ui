@@ -26,7 +26,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Kaihen uses the &lt;a href=&quot;http://www.nndc.bnl.gov/ensdf/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0057ae;&quot;&gt;ENSDF database&lt;/span&gt;&lt;/a&gt; as source for nuclear decay information. Please press the download button to automatically retrieve the necessary files.&lt;/p&gt;&lt;p&gt;If you already have a copy of the ENSDF files and do not want to download it again you can also select the appropriate local folder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Nuclei&lt;/span&gt; uses the &lt;a href=&quot;http://www.nndc.bnl.gov/ensdf/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0057ae;&quot;&gt;ENSDF database&lt;/span&gt;&lt;/a&gt; as source for nuclear decay information. Please press the download button to automatically retrieve the necessary files.&lt;/p&gt;&lt;p&gt;If you already have a copy of the ENSDF files and do not want to download it again you can also select the appropriate local folder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="textFormat">
       <enum>Qt::RichText</enum>
@@ -51,7 +51,7 @@
       <string>Automatically Download Database</string>
      </property>
      <property name="icon">
-      <iconset resource="kaihen.qrc">
+      <iconset resource="nuclei.qrc">
        <normaloff>:/download.png</normaloff>:/download.png</iconset>
      </property>
      <property name="iconSize">
@@ -83,7 +83,7 @@
             <string>Select Local Copy</string>
            </property>
            <property name="icon">
-            <iconset resource="kaihen.qrc">
+            <iconset resource="nuclei.qrc">
              <normaloff>:/document-open-folder.png</normaloff>:/document-open-folder.png</iconset>
            </property>
           </widget>
@@ -94,7 +94,7 @@
             <string>Adjust Download Settings</string>
            </property>
            <property name="icon">
-            <iconset resource="kaihen.qrc">
+            <iconset resource="nuclei.qrc">
              <normaloff>:/configure.png</normaloff>:/configure.png</iconset>
            </property>
           </widget>
@@ -125,7 +125,7 @@
             <string>Close</string>
            </property>
            <property name="icon">
-            <iconset resource="kaihen.qrc">
+            <iconset resource="nuclei.qrc">
              <normaloff>:/dialog-close.png</normaloff>:/dialog-close.png</iconset>
            </property>
           </widget>
@@ -170,7 +170,7 @@
             <string>Cancel</string>
            </property>
            <property name="icon">
-            <iconset resource="kaihen.qrc">
+            <iconset resource="nuclei.qrc">
              <normaloff>:/dialog-cancel.png</normaloff>:/dialog-cancel.png</iconset>
            </property>
           </widget>
@@ -184,7 +184,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="kaihen.qrc"/>
+  <include location="nuclei.qrc"/>
  </resources>
  <connections/>
 </ui>

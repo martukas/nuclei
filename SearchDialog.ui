@@ -7,14 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>369</width>
-    <height>541</height>
+    <height>548</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Search Decay Cascades</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="kaihen.qrc">
+   <iconset resource="nuclei.qrc">
     <normaloff>:/edit-find.png</normaloff>:/edit-find.png</iconset>
   </property>
   <property name="styleSheet">
@@ -643,7 +643,7 @@
   <tabstop>buttonBox</tabstop>
  </tabstops>
  <resources>
-  <include location="kaihen.qrc"/>
+  <include location="nuclei.qrc"/>
  </resources>
  <connections>
   <connection>

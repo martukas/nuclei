@@ -1,28 +1,28 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define VERSION "2.0"
+#define VERSION "2.1"
 
 // used to save windows state. must be incremented if window layout changes!
 #define UIVERSION 0
 
-#define KAIHENURL "http://???.sf.net"
+#define NUCLEIURL "http://nuclei.sf.net"
 
-#define KAIHENABOUT "\
-<p><b>Kaihen</b></p><p>shows decay schemes, computes anisotropies of decay cascades and \
-shows simplistic approximations of the expected energy spectra.</p> \
+#define NUCLEIABOUT "\
+<p><b>Nuclei</b></p><p>shows decay schemes, computes anisotropies of decay cascades and \
+shows the expected photo peak spectra.</p> \
 \
 <p>Copyright 2012 Matthias Nagl, Georg-August Universität Göttingen</p> \
-<p><a href=\"" KAIHENURL "\">" KAIHENURL "</a></p> \
+<p><a href=\"" NUCLEIURL "\">" NUCLEIURL "</a></p> \
 "
 
 #define LIBAKKABOUT "\
-<p>Kaihen uses <b>libakk</b> for anisotropy calculations</p> \
+<p>Nuclei uses <b>libakk</b> for anisotropy calculations</p> \
 <p>Copyright 2012 João Guilherme Martins Correia & Marcelo Baptista Barbosa, CERN</p> \
 "
 
 #define GPL "\
-<p>Kaihen is free software: you can redistribute it and/or modify \
+<p>Nuclei is free software: you can redistribute it and/or modify \
 it under the terms of the GNU General Public License as published by \
 the Free Software Foundation, either version 3 of the License, or \
 (at your option) any later version.</p> \
