@@ -8,6 +8,7 @@ QXT += core gui
 TARGET = nuclei
 TEMPLATE = app
 
+DEFINES += PRINT_SEARCH_RESULTS
 
 SOURCES += main.cpp\
     Decay.cpp \

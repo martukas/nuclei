@@ -7,6 +7,8 @@
 #include <cmath>
 #include <Akk.h>
 
+#include <iostream>
+
 #include "EnergyLevel.h"
 
 
@@ -272,6 +274,19 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                                  .arg(depop->populatedLevel()->energy().toString());
 
                     cascades.insert(cname, cid);
+
+#if defined(PRINT_SEARCH_RESULTS)
+                    std::cout << dec->daughterNuclide()->name().toStdString() << "\t"
+                              << dec->parentNuclide()->name().toStdString() << "\t"
+                              << dec->parentNuclide()->halfLifeAsText().toStdString() << "\t"
+                              << pop->depopulatedLevel()->energy() << "/"
+                              << pop->populatedLevel()->energy() << "/"
+                              << depop->populatedLevel()->energy() << "\t"
+                              << pop->populatedLevel()->halfLife().toString().toStdString() << "\t"
+                              << pop->populatedLevel()->qAsText().toStdString() << "\t"
+                              << pop->populatedLevel()->muAsText().toStdString() << "\t"
+                              << std::endl;
+#endif
                 }
             }
 
