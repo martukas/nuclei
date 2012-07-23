@@ -7,10 +7,14 @@ SearchConstraints::SearchConstraints()
       minGammaIntensity(std::numeric_limits<double>::quiet_NaN()),
       minMu(std::numeric_limits<double>::quiet_NaN()),
       minQ(std::numeric_limits<double>::quiet_NaN()),
+      skipUnknownMu(false), skipUnknownQ(false),
+      muAndQORCombined(false),
       minA22(std::numeric_limits<double>::quiet_NaN()),
       minA24(std::numeric_limits<double>::quiet_NaN()),
       minA42(std::numeric_limits<double>::quiet_NaN()),
-      minA44(std::numeric_limits<double>::quiet_NaN())
+      minA44(std::numeric_limits<double>::quiet_NaN()),
+      skipUnknownAnisotropies(false),
+      anisotropiesORCombined(false)
 {
 }
 
@@ -21,7 +25,12 @@ QDataStream & operator <<(QDataStream &out, const SearchConstraints &c)
 
     out << c.minLevelHl.seconds() << c.maxLevelHl.seconds() << c.minMu << c.minQ;
 
+    out << c.skipUnknownMu << c.skipUnknownQ << c.muAndQORCombined;
+
     out << c.minA22 << c.minA24 << c.minA42 << c.minA44;
+
+    out << c.skipUnknownAnisotropies;
+    out << c.anisotropiesORCombined;
 
     return out;
 }
@@ -41,7 +50,10 @@ QDataStream &operator >>(QDataStream &in, SearchConstraints &c)
     in >> tmp;
     c.maxLevelHl = HalfLife(tmp);
     in >> c.minMu >> c.minQ;
+    in >> c.skipUnknownMu >> c.skipUnknownQ >> c.muAndQORCombined;
     in >> c.minA22 >> c.minA24 >> c.minA42 >> c.minA44;
+    in >> c.skipUnknownAnisotropies;
+    in >> c.anisotropiesORCombined;
 
     return in;
 }

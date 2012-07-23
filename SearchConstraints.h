@@ -19,8 +19,12 @@ public:
     HalfLife minLevelHl, maxLevelHl;
     double minMu;
     double minQ;
+    bool skipUnknownMu, skipUnknownQ;
+    bool muAndQORCombined;
 
     double minA22, minA24, minA42, minA44;
+    bool skipUnknownAnisotropies;
+    bool anisotropiesORCombined;
 
     friend QDataStream & operator<<(QDataStream &out, const SearchConstraints &c);
     friend QDataStream & operator>>(QDataStream &in, SearchConstraints &c);

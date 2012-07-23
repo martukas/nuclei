@@ -27,6 +27,10 @@ public:
 public slots:
     virtual void accept();
 
+private slots:
+    void updateAnisotropyAndOrButtons();
+    void updateMuQAndOrButtons();
+
 signals:
     void resultAvailable(SearchResultDataSource *result);
     

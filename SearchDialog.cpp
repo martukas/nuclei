@@ -11,6 +11,12 @@ SearchDialog::SearchDialog(QWidget *parent) :
     ds(0)
 {
     ui->setupUi(this);
+    connect(ui->muValCheck, SIGNAL(toggled(bool)), this, SLOT(updateMuQAndOrButtons()));
+    connect(ui->qValCheck, SIGNAL(toggled(bool)), this, SLOT(updateMuQAndOrButtons()));
+    connect(ui->a22Check, SIGNAL(toggled(bool)), this, SLOT(updateAnisotropyAndOrButtons()));
+    connect(ui->a24Check, SIGNAL(toggled(bool)), this, SLOT(updateAnisotropyAndOrButtons()));
+    connect(ui->a42Check, SIGNAL(toggled(bool)), this, SLOT(updateAnisotropyAndOrButtons()));
+    connect(ui->a44Check, SIGNAL(toggled(bool)), this, SLOT(updateAnisotropyAndOrButtons()));
 }
 
 SearchDialog::~SearchDialog()
@@ -47,6 +53,10 @@ SearchConstraints SearchDialog::searchConstraints() const
     if (ui->qValCheck->isChecked())
         sc.minQ = ui->qVal->value();
 
+    sc.skipUnknownMu = ui->muValSkip->isChecked();
+    sc.skipUnknownQ = ui->qValSkip->isChecked();
+    sc.muAndQORCombined = ui->muQOr->isChecked();
+
     if (ui->a22Check->isChecked())
         sc.minA22 = ui->a22->value();
     if (ui->a24Check->isChecked())
@@ -55,6 +65,9 @@ SearchConstraints SearchDialog::searchConstraints() const
         sc.minA42 = ui->a42->value();
     if (ui->a44Check->isChecked())
         sc.minA44 = ui->a44->value();
+
+    sc.skipUnknownAnisotropies = ui->anisotropySkip->isChecked();
+    sc.anisotropiesORCombined = ui->anisotropyOr->isChecked();
 
     return sc;
 }
@@ -92,6 +105,11 @@ void SearchDialog::setSearchConstraints(const SearchConstraints &sc)
     if (std::isfinite(sc.minQ))
         ui->qVal->setValue(sc.minQ);
 
+    ui->muValSkip->setChecked(sc.skipUnknownMu);
+    ui->qValCheck->setChecked(sc.skipUnknownQ);
+    if (sc.muAndQORCombined)
+        ui->muQOr->setChecked(true);
+
     ui->a22Check->setChecked(std::isfinite(sc.minA22));
     if (std::isfinite(sc.minA22))
         ui->a22->setValue(sc.minA22);
@@ -104,6 +122,10 @@ void SearchDialog::setSearchConstraints(const SearchConstraints &sc)
     ui->a44Check->setChecked(std::isfinite(sc.minA44));
     if (std::isfinite(sc.minA44))
         ui->a44->setValue(sc.minA44);
+
+    ui->anisotropySkip->setChecked(sc.skipUnknownAnisotropies);
+    if (sc.anisotropiesORCombined)
+        ui->anisotropyOr->setChecked(true);
 }
 
 void SearchDialog::accept()
@@ -117,4 +139,28 @@ void SearchDialog::accept()
     sds->populate(searchConstraints());
 
     QDialog::accept();
+}
+
+void SearchDialog::updateAnisotropyAndOrButtons()
+{
+    int numchecked = 0;
+    if (ui->a22Check->isChecked())
+        numchecked++;
+    if (ui->a24Check->isChecked())
+        numchecked++;
+    if (ui->a42Check->isChecked())
+        numchecked++;
+    if (ui->a44Check->isChecked())
+        numchecked++;
+
+    ui->anisotropyAnd->setEnabled(numchecked > 1);
+    ui->anisotropyOr->setEnabled(numchecked > 1);
+    ui->anisotropySkip->setEnabled(numchecked > 0);
+}
+
+void SearchDialog::updateMuQAndOrButtons()
+{
+    bool enable = ui->muValCheck->isChecked() && ui->qValCheck->isChecked();
+    ui->muQAnd->setEnabled(enable);
+    ui->muQOr->setEnabled(enable);
 }

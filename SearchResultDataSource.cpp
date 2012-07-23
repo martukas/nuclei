@@ -194,10 +194,32 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
 
                 // check intermediate level
                 const EnergyLevel *intlevel = pop->populatedLevel();
-                if (std::isfinite(m_constraints.minMu) && (intlevel->mu() < m_constraints.minMu || !std::isfinite(intlevel->mu())))
+                int rejectMuQ = 0;
+                // µ
+                if (std::isfinite(m_constraints.minMu)) {
+                    if (std::isfinite(intlevel->mu())) {
+                        if (intlevel->mu() < m_constraints.minMu)
+                            rejectMuQ++;
+                    }
+                    else {
+                        if (!m_constraints.skipUnknownMu)
+                            rejectMuQ++;
+                    }
+                }
+                // Q
+                if (std::isfinite(m_constraints.minQ)) {
+                    if (std::isfinite(intlevel->q())) {
+                        if (intlevel->q() < m_constraints.minQ)
+                            rejectMuQ++;
+                    }
+                    else {
+                        if (!m_constraints.skipUnknownQ)
+                            rejectMuQ++;
+                    }
+                }
+                if (rejectMuQ > 1 || (rejectMuQ == 1 && !m_constraints.muAndQORCombined))
                     continue;
-                if (std::isfinite(m_constraints.minQ) && (intlevel->q() < m_constraints.minQ || !std::isfinite(intlevel->q())))
-                    continue;
+                // intermediate state's half life
                 if (m_constraints.minLevelHl.isValid() && (intlevel->halfLife() < m_constraints.minLevelHl || !intlevel->halfLife().isValid()))
                     continue;
                 if (m_constraints.maxLevelHl.isValid() && (intlevel->halfLife() > m_constraints.maxLevelHl || !intlevel->halfLife().isValid()))
@@ -215,43 +237,50 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                             std::isfinite(m_constraints.minA42) ||
                             std::isfinite(m_constraints.minA44)) {
 
-                        // discard cascade if necessary parameters are missing
-                        if (!pop->depopulatedLevel()->spin().isValid() ||
-                                !depop->populatedLevel()->spin().isValid() ||
-                                !intlevel->spin().isValid() ||
-                                !(pop->deltaState() & GammaTransition::SignMagnitudeDefined) ||
-                                !(depop->deltaState() & GammaTransition::SignMagnitudeDefined))
-                            continue;
-
-                        Akk calc;
-                        calc.setInitialStateSpin(pop->depopulatedLevel()->spin().doubledSpin());
-                        calc.setIntermediateStateSpin(intlevel->spin().doubledSpin());
-                        calc.setFinalStateSpin(depop->populatedLevel()->spin().doubledSpin());
-
                         // initialize flags
                         bool a22ok = false, a24ok = false, a42ok = false, a44ok = false;
 
-                        // compute Akk for all possible sign combinations
-                        QList<double> popvariants, depopvariants;
-                        popvariants << 1.0;
-                        depopvariants << 1.0;
-                        if (pop->deltaState() == GammaTransition::MagnitudeDefined)
-                            popvariants << -1.0;
-                        if (pop->deltaState() == GammaTransition::MagnitudeDefined)
-                            depopvariants << -1.0;
+                        // keep cascade if necessary parameters are missing
+                        if (
+                                !pop->depopulatedLevel()->spin().isValid() ||
+                                !depop->populatedLevel()->spin().isValid() ||
+                                !intlevel->spin().isValid() ||
+                                !(pop->deltaState() & GammaTransition::SignMagnitudeDefined) ||
+                                !(depop->deltaState() & GammaTransition::SignMagnitudeDefined)) {
+                            a22ok = true;
+                            a24ok = true;
+                            a42ok = true;
+                            a44ok = true;
+                        }
+                        else {
 
-                        foreach (double popvariant, popvariants) {
-                            foreach (double depopvariant, depopvariants) {
-                                calc.setPopulatingGammaMixing(pop->delta() * popvariant);
-                                calc.setDepopulatingGammaMixing(depop->delta() * depopvariant);
-                                if (!std::isfinite(m_constraints.minA22) || qAbs(calc.a22()) >= m_constraints.minA22)
-                                    a22ok = true;
-                                if (!std::isfinite(m_constraints.minA24) || qAbs(calc.a24()) >= m_constraints.minA24)
-                                    a24ok = true;
-                                if (!std::isfinite(m_constraints.minA42) || qAbs(calc.a42()) >= m_constraints.minA42)
-                                    a42ok = true;
-                                if (!std::isfinite(m_constraints.minA44) || qAbs(calc.a44()) >= m_constraints.minA44)
-                                    a44ok = true;
+                            Akk calc;
+                            calc.setInitialStateSpin(pop->depopulatedLevel()->spin().doubledSpin());
+                            calc.setIntermediateStateSpin(intlevel->spin().doubledSpin());
+                            calc.setFinalStateSpin(depop->populatedLevel()->spin().doubledSpin());
+
+                            // compute Akk for all possible sign combinations
+                            QList<double> popvariants, depopvariants;
+                            popvariants << 1.0;
+                            depopvariants << 1.0;
+                            if (pop->deltaState() == GammaTransition::MagnitudeDefined)
+                                popvariants << -1.0;
+                            if (pop->deltaState() == GammaTransition::MagnitudeDefined)
+                                depopvariants << -1.0;
+
+                            foreach (double popvariant, popvariants) {
+                                foreach (double depopvariant, depopvariants) {
+                                    calc.setPopulatingGammaMixing(pop->delta() * popvariant);
+                                    calc.setDepopulatingGammaMixing(depop->delta() * depopvariant);
+                                    if (!std::isfinite(m_constraints.minA22) || qAbs(calc.a22()) >= m_constraints.minA22)
+                                        a22ok = true;
+                                    if (!std::isfinite(m_constraints.minA24) || qAbs(calc.a24()) >= m_constraints.minA24)
+                                        a24ok = true;
+                                    if (!std::isfinite(m_constraints.minA42) || qAbs(calc.a42()) >= m_constraints.minA42)
+                                        a42ok = true;
+                                    if (!std::isfinite(m_constraints.minA44) || qAbs(calc.a44()) >= m_constraints.minA44)
+                                        a44ok = true;
+                                }
                             }
                         }
 
