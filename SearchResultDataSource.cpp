@@ -240,17 +240,18 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                         // initialize flags
                         bool a22ok = false, a24ok = false, a42ok = false, a44ok = false;
 
-                        // keep cascade if necessary parameters are missing
-                        if (
-                                !pop->depopulatedLevel()->spin().isValid() ||
+                        // keep cascade if necessary parameters are missing and skip field is checked
+                        if (    !pop->depopulatedLevel()->spin().isValid() ||
                                 !depop->populatedLevel()->spin().isValid() ||
                                 !intlevel->spin().isValid() ||
                                 !(pop->deltaState() & GammaTransition::SignMagnitudeDefined) ||
                                 !(depop->deltaState() & GammaTransition::SignMagnitudeDefined)) {
-                            a22ok = true;
-                            a24ok = true;
-                            a42ok = true;
-                            a44ok = true;
+                            if (m_constraints.skipUnknownAnisotropies) {
+                                a22ok = true;
+                                a24ok = true;
+                                a42ok = true;
+                                a44ok = true;
+                            }
                         }
                         else {
 
@@ -284,8 +285,14 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                             }
                         }
 
-                        if (!(a22ok && a24ok && a42ok && a44ok))
-                            continue;
+                        if (m_constraints.anisotropiesORCombined) {
+                            if (!a22ok && !a24ok && !a42ok && !a44ok)
+                                continue;
+                        }
+                        else {
+                            if (!(a22ok && a24ok && a42ok && a44ok))
+                                continue;
+                        }
                     }
 
                     // create cascade identifier
