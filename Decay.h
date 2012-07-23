@@ -95,6 +95,7 @@ public:
         QString a44;
     };
 
+    DecayDataSet decayDataSet() const;
     void triggerDecayDataUpdate();
 
 signals:

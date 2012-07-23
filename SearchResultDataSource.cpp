@@ -8,6 +8,7 @@
 #include <Akk.h>
 
 #include <iostream>
+#include <QTextCodec>
 
 #include "EnergyLevel.h"
 
@@ -126,6 +127,15 @@ void SearchThread::run()
     AbstractTreeItem *baseRoot = m_baseDataSource.rootItem();
 
     emit percentComplete(0);
+
+#if defined(PRINT_SEARCH_RESULTS)
+    QStringList constraintsl(m_constraints.toStringList());
+    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
+    std::cout << "# Selected Search Constraints:" << std::endl;
+    foreach (const QString &s, constraintsl)
+        std::cout << "# " << s.toStdString() << std::endl;
+    std::cout << std::endl << "# daughter	parent	half-life	levels	inter. hl	inter. spin	Q	µ	a22	a24	a42	a44" << std::endl;
+#endif
 
     for (int i=0; i<baseRoot->childCount(); i++) {
         if (stop)
@@ -312,15 +322,30 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                     cascades.insert(cname, cid);
 
 #if defined(PRINT_SEARCH_RESULTS)
+                    Decay::CascadeIdentifier id;
+                    id.start = pop->depopulatedLevel()->energy();
+                    id.pop = pop->energy();
+                    id.intermediate = pop->populatedLevel()->energy();
+                    id.highlightIntermediate = true;
+                    id.depop = depop->energy();
+
+                    dec->setCurrentSelection(id);
+                    Decay::DecayDataSet ds = dec->decayDataSet();
+
                     std::cout << dec->daughterNuclide()->name().toStdString() << "\t"
                               << dec->parentNuclide()->name().toStdString() << "\t"
                               << dec->parentNuclide()->halfLifeAsText().toStdString() << "\t"
                               << pop->depopulatedLevel()->energy() << "/"
                               << pop->populatedLevel()->energy() << "/"
                               << depop->populatedLevel()->energy() << "\t"
-                              << pop->populatedLevel()->halfLife().toString().toStdString() << "\t"
-                              << pop->populatedLevel()->qAsText().toStdString() << "\t"
-                              << pop->populatedLevel()->muAsText().toStdString() << "\t"
+                              << ds.intHalfLife.toStdString() << "\t"
+                              << ds.intSpin.toStdString() << "\t"
+                              << ds.intQ.toStdString() << "\t"
+                              << ds.intMu.toStdString() << "\t"
+                              << ds.a22.toStdString() << "\t"
+                              << ds.a24.toStdString() << "\t"
+                              << ds.a42.toStdString() << "\t"
+                              << ds.a44.toStdString()
                               << std::endl;
 #endif
                 }

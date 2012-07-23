@@ -316,11 +316,14 @@ Decay::CascadeIdentifier Decay::currentSelection() const
 void Decay::setCurrentSelection(const Decay::CascadeIdentifier &identifier)
 {
     if (firstSelectedGamma)
-        firstSelectedGamma->graphicsItem()->setHighlighted(false);
+        if (firstSelectedGamma->graphicsItem())
+            firstSelectedGamma->graphicsItem()->setHighlighted(false);
     if (secondSelectedGamma)
-        secondSelectedGamma->graphicsItem()->setHighlighted(false);
+        if (secondSelectedGamma->graphicsItem())
+            secondSelectedGamma->graphicsItem()->setHighlighted(false);
     if (selectedEnergyLevel)
-        selectedEnergyLevel->graphicsItem()->setHighlighted(false);
+        if (selectedEnergyLevel->graphicsItem())
+            selectedEnergyLevel->graphicsItem()->setHighlighted(false);
 
     EnergyLevel *start = 0;
     if (identifier.start.isValid())
@@ -341,7 +344,8 @@ void Decay::setCurrentSelection(const Decay::CascadeIdentifier &identifier)
         }
         if (gamma) {
             firstSelectedGamma = gamma;
-            firstSelectedGamma->graphicsItem()->setHighlighted(true);
+            if (firstSelectedGamma->graphicsItem())
+                firstSelectedGamma->graphicsItem()->setHighlighted(true);
         }
     }
 
@@ -356,16 +360,134 @@ void Decay::setCurrentSelection(const Decay::CascadeIdentifier &identifier)
         }
         if (gamma) {
             secondSelectedGamma = gamma;
-            secondSelectedGamma->graphicsItem()->setHighlighted(true);
+            if (secondSelectedGamma->graphicsItem())
+                secondSelectedGamma->graphicsItem()->setHighlighted(true);
         }
     }
 
     if (inter && identifier.highlightIntermediate) {
         selectedEnergyLevel = inter;
-        selectedEnergyLevel->graphicsItem()->setHighlighted(true);
+        if (selectedEnergyLevel->graphicsItem())
+            selectedEnergyLevel->graphicsItem()->setHighlighted(true);
     }
 
     triggerDecayDataUpdate();
+}
+
+Decay::DecayDataSet Decay::decayDataSet() const
+{
+    DecayDataSet dataset;
+
+    // intermediate level
+    if (selectedEnergyLevel) {
+        dataset.intEnergy = selectedEnergyLevel->energy().toString();
+        dataset.intHalfLife = selectedEnergyLevel->halfLife().toString();
+        dataset.intSpin = selectedEnergyLevel->spin().toString();
+        dataset.intMu = selectedEnergyLevel->muAsText();
+        dataset.intQ = selectedEnergyLevel->qAsText();
+    }
+
+    // gammas
+    GammaTransition *pop = 0, *depop = 0;
+    if (firstSelectedGamma) {
+        if (firstSelectedGamma->depopulatedLevel() == selectedEnergyLevel)
+            depop = firstSelectedGamma;
+        else
+            pop = firstSelectedGamma;
+    }
+    if (secondSelectedGamma) {
+        if (secondSelectedGamma->depopulatedLevel() == selectedEnergyLevel)
+            depop = secondSelectedGamma;
+        else
+            pop = secondSelectedGamma;
+    }
+
+    // populating
+    if (pop) {
+        dataset.popEnergy = pop->energy().toString();
+        dataset.popIntensity = pop->intensityAsText();
+        dataset.popMultipolarity = pop->multipolarityAsText();
+        dataset.popMixing = pop->deltaAsText();
+    }
+
+    // depopulating
+    if (depop) {
+        dataset.depopEnergy = depop->energy().toString();
+        dataset.depopIntensity = depop->intensityAsText();
+        dataset.depopMultipolarity = depop->multipolarityAsText();
+        dataset.depopMixing = depop->deltaAsText();
+    }
+
+    // start and end level
+    if (firstSelectedGamma && secondSelectedGamma) {
+        dataset.startEnergy = pop->depopulatedLevel()->energy().toString();
+        dataset.startSpin = pop->depopulatedLevel()->spin().toString();
+        dataset.endEnergy = depop->populatedLevel()->energy().toString();
+        dataset.endSpin = depop->populatedLevel()->spin().toString();
+    }
+
+    // calculate anisotropies
+    if (pop && depop && selectedEnergyLevel) {
+        if (pop->depopulatedLevel()->spin().isValid() &&
+            depop->populatedLevel()->spin().isValid() &&
+            selectedEnergyLevel->spin().isValid() &&
+            pop->deltaState() & GammaTransition::SignMagnitudeDefined &&
+            depop->deltaState() & GammaTransition::SignMagnitudeDefined
+           ) {
+            // create list of sign combinations
+            typedef QPair<double, double> SignCombination;
+            QList< SignCombination > variants;
+            QList< double > popvariants;
+            if (pop->deltaState() == GammaTransition::MagnitudeDefined)
+                popvariants << 1. << -1.;
+            else
+                popvariants << ((pop->delta() < 0.0) ? -1. : 1.);
+            foreach (double popvariant, popvariants) {
+                if (depop->deltaState() == GammaTransition::MagnitudeDefined)
+                    variants << QPair<double, double>(popvariant, 1.) << SignCombination(popvariant, -1.);
+                else
+                    variants << SignCombination(popvariant, (depop->delta() < 0.0) ? -1. : 1.);
+            }
+
+            // compute possible results
+            QStringList a22, a24, a42, a44;
+            Akk calc;
+            calc.setInitialStateSpin(pop->depopulatedLevel()->spin().doubledSpin());
+            calc.setIntermediateStateSpin(selectedEnergyLevel->spin().doubledSpin());
+            calc.setFinalStateSpin(depop->populatedLevel()->spin().doubledSpin());
+
+            foreach (SignCombination variant, variants) {
+                double popdelta = pop->delta();
+                double depopdelta = depop->delta();
+                if (pop->deltaState() == GammaTransition::MagnitudeDefined)
+                    popdelta *= variant.first;
+                if (depop->deltaState() == GammaTransition::MagnitudeDefined)
+                    depopdelta *= variant.second;
+
+                calc.setPopulatingGammaMixing(popdelta);
+                calc.setDepopulatingGammaMixing(depopdelta);
+
+                // determine prefix
+                QString prfx;
+                if (variants.size() > 1) {
+                    prfx = QString::fromUtf8("%1: ");
+                    prfx = prfx.arg(QString(variant.first < 0 ? "-" : "+") + QString(variant.second < 0 ? "-" : "+"));
+                }
+
+                a22.append(QString("%1%2").arg(prfx).arg(calc.a22()));
+                a24.append(QString("%1%2").arg(prfx).arg(calc.a24()));
+                a42.append(QString("%1%2").arg(prfx).arg(calc.a42()));
+                a44.append(QString("%1%2").arg(prfx).arg(calc.a44()));
+            }
+
+            dataset.a22 = a22.join(", ");;
+            dataset.a24 = a24.join(", ");;
+            dataset.a42 = a42.join(", ");;
+            dataset.a44 = a44.join(", ");;
+        }
+    }
+
+    return dataset;
 }
 
 void Decay::itemClicked(ClickableItem *item)
@@ -508,118 +630,7 @@ void Decay::clickedEnergyLevel(EnergyLevel *e)
 
 void Decay::triggerDecayDataUpdate()
 {
-    DecayDataSet dataset;
-
-    // intermediate level
-    if (selectedEnergyLevel) {
-        dataset.intEnergy = selectedEnergyLevel->energy().toString();
-        dataset.intHalfLife = selectedEnergyLevel->halfLife().toString();
-        dataset.intSpin = selectedEnergyLevel->spin().toString();
-        dataset.intMu = selectedEnergyLevel->muAsText();
-        dataset.intQ = selectedEnergyLevel->qAsText();
-    }
-
-    // gammas
-    GammaTransition *pop = 0, *depop = 0;
-    if (firstSelectedGamma) {
-        if (firstSelectedGamma->depopulatedLevel() == selectedEnergyLevel)
-            depop = firstSelectedGamma;
-        else
-            pop = firstSelectedGamma;
-    }
-    if (secondSelectedGamma) {
-        if (secondSelectedGamma->depopulatedLevel() == selectedEnergyLevel)
-            depop = secondSelectedGamma;
-        else
-            pop = secondSelectedGamma;
-    }
-
-    // populating
-    if (pop) {
-        dataset.popEnergy = pop->energy().toString();
-        dataset.popIntensity = pop->intensityAsText();
-        dataset.popMultipolarity = pop->multipolarityAsText();
-        dataset.popMixing = pop->deltaAsText();
-    }
-
-    // depopulating
-    if (depop) {
-        dataset.depopEnergy = depop->energy().toString();
-        dataset.depopIntensity = depop->intensityAsText();
-        dataset.depopMultipolarity = depop->multipolarityAsText();
-        dataset.depopMixing = depop->deltaAsText();
-    }
-
-    // start and end level
-    if (firstSelectedGamma && secondSelectedGamma) {
-        dataset.startEnergy = pop->depopulatedLevel()->energy().toString();
-        dataset.startSpin = pop->depopulatedLevel()->spin().toString();
-        dataset.endEnergy = depop->populatedLevel()->energy().toString();
-        dataset.endSpin = depop->populatedLevel()->spin().toString();
-    }
-
-    // calculate anisotropies
-    if (pop && depop && selectedEnergyLevel) {
-        if (pop->depopulatedLevel()->spin().isValid() &&
-            depop->populatedLevel()->spin().isValid() &&
-            selectedEnergyLevel->spin().isValid() &&
-            pop->deltaState() & GammaTransition::SignMagnitudeDefined &&
-            depop->deltaState() & GammaTransition::SignMagnitudeDefined
-           ) {
-            // create list of sign combinations
-            typedef QPair<double, double> SignCombination;
-            QList< SignCombination > variants;
-            QList< double > popvariants;
-            if (pop->deltaState() == GammaTransition::MagnitudeDefined)
-                popvariants << 1. << -1.;
-            else
-                popvariants << ((pop->delta() < 0.0) ? -1. : 1.);
-            foreach (double popvariant, popvariants) {
-                if (depop->deltaState() == GammaTransition::MagnitudeDefined)
-                    variants << QPair<double, double>(popvariant, 1.) << SignCombination(popvariant, -1.);
-                else
-                    variants << SignCombination(popvariant, (depop->delta() < 0.0) ? -1. : 1.);
-            }
-
-            // compute possible results
-            QStringList a22, a24, a42, a44;
-            Akk calc;
-            calc.setInitialStateSpin(pop->depopulatedLevel()->spin().doubledSpin());
-            calc.setIntermediateStateSpin(selectedEnergyLevel->spin().doubledSpin());
-            calc.setFinalStateSpin(depop->populatedLevel()->spin().doubledSpin());
-
-            foreach (SignCombination variant, variants) {
-                double popdelta = pop->delta();
-                double depopdelta = depop->delta();
-                if (pop->deltaState() == GammaTransition::MagnitudeDefined)
-                    popdelta *= variant.first;
-                if (depop->deltaState() == GammaTransition::MagnitudeDefined)
-                    depopdelta *= variant.second;
-
-                calc.setPopulatingGammaMixing(popdelta);
-                calc.setDepopulatingGammaMixing(depopdelta);
-
-                // determine prefix
-                QString prfx;
-                if (variants.size() > 1) {
-                    prfx = QString::fromUtf8("%1: ");
-                    prfx = prfx.arg(QString(variant.first < 0 ? "-" : "+") + QString(variant.second < 0 ? "-" : "+"));
-                }
-
-                a22.append(QString("%1%2").arg(prfx).arg(calc.a22()));
-                a24.append(QString("%1%2").arg(prfx).arg(calc.a24()));
-                a42.append(QString("%1%2").arg(prfx).arg(calc.a42()));
-                a44.append(QString("%1%2").arg(prfx).arg(calc.a44()));
-            }
-
-            dataset.a22 = a22.join(", ");;
-            dataset.a24 = a24.join(", ");;
-            dataset.a42 = a42.join(", ");;
-            dataset.a44 = a44.join(", ");;
-        }
-    }
-
-    emit updatedDecayData(dataset);
+    emit updatedDecayData(decayDataSet());
 }
 
 void Decay::alignGraphicsItems()

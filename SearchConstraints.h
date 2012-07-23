@@ -3,6 +3,7 @@
 
 #include "HalfLife.h"
 #include <QMetaType>
+#include <QStringList>
 
 class SearchConstraints
 {
@@ -25,6 +26,8 @@ public:
     double minA22, minA24, minA42, minA44;
     bool skipUnknownAnisotropies;
     bool anisotropiesORCombined;
+
+    QStringList toStringList() const;
 
     friend QDataStream & operator<<(QDataStream &out, const SearchConstraints &c);
     friend QDataStream & operator>>(QDataStream &in, SearchConstraints &c);
