@@ -15,7 +15,8 @@ public:
     SpinParity();
 
     SpinParity(unsigned int numerator, unsigned int denominator,
-               Parity parity = Undefined, bool weakarguments = false, bool valid = true);
+               Parity parity = Undefined, bool weakarguments = false,
+               bool valid = true, const QString &invalidText = QString());
 
     bool isValid() const;
 
@@ -28,7 +29,7 @@ private:
     unsigned int denom;
     Parity p;
     bool weakarg;
-
+    QString invalidText;
 };
 
 #endif // SPINPARITY_H

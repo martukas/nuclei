@@ -87,8 +87,8 @@ mac {
     ICON = nuclei.icns
     QMAKE_MAC_SDK=/Developer/SDKs/MacOSX10.5.sdk
     config += ppc x86
-    LIBS += -L../../quazip/quazip -L../../libqxt/lib -L../../libakk/src -lqwt
-    INCLUDEPATH += ../../quazip /opt/local/include/qwt
+    LIBS += -L../quazip/quazip -L../libqxt/lib -L../libakk/src -lqwt
+    INCLUDEPATH += ../quazip /opt/local/include/qwt ../libakk/src
 }
 
 # QWT ####################

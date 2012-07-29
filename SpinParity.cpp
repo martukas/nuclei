@@ -7,8 +7,10 @@ SpinParity::SpinParity()
 }
 
 SpinParity::SpinParity(unsigned int numerator, unsigned int denominator,
-                       Parity parity, bool weakarguments, bool valid)
-    : m_valid(valid), num(numerator), denom(denominator), p(parity), weakarg(weakarguments)
+                       Parity parity, bool weakarguments, bool valid,
+                       const QString &invalidText)
+    : m_valid(valid), num(numerator), denom(denominator), p(parity),
+      weakarg(weakarguments), invalidText(invalidText)
 {
 }
 
@@ -25,7 +27,7 @@ int SpinParity::doubledSpin() const
 QString SpinParity::toString() const
 {
     if (!m_valid)
-        return "";
+        return invalidText;
 
     QString sign;
     switch (p) {

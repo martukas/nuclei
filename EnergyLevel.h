@@ -28,7 +28,7 @@ public:
                 double mu = std::numeric_limits<double>::quiet_NaN()
                 );
 
-    ~EnergyLevel();
+    virtual ~EnergyLevel();
 
     Energy energy() const;
     SpinParity spin() const;

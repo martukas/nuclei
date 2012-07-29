@@ -206,8 +206,11 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
 
             // if an appropriate entry was found, read its contents
             // set half life if necessary
-            if (!adptlvl.isEmpty() && !hl.isValid())
+            if (!adptlvl.isEmpty() && !hl.isValid()) {
                 hl = HalfLife(parseHalfLife(adptlvl.at(0).mid(39, 10)));
+                if (!spin.isValid())
+                    spin = parseSpinParity(adptlvl.at(0).mid(21, 18));
+            }
 
             // parse continuation records
             // fetch records
@@ -458,17 +461,19 @@ SpinParity ENSDFParser::parseSpinParity(const QString &sstr)
     else if (spstr.right(1) == "-")
         p = SpinParity::Minus;
     spstr.remove('+').remove('-');
-    QStringList fract(spstr.split('/'));
-    if (!fract.isEmpty()) {
-        num = fract.at(0).toUInt();
-        if (fract.size() > 1)
-            denom = fract.at(1).toUInt();
-        if (denom == 0)
-            denom = 1;
-        valid = true;
+	if (!spstr.isEmpty() && !spstr.contains(",")) {
+        QStringList fract(spstr.split('/'));
+        if (!fract.isEmpty()) {
+            num = fract.at(0).toUInt();
+            if (fract.size() > 1)
+                denom = fract.at(1).toUInt();
+            if (denom == 0)
+                denom = 1;
+            valid = true;
+        }
     }
 
-    return SpinParity(num, denom, p, weakarg, valid);
+    return SpinParity(num, denom, p, weakarg, valid, (valid ? "" : sstr.trimmed()));
 }
 
 double ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipolarity, GammaTransition::DeltaState *state)

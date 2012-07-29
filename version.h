@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define VERSION "2.1"
+#define VERSION "2.2"
 
 // used to save windows state. must be incremented if window layout changes!
 #define UIVERSION 0
@@ -22,7 +22,7 @@ shows the expected photo peak spectra.</p> \
 "
 
 #define GPL "\
-<p>Nuclei is free software: you can redistribute it and/or modify \
+<p>Nuclei as well as libAkk is free software: you can redistribute it and/or modify \
 it under the terms of the GNU General Public License as published by \
 the Free Software Foundation, either version 3 of the License, or \
 (at your option) any later version.</p> \
