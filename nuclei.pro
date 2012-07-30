@@ -67,8 +67,8 @@ HEADERS  += \
     ProxyStyle.h \
     Nuclei.h
 
-INCLUDEPATH += ../../libakk/src
-LIBS += -lakk -L../../libakk
+INCLUDEPATH += ../libakk/src
+LIBS += -lakk -L../libakk
 LIBS += -lquazip
 
 FORMS    += \
@@ -88,7 +88,7 @@ mac {
     QMAKE_MAC_SDK=/Developer/SDKs/MacOSX10.5.sdk
     config += ppc x86
     LIBS += -L../quazip/quazip -L../libqxt/lib -L../libakk/src -lqwt
-    INCLUDEPATH += ../quazip /opt/local/include/qwt ../libakk/src
+    INCLUDEPATH += ../quazip /opt/local/include/qwt
 }
 
 # QWT ####################
