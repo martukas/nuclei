@@ -36,4 +36,6 @@ GNU General Public License for more details.</p> \
 along with this program.  If not, see <http://www.gnu.org/licenses/>.</p> \
 "
 
+#define NUCLEIVERSIONURL "http://nuclei.sourceforge.net/versioninfo/versions.txt"
+
 #endif // VERSION_H

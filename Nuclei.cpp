@@ -31,6 +31,7 @@
 #include "DecayCascadeFilterProxyModel.h"
 #include "SearchDialog.h"
 #include "SearchResultDataSource.h"
+#include "UpdateCheck.h"
 
 class PlotZoomer : public QwtPlotZoomer
 {
@@ -192,6 +193,9 @@ Nuclei::~Nuclei()
 
 void Nuclei::initialize()
 {
+    // load update checker
+    new UpdateCheck(this);
+
     QSettings s;
 
     restoreGeometry(s.value("geometry").toByteArray());

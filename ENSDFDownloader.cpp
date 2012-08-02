@@ -9,15 +9,21 @@
 #include <QFileDialog>
 #include <QFtp>
 #include <QRegExp>
+#include <QDesktopServices>
 #include <quazip/JlCompress.h>
 #include <iostream>
 
 ENSDFDownloader::ENSDFDownloader(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::ENSDFDownloader), defaultPath(qApp->applicationDirPath() + "/ensdf"),
+    ui(new Ui::ENSDFDownloader),
     ftp(new QFtp(this)), pendinghandle(0), ftpOutFile(0)
 {
     ui->setupUi(this);
+
+    defaultPath = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+    if (defaultPath.isEmpty())
+        defaultPath = qApp->applicationDirPath();
+    defaultPath.append("/ensdf");
 
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(reject()));
     connect(ui->ftpCancelButton, SIGNAL(clicked()), this, SLOT(resetFtpTransfer()));
@@ -34,7 +40,7 @@ ENSDFDownloader::ENSDFDownloader(QWidget *parent) :
     QSettings s;
     // initialize ENSDF path if necessary
     if (!s.contains("ensdfPath")) {
-        s.setValue("ensdfPath", qApp->applicationDirPath() + "/ensdf");
+        s.setValue("ensdfPath", defaultPath);
         s.sync();
     }
 }
@@ -54,10 +60,7 @@ void ENSDFDownloader::download()
 
     while (!dest.exists()) {
         // try to create default path, if saved does not exist
-        if (QDir(qApp->applicationDirPath()).mkdir("ensdf")) {
-            dest.setPath(defaultPath);
-        }
-        else {
+        if (!dest.mkpath(dest.path())) {
             QString p(QFileDialog::getExistingDirectory(this, "Select Database Folder", dest.absolutePath()));
             if (p.isEmpty())
                 return;

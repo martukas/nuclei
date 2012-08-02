@@ -39,7 +39,8 @@ SOURCES += main.cpp\
     SearchConstraints.cpp \
     TreeView.cpp \
     ProxyStyle.cpp \
-    Nuclei.cpp
+    Nuclei.cpp \
+    UpdateCheck.cpp
 
 HEADERS  += \
     Decay.h \
@@ -67,7 +68,8 @@ HEADERS  += \
     SearchConstraints.h \
     TreeView.h \
     ProxyStyle.h \
-    Nuclei.h
+    Nuclei.h \
+    UpdateCheck.h
 
 INCLUDEPATH += ../libakk/src
 LIBS += -lakk -L../libakk
@@ -78,7 +80,8 @@ FORMS    += \
     ENSDFDownloaderSettings.ui \
     PreferencesDialog.ui \
     SearchDialog.ui \
-    Nuclei.ui
+    Nuclei.ui \
+    UpdateCheckDialog.ui
 
 RESOURCES += \
     nuclei.qrc

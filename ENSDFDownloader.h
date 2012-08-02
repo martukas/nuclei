@@ -33,7 +33,7 @@ private:
     void processZipFiles();
     void saveENSDFLocation();
     Ui::ENSDFDownloader *ui;
-    const QString defaultPath;
+    QString defaultPath;
     QFtp *ftp;
 
     QDir dest;

@@ -36,6 +36,10 @@ public:
     virtual QSharedPointer<Decay> decay(const AbstractTreeItem *item) const;
 
 private:
+    QList<unsigned int> getAvailableDataFileNumbers() const;
+
+    QString cachePath;
+
     static const quint32 magicNumber;
     static const quint32 cacheVersion;
 

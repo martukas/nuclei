@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QProgressDialog>
 #include <QMutexLocker>
+#include <QDesktopServices>
 
 #include "ENSDFDownloader.h"
 #include "ENSDFParser.h"
@@ -16,6 +17,11 @@ const quint32 ENSDFDataSource::cacheVersion = 1;
 ENSDFDataSource::ENSDFDataSource(QObject *parent)
     : AbstractDataSource(parent), root(new ENSDFTreeItem(AbstractTreeItem::RootType)), mccache(0)
 {
+    // initialize cache path
+    cachePath = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
+    if (cachePath.isEmpty())
+        cachePath = qApp->applicationDirPath();
+
     // load decay cache
     if (!loadENSDFCache())
         createENSDFCache();
@@ -50,12 +56,44 @@ QSharedPointer<Decay> ENSDFDataSource::decay(const AbstractTreeItem *item) const
     return mccache->decay(eitem->parent()->data(0).toString(), eitem->data(0).toString());
 }
 
+QList<unsigned int> ENSDFDataSource::getAvailableDataFileNumbers() const
+{
+    QWidget *pwid = qobject_cast<QWidget*>(parent());
+
+    // get A (mass number) strings or exit application
+    QList<unsigned int> aList(ENSDFParser::aValues());
+    bool firsttry = true;
+    while (aList.isEmpty()) {
+        if (!firsttry)
+            if (QMessageBox::Close == QMessageBox::warning(pwid, "Selected Folder is Empty", "Please select a folder containing the ENSDF database or use the download feature!", QMessageBox::Ok | QMessageBox::Close, QMessageBox::Ok)) {
+                qApp->quit();
+                return QList<unsigned int>();
+            }
+        ENSDFDownloader downloader(pwid);
+        if (downloader.exec() != QDialog::Accepted) {
+            qApp->quit();
+            return QList<unsigned int>();
+        }
+
+        aList = ENSDFParser::aValues();
+        firsttry = false;
+    }
+
+    return aList;
+}
+
 
 bool ENSDFDataSource::loadENSDFCache()
 {
     QSettings s;
-    QFile f(s.value("ensdfPath", ".").toString() + "/nuclei_ensdf.cache");
+
+    // return if cache file is missing
+    QFile f(QDir(cachePath).absoluteFilePath("nuclei_ensdf.cache"));
     if (!f.open(QIODevice::ReadOnly))
+        return false;
+
+    // make sure ensdf files are available
+    if (getAvailableDataFileNumbers().isEmpty())
         return false;
 
     QDataStream in(&f);
@@ -85,21 +123,9 @@ void ENSDFDataSource::createENSDFCache()
     QWidget *pwid = qobject_cast<QWidget*>(parent());
 
     // get A (mass number) strings or exit application
-    QList<unsigned int> aList(ENSDFParser::aValues());
-    bool firsttry = true;
-    while (aList.isEmpty()) {
-        if (!firsttry)
-            if (QMessageBox::Close == QMessageBox::warning(pwid, "Selected Folder is Empty", "Please select a folder containing the ENSDF database or use the download feature!", QMessageBox::Ok | QMessageBox::Close, QMessageBox::Ok))
-                qApp->quit();
-        ENSDFDownloader downloader(pwid);
-        if (downloader.exec() != QDialog::Accepted) {
-            qApp->quit();
-            return;
-        }
-
-        aList = ENSDFParser::aValues();
-        firsttry = false;
-    }
+    QList<unsigned int> aList(getAvailableDataFileNumbers());
+    if (aList.isEmpty())
+        return;
 
     // open cache file
     //  first try to read cache (path might be different than before)
@@ -107,10 +133,16 @@ void ENSDFDataSource::createENSDFCache()
         return;
 
     QSettings s;
-    QFile f(s.value("ensdfPath", ".").toString() + "/nuclei_ensdf.cache");
+    //create directory if it does not exist
+    QDir cacheDir(cachePath);
+    if (!cacheDir.exists())
+        cacheDir.mkpath(cachePath);
+    QFile f(cacheDir.absoluteFilePath("nuclei_ensdf.cache"));
     while (!f.open(QIODevice::WriteOnly))
-        if (QMessageBox::Close == QMessageBox::warning(pwid, "ENSDF Folder is not writeable!", "<p>The currently selected folder <br />" + s.value("ensdfPath", ".").toString() + "<br /> is not writeable!</p><p>It must be writeable to create a cache file.</p>", QMessageBox::Ok | QMessageBox::Close, QMessageBox::Retry))
+        if (QMessageBox::Close == QMessageBox::warning(pwid, "ENSDF Folder is not writeable!", "<p>The currently selected folder <br />" + cachePath + "<br /> is not writeable!</p><p>It must be writeable to create a cache file.</p>", QMessageBox::Close, QMessageBox::Close)) {
             qApp->quit();
+            return;
+        }
 
     QDataStream out(&f);
     out << magicNumber;
