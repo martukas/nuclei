@@ -7,7 +7,9 @@ CONFIG += warn_on
     QXT += core gui
 }
 
-TARGET = nuclei
+!mac:TARGET = nuclei
+mac:TARGET = Nuclei
+
 TEMPLATE = app
 
 DEFINES += PRINT_SEARCH_RESULTS
@@ -86,9 +88,9 @@ RC_FILE = nuclei.rc
 mac {
     ICON = nuclei.icns
     QMAKE_MAC_SDK=/Developer/SDKs/MacOSX10.5.sdk
-    config += ppc x86
-    LIBS += -L../quazip/quazip -L../libqxt/lib -L../libakk/src -lqwt
-    INCLUDEPATH += ../quazip /opt/local/include/qwt
+    CONFIG += ppc x86
+    LIBS += -lqwt -lakk -L/usr/lib -L../libakk/src
+    INCLUDEPATH += /opt/local/include/qwt ../libakk/src
 }
 
 # QWT ####################

@@ -1,6 +1,8 @@
 #!/bin/sh
-macdeployqt nuclei.app
-mkdir nuclei.app/Contents/Frameworks
-cp ../libakk/src/libakk.1.dylib nuclei.app/Contents/Frameworks/
-install_name_tool -change /usr/lib/libakk.1.dylib @executable_path/../Frameworks/libakk.1.dylib nuclei.app/Contents/MacOS/nuclei
-cp ../quazip/quazip/libquazip.1.dylib nuclei.app/Contents/Frameworks/
+macdeployqt Nuclei.app
+cp -r /opt/local/lib/Resources/qt_menu.nib Nuclei.app/Contents/Resources
+install_name_tool -change /usr/lib/libakk.1.dylib @executable_path/../Frameworks/libakk.1.dylib Nuclei.app/Contents/MacOS/nuclei
+sed -e "s/com.yourcompany/de.uni-goettingen/g" Nuclei.app/Contents/Info.plist > tmp.plist
+mv tmp.plist Nuclei.app/Contents/Info.plist
+rm tmp.plist
+hdiutil create ./Nuclei.dmg -srcfolder ./Nuclei.app/ -ov
