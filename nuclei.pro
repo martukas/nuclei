@@ -1,16 +1,13 @@
+TEMPLATE = app
 
 QT += core gui network svg
 CONFIG += warn_on
 
-!mac {
-    CONFIG += qxt
-    QXT += core gui
+mac {
+    TARGET = Nuclei
+} else {
+    TARGET = nuclei
 }
-
-!mac:TARGET = nuclei
-mac:TARGET = Nuclei
-
-TEMPLATE = app
 
 DEFINES += PRINT_SEARCH_RESULTS
 
@@ -71,8 +68,14 @@ HEADERS  += \
     Nuclei.h \
     UpdateCheck.h
 
-INCLUDEPATH += ../libakk/src
-LIBS += -lakk -L../libakk
+isEmpty(PREFIX) {
+    PREFIX=/usr/local
+}
+target.path = $$PREFIX/bin/
+INSTALLS = target
+
+INCLUDEPATH += $$PREFIX/include ../libakk
+LIBS += -lakk -L$$PREFIX/lib -L../libakk
 LIBS += -lquazip
 
 FORMS    += \
@@ -92,8 +95,11 @@ mac {
     ICON = nuclei.icns
     QMAKE_MAC_SDK=/Developer/SDKs/MacOSX10.5.sdk
     CONFIG += ppc x86
-    LIBS += -lqwt -lakk -L/usr/lib -L../libakk/src
-    INCLUDEPATH += /opt/local/include/qwt ../libakk/src
+    LIBS += -lqwt -L/usr/lib
+    INCLUDEPATH += /opt/local/include/qwt
+} else {
+    CONFIG += qxt
+    QXT += core gui
 }
 
 # QWT ####################
