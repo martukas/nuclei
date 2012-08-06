@@ -276,7 +276,7 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                             depopvariants << 1.0;
                             if (pop->deltaState() == GammaTransition::MagnitudeDefined)
                                 popvariants << -1.0;
-                            if (pop->deltaState() == GammaTransition::MagnitudeDefined)
+                            if (depop->deltaState() == GammaTransition::MagnitudeDefined)
                                 depopvariants << -1.0;
 
                             foreach (double popvariant, popvariants) {

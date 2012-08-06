@@ -38,7 +38,7 @@ QStringList SearchConstraints::toStringList() const
         r.append(QString::fromUtf8("Min. µ: %1%2").arg(minMu).arg(skipUnknownMu ? " (skip unknown)" : ""));
     if (std::isfinite(minQ))
         r.append(QString::fromUtf8("Min. Q: %1%2").arg(minQ).arg(skipUnknownQ ? " (skip unknown)" : ""));
-    r.append(QString::fromUtf8("Logical combination of µ and Q: ").arg(muAndQORCombined ? "OR" : "AND"));
+    r.append(QString::fromUtf8("Logical combination of µ and Q: %1").arg(muAndQORCombined ? "OR" : "AND"));
     if (std::isfinite(minA22))
         r.append(QString("Min. A22: %1").arg(minA22));
     if (std::isfinite(minA24))
