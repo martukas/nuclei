@@ -58,7 +58,7 @@ private:
     static Energy parseEnsdfEnergy(const QString &estr);
     static HalfLife parseHalfLife(const QString &hlstr);
     static SpinParity parseSpinParity(const QString &sstr);
-    static double parseEnsdfMixing(const QString &s, const QString &multipolarity, GammaTransition::DeltaState *state);
+    static double parseEnsdfMixing(const QString &s, const QString &multipolarity, MixingRatio::State *state);
     static ParentRecord parseParentRecord(const QString &precstr);
 
     template <typename T> const T & findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;

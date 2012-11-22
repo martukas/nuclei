@@ -407,7 +407,7 @@ Decay::DecayDataSet Decay::decayDataSet() const
         dataset.popEnergy = pop->energy().toString();
         dataset.popIntensity = pop->intensityAsText();
         dataset.popMultipolarity = pop->multipolarityAsText();
-        dataset.popMixing = pop->deltaAsText();
+        dataset.popMixing = pop->delta().toString();
     }
 
     // depopulating
@@ -415,7 +415,7 @@ Decay::DecayDataSet Decay::decayDataSet() const
         dataset.depopEnergy = depop->energy().toString();
         dataset.depopIntensity = depop->intensityAsText();
         dataset.depopMultipolarity = depop->multipolarityAsText();
-        dataset.depopMixing = depop->deltaAsText();
+        dataset.depopMixing = depop->delta().toString();
     }
 
     // start and end level
@@ -431,19 +431,19 @@ Decay::DecayDataSet Decay::decayDataSet() const
         if (pop->depopulatedLevel()->spin().isValid() &&
             depop->populatedLevel()->spin().isValid() &&
             selectedEnergyLevel->spin().isValid() &&
-            pop->deltaState() & GammaTransition::SignMagnitudeDefined &&
-            depop->deltaState() & GammaTransition::SignMagnitudeDefined
+            pop->delta().state() & MixingRatio::SignMagnitudeDefined &&
+            depop->delta().state() & MixingRatio::SignMagnitudeDefined
            ) {
             // create list of sign combinations
             typedef QPair<double, double> SignCombination;
             QList< SignCombination > variants;
             QList< double > popvariants;
-            if (pop->deltaState() == GammaTransition::MagnitudeDefined)
+            if (pop->delta().state() == MixingRatio::MagnitudeDefined)
                 popvariants << 1. << -1.;
             else
                 popvariants << ((pop->delta() < 0.0) ? -1. : 1.);
             foreach (double popvariant, popvariants) {
-                if (depop->deltaState() == GammaTransition::MagnitudeDefined)
+                if (depop->delta().state() == MixingRatio::MagnitudeDefined)
                     variants << QPair<double, double>(popvariant, 1.) << SignCombination(popvariant, -1.);
                 else
                     variants << SignCombination(popvariant, (depop->delta() < 0.0) ? -1. : 1.);
@@ -459,9 +459,9 @@ Decay::DecayDataSet Decay::decayDataSet() const
             foreach (SignCombination variant, variants) {
                 double popdelta = pop->delta();
                 double depopdelta = depop->delta();
-                if (pop->deltaState() == GammaTransition::MagnitudeDefined)
+                if (pop->delta().state() == MixingRatio::MagnitudeDefined)
                     popdelta *= variant.first;
-                if (depop->deltaState() == GammaTransition::MagnitudeDefined)
+                if (depop->delta().state() == MixingRatio::MagnitudeDefined)
                     depopdelta *= variant.second;
 
                 calc.setPopulatingGammaMixing(popdelta);
@@ -480,10 +480,10 @@ Decay::DecayDataSet Decay::decayDataSet() const
                 a44.append(QString("%1%2").arg(prfx).arg(calc.a44()));
             }
 
-            dataset.a22 = a22.join(", ");;
-            dataset.a24 = a24.join(", ");;
-            dataset.a42 = a42.join(", ");;
-            dataset.a44 = a44.join(", ");;
+            dataset.a22 = a22.join(", ");
+            dataset.a24 = a24.join(", ");
+            dataset.a42 = a42.join(", ");
+            dataset.a44 = a44.join(", ");
         }
     }
 

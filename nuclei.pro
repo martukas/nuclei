@@ -37,7 +37,9 @@ SOURCES += main.cpp\
     TreeView.cpp \
     ProxyStyle.cpp \
     Nuclei.cpp \
-    UpdateCheck.cpp
+    UpdateCheck.cpp \
+    MixingRatio.cpp \
+    UncertainDouble.cpp
 
 HEADERS  += \
     Decay.h \
@@ -66,7 +68,9 @@ HEADERS  += \
     TreeView.h \
     ProxyStyle.h \
     Nuclei.h \
-    UpdateCheck.h
+    UpdateCheck.h \
+    MixingRatio.h \
+    UncertainDouble.h
 
 isEmpty(PREFIX) {
     PREFIX=/usr/local

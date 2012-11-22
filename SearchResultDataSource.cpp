@@ -254,8 +254,8 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                         if (    !pop->depopulatedLevel()->spin().isValid() ||
                                 !depop->populatedLevel()->spin().isValid() ||
                                 !intlevel->spin().isValid() ||
-                                !(pop->deltaState() & GammaTransition::SignMagnitudeDefined) ||
-                                !(depop->deltaState() & GammaTransition::SignMagnitudeDefined)) {
+                                !(pop->delta().state() & MixingRatio::SignMagnitudeDefined) ||
+                                !(depop->delta().state() & MixingRatio::SignMagnitudeDefined)) {
                             if (m_constraints.skipUnknownAnisotropies) {
                                 a22ok = true;
                                 a24ok = true;
@@ -274,9 +274,9 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                             QList<double> popvariants, depopvariants;
                             popvariants << 1.0;
                             depopvariants << 1.0;
-                            if (pop->deltaState() == GammaTransition::MagnitudeDefined)
+                            if (pop->delta().state() == MixingRatio::MagnitudeDefined)
                                 popvariants << -1.0;
-                            if (depop->deltaState() == GammaTransition::MagnitudeDefined)
+                            if (depop->delta().state() == MixingRatio::MagnitudeDefined)
                                 depopvariants << -1.0;
 
                             foreach (double popvariant, popvariants) {

@@ -125,12 +125,12 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
             QString mpol(line.mid(31, 10).trimmed());
 
             // determine delta
-            GammaTransition::DeltaState deltastate = GammaTransition::UnknownDelta;
+            MixingRatio::State deltastate = MixingRatio::UnknownDelta;
 
             double delta = parseEnsdfMixing(line.mid(41, 8).trimmed(), mpol, &deltastate);
 
             // parse adopted levels if necessary
-            if (deltastate != GammaTransition::SignMagnitudeDefined || mpol.isEmpty()) {
+            if (deltastate != MixingRatio::SignMagnitudeDefined || mpol.isEmpty()) {
                 // Get adopted levels block for current level
                 QStringList adptlvl;
                 QRegExp gammare("^" + dNucid + "  G (.*)$");
@@ -156,8 +156,8 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
                         if (mpol.isEmpty())
                             mpol = gammastr.mid(31, 10).trimmed();
 
-                        if (deltastate != GammaTransition::SignMagnitudeDefined) {
-                            GammaTransition::DeltaState adptdeltastate = GammaTransition::UnknownDelta;
+                        if (deltastate != MixingRatio::SignMagnitudeDefined) {
+                            MixingRatio::State adptdeltastate = MixingRatio::UnknownDelta;
                             double adptdelta = parseEnsdfMixing(gammastr.mid(41, 8).trimmed(), mpol, &adptdeltastate);
                             if (adptdeltastate > deltastate) {
                                 delta = adptdelta;
@@ -476,7 +476,7 @@ SpinParity ENSDFParser::parseSpinParity(const QString &sstr)
     return SpinParity(num, denom, p, weakarg, valid, (valid ? "" : sstr.trimmed()));
 }
 
-double ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipolarity, GammaTransition::DeltaState *state)
+double ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipolarity, MixingRatio::State *state)
 {
     QLocale clocale("C");
     bool convok = false;
@@ -485,7 +485,7 @@ double ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipo
         QString tmp(multipolarity);
         tmp.remove('(').remove(')');
         if (tmp.count() == 2)
-            *state = GammaTransition::SignMagnitudeDefined;
+            *state = MixingRatio::SignMagnitudeDefined;
         // else leave deltastate UnknownDelta
     }
     else {
@@ -493,9 +493,9 @@ double ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipo
         if (convok) {
             delta = tmp;
             if (mstr.contains('+') || mstr.contains('-'))
-                *state = GammaTransition::SignMagnitudeDefined;
+                *state = MixingRatio::SignMagnitudeDefined;
             else
-                *state = GammaTransition::MagnitudeDefined;
+                *state = MixingRatio::MagnitudeDefined;
         }
         // else leave deltastate UnknownDelta
     }

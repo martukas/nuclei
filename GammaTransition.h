@@ -6,6 +6,7 @@
 #include <QPen>
 #include "ClickableItem.h"
 #include "Energy.h"
+#include "MixingRatio.h"
 
 class QGraphicsItem;
 class ActiveGraphicsItemGroup;
@@ -19,26 +20,17 @@ class EnergyLevel;
 class GammaTransition : public ClickableItem
 {
 public:
-    enum DeltaState {
-        UnknownDelta = 0x0,
-        MagnitudeDefined = 0x1,
-        SignDefined = 0x2,
-        SignMagnitudeDefined = 0x3
-    };
-
     GammaTransition(Energy energy, double intensity,
-                    const QString &multipol, double delta, DeltaState deltastate,
+                    const QString &multipol, double delta, MixingRatio::State deltastate,
                     EnergyLevel *start, EnergyLevel *dest);
 
     Energy energy() const;
     double intensity() const;
     QString multipolarity() const;
-    double delta() const;
-    DeltaState deltaState() const;
+    const MixingRatio &delta() const;
 
     QString intensityAsText() const;
     QString multipolarityAsText() const;
-    QString deltaAsText() const;
 
     EnergyLevel * depopulatedLevel() const;
     EnergyLevel * populatedLevel() const;
@@ -61,8 +53,7 @@ private:
     Energy m_e;
     double intens;
     QString m_mpol;
-    double m_delta;
-    DeltaState m_deltastate;
+    MixingRatio m_delta;
     EnergyLevel *m_start, *m_dest;
 
     QGraphicsLineItem *arrow;

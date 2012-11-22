@@ -20,10 +20,10 @@ const QPolygonF GammaTransition::arrowBaseShape = initArrowBase();
 
 
 GammaTransition::GammaTransition(Energy energy, double intensity,
-                                 const QString &multipol, double delta, DeltaState deltastate,
+                                 const QString &multipol, double delta, MixingRatio::State deltastate,
                                  EnergyLevel *start, EnergyLevel *dest)
     : ClickableItem(ClickableItem::GammaTransitionType),
-      m_e(energy), intens(intensity), m_mpol(multipol), m_delta(delta), m_deltastate(deltastate), m_start(start), m_dest(dest),
+      m_e(energy), intens(intensity), m_mpol(multipol), m_delta(delta, deltastate), m_start(start), m_dest(dest),
       arrow(0), text(0), arrowhead(0), arrowbase(0), clickarea(0), highlightHelper(0), mindist(0.0),
       m_lastFwhm(std::numeric_limits<double>::quiet_NaN()),
       m_lastEmax(std::numeric_limits<double>::quiet_NaN()),
@@ -48,14 +48,9 @@ QString GammaTransition::multipolarity() const
     return m_mpol;
 }
 
-double GammaTransition::delta() const
+const MixingRatio & GammaTransition::delta() const
 {
     return m_delta;
-}
-
-GammaTransition::DeltaState GammaTransition::deltaState() const
-{
-    return m_deltastate;
 }
 
 QString GammaTransition::intensityAsText() const
@@ -71,17 +66,6 @@ QString GammaTransition::multipolarityAsText() const
     if (m_mpol.isEmpty())
         return "<i>unknown</i>";
     return m_mpol;
-}
-
-QString GammaTransition::deltaAsText() const
-{
-    if (m_deltastate == UnknownDelta)
-        return "<i>unknown</i>";
-
-    QString dstr(QString::number(m_delta));
-    if (m_deltastate == MagnitudeDefined)
-        dstr.prepend(QString::fromUtf8("± "));
-    return dstr;
 }
 
 EnergyLevel *GammaTransition::depopulatedLevel() const
