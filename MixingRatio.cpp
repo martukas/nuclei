@@ -4,12 +4,12 @@
 #include <cmath>
 
 MixingRatio::MixingRatio()
-    : m_valid(false), m_delta(std::numeric_limits<double>::quiet_NaN()), m_state(UnknownDelta)
+    : m_valid(false)
 {
 }
 
-MixingRatio::MixingRatio(double delta, State state)
-    : m_valid(true), m_delta(delta), m_state(state)
+MixingRatio::MixingRatio(UncertainDouble delta)
+    : m_valid(true), m_delta(delta)
 {
 }
 
@@ -20,23 +20,12 @@ bool MixingRatio::isValid() const
 
 QString MixingRatio::toString() const
 {
-    if (m_state == UnknownDelta)
-        return "<i>unknown</i>";
-
-    QString dstr(QString::number(m_delta));
-    if (m_state == MagnitudeDefined)
-        dstr.prepend(QString::fromUtf8("± "));
-    return dstr;
+    return m_delta.toString();
 }
 
-double MixingRatio::value() const
+UncertainDouble MixingRatio::value() const
 {
     return m_delta;
-}
-
-MixingRatio::State MixingRatio::state() const
-{
-    return m_state;
 }
 
 bool operator <(const MixingRatio &left, const MixingRatio &right)
@@ -45,7 +34,7 @@ bool operator <(const MixingRatio &left, const MixingRatio &right)
 }
 
 
-bool operator <(const MixingRatio &left, const double &right)
+bool operator <(const MixingRatio &left, const UncertainDouble &right)
 {
     return left.m_delta < right;
 }
@@ -57,7 +46,7 @@ bool operator >(const MixingRatio &left, const MixingRatio &right)
 }
 
 
-bool operator >(const MixingRatio &left, const double &right)
+bool operator >(const MixingRatio &left, const UncertainDouble &right)
 {
     return left.m_delta > right;
 }

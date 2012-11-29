@@ -8,16 +8,30 @@ UncertainDouble::UncertainDouble()
     : m_val(std::numeric_limits<double>::quiet_NaN()),
       m_lowerSigma(std::numeric_limits<double>::quiet_NaN()),
       m_upperSigma(std::numeric_limits<double>::quiet_NaN()),
-      m_type(Undefined)
+      m_sign(SignMagnitudeDefined),
+      m_type(UndefinedType)
 {
 }
 
-UncertainDouble::UncertainDouble(double d)
+UncertainDouble::UncertainDouble(double d, Sign s)
     : m_val(d),
       m_lowerSigma(0.0),
       m_upperSigma(0.0),
-      m_type(Undefined)
+      m_sign(UndefinedSign),
+      m_type(UndefinedType)
 {
+}
+
+UncertainDouble &UncertainDouble::operator =(const UncertainDouble &other)
+{
+    if (this != &other) {
+        m_val = other.m_val;
+        m_lowerSigma = other.m_lowerSigma;
+        m_upperSigma = other.m_upperSigma;
+        m_sign = other.m_sign;
+        m_type = other.m_type;
+    }
+    return *this;
 }
 
 double UncertainDouble::value() const
@@ -33,6 +47,16 @@ double UncertainDouble::lowerUncertainty() const
 double UncertainDouble::upperUncertainty() const
 {
     return m_upperSigma;
+}
+
+UncertainDouble::UncertaintyType UncertainDouble::uncertaintyType() const
+{
+    return m_type;
+}
+
+UncertainDouble::Sign UncertainDouble::sign() const
+{
+    return m_sign;
 }
 
 void UncertainDouble::setValue(double val)
@@ -57,23 +81,39 @@ void UncertainDouble::setAsymmetricUncertainty(double lowerSigma, double upperSi
     setUncertainty(lowerSigma, upperSigma, AsymmetricUncertainty);
 }
 
+void UncertainDouble::setSign(UncertainDouble::Sign s)
+{
+    m_sign = s;
+}
+
 QString UncertainDouble::toString() const
 {
+    QString signprefix;
+    double val = m_val;
+    if (m_sign == MagnitudeDefined) {
+        signprefix = QString::fromUtf8("± ");
+        val = std::abs(val);
+    }
+    else if (m_sign == UndefinedSign) {
+        signprefix = "? ";
+        val = std::abs(val);
+    }
+
     switch (m_type) {
     case Systematics:
-        return QString("%1 (systematics)").arg(m_val);
+        return QString("%1%2 (systematics)").arg(signprefix).arg(val);
     case Calculated:
-        return QString("%1 (calculated)").arg(m_val);
+        return QString("%1%2 (calculated)").arg(signprefix).arg(val);
     case Approximately:
-        return QString("~ %1").arg(m_val);
+        return QString("~ %1%2").arg(signprefix).arg(val);
     case GreaterEqual:
-        return QString(QString::fromUtf8("≥ %1")).arg(m_val);
+        return QString(QString::fromUtf8("≥ %1%2")).arg(signprefix).arg(val);
     case GreaterThan:
-        return QString(QString::fromUtf8("> %1")).arg(m_val);
+        return QString(QString::fromUtf8("> %1%2")).arg(signprefix).arg(val);
     case LessEqual:
-        return QString(QString::fromUtf8("≤ %1")).arg(m_val);
+        return QString(QString::fromUtf8("≤ %1%2")).arg(signprefix).arg(val);
     case LessThan:
-        return QString(QString::fromUtf8("< %1")).arg(m_val);
+        return QString(QString::fromUtf8("< %1%2")).arg(signprefix).arg(val);
     case SymmetricUncertainty:
         Q_ASSERT(m_lowerSigma == m_upperSigma);
     case AsymmetricUncertainty:
@@ -82,7 +122,7 @@ QString UncertainDouble::toString() const
 
     {
         // determine orders of magnitude to align uncertainty output
-        int orderOfValue = std::floor(std::log10(m_val));
+        int orderOfValue = std::floor(std::log10(val));
         int orderOfUncert = std::min(std::floor(std::log10(m_lowerSigma)), std::floor(std::log10(m_upperSigma)));
 
         int precision = 0;
@@ -113,21 +153,30 @@ QString UncertainDouble::toString() const
         // use scientific notation for values outside ]10,0.1]
         QString result;
         if (precision < 0) {
-            result = QString("(%1)").arg(QString::number(m_val, 'g', 0));
+            result = QString("(%1)").arg(QString::number(val, 'g', 0));
         }
-        else if (m_val < 10.0 && m_val >= 0.1) {
-            result = QString::number(m_val, 'f', precision);
+        else if (val < 10.0 && val >= 0.1) {
+            result = QString::number(val, 'f', precision);
             result.append(uncertstr);
         }
         else {
-            result = QString::number(m_val, 'e', precision);
+            result = QString::number(val, 'e', precision);
             result = result.split('e').join(uncertstr + "e");
         }
-        return result;
+        return signprefix + result;
     }
     default:
-        return "?";
+        return "undefined";
     }
+}
+
+QString UncertainDouble::toText() const
+{
+    QString result(toString());
+    result.replace("(systematics)", "<i>(systematics)</i>");
+    result.replace("(calculated)", "<i>(calculated)</i>");
+    result.replace("(systematics)", "<i>(systematics)</i>");
+    result.replace(QRegExp("e[-+]([0-9][0-9])"), QString::fromUtf8("⋅10<sup>%1</sup>"))
 }
 
 UncertainDouble::operator double() const
@@ -141,6 +190,9 @@ QDataStream &operator <<(QDataStream &out, const UncertainDouble &u)
 {
     out << u.m_val;
     out << u.m_lowerSigma;
+    out << u.m_upperSigma;
+    out << int(u.m_sign);
+    out << int(u.m_type);
     return out;
 }
 
@@ -149,5 +201,11 @@ QDataStream &operator >>(QDataStream &in, UncertainDouble &u)
 {
     in >> u.m_val;
     in >> u.m_lowerSigma;
+    in >> u.m_upperSigma;
+    int tmp;
+    in >> tmp;
+    u.m_sign = Sign(tmp);
+    in >> tmp;
+    u.m_type = UncertaintyType(tmp);
     return in;
 }

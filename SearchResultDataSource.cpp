@@ -254,8 +254,8 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                         if (    !pop->depopulatedLevel()->spin().isValid() ||
                                 !depop->populatedLevel()->spin().isValid() ||
                                 !intlevel->spin().isValid() ||
-                                !(pop->delta().state() & MixingRatio::SignMagnitudeDefined) ||
-                                !(depop->delta().state() & MixingRatio::SignMagnitudeDefined)) {
+                                !isDeltaUsable(pop->delta()) ||
+                                !isDeltaUsable(depop->delta()) ) {
                             if (m_constraints.skipUnknownAnisotropies) {
                                 a22ok = true;
                                 a24ok = true;
@@ -400,6 +400,15 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
 void SearchThread::processThreadEnd()
 {
     emit threadEnded(!stop);
+}
+
+bool SearchThread::isDeltaUsable(const UncertainDouble &delta)
+{
+    if (    delta.sign() != UncertainDouble::MagnitudeDefined &&
+            delta.sign() != UncertainDouble::SignMagnitudeDefined )
+        return false;
+
+    if (delta.t)
 }
 
 

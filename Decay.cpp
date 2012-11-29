@@ -431,19 +431,19 @@ Decay::DecayDataSet Decay::decayDataSet() const
         if (pop->depopulatedLevel()->spin().isValid() &&
             depop->populatedLevel()->spin().isValid() &&
             selectedEnergyLevel->spin().isValid() &&
-            pop->delta().state() & MixingRatio::SignMagnitudeDefined &&
-            depop->delta().state() & MixingRatio::SignMagnitudeDefined
+            pop->delta().sign() & UncertainDouble::SignMagnitudeDefined &&
+            depop->delta().sign() & UncertainDouble::SignMagnitudeDefined
            ) {
             // create list of sign combinations
             typedef QPair<double, double> SignCombination;
             QList< SignCombination > variants;
             QList< double > popvariants;
-            if (pop->delta().state() == MixingRatio::MagnitudeDefined)
+            if (pop->delta().sign() == UncertainDouble::MagnitudeDefined)
                 popvariants << 1. << -1.;
             else
                 popvariants << ((pop->delta() < 0.0) ? -1. : 1.);
             foreach (double popvariant, popvariants) {
-                if (depop->delta().state() == MixingRatio::MagnitudeDefined)
+                if (depop->delta().sign() == UncertainDouble::MagnitudeDefined)
                     variants << QPair<double, double>(popvariant, 1.) << SignCombination(popvariant, -1.);
                 else
                     variants << SignCombination(popvariant, (depop->delta() < 0.0) ? -1. : 1.);
@@ -459,9 +459,9 @@ Decay::DecayDataSet Decay::decayDataSet() const
             foreach (SignCombination variant, variants) {
                 double popdelta = pop->delta();
                 double depopdelta = depop->delta();
-                if (pop->delta().state() == MixingRatio::MagnitudeDefined)
+                if (pop->delta().sign() == UncertainDouble::MagnitudeDefined)
                     popdelta *= variant.first;
-                if (depop->delta().state() == MixingRatio::MagnitudeDefined)
+                if (depop->delta().sign() == UncertainDouble::MagnitudeDefined)
                     depopdelta *= variant.second;
 
                 calc.setPopulatingGammaMixing(popdelta);

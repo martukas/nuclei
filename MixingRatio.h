@@ -4,31 +4,24 @@
 #include <QString>
 #include <QMetaType>
 #include <QDataStream>
+#include "UncertainDouble.h"
 
 class MixingRatio
 {
 public:
-    enum State {
-        UnknownDelta = 0x0,
-        MagnitudeDefined = 0x1,
-        SignDefined = 0x2,
-        SignMagnitudeDefined = 0x3
-    };
-
     MixingRatio();
-    explicit MixingRatio(double delta, State state = SignMagnitudeDefined);
+    explicit MixingRatio(UncertainDouble delta);
 
     bool isValid() const;
 
     QString toString() const;
 
-    double value() const;
-    State state() const;
+    UncertainDouble value() const;
 
     friend bool operator<(const MixingRatio &left, const MixingRatio &right);
-    friend bool operator<(const MixingRatio &left, const double &right);
+    friend bool operator<(const MixingRatio &left, const UncertainDouble &right);
     friend bool operator>(const MixingRatio &left, const MixingRatio &right);
-    friend bool operator>(const MixingRatio &left, const double &right);
+    friend bool operator>(const MixingRatio &left, const UncertainDouble &right);
     friend bool operator==(const MixingRatio &left, const MixingRatio &right);
     operator double() const;
 
@@ -37,8 +30,7 @@ public:
 
 private:
     bool m_valid;
-    double m_delta;
-    State m_state;
+    UncertainDouble m_delta;
 };
 
 #endif // MIXINGRATIO_H

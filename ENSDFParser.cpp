@@ -125,12 +125,10 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
             QString mpol(line.mid(31, 10).trimmed());
 
             // determine delta
-            MixingRatio::State deltastate = MixingRatio::UnknownDelta;
-
-            double delta = parseEnsdfMixing(line.mid(41, 8).trimmed(), mpol, &deltastate);
+            UncertainDouble delta = parseEnsdfMixing(line.mid(41, 8).trimmed(), mpol);
 
             // parse adopted levels if necessary
-            if (deltastate != MixingRatio::SignMagnitudeDefined || mpol.isEmpty()) {
+            if (delta.sign() != UncertainDouble::SignMagnitudeDefined || mpol.isEmpty()) {
                 // Get adopted levels block for current level
                 QStringList adptlvl;
                 QRegExp gammare("^" + dNucid + "  G (.*)$");
@@ -156,13 +154,10 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
                         if (mpol.isEmpty())
                             mpol = gammastr.mid(31, 10).trimmed();
 
-                        if (deltastate != MixingRatio::SignMagnitudeDefined) {
-                            MixingRatio::State adptdeltastate = MixingRatio::UnknownDelta;
-                            double adptdelta = parseEnsdfMixing(gammastr.mid(41, 8).trimmed(), mpol, &adptdeltastate);
-                            if (adptdeltastate > deltastate) {
+                        if (delta.sign() != UncertainDouble::SignMagnitudeDefined) {
+                            UncertainDouble adptdelta = parseEnsdfMixing(gammastr.mid(41, 8).trimmed(), mpol);
+                            if (adptdelta.sign() > delta.sign())
                                 delta = adptdelta;
-                                deltastate = adptdeltastate;
-                            }
                         }
                     }
                 }
@@ -174,7 +169,7 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
                 EnergyLevel *destlvl = findNearest(levels, Energy(start->energy() - e));
 
                 // gamma registers itself with the start and dest levels
-                new GammaTransition(e, in, mpol, delta, deltastate, start, destlvl);
+                new GammaTransition(e, in, mpol, delta, start, destlvl);
             }
         }
         // process new level
@@ -476,11 +471,11 @@ SpinParity ENSDFParser::parseSpinParity(const QString &sstr)
     return SpinParity(num, denom, p, weakarg, valid, (valid ? "" : sstr.trimmed()));
 }
 
-double ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipolarity, MixingRatio::State *state)
+UncertainDouble ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipolarity)
 {
-    QLocale clocale("C");
+/*    QLocale clocale("C");
     bool convok = false;
-    double delta = 0.0;
+    UncertainDouble delta = 0.0;
     if (mstr.isEmpty()) {
         QString tmp(multipolarity);
         tmp.remove('(').remove(')');
@@ -499,7 +494,7 @@ double ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipo
         }
         // else leave deltastate UnknownDelta
     }
-    return delta;
+    return delta;*/
 }
 
 ENSDFParser::ParentRecord ENSDFParser::parseParentRecord(const QString &precstr)

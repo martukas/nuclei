@@ -21,13 +21,13 @@ class GammaTransition : public ClickableItem
 {
 public:
     GammaTransition(Energy energy, double intensity,
-                    const QString &multipol, double delta, MixingRatio::State deltastate,
+                    const QString &multipol, UncertainDouble delta,
                     EnergyLevel *start, EnergyLevel *dest);
 
     Energy energy() const;
     double intensity() const;
     QString multipolarity() const;
-    const MixingRatio &delta() const;
+    const UncertainDouble &delta() const;
 
     QString intensityAsText() const;
     QString multipolarityAsText() const;
@@ -53,7 +53,7 @@ private:
     Energy m_e;
     double intens;
     QString m_mpol;
-    MixingRatio m_delta;
+    UncertainDouble m_delta;
     EnergyLevel *m_start, *m_dest;
 
     QGraphicsLineItem *arrow;
