@@ -254,8 +254,8 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                         if (    !pop->depopulatedLevel()->spin().isValid() ||
                                 !depop->populatedLevel()->spin().isValid() ||
                                 !intlevel->spin().isValid() ||
-                                !isDeltaUsable(pop->delta()) ||
-                                !isDeltaUsable(depop->delta()) ) {
+                                !pop->delta().hasFiniteValue() ||
+                                !depop->delta().hasFiniteValue() ) {
                             if (m_constraints.skipUnknownAnisotropies) {
                                 a22ok = true;
                                 a24ok = true;
@@ -274,15 +274,15 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                             QList<double> popvariants, depopvariants;
                             popvariants << 1.0;
                             depopvariants << 1.0;
-                            if (pop->delta().state() == MixingRatio::MagnitudeDefined)
+                            if (pop->delta().sign() == UncertainDouble::MagnitudeDefined)
                                 popvariants << -1.0;
-                            if (depop->delta().state() == MixingRatio::MagnitudeDefined)
+                            if (depop->delta().sign() == UncertainDouble::MagnitudeDefined)
                                 depopvariants << -1.0;
 
                             foreach (double popvariant, popvariants) {
                                 foreach (double depopvariant, depopvariants) {
-                                    calc.setPopulatingGammaMixing(pop->delta() * popvariant);
-                                    calc.setDepopulatingGammaMixing(depop->delta() * depopvariant);
+                                    calc.setPopulatingGammaMixing(pop->delta() * popvariant, std::max(pop->delta().lowerUncertainty(), pop->delta().upperUncertainty()));
+                                    calc.setDepopulatingGammaMixing(depop->delta() * depopvariant, std::max(depop->delta().lowerUncertainty(), depop->delta().upperUncertainty()));
                                     if (!std::isfinite(m_constraints.minA22) || qAbs(calc.a22()) >= m_constraints.minA22)
                                         a22ok = true;
                                     if (!std::isfinite(m_constraints.minA24) || qAbs(calc.a24()) >= m_constraints.minA24)
@@ -400,15 +400,6 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
 void SearchThread::processThreadEnd()
 {
     emit threadEnded(!stop);
-}
-
-bool SearchThread::isDeltaUsable(const UncertainDouble &delta)
-{
-    if (    delta.sign() != UncertainDouble::MagnitudeDefined &&
-            delta.sign() != UncertainDouble::SignMagnitudeDefined )
-        return false;
-
-    if (delta.t)
 }
 
 

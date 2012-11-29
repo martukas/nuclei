@@ -12,7 +12,7 @@
 #include "ENSDFParser.h"
 
 const quint32 ENSDFDataSource::magicNumber = 0x4b616945;
-const quint32 ENSDFDataSource::cacheVersion = 1;
+const quint32 ENSDFDataSource::cacheVersion = 2;
 
 ENSDFDataSource::ENSDFDataSource(QObject *parent)
     : AbstractDataSource(parent), root(new ENSDFTreeItem(AbstractTreeItem::RootType)), mccache(0)

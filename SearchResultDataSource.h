@@ -85,7 +85,6 @@ private slots:
     void processThreadEnd();
 
 private:
-    static bool isDeltaUsable(const UncertainDouble &delta);
     bool stop;
     SearchConstraints m_constraints;
     AbstractTreeItem *resultRoot;

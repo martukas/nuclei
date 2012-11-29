@@ -30,6 +30,7 @@ public:
 
     UncertainDouble();
     UncertainDouble(double d, Sign s);
+    UncertainDouble(double d, Sign s, double symmetricSigma);
 
     UncertainDouble & operator=(const UncertainDouble & other);
 
@@ -44,6 +45,8 @@ public:
     void setSymmetricUncertainty(double sigma);
     void setAsymmetricUncertainty(double lowerSigma, double upperSigma);
     void setSign(Sign s);
+
+    bool hasFiniteValue() const;
 
     QString toString() const;
     QString toText() const; // outputs formatted text

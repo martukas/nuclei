@@ -6,7 +6,7 @@
 #include <QPen>
 #include "ClickableItem.h"
 #include "Energy.h"
-#include "MixingRatio.h"
+#include "UncertainDouble.h"
 
 class QGraphicsItem;
 class ActiveGraphicsItemGroup;

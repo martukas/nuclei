@@ -8,7 +8,7 @@ UncertainDouble::UncertainDouble()
     : m_val(std::numeric_limits<double>::quiet_NaN()),
       m_lowerSigma(std::numeric_limits<double>::quiet_NaN()),
       m_upperSigma(std::numeric_limits<double>::quiet_NaN()),
-      m_sign(SignMagnitudeDefined),
+      m_sign(UndefinedSign),
       m_type(UndefinedType)
 {
 }
@@ -17,8 +17,17 @@ UncertainDouble::UncertainDouble(double d, Sign s)
     : m_val(d),
       m_lowerSigma(0.0),
       m_upperSigma(0.0),
-      m_sign(UndefinedSign),
-      m_type(UndefinedType)
+      m_sign(s),
+      m_type(Systematics)
+{
+}
+
+UncertainDouble::UncertainDouble(double d, UncertainDouble::Sign s, double symmetricSigma)
+    : m_val(d),
+      m_lowerSigma(symmetricSigma),
+      m_upperSigma(symmetricSigma),
+      m_sign(s),
+      m_type(SymmetricUncertainty)
 {
 }
 
@@ -66,6 +75,8 @@ void UncertainDouble::setValue(double val)
 
 void UncertainDouble::setUncertainty(double lower, double upper, UncertainDouble::UncertaintyType type)
 {
+    Q_ASSERT(lower >= 0.0);
+    Q_ASSERT(upper >= 0.0);
     m_lowerSigma = lower;
     m_upperSigma = upper;
     m_type = type;
@@ -84,6 +95,21 @@ void UncertainDouble::setAsymmetricUncertainty(double lowerSigma, double upperSi
 void UncertainDouble::setSign(UncertainDouble::Sign s)
 {
     m_sign = s;
+}
+
+bool UncertainDouble::hasFiniteValue() const
+{
+    if (    sign() != UncertainDouble::MagnitudeDefined &&
+            sign() != UncertainDouble::SignMagnitudeDefined )
+        return false;
+
+    if (    uncertaintyType() == UncertainDouble::SymmetricUncertainty ||
+            uncertaintyType() == UncertainDouble::AsymmetricUncertainty ||
+            uncertaintyType() == UncertainDouble::Approximately ||
+            uncertaintyType() == UncertainDouble::Calculated ||
+            uncertaintyType() == UncertainDouble::Systematics )
+        return true;
+    return false;
 }
 
 QString UncertainDouble::toString() const
@@ -176,7 +202,7 @@ QString UncertainDouble::toText() const
     result.replace("(systematics)", "<i>(systematics)</i>");
     result.replace("(calculated)", "<i>(calculated)</i>");
     result.replace("(systematics)", "<i>(systematics)</i>");
-    result.replace(QRegExp("e[-+]([0-9][0-9])"), QString::fromUtf8("⋅10<sup>%1</sup>"))
+    result.replace(QRegExp("e[-+]([0-9][0-9])"), QString::fromUtf8("⋅10<sup>%1</sup>"));
 }
 
 UncertainDouble::operator double() const
@@ -204,8 +230,8 @@ QDataStream &operator >>(QDataStream &in, UncertainDouble &u)
     in >> u.m_upperSigma;
     int tmp;
     in >> tmp;
-    u.m_sign = Sign(tmp);
+    u.m_sign = UncertainDouble::Sign(tmp);
     in >> tmp;
-    u.m_type = UncertaintyType(tmp);
+    u.m_type = UncertainDouble::UncertaintyType(tmp);
     return in;
 }

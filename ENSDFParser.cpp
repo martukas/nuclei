@@ -125,7 +125,7 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
             QString mpol(line.mid(31, 10).trimmed());
 
             // determine delta
-            UncertainDouble delta = parseEnsdfMixing(line.mid(41, 8).trimmed(), mpol);
+            UncertainDouble delta = parseEnsdfMixing(line.mid(41, 14), mpol);
 
             // parse adopted levels if necessary
             if (delta.sign() != UncertainDouble::SignMagnitudeDefined || mpol.isEmpty()) {
@@ -155,7 +155,7 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
                             mpol = gammastr.mid(31, 10).trimmed();
 
                         if (delta.sign() != UncertainDouble::SignMagnitudeDefined) {
-                            UncertainDouble adptdelta = parseEnsdfMixing(gammastr.mid(41, 8).trimmed(), mpol);
+                            UncertainDouble adptdelta = parseEnsdfMixing(gammastr.mid(41, 14), mpol);
                             if (adptdelta.sign() > delta.sign())
                                 delta = adptdelta;
                         }
@@ -473,28 +473,43 @@ SpinParity ENSDFParser::parseSpinParity(const QString &sstr)
 
 UncertainDouble ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipolarity)
 {
-/*    QLocale clocale("C");
+    Q_ASSERT(mstr.size() == 14);
+    QLocale clocale("C");
     bool convok = false;
-    UncertainDouble delta = 0.0;
-    if (mstr.isEmpty()) {
+    if (mstr.trimmed().isEmpty()) {
         QString tmp(multipolarity);
         tmp.remove('(').remove(')');
         if (tmp.count() == 2)
-            *state = MixingRatio::SignMagnitudeDefined;
-        // else leave deltastate UnknownDelta
+            return UncertainDouble(0.0, UncertainDouble::SignMagnitudeDefined);
+        else
+            return UncertainDouble();
     }
     else {
-        double tmp = clocale.toDouble(mstr, &convok);
+        // parse delta value
+        UncertainDouble delta(clocale.toDouble(mstr.left(8).trimmed(), &convok), UncertainDouble::UndefinedSign);
         if (convok) {
-            delta = tmp;
-            if (mstr.contains('+') || mstr.contains('-'))
-                *state = MixingRatio::SignMagnitudeDefined;
+            if (mstr.left(8).contains('+') || mstr.left(8).contains('-'))
+                delta.setSign(UncertainDouble::SignMagnitudeDefined);
             else
-                *state = MixingRatio::MagnitudeDefined;
+                delta.setSign(UncertainDouble::MagnitudeDefined);
+
+            // parse uncertainty
+            QString u(mstr.right(6).trimmed());
+            // symmetric or special case
+            if (u.size() == 2) {
+
+            }
+            // asymmetric case
+            else {
+                Q_ASSERT(u.contains('+') && u.contains('-'));
+
+            }
+
+            return delta;
         }
-        // else leave deltastate UnknownDelta
+        // else return unknown
     }
-    return delta;*/
+    return UncertainDouble();
 }
 
 ENSDFParser::ParentRecord ENSDFParser::parseParentRecord(const QString &precstr)

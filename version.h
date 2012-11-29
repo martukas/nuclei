@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define VERSION "2.3"
+#define VERSION "2.4"
 
 // used to save windows state. must be incremented if window layout changes!
 #define UIVERSION 0

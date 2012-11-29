@@ -431,8 +431,8 @@ Decay::DecayDataSet Decay::decayDataSet() const
         if (pop->depopulatedLevel()->spin().isValid() &&
             depop->populatedLevel()->spin().isValid() &&
             selectedEnergyLevel->spin().isValid() &&
-            pop->delta().sign() & UncertainDouble::SignMagnitudeDefined &&
-            depop->delta().sign() & UncertainDouble::SignMagnitudeDefined
+            pop->delta().hasFiniteValue() &&
+            depop->delta().hasFiniteValue()
            ) {
             // create list of sign combinations
             typedef QPair<double, double> SignCombination;
@@ -457,15 +457,15 @@ Decay::DecayDataSet Decay::decayDataSet() const
             calc.setFinalStateSpin(depop->populatedLevel()->spin().doubledSpin());
 
             foreach (SignCombination variant, variants) {
-                double popdelta = pop->delta();
-                double depopdelta = depop->delta();
+                UncertainDouble popdelta(pop->delta());
+                UncertainDouble depopdelta(depop->delta());
                 if (pop->delta().sign() == UncertainDouble::MagnitudeDefined)
-                    popdelta *= variant.first;
+                    popdelta.setValue(popdelta.value() * variant.first);
                 if (depop->delta().sign() == UncertainDouble::MagnitudeDefined)
-                    depopdelta *= variant.second;
+                    depopdelta.setValue(depopdelta.value() * variant.second);
 
-                calc.setPopulatingGammaMixing(popdelta);
-                calc.setDepopulatingGammaMixing(depopdelta);
+                calc.setPopulatingGammaMixing(popdelta.value(), std::max(popdelta.lowerUncertainty(), popdelta.upperUncertainty()));
+                calc.setDepopulatingGammaMixing(depopdelta.value(), std::max(depopdelta.lowerUncertainty(), depopdelta.upperUncertainty()));
 
                 // determine prefix
                 QString prfx;
@@ -474,10 +474,10 @@ Decay::DecayDataSet Decay::decayDataSet() const
                     prfx = prfx.arg(QString(variant.first < 0 ? "-" : "+") + QString(variant.second < 0 ? "-" : "+"));
                 }
 
-                a22.append(QString("%1%2").arg(prfx).arg(calc.a22()));
-                a24.append(QString("%1%2").arg(prfx).arg(calc.a24()));
-                a42.append(QString("%1%2").arg(prfx).arg(calc.a42()));
-                a44.append(QString("%1%2").arg(prfx).arg(calc.a44()));
+                a22.append(QString("%1%2").arg(prfx).arg(UncertainDouble(calc.a22(), UncertainDouble::SignMagnitudeDefined, calc.a22Uncertainty()).toText()));
+                a24.append(QString("%1%2").arg(prfx).arg(UncertainDouble(calc.a24(), UncertainDouble::SignMagnitudeDefined, calc.a24Uncertainty()).toText()));
+                a42.append(QString("%1%2").arg(prfx).arg(UncertainDouble(calc.a42(), UncertainDouble::SignMagnitudeDefined, calc.a42Uncertainty()).toText()));
+                a44.append(QString("%1%2").arg(prfx).arg(UncertainDouble(calc.a44(), UncertainDouble::SignMagnitudeDefined, calc.a44Uncertainty()).toText()));
             }
 
             dataset.a22 = a22.join(", ");
