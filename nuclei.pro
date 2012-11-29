@@ -38,7 +38,6 @@ SOURCES += main.cpp\
     ProxyStyle.cpp \
     Nuclei.cpp \
     UpdateCheck.cpp \
-    MixingRatio.cpp \
     UncertainDouble.cpp
 
 HEADERS  += \
@@ -69,7 +68,6 @@ HEADERS  += \
     ProxyStyle.h \
     Nuclei.h \
     UpdateCheck.h \
-    MixingRatio.h \
     UncertainDouble.h
 
 isEmpty(PREFIX) {
