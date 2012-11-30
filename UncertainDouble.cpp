@@ -18,7 +18,7 @@ UncertainDouble::UncertainDouble(double d, Sign s)
       m_lowerSigma(0.0),
       m_upperSigma(0.0),
       m_sign(s),
-      m_type(Systematics)
+      m_type(SymmetricUncertainty)
 {
 }
 
@@ -143,10 +143,14 @@ QString UncertainDouble::toString() const
     case SymmetricUncertainty:
         Q_ASSERT(m_lowerSigma == m_upperSigma);
     case AsymmetricUncertainty:
-        Q_ASSERT(std::isfinite(m_upperSigma) && m_upperSigma > 0.0);
-        Q_ASSERT(std::isfinite(m_lowerSigma) && m_lowerSigma > 0.0);
+        Q_ASSERT(std::isfinite(m_upperSigma));
+        Q_ASSERT(std::isfinite(m_lowerSigma));
 
     {
+        // return precise numbers without uncertainty
+        if (m_upperSigma == 0.0 && m_lowerSigma == 0.0)
+            return QString("%1%2").arg(signprefix).arg(val);
+
         // determine orders of magnitude to align uncertainty output
         int orderOfValue = std::floor(std::log10(val));
         int orderOfUncert = std::min(std::floor(std::log10(m_lowerSigma)), std::floor(std::log10(m_upperSigma)));
@@ -203,6 +207,7 @@ QString UncertainDouble::toText() const
     result.replace("(calculated)", "<i>(calculated)</i>");
     result.replace("(systematics)", "<i>(systematics)</i>");
     result.replace(QRegExp("e[-+]([0-9][0-9])"), QString::fromUtf8("⋅10<sup>%1</sup>"));
+    return result;
 }
 
 UncertainDouble::operator double() const
