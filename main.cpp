@@ -1,4 +1,5 @@
 #include <QtGui/QApplication>
+#include <QProcess>
 #include "Nuclei.h"
 #include "ENSDFDataSource.h"
 #include "SearchConstraints.h"
@@ -22,8 +23,19 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationDomain("physik.uni-goettingen.de");
     QCoreApplication::setApplicationName("Nuclei");
     QCoreApplication::setApplicationVersion(QString("%1").arg(VERSION));
-    Nuclei w;
-    w.show();
+
+    int retcode = 0;
+    {
+        Nuclei w;
+        w.show();
     
-    return a.exec();
+        retcode = a.exec();
+    }
+
+    if (retcode == 6000) {
+        QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
+        return 0;
+    }
+
+    return retcode;
 }

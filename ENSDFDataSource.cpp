@@ -56,6 +56,33 @@ QSharedPointer<Decay> ENSDFDataSource::decay(const AbstractTreeItem *item) const
     return mccache->decay(eitem->parent()->data(0).toString(), eitem->data(0).toString());
 }
 
+void ENSDFDataSource::deleteDatabaseAndCache()
+{
+    QSettings s;
+    deleteCache();
+
+    // get A (mass number) strings
+    QList<unsigned int> aList(getAvailableDataFileNumbers());
+    if (aList.isEmpty())
+        return;
+    foreach (unsigned int a, aList) {
+        QFile f(s.value("ensdfPath", ".").toString() + QString("/ensdf.%1").arg(a, int(3), int(10), QChar('0')));
+        if (f.exists())
+            f.remove();
+    }
+    QCoreApplication::exit(6000); // tells the code in main.cpp to restart the application!
+}
+
+void ENSDFDataSource::deleteCache()
+{
+    // return if cache file is missing
+    QFile f(QDir(cachePath).absoluteFilePath("nuclei_ensdf.cache"));
+    // delete file
+    if (f.exists())
+        f.remove();
+    QCoreApplication::exit(6000); // tells the code in main.cpp to restart the application!
+}
+
 QList<unsigned int> ENSDFDataSource::getAvailableDataFileNumbers() const
 {
     QWidget *pwid = qobject_cast<QWidget*>(parent());

@@ -27,6 +27,8 @@ Q_DECLARE_METATYPE(ENSDFTreeItem)
 
 class ENSDFDataSource : public AbstractDataSource
 {
+    Q_OBJECT
+
 public:
     explicit ENSDFDataSource(QObject *parent = 0);
     virtual ~ENSDFDataSource();
@@ -34,6 +36,10 @@ public:
     virtual AbstractTreeItem * rootItem() const;
 
     virtual QSharedPointer<Decay> decay(const AbstractTreeItem *item) const;
+
+public slots:
+    void deleteDatabaseAndCache();
+    void deleteCache();
 
 private:
     QList<unsigned int> getAvailableDataFileNumbers() const;

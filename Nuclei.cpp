@@ -221,6 +221,9 @@ void Nuclei::initialize()
 
     ENSDFDataSource *ds = new ENSDFDataSource(this);
 
+    connect(preferencesDialogUi->resetCacheButton, SIGNAL(clicked()), ds, SLOT(deleteCache()));
+    connect(preferencesDialogUi->resetDatabaseButton, SIGNAL(clicked()), ds, SLOT(deleteDatabaseAndCache()));
+
     decaySelectionModel = new DecayCascadeItemModel(ds, this);
     decayProxyModel = new DecayCascadeFilterProxyModel(this);
     decayProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -553,14 +556,10 @@ void Nuclei::showPreferences()
 {
     preferencesDialog->exec();
 
-    Decay::CascadeIdentifier ci;
-    if (m_decay)
-        ci = m_decay->currentSelection();
-
-    /// \todo reimplement with changed selector!
-
-    if (m_decay)
+    if (m_decay) {
+        Decay::CascadeIdentifier ci = m_decay->currentSelection();
         m_decay->setCurrentSelection(ci);
+    }
 }
 
 void Nuclei::showAbout()

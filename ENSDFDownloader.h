@@ -41,6 +41,7 @@ private:
         NotConnected,
         Connecting,
         LoggingIn,
+        ChangingDirectory,
         RequestingList,
         Downloading,
         Finished,

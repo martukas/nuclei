@@ -148,6 +148,10 @@ void ENSDFDownloader::ftpDispatcher(int id, bool error)
         ftpstate = LoggingIn;
         break;
     case LoggingIn:
+        pendinghandle = ftp->cd("/outgoing/ensdf");
+        ftpstate = ChangingDirectory;
+        break;
+    case ChangingDirectory:
         pendinghandle = ftp->list(".");
         ftpstate = RequestingList;
         break;
