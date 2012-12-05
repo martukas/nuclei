@@ -127,32 +127,32 @@ QString UncertainDouble::toString() const
 
     switch (m_type) {
     case Systematics:
-        return QString("%1%2 (systematics)").arg(signprefix).arg(val);
+        return QString("%1%2 (systematics)").arg(signprefix).arg(val).replace('e', "E");
     case Calculated:
-        return QString("%1%2 (calculated)").arg(signprefix).arg(val);
+        return QString("%1%2 (calculated)").arg(signprefix).arg(val).replace('e', "E");
     case Approximately:
-        return QString("~ %1%2").arg(signprefix).arg(val);
+        return QString("~ %1%2").arg(signprefix).arg(val).replace('e', "E");
     case GreaterEqual:
-        return QString(QString::fromUtf8("≥ %1%2")).arg(signprefix).arg(val);
+        return QString(QString::fromUtf8("≥ %1%2")).arg(signprefix).arg(val).replace('e', "E");
     case GreaterThan:
-        return QString(QString::fromUtf8("> %1%2")).arg(signprefix).arg(val);
+        return QString(QString::fromUtf8("> %1%2")).arg(signprefix).arg(val).replace('e', "E");
     case LessEqual:
-        return QString(QString::fromUtf8("≤ %1%2")).arg(signprefix).arg(val);
+        return QString(QString::fromUtf8("≤ %1%2")).arg(signprefix).arg(val).replace('e', "E");
     case LessThan:
-        return QString(QString::fromUtf8("< %1%2")).arg(signprefix).arg(val);
+        return QString(QString::fromUtf8("< %1%2")).arg(signprefix).arg(val).replace('e', "E");
     case SymmetricUncertainty:
         Q_ASSERT(m_lowerSigma == m_upperSigma);
     case AsymmetricUncertainty:
-        Q_ASSERT(std::isfinite(m_upperSigma));
-        Q_ASSERT(std::isfinite(m_lowerSigma));
+        Q_ASSERT(std::isfinite(m_upperSigma) && m_upperSigma >= 0.0);
+        Q_ASSERT(std::isfinite(m_lowerSigma) && m_lowerSigma >= 0.0);
 
     {
         // return precise numbers without uncertainty
         if (m_upperSigma == 0.0 && m_lowerSigma == 0.0)
-            return QString("%1%2").arg(signprefix).arg(val);
+            return QString("%1%2").arg(signprefix).arg(val, 0, 'g', 4).replace('e', "E");
 
         // determine orders of magnitude to align uncertainty output
-        int orderOfValue = std::floor(std::log10(val));
+        int orderOfValue = std::floor(std::log10(std::abs(val)));
         int orderOfUncert = std::min(std::floor(std::log10(m_lowerSigma)), std::floor(std::log10(m_upperSigma)));
 
         int precision = 0;
@@ -193,6 +193,7 @@ QString UncertainDouble::toString() const
             result = QString::number(val, 'e', precision);
             result = result.split('e').join(uncertstr + "e");
         }
+        result = result.replace('e', "E");
         return signprefix + result;
     }
     default:
@@ -206,7 +207,7 @@ QString UncertainDouble::toText() const
     result.replace("(systematics)", "<i>(systematics)</i>");
     result.replace("(calculated)", "<i>(calculated)</i>");
     result.replace("(systematics)", "<i>(systematics)</i>");
-    result.replace(QRegExp("e[-+]([0-9][0-9])"), QString::fromUtf8("⋅10<sup>%1</sup>"));
+    //result.replace(QRegExp("e([-+][0-9][0-9])"), QString::fromUtf8("⋅10<sup>\\1</sup>"));
     return result;
 }
 

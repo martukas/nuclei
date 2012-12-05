@@ -515,14 +515,14 @@ UncertainDouble ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString
                     // determine significant figure
                     unsigned int uncert = clocale.toUInt(ustr, &convok);
                     if (convok)
-                        delta.setSymmetricUncertainty(getUncertainty(ustr, uncert));
+                        delta.setSymmetricUncertainty(getUncertainty(mstr.left(8).trimmed(), uncert));
                     else
                         delta.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::UndefinedType);
                 }
             }
             // asymmetric case
             else {
-                Q_ASSERT(u.contains('+') && u.contains('-'));
+                Q_ASSERT(ustr.contains('+') && ustr.contains('-'));
                 QString uposstr(ustr.replace(QRegExp("^\\+([0-9])+\\-([0-9])+$"), "\\1"));
                 QString unegstr(ustr.replace(QRegExp("^\\+([0-9])+\\-([0-9])+$"), "\\2"));
                 Q_ASSERT(uposstr.size() > 0 && unegstr.size() > 0);
@@ -530,7 +530,7 @@ UncertainDouble ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString
                 bool tmp = convok;
                 unsigned int unegative = clocale.toUInt(unegstr, &convok);
                 if (tmp && convok)
-                    delta.setAsymmetricUncertainty(getUncertainty(ustr, unegative), getUncertainty(ustr, upositive));
+                    delta.setAsymmetricUncertainty(getUncertainty(mstr.left(8).trimmed(), unegative), getUncertainty(mstr.left(8).trimmed(), upositive));
                 else
                     delta.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::UndefinedType);
             }
@@ -566,12 +566,12 @@ ENSDFParser::ParentRecord ENSDFParser::parseParentRecord(const QString &precstr)
 double ENSDFParser::getUncertainty(const QString value, unsigned int stdUncertainty)
 {
     QLocale clocale("C");
-    bool convok;
+    bool convok = true;
 
     const QStringList splitval = value.split('E');
     Q_ASSERT(splitval.size() > 0);
     const QString &mantissa = splitval.value(0);
-    const QString &expstr = splitval.value(1);
+    const QString &expstr = splitval.value(1); // zero if splitval.size() == 1
     int exponent = 0;
     if (!expstr.isEmpty())
         exponent = clocale.toInt(expstr, &convok);
