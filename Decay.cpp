@@ -407,7 +407,7 @@ Decay::DecayDataSet Decay::decayDataSet() const
         dataset.popEnergy = pop->energy().toString();
         dataset.popIntensity = pop->intensityAsText();
         dataset.popMultipolarity = pop->multipolarityAsText();
-        dataset.popMixing = pop->delta().toString();
+        dataset.popMixing = pop->delta().toString().replace("undefined", "<i>unknown</i>");
     }
 
     // depopulating
@@ -460,9 +460,9 @@ Decay::DecayDataSet Decay::decayDataSet() const
                 UncertainDouble popdelta(pop->delta());
                 UncertainDouble depopdelta(depop->delta());
                 if (pop->delta().sign() == UncertainDouble::MagnitudeDefined)
-                    popdelta.setValue(popdelta.value() * variant.first);
+                    popdelta.setValue(popdelta.value() * variant.first, UncertainDouble::SignMagnitudeDefined);
                 if (depop->delta().sign() == UncertainDouble::MagnitudeDefined)
-                    depopdelta.setValue(depopdelta.value() * variant.second);
+                    depopdelta.setValue(depopdelta.value() * variant.second, UncertainDouble::SignMagnitudeDefined);
 
                 calc.setPopulatingGammaMixing(popdelta.value(), std::max(popdelta.lowerUncertainty(), popdelta.upperUncertainty()));
                 calc.setDepopulatingGammaMixing(depopdelta.value(), std::max(depopdelta.lowerUncertainty(), depopdelta.upperUncertainty()));

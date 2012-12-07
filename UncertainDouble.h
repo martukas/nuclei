@@ -40,7 +40,7 @@ public:
     UncertaintyType uncertaintyType() const;
     Sign sign() const;
 
-    void setValue(double val);
+    void setValue(double val, Sign s = SignMagnitudeDefined);
     void setUncertainty(double lower, double upper, UncertaintyType type);
     void setSymmetricUncertainty(double sigma);
     void setAsymmetricUncertainty(double lowerSigma, double upperSigma);

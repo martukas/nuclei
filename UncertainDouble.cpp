@@ -68,9 +68,10 @@ UncertainDouble::Sign UncertainDouble::sign() const
     return m_sign;
 }
 
-void UncertainDouble::setValue(double val)
+void UncertainDouble::setValue(double val, Sign s)
 {
     m_val = val;
+    m_sign = s;
 }
 
 void UncertainDouble::setUncertainty(double lower, double upper, UncertainDouble::UncertaintyType type)
@@ -111,7 +112,7 @@ bool UncertainDouble::hasFiniteValue() const
         return true;
     return false;
 }
-
+#include <iostream>
 QString UncertainDouble::toString() const
 {
     QString signprefix;
@@ -158,37 +159,48 @@ QString UncertainDouble::toString() const
         int precision = 0;
         QString uncertstr;
 
-        // uncertainty counts below 25 of the least significant figure are printed with two digits. else one.
+        // uncertainty counts below 25 of the least significant figure are printed with two digits
+        // IF the two digit uncertainty and the value both do not end with 0. Else a one digit unvertainty is printed.
+
         // for asymmetric uncertainties both values need to be checked.
         if (m_type == AsymmetricUncertainty) {
             double lowerUncertNumber = m_lowerSigma/pow(10.0, orderOfUncert);
             double upperUncertNumber = m_upperSigma/pow(10.0, orderOfUncert);
-            if (lowerUncertNumber <= 2.5 && upperUncertNumber <= 2.5) {
+            if (lowerUncertNumber <= 2.5 && upperUncertNumber <= 2.5 &&
+                    (
+                        qRound(val * pow(10.0, -orderOfUncert+1)) % 10 != 0 ||
+                        qRound(upperUncertNumber*10.0) % 10 != 0 || qRound(lowerUncertNumber*10.0) % 10 != 0
+                    )
+                ) {
                 orderOfUncert--;
                 lowerUncertNumber *= 10.0;
                 upperUncertNumber *= 10.0;
             }
             uncertstr = QString("(+%1-%2)").arg(qRound(upperUncertNumber)).arg(qRound(lowerUncertNumber));
         }
+        // for the symmetric case: check only one value
         else if (m_type == SymmetricUncertainty) {
             double uncertNumber = m_lowerSigma/pow(10.0, orderOfUncert);
-            if (uncertNumber <= 2.5) {
+            if (uncertNumber <= 2.5 &&
+                    (qRound(val * pow(10.0, -orderOfUncert+1)) % 10 != 0 || qRound(uncertNumber*10.0) % 10 != 0)) {
                 orderOfUncert--;
                 uncertNumber *= 10.0;
             }
             uncertstr = QString("(%1)").arg(qRound(uncertNumber));
         }
+
         precision = orderOfValue - orderOfUncert;
 
-        // use scientific notation for values outside ]10,0.1]
         QString result;
         if (precision < 0) {
             result = QString("(%1)").arg(QString::number(val, 'g', 0));
         }
+        // use standard notation inside ]10,0.1]
         else if (val < 10.0 && val >= 0.1) {
-            result = QString::number(val, 'f', precision);
+            result = QString::number(val, 'f', val < 1.0 ? precision+1 : precision);
             result.append(uncertstr);
         }
+        // use scientific notation for values outside ]10,0.1]
         else {
             result = QString::number(val, 'e', precision);
             result = result.split('e').join(uncertstr + "e");
