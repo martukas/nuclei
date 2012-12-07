@@ -467,6 +467,11 @@ Decay::DecayDataSet Decay::decayDataSet() const
                 calc.setPopulatingGammaMixing(popdelta.value(), std::max(popdelta.lowerUncertainty(), popdelta.upperUncertainty()));
                 calc.setDepopulatingGammaMixing(depopdelta.value(), std::max(depopdelta.lowerUncertainty(), depopdelta.upperUncertainty()));
 
+                // determine uncertainty type of results (may only be SymmetricUncertainty or Approximately)
+                UncertainDouble::UncertaintyType restype = UncertainDouble::SymmetricUncertainty;
+                if (popdelta.uncertaintyType() == UncertainDouble::Approximately || depopdelta.uncertaintyType() == UncertainDouble::Approximately)
+                    restype = UncertainDouble::Approximately;
+
                 // determine prefix
                 QString prfx;
                 if (variants.size() > 1) {
@@ -474,10 +479,19 @@ Decay::DecayDataSet Decay::decayDataSet() const
                     prfx = prfx.arg(QString(variant.first < 0 ? "-" : "+") + QString(variant.second < 0 ? "-" : "+"));
                 }
 
-                a22.append(QString("%1%2").arg(prfx).arg(UncertainDouble(calc.a22(), UncertainDouble::SignMagnitudeDefined, calc.a22Uncertainty()).toText()));
-                a24.append(QString("%1%2").arg(prfx).arg(UncertainDouble(calc.a24(), UncertainDouble::SignMagnitudeDefined, calc.a24Uncertainty()).toText()));
-                a42.append(QString("%1%2").arg(prfx).arg(UncertainDouble(calc.a42(), UncertainDouble::SignMagnitudeDefined, calc.a42Uncertainty()).toText()));
-                a44.append(QString("%1%2").arg(prfx).arg(UncertainDouble(calc.a44(), UncertainDouble::SignMagnitudeDefined, calc.a44Uncertainty()).toText()));
+                UncertainDouble a22dbl(calc.a22(), UncertainDouble::SignMagnitudeDefined);
+                a22dbl.setUncertainty(calc.a22Uncertainty(), calc.a22Uncertainty(), restype);
+                UncertainDouble a24dbl(calc.a24(), UncertainDouble::SignMagnitudeDefined);
+                a24dbl.setUncertainty(calc.a24Uncertainty(), calc.a24Uncertainty(), restype);
+                UncertainDouble a42dbl(calc.a42(), UncertainDouble::SignMagnitudeDefined);
+                a42dbl.setUncertainty(calc.a42Uncertainty(), calc.a42Uncertainty(), restype);
+                UncertainDouble a44dbl(calc.a44(), UncertainDouble::SignMagnitudeDefined);
+                a44dbl.setUncertainty(calc.a44Uncertainty(), calc.a44Uncertainty(), restype);
+
+                a22.append(QString("%1%2").arg(prfx).arg(a22dbl.toText()));
+                a24.append(QString("%1%2").arg(prfx).arg(a24dbl.toText()));
+                a42.append(QString("%1%2").arg(prfx).arg(a42dbl.toText()));
+                a44.append(QString("%1%2").arg(prfx).arg(a44dbl.toText()));
             }
 
             dataset.a22 = a22.join(", ");

@@ -76,8 +76,6 @@ void UncertainDouble::setValue(double val, Sign s)
 
 void UncertainDouble::setUncertainty(double lower, double upper, UncertainDouble::UncertaintyType type)
 {
-    Q_ASSERT(lower >= 0.0);
-    Q_ASSERT(upper >= 0.0);
     m_lowerSigma = lower;
     m_upperSigma = upper;
     m_type = type;

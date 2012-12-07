@@ -84,6 +84,10 @@ Nuclei::Nuclei(QWidget *parent) :
 
     ui->mainToolBar->insertSeparator(ui->actionZoom_In);
 
+    connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(processTabSelection(int)));
+    if (ui->tabWidget->currentWidget() != ui->energySpectrumTab)
+        ui->energySpectrumBar->setDisabled(true);
+
     plot = new QwtPlot(ui->energySpectrumTab);
     plot->setCanvasBackground(Qt::white);
     ui->energySpectrumLayout->addWidget(plot);
@@ -568,6 +572,14 @@ void Nuclei::showAbout()
                        QString("About: %1 %2").arg(QCoreApplication::applicationName(), QCoreApplication::applicationVersion()),
                        QString::fromUtf8(NUCLEIABOUT "<hr />" LIBAKKABOUT "<hr />" GPL)
                        );
+}
+
+void Nuclei::processTabSelection(int index)
+{
+    if (index == ui->tabWidget->indexOf(ui->energySpectrumTab))
+        ui->energySpectrumBar->setEnabled(true);
+    else
+        ui->energySpectrumBar->setDisabled(true);
 }
 
 void Nuclei::closeEvent(QCloseEvent *event)

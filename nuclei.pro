@@ -77,8 +77,12 @@ target.path = $$PREFIX/bin/
 INSTALLS = target
 
 INCLUDEPATH += $$PREFIX/include ../libakk
-!win32:LIBS += -lakk -L$$PREFIX/lib -L../libakk
+mac:LIBS += -lakk -L$$PREFIX/lib -L../libakk
 win32:LIBS += -lakk2 -L../libakk-build-desktop-Qt_4_8_1_for_Desktop_-_MinGW__Qt_SDK__Release\release
+unix:LIBS += -lakk
+unix:release:LIBS += -L../libakk-build-desktop-Qt_aus_PATH_Release/
+unix:debug:LIBS += -L../libakk-build-desktop-Qt_aus_PATH_Debug/
+
 LIBS += -lquazip
 
 FORMS    += \

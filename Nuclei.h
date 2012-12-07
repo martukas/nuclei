@@ -54,6 +54,8 @@ private slots:
     void showPreferences();
     void showAbout();
     
+    void processTabSelection(int index);
+
 protected:
     void closeEvent(QCloseEvent * event);
 
