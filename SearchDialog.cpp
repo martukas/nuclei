@@ -11,6 +11,7 @@ SearchDialog::SearchDialog(QWidget *parent) :
     ds(0)
 {
     ui->setupUi(this);
+    ui->minIntHalfLife->setValue(1E-9);
     connect(ui->muValCheck, SIGNAL(toggled(bool)), this, SLOT(updateMuQAndOrButtons()));
     connect(ui->qValCheck, SIGNAL(toggled(bool)), this, SLOT(updateMuQAndOrButtons()));
     connect(ui->a22Check, SIGNAL(toggled(bool)), this, SLOT(updateAnisotropyAndOrButtons()));
