@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <cmath>
+#include <cstdlib>
 
 #include "HalfLife.h"
 
