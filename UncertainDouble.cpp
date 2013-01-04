@@ -193,12 +193,12 @@ QString UncertainDouble::toString() const
         if (precision < 0) {
             result = QString("(%1)").arg(QString::number(val, 'g', 0));
         }
-        // use standard notation inside ]10,0.1]
-        else if (val < 10.0 && val >= 0.1) {
+        // use standard notation inside ]10,0.01]
+        else if (qAbs(val) < 10.0 && qAbs(val) >= 0.01) {
             result = QString::number(val, 'f', val < 1.0 ? precision+1 : precision);
             result.append(uncertstr);
         }
-        // use scientific notation for values outside ]10,0.1]
+        // use scientific notation for values outside ]10,0.01]
         else {
             result = QString::number(val, 'e', precision);
             result = result.split('e').join(uncertstr + "e");
