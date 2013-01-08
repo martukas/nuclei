@@ -450,13 +450,15 @@ Decay::DecayDataSet Decay::decayDataSet() const
             }
 
             // compute possible results
-            QStringList a22, a24, a42, a44;
+            QStringList a22str, a24str, a42str, a44str;
+            UncertainDouble a22[variants.size()], a24[variants.size()], a42[variants.size()], a44[variants.size()];
             Akk calc;
             calc.setInitialStateSpin(pop->depopulatedLevel()->spin().doubledSpin());
             calc.setIntermediateStateSpin(selectedEnergyLevel->spin().doubledSpin());
             calc.setFinalStateSpin(depop->populatedLevel()->spin().doubledSpin());
 
-            foreach (SignCombination variant, variants) {
+            for (int i=0; i<variants.size(); i++) {
+                SignCombination variant = variants.at(i);
                 UncertainDouble popdelta(pop->delta());
                 UncertainDouble depopdelta(depop->delta());
                 if (pop->delta().sign() == UncertainDouble::MagnitudeDefined)
@@ -479,25 +481,44 @@ Decay::DecayDataSet Decay::decayDataSet() const
                     prfx = prfx.arg(QString(variant.first < 0 ? "-" : "+") + QString(variant.second < 0 ? "-" : "+"));
                 }
 
-                UncertainDouble a22dbl(calc.a22(), UncertainDouble::SignMagnitudeDefined);
-                a22dbl.setUncertainty(calc.a22Uncertainty(), calc.a22Uncertainty(), restype);
-                UncertainDouble a24dbl(calc.a24(), UncertainDouble::SignMagnitudeDefined);
-                a24dbl.setUncertainty(calc.a24Uncertainty(), calc.a24Uncertainty(), restype);
-                UncertainDouble a42dbl(calc.a42(), UncertainDouble::SignMagnitudeDefined);
-                a42dbl.setUncertainty(calc.a42Uncertainty(), calc.a42Uncertainty(), restype);
-                UncertainDouble a44dbl(calc.a44(), UncertainDouble::SignMagnitudeDefined);
-                a44dbl.setUncertainty(calc.a44Uncertainty(), calc.a44Uncertainty(), restype);
+                a22[i].setValue(calc.a22(), UncertainDouble::SignMagnitudeDefined);
+                a22[i].setUncertainty(calc.a22Uncertainty(), calc.a22Uncertainty(), restype);
+                a24[i].setValue(calc.a24(), UncertainDouble::SignMagnitudeDefined);
+                a24[i].setUncertainty(calc.a24Uncertainty(), calc.a24Uncertainty(), restype);
+                a42[i].setValue(calc.a42(), UncertainDouble::SignMagnitudeDefined);
+                a42[i].setUncertainty(calc.a42Uncertainty(), calc.a42Uncertainty(), restype);
+                a44[i].setValue(calc.a44(), UncertainDouble::SignMagnitudeDefined);
+                a44[i].setUncertainty(calc.a44Uncertainty(), calc.a44Uncertainty(), restype);
 
-                a22.append(QString("%1%2").arg(prfx).arg(a22dbl.toText()));
-                a24.append(QString("%1%2").arg(prfx).arg(a24dbl.toText()));
-                a42.append(QString("%1%2").arg(prfx).arg(a42dbl.toText()));
-                a44.append(QString("%1%2").arg(prfx).arg(a44dbl.toText()));
+                a22str.append(QString("%1%2").arg(prfx).arg(a22[i].toText()));
+                a24str.append(QString("%1%2").arg(prfx).arg(a24[i].toText()));
+                a42str.append(QString("%1%2").arg(prfx).arg(a42[i].toText()));
+                a44str.append(QString("%1%2").arg(prfx).arg(a44[i].toText()));
+            }
+            // replace strings if all values are equal
+            if (variants.size() > 1) {
+                if (std::count(a22 + 1, a22 + variants.size(), a22[0]) == (variants.size()-1)) {
+                    a22str.clear();
+                    a22str.append(a22[0].toText());
+                }
+                if (std::count(a24 + 1, a24 + variants.size(), a24[0]) == (variants.size()-1)) {
+                    a24str.clear();
+                    a24str.append(a24[0].toText());
+                }
+                if (std::count(a42 + 1, a42 + variants.size(), a42[0]) == (variants.size()-1)) {
+                    a42str.clear();
+                    a42str.append(a42[0].toText());
+                }
+                if (std::count(a44 + 1, a44 + variants.size(), a44[0]) == (variants.size()-1)) {
+                    a44str.clear();
+                    a44str.append(a44[0].toText());
+                }
             }
 
-            dataset.a22 = a22.join(", ");
-            dataset.a24 = a24.join(", ");
-            dataset.a42 = a42.join(", ");
-            dataset.a44 = a44.join(", ");
+            dataset.a22 = a22str.join(", ");
+            dataset.a24 = a24str.join(", ");
+            dataset.a42 = a42str.join(", ");
+            dataset.a44 = a44str.join(", ");
         }
     }
 
@@ -904,12 +925,12 @@ Decay::CascadeIdentifier::CascadeIdentifier()
 }
 
 Decay::DecayDataSet::DecayDataSet()
-    : startEnergy("- keV"), startSpin("/"),
-      popEnergy("- keV"), popIntensity("- %"), popMultipolarity("<i>unknown</i>"), popMixing("<i>unknown</i>"),
-      intEnergy("- keV"), intHalfLife("- ns"), intSpin("/"), intMu("-"), intQ("-"),
-      depopEnergy("- keV"), depopIntensity("- %"), depopMultipolarity("<i>unknown</i>"), depopMixing("<i>unknown</i>"),
-      endEnergy("- keV"), endSpin("/"),
-      a22("-"), a24("-"), a42("-"), a44("-")
+    : startEnergy("? keV"), startSpin("/"),
+      popEnergy("? keV"), popIntensity("? %"), popMultipolarity("<i>unknown</i>"), popMixing("<i>unknown</i>"),
+      intEnergy("? keV"), intHalfLife("? ns"), intSpin("/"), intMu("?"), intQ("?"),
+      depopEnergy("? keV"), depopIntensity("? %"), depopMultipolarity("<i>unknown</i>"), depopMixing("<i>unknown</i>"),
+      endEnergy("? keV"), endSpin("/"),
+      a22("?"), a24("?"), a42("?"), a44("?")
 {
 }
 

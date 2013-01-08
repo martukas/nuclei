@@ -195,7 +195,12 @@ QString UncertainDouble::toString() const
         }
         // use standard notation inside ]10,0.01]
         else if (qAbs(val) < 10.0 && qAbs(val) >= 0.01) {
-            result = QString::number(val, 'f', val < 1.0 ? precision+1 : precision);
+            // fix Qt's strange idea of precision...
+            int qtprecision = std::abs(val) < 1.0 ? precision+1 : precision;
+            if (std::abs(val) < 0.1)
+                qtprecision++;
+
+            result = QString::number(val, 'f', qtprecision);
             result.append(uncertstr);
         }
         // use scientific notation for values outside ]10,0.01]
