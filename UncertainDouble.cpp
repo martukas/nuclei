@@ -130,7 +130,7 @@ QString UncertainDouble::toString() const
     case Calculated:
         return QString("%1%2 (calculated)").arg(signprefix).arg(val).replace('e', "E");
     case Approximately:
-        return QString("~ %1%2").arg(signprefix).arg(val).replace('e', "E");
+        return QString("~ %1%2").arg(signprefix).arg(val, 0, 'g', 3).replace('e', "E");
     case GreaterEqual:
         return QString(QString::fromUtf8("≥ %1%2")).arg(signprefix).arg(val).replace('e', "E");
     case GreaterThan:
