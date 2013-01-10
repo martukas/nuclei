@@ -3,7 +3,7 @@
 #include <cmath>
 #include "GammaTransition.h"
 
-EnergyLevel::EnergyLevel(Energy energy, SpinParity spin, HalfLife halfLife, unsigned int isomerNum, double Q, double mu)
+EnergyLevel::EnergyLevel(Energy energy, SpinParity spin, HalfLife halfLife, unsigned int isomerNum, UncertainDouble Q, UncertainDouble mu)
     : ClickableItem(ClickableItem::EnergyLevelType),
       m_e(energy), sp(spin), hl(halfLife), isonum(isomerNum),
       feedintens(std::numeric_limits<double>::quiet_NaN()), feedinglevel(false),
@@ -46,12 +46,12 @@ double EnergyLevel::normalizedFeedIntensity() const
     return feedintens;
 }
 
-double EnergyLevel::mu() const
+UncertainDouble EnergyLevel::mu() const
 {
     return m_mu;
 }
 
-double EnergyLevel::q() const
+UncertainDouble EnergyLevel::q() const
 {
     return m_Q;
 }
@@ -63,30 +63,6 @@ const QList<GammaTransition *> & EnergyLevel::depopulatingTransitions() const
 {
     qSort(m_depopulatingTransitions.begin(), m_depopulatingTransitions.end(), gammaSmallerThan);
     return m_depopulatingTransitions;
-}
-
-QString EnergyLevel::muAsText() const
-{
-    if (std::isfinite(m_mu))
-        return QString::number(m_mu);
-    return "?";
-}
-
-QString EnergyLevel::qAsText() const
-{
-    if (std::isfinite(m_Q))
-        return QString::number(m_Q);
-    return "?";
-}
-
-QString EnergyLevel::momentaAsText() const
-{
-    QStringList r;
-    if (std::isfinite(m_mu))
-        r.append(QString::fromUtf8("µ=%1").arg(m_mu));
-    if (std::isfinite(m_Q))
-        r.append(QString("Q=%1").arg(m_Q));
-    return r.join(", ");
 }
 
 void EnergyLevel::setFeedIntensity(double intensity)

@@ -216,6 +216,11 @@ QString Decay::name() const
     return m_name;
 }
 
+Decay::Type Decay::type() const
+{
+    return t;
+}
+
 Nuclide *Decay::parentNuclide() const
 {
     return pNuc;
@@ -383,8 +388,8 @@ Decay::DecayDataSet Decay::decayDataSet() const
         dataset.intEnergy = selectedEnergyLevel->energy().toString();
         dataset.intHalfLife = selectedEnergyLevel->halfLife().toString();
         dataset.intSpin = selectedEnergyLevel->spin().toString();
-        dataset.intMu = selectedEnergyLevel->muAsText();
-        dataset.intQ = selectedEnergyLevel->qAsText();
+        dataset.intMu = selectedEnergyLevel->mu().toString().replace("undefined", "?");
+        dataset.intQ = selectedEnergyLevel->q().toString().replace("undefined", "?");
     }
 
     // gammas
@@ -415,7 +420,7 @@ Decay::DecayDataSet Decay::decayDataSet() const
         dataset.depopEnergy = depop->energy().toString();
         dataset.depopIntensity = depop->intensityAsText();
         dataset.depopMultipolarity = depop->multipolarityAsText();
-        dataset.depopMixing = depop->delta().toString();
+        dataset.depopMixing = depop->delta().toString().replace("undefined", "<i>unknown</i>");
     }
 
     // start and end level

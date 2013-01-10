@@ -60,7 +60,9 @@ private:
     static SpinParity parseSpinParity(const QString &sstr);
     static UncertainDouble parseEnsdfMixing(const QString &s, const QString &multipolarity);
     static ParentRecord parseParentRecord(const QString &precstr);
+    static UncertainDouble parseMoment(const QString &s);
 
+    static UncertainDouble parseUncertainty(const QString &value, const QString &uncertaintyString);
     static double getUncertainty(const QString value, unsigned int stdUncertainty);
 
     template <typename T> const T & findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;

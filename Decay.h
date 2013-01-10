@@ -43,6 +43,7 @@ public:
     void setShadowEnabled(bool enable);
 
     QString name() const;
+    Type type() const;
 
     Nuclide * parentNuclide() const;
     Nuclide * daughterNuclide() const;

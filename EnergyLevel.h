@@ -9,6 +9,7 @@
 #include "Energy.h"
 #include "SpinParity.h"
 #include "ClickableItem.h"
+#include "UncertainDouble.h"
 
 class ActiveGraphicsItemGroup;
 class QGraphicsLineItem;
@@ -24,8 +25,8 @@ public:
     EnergyLevel(Energy energy, SpinParity spin,
                 HalfLife halfLife = HalfLife(std::numeric_limits<double>::infinity()),
                 unsigned int isomerNum = 0,
-                double Q = std::numeric_limits<double>::quiet_NaN(),
-                double mu = std::numeric_limits<double>::quiet_NaN()
+                UncertainDouble Q = UncertainDouble(),
+                UncertainDouble mu = UncertainDouble()
                 );
 
     virtual ~EnergyLevel();
@@ -35,14 +36,10 @@ public:
     HalfLife halfLife() const;
     unsigned int isomerNum() const;
     double normalizedFeedIntensity() const;
-    double mu() const;
-    double q() const;
+    UncertainDouble mu() const;
+    UncertainDouble q() const;
 
     const QList<GammaTransition *> &depopulatingTransitions() const;
-
-    QString muAsText() const;
-    QString qAsText() const;
-    QString momentaAsText() const;
 
     void setFeedIntensity(double intensity);
     void setFeedingLevel(bool isfeeding);
@@ -62,7 +59,7 @@ private:
     double feedintens; // says how often this level is directly fed per 100 parent decays
     bool feedinglevel; // true if this is belonging to a parent nuclide and is a starting point for decays
 
-    double m_Q, m_mu; // quadrupole and magnetic moments
+    UncertainDouble m_Q, m_mu; // quadrupole and magnetic moments
 
     mutable QList<GammaTransition*> m_populatingTransitions;
     mutable QList<GammaTransition*> m_depopulatingTransitions;

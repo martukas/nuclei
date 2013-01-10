@@ -6,6 +6,7 @@
 #include <QLocale>
 #include <QSettings>
 #include <cmath>
+#include <iostream>
 
 #include "Decay.h"
 #include "Nuclide.h"
@@ -186,11 +187,10 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
             // determine half-life
             HalfLife hl(parseHalfLife(line.mid(39, 10)));
 
+            UncertainDouble Q, mu;
+
             // get additional data from adopted leves record
             //   find closest entry
-            double Q = std::numeric_limits<double>::quiet_NaN();
-            double mu = std::numeric_limits<double>::quiet_NaN();
-
             QStringList adptlvl;
             if (!adoptblocks.isEmpty()) {
                 Energy foundE;
@@ -221,18 +221,18 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
             // search and parse Q and µ fields
             // Q
             QString qstr(crecs.value(crecs.indexOf(QRegExp("^MOME2.*$"))));
-            qstr.replace(QRegExp("^MOME2\\s*=\\s*([\\S]+).*"), "\\1");
-            qstr.remove('(').remove(')');
-            Q = clocale.toDouble(qstr, &convok);
-            if (!convok)
-                Q = std::numeric_limits<double>::quiet_NaN();
+            qstr.remove(0, 5);
+            qstr = qstr.trimmed();
+            if (qstr.startsWith('='))
+                qstr.remove(0, 1);
+            Q = parseMoment(qstr.trimmed());
             // µ
             QString mustr(crecs.value(crecs.indexOf(QRegExp("^MOMM1.*$"))));
-            mustr.replace(QRegExp("^MOMM1\\s*=\\s*([\\S]+).*"), "\\1");
-            mustr.remove('(').remove(')');
-            mu = clocale.toDouble(mustr, &convok);
-            if (!convok)
-                mu = std::numeric_limits<double>::quiet_NaN();
+            mustr.remove(0, 5);
+            mustr = mustr.trimmed();
+            if (mustr.startsWith('='))
+                mustr.remove(0, 1);
+            mu = parseMoment(mustr.trimmed());
 
             currentLevel = new EnergyLevel(e, spin, hl, isonum, Q, mu);
             levels.insert(e, currentLevel);
@@ -474,8 +474,8 @@ SpinParity ENSDFParser::parseSpinParity(const QString &sstr)
 UncertainDouble ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipolarity)
 {
     Q_ASSERT(mstr.size() == 14);
-    QLocale clocale("C");
-    bool convok = false;
+
+    // special case for pure multipolarities
     if (mstr.trimmed().isEmpty()) {
         QString tmp(multipolarity);
         tmp.remove('(').remove(')');
@@ -484,62 +484,9 @@ UncertainDouble ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString
         else
             return UncertainDouble();
     }
-    else {
-        // parse delta value
-        UncertainDouble delta(clocale.toDouble(mstr.left(8).trimmed(), &convok), UncertainDouble::UndefinedSign);
-        if (convok) {
-            if (mstr.left(8).contains('+') || mstr.left(8).contains('-'))
-                delta.setSign(UncertainDouble::SignMagnitudeDefined);
-            else
-                delta.setSign(UncertainDouble::MagnitudeDefined);
 
-            // parse uncertainty
-            QString ustr(mstr.right(6).trimmed());
-            // symmetric or special case
-            if (ustr.size() <= 2) {
-                if (ustr == "LT")
-                    delta.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, UncertainDouble::LessThan);
-                else if (ustr == "GT")
-                    delta.setUncertainty(0.0, std::numeric_limits<double>::infinity(), UncertainDouble::GreaterThan);
-                else if (ustr == "LE")
-                    delta.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, UncertainDouble::LessEqual);
-                else if (ustr == "GE")
-                    delta.setUncertainty(0.0, std::numeric_limits<double>::infinity(), UncertainDouble::GreaterEqual);
-                else if (ustr == "AP")
-                    delta.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::Approximately);
-                else if (ustr == "CA")
-                    delta.setUncertainty(0.0, 0.0, UncertainDouble::Calculated);
-                else if (ustr == "SY")
-                    delta.setUncertainty(0.0, 0.0, UncertainDouble::Systematics);
-                else {
-                    // determine significant figure
-                    unsigned int uncert = clocale.toUInt(ustr, &convok);
-                    if (convok)
-                        delta.setSymmetricUncertainty(getUncertainty(mstr.left(8).trimmed(), uncert));
-                    else
-                        delta.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::UndefinedType);
-                }
-            }
-            // asymmetric case
-            else {
-                Q_ASSERT(ustr.contains('+') && ustr.contains('-'));
-                QString uposstr(ustr.replace(QRegExp("^\\+([0-9])+\\-([0-9])+$"), "\\1"));
-                QString unegstr(ustr.replace(QRegExp("^\\+([0-9])+\\-([0-9])+$"), "\\2"));
-                Q_ASSERT(uposstr.size() > 0 && unegstr.size() > 0);
-                unsigned int upositive = clocale.toUInt(uposstr, &convok);
-                bool tmp = convok;
-                unsigned int unegative = clocale.toUInt(unegstr, &convok);
-                if (tmp && convok)
-                    delta.setAsymmetricUncertainty(getUncertainty(mstr.left(8).trimmed(), unegative), getUncertainty(mstr.left(8).trimmed(), upositive));
-                else
-                    delta.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::UndefinedType);
-            }
-
-            return delta;
-        }
-        // else return unknown
-    }
-    return UncertainDouble();
+    // mixed case
+    return parseUncertainty(mstr.left(8).trimmed(), mstr.right(6).trimmed().replace(' ', ""));
 }
 
 ENSDFParser::ParentRecord ENSDFParser::parseParentRecord(const QString &precstr)
@@ -561,6 +508,119 @@ ENSDFParser::ParentRecord ENSDFParser::parseParentRecord(const QString &precstr)
     prec.spin = SpinParity(parseSpinParity(precstr.mid(21, 18)));
 
     return prec;
+}
+
+UncertainDouble ENSDFParser::parseMoment(const QString &s)
+{
+    // MOMXY= must be stripped and the remaining text trimmed before calling this method!
+
+    if (s.isEmpty())
+        return UncertainDouble();
+
+    UncertainDouble result;
+    QString str(s);
+    str.remove('(').remove(')');
+
+    QStringList parts = str.split(" ");
+    Q_ASSERT(parts.count() >= 1);
+    if (parts.count() == 1)
+        parts.prepend("AP");
+
+    QString &first = parts[0];
+    if (first == "LT" || first == "GT" || first == "LE" || first == "GE" || first == "AP" || first == "CA" || first == "SY")
+        return parseUncertainty(parts.at(1), parts.at(0));
+
+    QString uncert(parts.at(1));
+    if (uncert.contains(QRegExp("[A-Za-z]"))) {
+        std::cerr << "Invalid or missing Momentum uncertainty: " << uncert.toStdString() << std::endl;
+        uncert = "AP";
+    }
+    return parseUncertainty(parts.at(0), uncert);
+}
+
+UncertainDouble ENSDFParser::parseUncertainty(const QString &value, const QString &uncertaintyString)
+{
+    QString v(value.trimmed());
+
+    if (value.trimmed().isEmpty())
+        return UncertainDouble();
+
+    QLocale clocale("C");
+    bool convok = false;
+
+    UncertainDouble result(clocale.toDouble(v, &convok), UncertainDouble::UndefinedSign);
+    if (convok) {
+        if (v.contains('+') || v.contains('-'))
+            result.setSign(UncertainDouble::SignMagnitudeDefined);
+        else
+            result.setSign(UncertainDouble::MagnitudeDefined);
+
+        // parse uncertainty
+        // symmetric or special case (consider symmetric if not + and - are both contained in string)
+        if ( !(uncertaintyString.contains('+')&&uncertaintyString.contains('-')) ) {
+            if (uncertaintyString == "LT")
+                result.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, UncertainDouble::LessThan);
+            else if (uncertaintyString == "GT")
+                result.setUncertainty(0.0, std::numeric_limits<double>::infinity(), UncertainDouble::GreaterThan);
+            else if (uncertaintyString == "LE")
+                result.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, UncertainDouble::LessEqual);
+            else if (uncertaintyString == "GE")
+                result.setUncertainty(0.0, std::numeric_limits<double>::infinity(), UncertainDouble::GreaterEqual);
+            else if (uncertaintyString == "AP")
+                result.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::Approximately);
+            else if (uncertaintyString == "CA")
+                result.setUncertainty(0.0, 0.0, UncertainDouble::Calculated);
+            else if (uncertaintyString == "SY")
+                result.setUncertainty(0.0, 0.0, UncertainDouble::Systematics);
+            else {
+                // determine significant figure
+                unsigned int uncert = clocale.toUInt(uncertaintyString, &convok);
+                if (convok)
+                    result.setSymmetricUncertainty(getUncertainty(v, uncert));
+                else
+                    result.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::UndefinedType);
+            }
+        }
+        // asymmetric case
+        else {
+            Q_ASSERT(uncertaintyString.contains('+') && uncertaintyString.contains('-'));
+            QRegExp re("^\\+([0-9]+)\\-([0-9]+)$");
+            QString uposstr, unegstr;
+            int pos = re.indexIn(uncertaintyString);
+            if (pos > -1) {
+                uposstr = re.cap(1);
+                unegstr = re.cap(2);
+            }
+            else {
+                QRegExp reinv("^\\-([0-9]+)\\+([0-9]+)$");
+                pos = reinv.indexIn(uncertaintyString);
+                Q_ASSERT(pos > -1);
+                uposstr = reinv.cap(2);
+                unegstr = reinv.cap(1);
+            }
+            Q_ASSERT(uposstr.size() > 0 && unegstr.size() > 0);
+            unsigned int upositive = clocale.toUInt(uposstr, &convok);
+            bool tmp = convok;
+            unsigned int unegative = clocale.toUInt(unegstr, &convok);
+            if (tmp && convok) {
+                // work aournd bad entries with asymmetric uncertainty values of 0.
+                if (upositive == 0.0 || unegative == 0.0) {
+                    result.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::Approximately);
+                    std::cerr << "Found asymmetric error of 0 in '" << uncertaintyString.toStdString() << "'. Auto-changing to 'approximately'" << std::endl;
+                }
+                else {
+                    result.setAsymmetricUncertainty(getUncertainty(v, unegative), getUncertainty(v, upositive));
+                }
+            }
+            else {
+                result.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::UndefinedType);
+            }
+        }
+
+        return result;
+    }
+    // else return undefined
+    return UncertainDouble();
 }
 
 double ENSDFParser::getUncertainty(const QString value, unsigned int stdUncertainty)

@@ -134,7 +134,7 @@ void SearchThread::run()
     std::cout << "# Selected Search Constraints:" << std::endl;
     foreach (const QString &s, constraintsl)
         std::cout << "# " << s.toStdString() << std::endl;
-    std::cout << std::endl << "# daughter	parent	half-life	levels	inter. hl	inter. spin	Q	µ	a22	a24	a42	a44" << std::endl;
+    std::cout << std::endl << "# daughter	parent	half-life	intermediate level	inter. hl	inter. spin	Q	µ   start level stop level	a22	a24	a42	a44" << std::endl;
 #endif
 
     for (int i=0; i<baseRoot->childCount(); i++) {
@@ -207,8 +207,8 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                 int rejectMuQ = 0;
                 // µ
                 if (std::isfinite(m_constraints.minMu)) {
-                    if (std::isfinite(intlevel->mu())) {
-                        if (intlevel->mu() < m_constraints.minMu)
+                    if (intlevel->mu().hasFiniteValue()) {
+                        if (std::abs(intlevel->mu()) < m_constraints.minMu)
                             rejectMuQ++;
                     }
                     else {
@@ -218,8 +218,8 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                 }
                 // Q
                 if (std::isfinite(m_constraints.minQ)) {
-                    if (std::isfinite(intlevel->q())) {
-                        if (intlevel->q() < m_constraints.minQ)
+                    if (intlevel->q().hasFiniteValue()) {
+                        if (std::abs(intlevel->q()) < m_constraints.minQ)
                             rejectMuQ++;
                     }
                     else {
@@ -333,15 +333,18 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                     Decay::DecayDataSet ds = dec->decayDataSet();
 
                     std::cout << dec->daughterNuclide()->name().toStdString() << "\t"
-                              << dec->parentNuclide()->name().toStdString() << "\t"
+                              << dec->parentNuclide()->name().toStdString();
+                    if (dec->type() == Decay::IsomericTransition)
+                        std::cout << "m";
+                    std::cout << "\t"
                               << dec->parentNuclide()->halfLifeAsText().toStdString() << "\t"
-                              << pop->depopulatedLevel()->energy() << "/"
-                              << pop->populatedLevel()->energy() << "/"
-                              << depop->populatedLevel()->energy() << "\t"
+                              << pop->populatedLevel()->energy() << "\t"
                               << ds.intHalfLife.toStdString() << "\t"
                               << ds.intSpin.toStdString() << "\t"
                               << ds.intQ.toStdString() << "\t"
                               << ds.intMu.toStdString() << "\t"
+                              << pop->depopulatedLevel()->energy() << "\t"
+                              << depop->populatedLevel()->energy() << "\t"
                               << ds.a22.toStdString() << "\t"
                               << ds.a24.toStdString() << "\t"
                               << ds.a42.toStdString() << "\t"
