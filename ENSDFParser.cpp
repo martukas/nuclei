@@ -384,6 +384,7 @@ Energy ENSDFParser::parseEnsdfEnergy(const QString &estr)
     QLocale clocale("C");
     QString tmp(estr);
     tmp.remove('(').remove(')');
+    tmp.remove("+X"); // fix modified energy values (illegaly used in ensdf...)
     bool convok = false;
     double result = clocale.toDouble(tmp.trimmed(), &convok);
     if (!convok)
