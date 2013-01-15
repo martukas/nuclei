@@ -456,7 +456,7 @@ Decay::DecayDataSet Decay::decayDataSet() const
 
             // compute possible results
             QStringList a22str, a24str, a42str, a44str;
-            UncertainDouble a22[variants.size()], a24[variants.size()], a42[variants.size()], a44[variants.size()];
+            QVector<UncertainDouble> a22(variants.size()), a24(variants.size()), a42(variants.size()), a44(variants.size());
             Akk calc;
             calc.setInitialStateSpin(pop->depopulatedLevel()->spin().doubledSpin());
             calc.setIntermediateStateSpin(selectedEnergyLevel->spin().doubledSpin());
@@ -502,19 +502,19 @@ Decay::DecayDataSet Decay::decayDataSet() const
             }
             // replace strings if all values are equal
             if (variants.size() > 1) {
-                if (std::count(a22 + 1, a22 + variants.size(), a22[0]) == (variants.size()-1)) {
+                if (a22.count(a22[0]) == (variants.size())) {
                     a22str.clear();
                     a22str.append(a22[0].toText());
                 }
-                if (std::count(a24 + 1, a24 + variants.size(), a24[0]) == (variants.size()-1)) {
+                if (a24.count(a24[0]) == (variants.size())) {
                     a24str.clear();
                     a24str.append(a24[0].toText());
                 }
-                if (std::count(a42 + 1, a42 + variants.size(), a42[0]) == (variants.size()-1)) {
+                if (a42.count(a42[0]) == (variants.size())) {
                     a42str.clear();
                     a42str.append(a42[0].toText());
                 }
-                if (std::count(a44 + 1, a44 + variants.size(), a44[0]) == (variants.size()-1)) {
+                if (a44.count(a44[0]) == (variants.size())) {
                     a44str.clear();
                     a44str.append(a44[0].toText());
                 }

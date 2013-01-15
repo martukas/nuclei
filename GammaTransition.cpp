@@ -33,6 +33,10 @@ GammaTransition::GammaTransition(Energy energy, double intensity,
     dest->m_populatingTransitions.append(this);
 }
 
+GammaTransition::~GammaTransition()
+{
+}
+
 Energy GammaTransition::energy() const
 {
     return m_e;

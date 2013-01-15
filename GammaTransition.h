@@ -24,6 +24,8 @@ public:
                     const QString &multipol, UncertainDouble delta,
                     EnergyLevel *start, EnergyLevel *dest);
 
+    virtual ~GammaTransition();
+
     Energy energy() const;
     double intensity() const;
     QString multipolarity() const;
