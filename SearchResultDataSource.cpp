@@ -371,6 +371,7 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
 
             SearchTreeItem *cascadeItem = new SearchTreeItem(AbstractTreeItem::CascadeType,
                                                              baseItem->A(),
+                                                             baseItem->Z(),
                                                              QList<QVariant>() << cascadeit.key(),
                                                              true,
                                                              result
@@ -413,8 +414,8 @@ SearchTreeItem::SearchTreeItem(AbstractTreeItem::ItemType type, AbstractTreeItem
 {
 }
 
-SearchTreeItem::SearchTreeItem(AbstractTreeItem::ItemType type, unsigned int A, const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent)
-    : AbstractTreeItem(type, A, data, selectable, parent)
+SearchTreeItem::SearchTreeItem(AbstractTreeItem::ItemType type, unsigned int A, unsigned int Z, const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent)
+    : AbstractTreeItem(type, A, Z, data, selectable, parent)
 {
 }
 

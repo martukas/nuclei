@@ -19,7 +19,7 @@ public:
     };
 
     explicit AbstractTreeItem(ItemType type = UnknownType, AbstractTreeItem *parent = 0);
-    explicit AbstractTreeItem(ItemType type, unsigned int A, const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent = 0);
+    explicit AbstractTreeItem(ItemType type, unsigned int A, unsigned int Z, const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent = 0);
     /**
      * @brief This copy constructor creates a standalone copy without links to parent or children
      * @param original
@@ -45,10 +45,11 @@ public:
     virtual int row() const;
 
     virtual unsigned int A() const;
+    virtual unsigned int Z() const;
     virtual ItemType type() const;
 
 protected:
-    unsigned int m_A;
+    unsigned int m_A, m_Z;
     QList<AbstractTreeItem*> childItems;
     QList<QVariant> itemData;
     AbstractTreeItem *parentItem;

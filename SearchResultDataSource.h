@@ -14,7 +14,7 @@ class SearchTreeItem : public AbstractTreeItem
 {
 public:
     explicit SearchTreeItem(AbstractTreeItem::ItemType type = AbstractTreeItem::UnknownType, AbstractTreeItem *parent = 0);
-    explicit SearchTreeItem(ItemType type, unsigned int A, const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent = 0);
+    explicit SearchTreeItem(ItemType type, unsigned int A, unsigned int Z, const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent = 0);
     explicit SearchTreeItem(AbstractTreeItem *original);
     virtual ~SearchTreeItem();
 

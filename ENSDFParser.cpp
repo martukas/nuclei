@@ -5,6 +5,7 @@
 #include <QMap>
 #include <QLocale>
 #include <QSettings>
+#include <QSet>
 #include <cmath>
 #include <iostream>
 
@@ -56,17 +57,25 @@ unsigned int ENSDFParser::aValue() const
     return a;
 }
 
-const QStringList & ENSDFParser::daughterNuclides() const
+const QList<Nuclide::Coordinates> ENSDFParser::daughterNuclides() const
 {
-    return m_daughterNames;
+    Q_ASSERT(m_decays.size() == m_decays.keys().toSet().size()); // check for duplicates
+    return m_decays.keys();
 }
 
-const QStringList & ENSDFParser::decays(const QString &daughterNuclideName) const
+const QList< QPair<QString, Nuclide::Coordinates> > ENSDFParser::decays(const Nuclide::Coordinates &daughterNuclide) const
 {
-    return m_decayNames[daughterNuclideName];
+    Q_ASSERT(m_decays.value(daughterNuclide).size() == m_decays.value(daughterNuclide).keys().toSet().size()); // check for duplicates
+    QList< QPair<QString, Nuclide::Coordinates> > result;
+    QMapIterator<QString, BasicDecayData> i(m_decays.value(daughterNuclide));
+    while (i.hasNext()) {
+        i.next();
+        result.append(QPair<QString, Nuclide::Coordinates>(i.key(), i.value().parents.at(0).nuclide));
+    }
+    return result;
 }
 
-QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, const QString &decayName) const
+QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuclide, const QString &decayName) const
 {
     QSettings s;
     double adoptedLevelMaxDifference = s.value("preferences/levelTolerance", 1.0).toDouble();
@@ -74,11 +83,11 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
 
     QMap<Energy, EnergyLevel*> levels;
 
-    BlockIndices alpos = m_adoptedlevels.value(daughterNuclideName);
-    BasicDecayData decaydata = m_decays.value(daughterNuclideName).value(decayName);
+    BlockIndices alpos = m_adoptedlevels.value(daughterNuclide);
+    BasicDecayData decaydata = m_decays.value(daughterNuclide).value(decayName);
     double normalizeDecIntensToPercentParentDecay = 1.0;
     double normalizeGammaIntensToPercentParentDecay = 1.0;
-    QString dNucid = nuclideToNucid(daughterNuclideName);
+    QString dNucid = nuclideToNucid(daughterNuclide);
 
     // process all adopted level sub-blocks
     EnergyLevel *currentLevel = 0;
@@ -323,45 +332,26 @@ QSharedPointer<Decay> ENSDFParser::decay(const QString &daughterNuclideName, con
         }
     }
 
-    Nuclide *pNuc = new Nuclide(A(decaydata.parents.value(0).nuclideName), element(decaydata.parents.value(0).nuclideName), pHl);
+    Nuclide *pNuc = new Nuclide(decaydata.parents.value(0).nuclide.first, decaydata.parents.value(0).nuclide.second, pHl);
     pNuc->addLevels(plevels);
-    Nuclide *dNuc = new Nuclide(A(decaydata.daughterName), element(decaydata.daughterName));
+    Nuclide *dNuc = new Nuclide(decaydata.daughter.first, decaydata.daughter.second);
     dNuc->addLevels(levels);
     return QSharedPointer<Decay>(new Decay(decayName, pNuc, dNuc, decaydata.decayType));
 }
 
-QString ENSDFParser::nuclideToNucid(const QString &nuclide)
+QString ENSDFParser::nuclideToNucid(Nuclide::Coordinates nuclide)
 {
-    QStringList parts = nuclide.split('-');
-    if (parts.size() < 2)
-        return QString();
-
-    QString nucid(parts.at(1).rightJustified(3, ' '));
-    nucid.append(parts.at(0).toUpper().leftJustified(2, ' '));
+    QString nucid(QString::number(nuclide.first).rightJustified(3, ' '));
+    nucid.append(Nuclide::nameOf(nuclide.second).toUpper().leftJustified(2, ' '));
     return nucid;
 }
 
-QString ENSDFParser::nucidToNuclide(const QString &nucid)
+Nuclide::Coordinates ENSDFParser::nucidToNuclide(const QString &nucid)
 {
     if (nucid.size() != 5)
-        return QString();
+        Nuclide::Coordinates(0, 0);
 
-    QString nuclide("-" + nucid.left(3).trimmed());
-    QString el(nucid.right(2).trimmed());
-    if (el.size() > 1)
-        el[1] = el.at(1).toLower();
-    nuclide.prepend(el);
-    return nuclide;
-}
-
-unsigned int ENSDFParser::A(const QString &nuclide)
-{
-    return nuclide.split("-").value(1).toUInt();
-}
-
-QString ENSDFParser::element(const QString &nuclide)
-{
-    return nuclide.split("-").value(0);
+    return Nuclide::Coordinates(nucid.left(3).trimmed().toUInt(), Nuclide::zOf(nucid.right(2).trimmed()));
 }
 
 Decay::Type ENSDFParser::parseDecayType(const QString &tstring)
@@ -497,7 +487,7 @@ ENSDFParser::ParentRecord ENSDFParser::parseParentRecord(const QString &precstr)
     ParentRecord prec;
 
     // determine parent data
-    prec.nuclideName = nucidToNuclide(precstr.left(5));
+    prec.nuclide = nucidToNuclide(precstr.left(5));
 
     // determine parent's half-life
     prec.hl = HalfLife(parseHalfLife(precstr.mid(39, 10)));
@@ -698,7 +688,7 @@ void ENSDFParser::parseBlocks()
         else if (decre.exactMatch(head)) {
             BasicDecayData decaydata;
 
-            decaydata.daughterName = nucidToNuclide(decre.capturedTexts().at(1));
+            decaydata.daughter = nucidToNuclide(decre.capturedTexts().at(1));
             decaydata.decayType = parseDecayType(decre.capturedTexts().at(2));
             decaydata.block = block;
 
@@ -711,16 +701,16 @@ void ENSDFParser::parseBlocks()
 
             // create decay string
             //   get reference to daughter map to work with (create and insert if necessary)
-            QMap<QString, BasicDecayData > &decmap(m_decays[decaydata.daughterName]);
+            QMap<QString, BasicDecayData > &decmap = m_decays[decaydata.daughter];
 
             QStringList hlstrings;
             foreach (const ParentRecord &prec, decaydata.parents) {
-                Q_ASSERT(prec.nuclideName == decaydata.parents.at(0).nuclideName);
+                Q_ASSERT(prec.nuclide == decaydata.parents.at(0).nuclide); // check "same parent/different half-life" scheme
                 hlstrings.append(prec.hl.toString());
             }
 
             const ParentRecord &prec(decaydata.parents.at(0));
-            QString decayname(prec.nuclideName);
+            QString decayname(Nuclide::nameOf(prec.nuclide));
             if (prec.energy > 0.0)
                 decayname.append("m");
             decayname.append(QString::fromUtf8(" → "))
@@ -733,17 +723,6 @@ void ENSDFParser::parseBlocks()
                 decayname.append(" (alt.)");
             decmap.insert(decayname, decaydata);
         }
-    }
-
-    // create daughter name cache map
-    m_daughterNames = m_decays.keys();
-    m_daughterNames.removeDuplicates();
-
-    // create decay name cache map
-    foreach (QString daughter, m_daughterNames) {
-        QStringList decays(m_decays.value(daughter).keys());
-        decays.removeDuplicates();
-        m_decayNames.insert(daughter, decays);
     }
 }
 

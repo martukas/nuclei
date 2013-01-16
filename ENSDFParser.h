@@ -5,19 +5,27 @@
 #include <QPair>
 #include "Decay.h"
 #include "Energy.h"
+#include "Nuclide.h"
 
 class HalfLife;
 
 class ENSDFParser
 {
 public:
+
     explicit ENSDFParser(unsigned int A);
 
     static const QList<unsigned int> &aValues();
 
     unsigned int aValue() const;
-    const QStringList & daughterNuclides() const;
-    const QStringList & decays(const QString &daughterNuclideName) const;
+    const QList<Nuclide::Coordinates> daughterNuclides() const;
+
+    /**
+     * @brief Lists with basic decay path data for a given daughter
+     * @param daughterNuclide daughter
+     * @return List of (Decay String, Parent Nucleus Coordinate) pairs
+     */
+    const QList< QPair<QString, Nuclide::Coordinates> > decays(const Nuclide::Coordinates &daughterNuclide) const;
 
     /**
      * @brief decay
@@ -27,15 +35,13 @@ public:
      * @param gammaMaxDifference Maximal difference between the energy of gammas in decay records and adopted levels
      * @return
      */
-    QSharedPointer<Decay> decay(const QString &daughterNuclideName, const QString &decayName) const;
-
-    static unsigned int A(const QString &nuclide);
+    QSharedPointer<Decay> decay(const Nuclide::Coordinates &daughterNuclide, const QString &decayName) const;
 
 private:
     typedef QPair<int,int> BlockIndices; // [startidx, size]
 
     struct ParentRecord {
-        QString nuclideName;
+        Nuclide::Coordinates nuclide;
         Energy energy;
         HalfLife hl;
         SpinParity spin;
@@ -44,16 +50,15 @@ private:
 
     struct BasicDecayData {
         QList<ParentRecord> parents;
-        QString daughterName;
+        Nuclide::Coordinates daughter;
         Decay::Type decayType;
         BlockIndices block;
     };
 
     static QList<unsigned int> aList;
 
-    static QString nuclideToNucid(const QString &nuclide);
-    static QString nucidToNuclide(const QString &nucid);
-    static QString element(const QString &nuclide);
+    static QString nuclideToNucid(Nuclide::Coordinates nuclide);
+    static Nuclide::Coordinates nucidToNuclide(const QString &nucid);
     static Decay::Type parseDecayType(const QString &tstring);
     static Energy parseEnsdfEnergy(const QString &estr);
     static HalfLife parseHalfLife(const QString &hlstr);
@@ -72,10 +77,9 @@ private:
     const unsigned int a;
 
     QStringList contents;
-    QMap< QString, BlockIndices > m_adoptedlevels; // daughter name: [startidx, size]
-    QMap< QString, QMap<QString, BasicDecayData > > m_decays; // daughter name: (decay name: [startidx, size])
-    QStringList m_daughterNames;
-    mutable QMap< QString, QStringList > m_decayNames;
+    QMap<Nuclide::Coordinates, BlockIndices> m_adoptedlevels; // daughter coordignates: [startidx, size]
+    QMap<Nuclide::Coordinates, QMap<QString, BasicDecayData > > m_decays; // daughter coordinates: (decay name: basic data)
+    mutable QMap<Nuclide::Coordinates, QStringList> m_decayNames; // daughter coordinates: decay
 };
 
 #endif // ENSDF_H

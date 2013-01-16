@@ -4,6 +4,7 @@
 #include <QString>
 #include <QMap>
 #include <QFont>
+#include <QPair>
 #include <limits>
 #include "HalfLife.h"
 #include "Energy.h"
@@ -16,11 +17,19 @@ class Nuclide
 {
 public:
     Nuclide();
-    Nuclide(unsigned int A, const QString &element, const HalfLife &halfLife = HalfLife(std::numeric_limits<double>::infinity()));
-    Nuclide(unsigned int A, const QString &element, const QList<HalfLife> &halfLifes);
+    Nuclide(unsigned int A, unsigned int Z, const HalfLife &halfLife = HalfLife(std::numeric_limits<double>::infinity()));
+    Nuclide(unsigned int A, unsigned int Z, const QList<HalfLife> &halfLifes);
+
+    typedef QPair<unsigned int, unsigned int> Coordinates;
 
     unsigned int a() const;
     unsigned int z() const;
+    Coordinates coordinates() const;
+
+    static QString nameOf(Coordinates c);
+    static QString nameOf(unsigned int Z);
+    static unsigned int zOf(const QString &name);
+
     QString element() const;
     QString name() const;
 
@@ -34,8 +43,7 @@ public:
     QGraphicsItem * nuclideGraphicsItem() const;
 
 private:
-    unsigned int m_A;
-    QString el;
+    unsigned int m_A, m_Z;
     QList <HalfLife> hl;
 
     QMap<Energy, EnergyLevel*> m_levels;

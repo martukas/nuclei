@@ -12,7 +12,7 @@
 #include "ENSDFParser.h"
 
 const quint32 ENSDFDataSource::magicNumber = 0x4b616945;
-const quint32 ENSDFDataSource::cacheVersion = 3;
+const quint32 ENSDFDataSource::cacheVersion = 4;
 
 ENSDFDataSource::ENSDFDataSource(QObject *parent)
     : AbstractDataSource(parent), root(new ENSDFTreeItem(AbstractTreeItem::RootType)), mccache(0)
@@ -48,12 +48,12 @@ QSharedPointer<Decay> ENSDFDataSource::decay(const AbstractTreeItem *item) const
     if (!eitem->parent() || !eitem->isSelectable())
         return QSharedPointer<Decay>();
 
-    if (mccache && mccache->aValue() == eitem->A())
-        return mccache->decay(eitem->parent()->data(0).toString(), eitem->data(0).toString());
+    if (mccache && mccache->aValue() == eitem->parent()->A())
+        return mccache->decay(Nuclide::Coordinates(eitem->parent()->A(), eitem->parent()->Z()), eitem->data(0).toString());
 
     delete mccache;
-    mccache = new ENSDFParser(eitem->A());
-    return mccache->decay(eitem->parent()->data(0).toString(), eitem->data(0).toString());
+    mccache = new ENSDFParser(eitem->parent()->A());
+    return mccache->decay(Nuclide::Coordinates(eitem->parent()->A(), eitem->parent()->Z()), eitem->data(0).toString());
 }
 
 void ENSDFDataSource::deleteDatabaseAndCache()
@@ -187,10 +187,11 @@ void ENSDFDataSource::createENSDFCache()
     foreach (unsigned int a, aList) {
         ENSDFParser *mc = new ENSDFParser(a);
 
-        foreach (const QString &daughter, mc->daughterNuclides()) {
-            ENSDFTreeItem *d = new ENSDFTreeItem(AbstractTreeItem::DaughterType, QList<QVariant>() << daughter, a, false, root);
-            foreach (const QString decay, mc->decays(daughter))
-                new ENSDFTreeItem(AbstractTreeItem::DecayType, QList<QVariant>() << decay, a, true, d);
+        foreach (const Nuclide::Coordinates &daughter, mc->daughterNuclides()) {
+            ENSDFTreeItem *d = new ENSDFTreeItem(AbstractTreeItem::DaughterType, QList<QVariant>() << Nuclide::nameOf(daughter), daughter.first, daughter.second, false, root);
+            typedef QPair<QString, Nuclide::Coordinates> DecayType;
+            foreach (const DecayType &decay, mc->decays(daughter))
+                new ENSDFTreeItem(AbstractTreeItem::DecayType, QList<QVariant>() << decay.first, decay.second.first, decay.second.second, true, d);
         }
 
         delete mc;
@@ -210,8 +211,8 @@ ENSDFTreeItem::ENSDFTreeItem(ItemType type, AbstractTreeItem *parent)
 {
 }
 
-ENSDFTreeItem::ENSDFTreeItem(ItemType type, const QList<QVariant> &data, unsigned int A, bool isdecay, AbstractTreeItem *parent)
-    : AbstractTreeItem(type, A, data, isdecay, parent)
+ENSDFTreeItem::ENSDFTreeItem(ItemType type, const QList<QVariant> &data, unsigned int A, unsigned int Z, bool isdecay, AbstractTreeItem *parent)
+    : AbstractTreeItem(type, A, Z, data, isdecay, parent)
 {
 }
 
@@ -223,6 +224,7 @@ QDataStream & operator <<(QDataStream &out, const ENSDFTreeItem &treeitem)
 {
     out << treeitem.itemData;
     out << treeitem.m_A;
+    out << treeitem.m_Z;
     out << treeitem.m_isSelectable;
     out << int(treeitem.m_type);
     out << quint32(treeitem.childItems.size());
@@ -239,6 +241,7 @@ QDataStream & operator >>(QDataStream &in, ENSDFTreeItem &treeitem)
 {
     in >> treeitem.itemData;
     in >> treeitem.m_A;
+    in >> treeitem.m_Z;
     in >> treeitem.m_isSelectable;
     int type;
     in >> type;

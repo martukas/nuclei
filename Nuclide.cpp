@@ -9,17 +9,14 @@ Nuclide::Nuclide()
 {
 }
 
-Nuclide::Nuclide(unsigned int A, const QString &element, const HalfLife &halfLife)
-    : m_A(A), el(element), item(0)
+Nuclide::Nuclide(unsigned int A, unsigned int Z, const HalfLife &halfLife)
+    : m_A(A), m_Z(Z), item(0)
 {
     hl.append(halfLife);
-    el = element.toLower();
-    if (!el.isEmpty())
-        el[0] = el[0].toUpper();
 }
 
-Nuclide::Nuclide(unsigned int A, const QString &element, const QList<HalfLife> &halfLifes)
-    : m_A(A), el(element), hl(halfLifes), item(0)
+Nuclide::Nuclide(unsigned int A, unsigned int Z, const QList<HalfLife> &halfLifes)
+    : m_A(A), m_Z(Z), hl(halfLifes), item(0)
 {
 }
 
@@ -30,17 +27,39 @@ unsigned int Nuclide::a() const
 
 unsigned int Nuclide::z() const
 {
-    return elToZ.value(element().toUpper());
+    return m_Z;
+}
+
+Nuclide::Coordinates Nuclide::coordinates() const
+{
+    return Coordinates(a(), z());
+}
+
+QString Nuclide::nameOf(Nuclide::Coordinates c)
+{
+    if (c.first == 0)
+        return "";
+    return nameOf(c.second) + "-" + QString::number(c.first);
+}
+
+QString Nuclide::nameOf(unsigned int Z)
+{
+    return elToZ.key(Z).toLower().replace(0, 1, elToZ.key(Z).left(1));
+}
+
+unsigned int Nuclide::zOf(const QString &name)
+{
+    return elToZ.value(name.toUpper());
 }
 
 QString Nuclide::element() const
 {
-    return el;
+    return nameOf(m_Z);
 }
 
 QString Nuclide::name() const
 {
-    return el + "-" + QString::number(m_A);
+    return element() + "-" + QString::number(m_A);
 }
 
 void Nuclide::addLevels(const QMap<Energy, EnergyLevel *> &levels)

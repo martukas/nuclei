@@ -16,7 +16,7 @@ class ENSDFTreeItem : public AbstractTreeItem
 {
 public:
     explicit ENSDFTreeItem(ItemType type = UnknownType, AbstractTreeItem *parent = 0);
-    explicit ENSDFTreeItem(ItemType type, const QList<QVariant> &data, unsigned int A, bool isdecay, AbstractTreeItem *parent = 0);
+    explicit ENSDFTreeItem(ItemType type, const QList<QVariant> &data, unsigned int A, unsigned int Z, bool isdecay, AbstractTreeItem *parent = 0);
     virtual ~ENSDFTreeItem();
 
     friend QDataStream & operator<<(QDataStream &out, const ENSDFTreeItem &treeitem);
