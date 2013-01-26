@@ -2,6 +2,7 @@
 #include "ui_SearchDialog.h"
 
 #include <cmath>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include "SearchResultDataSource.h"
 
@@ -88,8 +89,8 @@ void SearchDialog::setSearchConstraints(const SearchConstraints &sc)
     if (sc.maxParentHl.isValid())
         ui->maxParentHalfLife->setValue(sc.maxParentHl.seconds());
 
-    ui->minIntensCheck->setChecked(std::isfinite(sc.minGammaIntensity));
-    if (std::isfinite(sc.minGammaIntensity))
+    ui->minIntensCheck->setChecked(boost::math::isfinite(sc.minGammaIntensity));
+    if (boost::math::isfinite(sc.minGammaIntensity))
         ui->minIntens->setValue(sc.minGammaIntensity);
 
     ui->minIntHalfLifeCheck->setChecked(sc.minLevelHl.isValid());
@@ -99,11 +100,11 @@ void SearchDialog::setSearchConstraints(const SearchConstraints &sc)
     if (sc.maxLevelHl.isValid())
         ui->maxIntHalfLife->setValue(sc.maxLevelHl.seconds());
 
-    ui->muValCheck->setChecked(std::isfinite(sc.minMu));
-    if (std::isfinite(sc.minMu))
+    ui->muValCheck->setChecked(boost::math::isfinite(sc.minMu));
+    if (boost::math::isfinite(sc.minMu))
         ui->muVal->setValue(sc.minMu);
-    ui->qValCheck->setChecked(std::isfinite(sc.minQ));
-    if (std::isfinite(sc.minQ))
+    ui->qValCheck->setChecked(boost::math::isfinite(sc.minQ));
+    if (boost::math::isfinite(sc.minQ))
         ui->qVal->setValue(sc.minQ);
 
     ui->muValSkip->setChecked(sc.skipUnknownMu);
@@ -111,17 +112,17 @@ void SearchDialog::setSearchConstraints(const SearchConstraints &sc)
     if (sc.muAndQORCombined)
         ui->muQOr->setChecked(true);
 
-    ui->a22Check->setChecked(std::isfinite(sc.minA22));
-    if (std::isfinite(sc.minA22))
+    ui->a22Check->setChecked(boost::math::isfinite(sc.minA22));
+    if (boost::math::isfinite(sc.minA22))
         ui->a22->setValue(sc.minA22);
-    ui->a24Check->setChecked(std::isfinite(sc.minA24));
-    if (std::isfinite(sc.minA24))
+    ui->a24Check->setChecked(boost::math::isfinite(sc.minA24));
+    if (boost::math::isfinite(sc.minA24))
         ui->a24->setValue(sc.minA24);
-    ui->a42Check->setChecked(std::isfinite(sc.minA42));
-    if (std::isfinite(sc.minA42))
+    ui->a42Check->setChecked(boost::math::isfinite(sc.minA42));
+    if (boost::math::isfinite(sc.minA42))
         ui->a42->setValue(sc.minA42);
-    ui->a44Check->setChecked(std::isfinite(sc.minA44));
-    if (std::isfinite(sc.minA44))
+    ui->a44Check->setChecked(boost::math::isfinite(sc.minA44));
+    if (boost::math::isfinite(sc.minA44))
         ui->a44->setValue(sc.minA44);
 
     ui->anisotropySkip->setChecked(sc.skipUnknownAnisotropies);

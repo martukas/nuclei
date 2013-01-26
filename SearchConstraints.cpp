@@ -1,6 +1,7 @@
 #include "SearchConstraints.h"
 #include <limits>
 #include <cmath>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 SearchConstraints::SearchConstraints()
     : valid(false),
@@ -28,24 +29,24 @@ QStringList SearchConstraints::toStringList() const
         r.append("Min. parent hl: " + minParentHl.toString());
     if (maxParentHl.isValid())
         r.append("Max. parent hl: " + maxParentHl.toString());
-    if (std::isfinite(minGammaIntensity))
+    if (boost::math::isfinite(minGammaIntensity))
         r.append(QString("Min. gamma intensity: %1 %").arg(minGammaIntensity));
     if (minLevelHl.isValid())
         r.append("Min. intermediate hl: " + minLevelHl.toString());
     if (maxLevelHl.isValid())
         r.append("Max. intermediate hl: " + maxLevelHl.toString());
-    if (std::isfinite(minMu))
+    if (boost::math::isfinite(minMu))
         r.append(QString::fromUtf8("Min. µ: %1%2").arg(minMu).arg(skipUnknownMu ? " (skip unknown)" : ""));
-    if (std::isfinite(minQ))
+    if (boost::math::isfinite(minQ))
         r.append(QString::fromUtf8("Min. Q: %1%2").arg(minQ).arg(skipUnknownQ ? " (skip unknown)" : ""));
     r.append(QString::fromUtf8("Logical combination of µ and Q: %1").arg(muAndQORCombined ? "OR" : "AND"));
-    if (std::isfinite(minA22))
+    if (boost::math::isfinite(minA22))
         r.append(QString("Min. A22: %1").arg(minA22));
-    if (std::isfinite(minA24))
+    if (boost::math::isfinite(minA24))
         r.append(QString("Min. A24: %1").arg(minA24));
-    if (std::isfinite(minA42))
+    if (boost::math::isfinite(minA42))
         r.append(QString("Min. A42: %1").arg(minA42));
-    if (std::isfinite(minA44))
+    if (boost::math::isfinite(minA44))
         r.append(QString("Min. A44: %1").arg(minA44));
     if (skipUnknownAnisotropies)
         r.append("Skipping unknown anisotropies");

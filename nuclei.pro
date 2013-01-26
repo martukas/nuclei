@@ -78,7 +78,6 @@ INSTALLS = target
 
 INCLUDEPATH += $$PREFIX/include ../libakk
 mac:LIBS += -lakk -L$$PREFIX/lib -L../libakk
-win32:LIBS += -lakk2 -L../libakk-build-desktop-Qt_4_8_1_for_Desktop_-_MinGW__Qt_SDK__Release\release
 unix:LIBS += -lakk
 unix:release:LIBS += -L../libakk-build-desktop-Qt_aus_PATH_Release/
 unix:debug:LIBS += -L../libakk-build-desktop-Qt_aus_PATH_Debug/
@@ -111,6 +110,13 @@ mac {
 
 win32-msvc* {
     CONFIG += static exceptions
+    LIBS += -L../libakk/release -lakk
+    INCLUDEPATH += C:/boost_1_52_0 ../quazip
+    LIBS += -L../qwt/lib -lqwt -L../quazip/quazip/release
+    INCLUDEPATH += ../qwt/src
+    LIBS += -L../gsl-1.14-msvc/lib -lgsl -lgslcblas
+    DEFINES += QUAZIP_STATIC
+    DEFINES += QXT_STATIC
 }
 
 
@@ -131,10 +137,5 @@ exists( /usr/include/qwt6/qwt.h ) {
 exists( /usr/include/qwt-qt4/qwt.h ) {
   INCLUDEPATH += /usr/include/qwt-qt4
   LIBS += -lqwt-qt4
-}
-
-exists( C://build//qwt//src//qwt.h ) {
-  INCLUDEPATH += C://build//qwt//src
-  LIBS += -LC://build//qwt//lib -lqwt
 }
 

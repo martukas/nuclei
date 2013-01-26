@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <cmath>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <QStringList>
 #include <QLocale>
 
@@ -17,7 +18,7 @@ HalfLife::HalfLife(double seconds, bool uncertain)
 
 bool HalfLife::isValid() const
 {
-    return !std::isnan(sec);
+    return !boost::math::isnan(sec);
 }
 
 double HalfLife::seconds() const
@@ -27,7 +28,7 @@ double HalfLife::seconds() const
 
 bool HalfLife::isStable() const
 {
-    return std::isinf(sec);
+    return boost::math::isinf(sec);
 }
 
 QString HalfLife::toString() const
@@ -37,10 +38,10 @@ QString HalfLife::toString() const
 
 QString HalfLife::secsToString(double secs, bool tagUncertain)
 {
-    if (std::isnan(secs))
+    if (boost::math::isnan(secs))
         return "";
 
-    if (std::isinf(secs))
+    if (boost::math::isinf(secs))
         return "stable";
 
     QString result;

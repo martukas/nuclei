@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <cmath>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 Energy::Energy()
     : e(std::numeric_limits<double>::quiet_NaN())
@@ -15,7 +16,7 @@ Energy::Energy(double energy)
 
 bool Energy::isValid() const
 {
-    return std::isfinite(e);
+    return boost::math::isfinite(e);
 }
 
 Energy::operator double() const
@@ -26,7 +27,7 @@ Energy::operator double() const
 
 QString Energy::toString() const
 {
-    if (!std::isfinite(e))
+    if (!boost::math::isfinite(e))
         return QString();
 
     if (e >= 10000.0)

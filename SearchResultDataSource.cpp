@@ -5,6 +5,7 @@
 #include <QVariant>
 #include <limits>
 #include <cmath>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <Akk.h>
 
 #include <iostream>
@@ -199,14 +200,14 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
             // get this level's gammas
             foreach (const GammaTransition *pop, li.value()->depopulatingTransitions()) {
                 // check populating gamma's intensity
-                if (std::isfinite(m_constraints.minGammaIntensity) && (pop->intensity() < m_constraints.minGammaIntensity || !std::isfinite(pop->intensity())))
+                if (boost::math::isfinite(m_constraints.minGammaIntensity) && (pop->intensity() < m_constraints.minGammaIntensity || !boost::math::isfinite(pop->intensity())))
                     continue;
 
                 // check intermediate level
                 const EnergyLevel *intlevel = pop->populatedLevel();
                 int rejectMuQ = 0;
                 // µ
-                if (std::isfinite(m_constraints.minMu)) {
+                if (boost::math::isfinite(m_constraints.minMu)) {
                     if (intlevel->mu().hasFiniteValue()) {
                         if (std::abs(intlevel->mu()) < m_constraints.minMu)
                             rejectMuQ++;
@@ -217,7 +218,7 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                     }
                 }
                 // Q
-                if (std::isfinite(m_constraints.minQ)) {
+                if (boost::math::isfinite(m_constraints.minQ)) {
                     if (intlevel->q().hasFiniteValue()) {
                         if (std::abs(intlevel->q()) < m_constraints.minQ)
                             rejectMuQ++;
@@ -238,14 +239,14 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                 // iterate over depopulating gammas
                 foreach (const GammaTransition *depop, intlevel->depopulatingTransitions()) {
                     // check depopulating gamma's intensity
-                    if (std::isfinite(m_constraints.minGammaIntensity) && (depop->intensity() < m_constraints.minGammaIntensity || !std::isfinite(pop->intensity())))
+                    if (boost::math::isfinite(m_constraints.minGammaIntensity) && (depop->intensity() < m_constraints.minGammaIntensity || !boost::math::isfinite(pop->intensity())))
                         continue;
 
                     // check anisotropy-limits
-                    if (std::isfinite(m_constraints.minA22) ||
-                            std::isfinite(m_constraints.minA24) ||
-                            std::isfinite(m_constraints.minA42) ||
-                            std::isfinite(m_constraints.minA44)) {
+                    if (boost::math::isfinite(m_constraints.minA22) ||
+                            boost::math::isfinite(m_constraints.minA24) ||
+                            boost::math::isfinite(m_constraints.minA42) ||
+                            boost::math::isfinite(m_constraints.minA44)) {
 
                         // initialize flags
                         bool a22ok = false, a24ok = false, a42ok = false, a44ok = false;
@@ -283,13 +284,13 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
                                 foreach (double depopvariant, depopvariants) {
                                     calc.setPopulatingGammaMixing(pop->delta() * popvariant, std::max(pop->delta().lowerUncertainty(), pop->delta().upperUncertainty()));
                                     calc.setDepopulatingGammaMixing(depop->delta() * depopvariant, std::max(depop->delta().lowerUncertainty(), depop->delta().upperUncertainty()));
-                                    if (!std::isfinite(m_constraints.minA22) || qAbs(calc.a22()) >= m_constraints.minA22)
+                                    if (!boost::math::isfinite(m_constraints.minA22) || qAbs(calc.a22()) >= m_constraints.minA22)
                                         a22ok = true;
-                                    if (!std::isfinite(m_constraints.minA24) || qAbs(calc.a24()) >= m_constraints.minA24)
+                                    if (!boost::math::isfinite(m_constraints.minA24) || qAbs(calc.a24()) >= m_constraints.minA24)
                                         a24ok = true;
-                                    if (!std::isfinite(m_constraints.minA42) || qAbs(calc.a42()) >= m_constraints.minA42)
+                                    if (!boost::math::isfinite(m_constraints.minA42) || qAbs(calc.a42()) >= m_constraints.minA42)
                                         a42ok = true;
-                                    if (!std::isfinite(m_constraints.minA44) || qAbs(calc.a44()) >= m_constraints.minA44)
+                                    if (!boost::math::isfinite(m_constraints.minA44) || qAbs(calc.a44()) >= m_constraints.minA44)
                                         a44ok = true;
                                 }
                             }

@@ -5,6 +5,14 @@
 #include <QList>
 #include <QTextDocument>
 #include <cmath>
+#include <boost/math/special_functions/fpclassify.hpp>
+#if !defined(M_PI)
+#define M_PI        3.14159265358979323846264338327950288
+#endif
+#if !defined(M_LN2)
+#define M_LN2       0.693147180559945309417232121458176568
+#endif
+
 #include "ActiveGraphicsItemGroup.h"
 #include "EnergyLevel.h"
 #include "GraphicsHighlightItem.h"
@@ -60,7 +68,7 @@ const UncertainDouble & GammaTransition::delta() const
 QString GammaTransition::intensityAsText() const
 {
     QString intensstr;
-    if (!std::isnan(intens))
+    if (!boost::math::isnan(intens))
         intensstr = QString("%1 %").arg(intens, 0, 'g', 3);
     return intensstr;
 }

@@ -8,6 +8,7 @@
 #include <QFontMetrics>
 #include <QVector>
 #include <cmath>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <algorithm>
 #include <functional>
 #include <Akk.h>
@@ -130,7 +131,7 @@ QGraphicsScene * Decay::levelPlot()
 
         // plot level feeding arrow if necessary
         double feedintensity = level->normalizedFeedIntensity();
-        if (std::isfinite(feedintensity)) {
+        if (boost::math::isfinite(feedintensity)) {
             // create line
             level->grafeedarrow = new QGraphicsLineItem;
             level->grafeedarrow->setPen((level->feedintens >= 10.0) ? intenseFeedArrowPen : feedArrowPen);
@@ -264,7 +265,7 @@ QVector<double> Decay::gammaSpectrumY(double fwhm) const
     // add single gamma results
     foreach (EnergyLevel *level, dNuc->levels())
         foreach (GammaTransition *g, level->depopulatingTransitions())
-            if (std::isfinite(g->intensity())) {
+            if (boost::math::isfinite(g->intensity())) {
                 QVector<double> &spect = g->spectrum(fwhm, max, numsamples);
                 std::transform(yResult.begin(), yResult.end(), spect.begin(), yResult.begin(), std::plus<double>());
             }
@@ -721,13 +722,13 @@ void Decay::alignGraphicsItems()
     foreach (EnergyLevel *level, levels) {
         QList<GammaTransition*> levelgammas = level->depopulatingTransitions();
         foreach (GammaTransition *gamma, levelgammas) {
-            if (std::isnan(gammaspace))
+            if (boost::math::isnan(gammaspace))
                 gammaspace = gamma->widthFromOrigin();
             else
                 gammaspace += gamma->minimalXDistance();
         }
     }
-    if (!std::isfinite(gammaspace))
+    if (!boost::math::isfinite(gammaspace))
         gammaspace = 0.0;
 
     // set gamma positions
@@ -815,7 +816,7 @@ void Decay::alignGraphicsItems()
             double arrowY = level->graYPos;
             level->grafeedarrow->setLine(leftend, arrowY, rightend, arrowY);
             level->graarrowhead->setPos((parentpos == RightParent) ? rightlinelength + arrowGap : -leftlinelength - arrowGap, arrowY);
-            if (std::isnan(arrowVEnd))
+            if (boost::math::isnan(arrowVEnd))
                 arrowVEnd = arrowY + 0.5*level->grafeedarrow->pen().widthF();
             level->grafeedintens->setPos(leftend + 15.0, arrowY - feedIntensityFontMetrics.height());
         }
@@ -859,7 +860,7 @@ void Decay::alignGraphicsItems()
 
         double arrowVStart = topMostLevel - 0.5*stableLevelPen.widthF();
         double arrowX = (parentpos == RightParent) ? activeright : activeleft;
-        if (std::isfinite(arrowVStart) && std::isfinite(arrowVEnd))
+        if (boost::math::isfinite(arrowVStart) && boost::math::isfinite(arrowVEnd))
             pNucVerticalArrow->setLine(arrowX, arrowVStart, arrowX, arrowVEnd);
 
         pNucHl->setPos(parentcenter - 0.5*pNucHl->boundingRect().width(), topMostLevel - stdBoldFontMetrics.height() - parentHlFontMetrics.height() - 12.0);
@@ -868,7 +869,7 @@ void Decay::alignGraphicsItems()
 
 double Decay::upperSpectrumLimit(double fwhm) const
 {
-    if (fwhm == m_lastFwhm && std::isfinite(m_upperSpectrumLimit))
+    if (fwhm == m_lastFwhm && boost::math::isfinite(m_upperSpectrumLimit))
         return m_upperSpectrumLimit;
 
     spectX.clear();
@@ -878,7 +879,7 @@ double Decay::upperSpectrumLimit(double fwhm) const
     m_upperSpectrumLimit = 0.0;
     foreach (EnergyLevel *level, dNuc->levels())
         foreach (GammaTransition *g, level->depopulatingTransitions())
-            if (std::isfinite(g->intensity()))
+            if (boost::math::isfinite(g->intensity()))
                 m_upperSpectrumLimit = qMax(m_upperSpectrumLimit, double(g->energy()));
     m_upperSpectrumLimit += 2*fwhm;
 

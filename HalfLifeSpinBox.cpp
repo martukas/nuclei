@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <cmath>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <cstdlib>
 
 #include "HalfLife.h"
@@ -102,7 +103,7 @@ double HalfLifeSpinBox::validateAndInterpret(QString &input, int &, QValidator::
             state = QValidator::Invalid;
         else if (num < 0.0)
             state = QValidator::Invalid;
-        else if (!std::isfinite(factor))
+        else if (!boost::math::isfinite(factor))
             state = QValidator::Intermediate;
         else
             state = QValidator::Acceptable;
