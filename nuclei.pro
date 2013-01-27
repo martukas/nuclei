@@ -82,7 +82,7 @@ unix:LIBS += -lakk
 unix:release:LIBS += -L../libakk-build-desktop-Qt_aus_PATH_Release/
 unix:debug:LIBS += -L../libakk-build-desktop-Qt_aus_PATH_Debug/
 
-LIBS += -lquazip
+!win32:LIBS += -lquazip
 
 FORMS    += \
     ENSDFDownloader.ui \
@@ -110,13 +110,15 @@ mac {
 
 win32-msvc* {
     CONFIG += static exceptions
-    LIBS += -L../libakk/release -lakk
+    LIBS += ../libakk/release/akk.lib
     INCLUDEPATH += C:/boost_1_52_0 ../quazip
-    LIBS += -L../qwt/lib -lqwt -L../quazip/quazip/release
+    LIBS += ../qwt/lib/qwt.lib ../quazip/quazip/release/quazip.lib
     INCLUDEPATH += ../qwt/src
-    LIBS += -L../gsl-1.14-msvc/lib -lgsl -lgslcblas
+    LIBS += ../gsl-1.15-msvc/_build-msvc/libcblas/libcblas.lib ../gsl-1.15-msvc/_build-msvc/libgsl/libgsl.lib
     DEFINES += QUAZIP_STATIC
     DEFINES += QXT_STATIC
+    DEFINES += BOOST_ALL_NO_LIB
+    #QMAKE_LFLAGS_RELEASE += /VERBOSE:LIB
 }
 
 
