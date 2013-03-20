@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define VERSION "2.5"
+#define VERSION "2.6"
 
 // used to save windows state. must be incremented if window layout changes!
 #define UIVERSION 0
@@ -12,7 +12,7 @@
 <p><b>Nuclei</b></p><p>shows decay schemes, computes anisotropies of decay cascades and \
 shows the expected photo peak spectra.</p> \
 \
-<p>Copyright 2012 Matthias Nagl, Georg-August Universität Göttingen</p> \
+<p>Copyright 2012-2013 Matthias Nagl, Georg-August Universität Göttingen</p> \
 <p><a href=\"" NUCLEIURL "\">" NUCLEIURL "</a></p> \
 "
 

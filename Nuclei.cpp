@@ -12,6 +12,7 @@
 #include <QPrinter>
 #include <QDesktopWidget>
 #include <qwt_plot.h>
+#include <qwt_plot_canvas.h>
 #include <qwt_plot_intervalcurve.h>
 #include <qwt_plot_grid.h>
 #include <qwt_plot_zoomer.h>
@@ -114,21 +115,21 @@ Nuclei::Nuclei(QWidget *parent) :
     curve = new QwtPlotIntervalCurve;
     curve->attach(plot);
     curve->setStyle(QwtPlotIntervalCurve::Tube);
-    curve->setPen(Qt::NoPen);
+    curve->setPen(QPen(Qt::NoPen));
     curve->setBrush(QBrush(QColor(68, 68, 68)));
     curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 
     g1curve = new QwtPlotIntervalCurve;
     g1curve->attach(plot);
     g1curve->setStyle(QwtPlotIntervalCurve::Tube);
-    g1curve->setPen(Qt::NoPen);
+    g1curve->setPen(QPen(Qt::NoPen));
     g1curve->setBrush(QBrush(QColor(126, 201, 80)));
     g1curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 
     g2curve = new QwtPlotIntervalCurve;
     g2curve->attach(plot);
     g2curve->setStyle(QwtPlotIntervalCurve::Tube);
-    g2curve->setPen(Qt::NoPen);
+    g2curve->setPen(QPen(Qt::NoPen));
     g2curve->setBrush(QBrush(QColor(232, 95, 92)));
     g2curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 

@@ -99,10 +99,6 @@ RC_FILE = nuclei.rc
 
 mac {
     ICON = nuclei.icns
-    QMAKE_MAC_SDK=/Developer/SDKs/MacOSX10.5.sdk
-    CONFIG += ppc x86
-    LIBS += -lqwt -L/usr/lib
-    INCLUDEPATH += /opt/local/include/qwt
 } else {
     CONFIG += qxt
     QXT += core gui
@@ -122,22 +118,6 @@ win32-msvc* {
 }
 
 
-# QWT ####################
-
+# QWT
 CONFIG += qwt
-
-exists( /usr/include/qwt/qwt.h ) {
-  INCLUDEPATH += /usr/include/qwt
-  LIBS += -lqwt
-}
-
-exists( /usr/include/qwt6/qwt.h ) {
-  INCLUDEPATH += /usr/include/qwt6
-  LIBS += -lqwt6
-}
-
-exists( /usr/include/qwt-qt4/qwt.h ) {
-  INCLUDEPATH += /usr/include/qwt-qt4
-  LIBS += -lqwt-qt4
-}
 
