@@ -220,7 +220,7 @@ void Nuclei::initialize()
     s.beginGroup("preferences");
     preferencesDialogUi->fontFamily->setCurrentFont(QFont(s.value("fontFamily", QFont().family()).toString()));
     preferencesDialogUi->fontSize->setValue(s.value("fontSize", 14).toInt());
-    preferencesDialogUi->levelDiff->setValue(s.value("levelTolerance", 1.0).toDouble());
+    preferencesDialogUi->levelDiff->setValue(s.value("levelTolerance", 40.0).toDouble());
     preferencesDialogUi->gammaDiff->setValue(s.value("gammaTolerance", 1.0).toDouble());
     s.endGroup();
 

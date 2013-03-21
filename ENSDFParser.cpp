@@ -162,9 +162,11 @@ QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuc
                 QMap<Energy, QString> e2g;
                 QStringList::const_iterator it(currentadoptblock.first);
                 while (it != currentadoptblock.last) {
-                    Energy gk(parseEnsdfEnergy((*it).mid(9, 10)));
-                    if (gk.isValid())
-                        e2g.insert(gk, (*it));
+                    if ((*it).startsWith(dNucid + "  G ")) {
+                        Energy gk(parseEnsdfEnergy((*it).mid(9, 10)));
+                        if (gk.isValid())
+                            e2g.insert(gk, (*it));
+                    }
                     it++;
                 }
                 // find gamma
@@ -656,8 +658,9 @@ void ENSDFParser::insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblo
     if (xref.startsWith("-(") && xref.endsWith(")") && xref.contains(dssym))
         return;
 
-    // exit if xref is neither "+" (level valid for all datasets) nor contains dssym
-    if (xref != "+" && !xref.contains(dssym))
+    // exit if xref is neither "+" (level valid for all datasets) nor -(...) not containing dssymb
+    // nor contains dssym
+    if (xref != "+" && !xref.startsWith("-(") && !xref.contains(dssym))
         return;
 
     // if this point is reached the level will be added in any case
@@ -699,7 +702,7 @@ QStringList ENSDFParser::extractContinuationRecords(const StringSubList &adopted
             crecs.append(*i);
         i++;
     }
-    // remove record id
+    // remove record id from beginning of string
     for (int i=0; i<crecs.size(); i++)
         crecs[i].remove(0, 9);
     // join lines and then split records
