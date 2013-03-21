@@ -168,8 +168,8 @@ Nuclei::~Nuclei()
     QSettings s;
 
     s.beginGroup("preferences");
-    s.setValue("preferences/levelTolerance", preferencesDialogUi->levelDiff->value());
-    s.setValue("preferences/gammaTolerance", preferencesDialogUi->gammaDiff->value());
+    s.setValue("levelTolerance", preferencesDialogUi->levelDiff->value());
+    s.setValue("gammaTolerance", preferencesDialogUi->gammaDiff->value());
     s.setValue("fontFamily", preferencesDialogUi->fontFamily->currentFont().family());
     s.setValue("fontSize", preferencesDialogUi->fontSize->value());
     s.endGroup();
