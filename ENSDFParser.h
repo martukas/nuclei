@@ -53,6 +53,7 @@ private:
         Nuclide::Coordinates daughter;
         Decay::Type decayType;
         BlockIndices block;
+        QString dsid;
     };
 
     static QList<unsigned int> aList;
@@ -71,6 +72,7 @@ private:
     static double getUncertainty(const QString value, unsigned int stdUncertainty);
 
     template <typename T> const T & findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;
+    static void insertAdoptedLevelsBlock(QMap<Energy, QStringList> *adoptblocks, const QStringList &newblock, char dssym);
 
     void parseBlocks();
 

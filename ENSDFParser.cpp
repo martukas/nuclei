@@ -95,19 +95,27 @@ QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuc
     bool convok;
     // create index map for adopted levels
     QMap<Energy, QStringList> adoptblocks;
+    QMap<QString, char> xrefs; // maps DSID to DSSYM (single letter)
     int laststart = -1;
     for (int i=alpos.first; i < alpos.first+alpos.second; i++) {
         const QString &line = contents.at(i);
+        // extract cross reference records as long as first level was found (cross reference must be before 1st level)
+        if (laststart == -1) {
+            if (line.startsWith(dNucid + "  X"))
+                xrefs.insert(line.mid(9, 30).trimmed(), line.at(8).toAscii());
+        }
+        // find level records
         if (line.startsWith(dNucid + "  L ")) {
             if (laststart > 0)
-                adoptblocks.insert(parseEnsdfEnergy(contents.at(laststart).mid(9, 10)),
-                                   QStringList(contents.mid(laststart, i-laststart)));
+                insertAdoptedLevelsBlock(&adoptblocks, QStringList(contents.mid(laststart, alpos.second-laststart)), xrefs.value(decaydata.dsid));
             laststart = i;
         }
     }
     if (laststart > 0)
-        adoptblocks.insert(parseEnsdfEnergy(contents.at(laststart).mid(9, 10)),
-                           QStringList(contents.mid(laststart, alpos.second-laststart)));
+        insertAdoptedLevelsBlock(&adoptblocks, QStringList(contents.mid(laststart, alpos.second-laststart)), xrefs.value(decaydata.dsid));
+
+    // adopted levels block of current level in decay data set
+    const QStringList *currentadoptblock = 0;
 
     // process decay block
     const QStringList decaylines(contents.mid(decaydata.block.first, decaydata.block.second));
@@ -138,20 +146,10 @@ QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuc
             UncertainDouble delta = parseEnsdfMixing(line.mid(41, 14), mpol);
 
             // parse adopted levels if necessary
-            if (delta.sign() != UncertainDouble::SignMagnitudeDefined || mpol.isEmpty()) {
-                // Get adopted levels block for current level
-                QStringList adptlvl;
-                QRegExp gammare("^" + dNucid + "  G (.*)$");
-                if (!adoptblocks.isEmpty()) {
-                    Energy foundE;
-                    const QStringList &adoptblock = findNearest(adoptblocks, currentLevel->energy(), &foundE);
-                    // assign filtered gamma records
-                    if (qAbs(currentLevel->energy() - foundE) <= (adoptedLevelMaxDifference/1000.0*currentLevel->energy()))
-                        adptlvl = adoptblock.filter(gammare);
-                }
+            if (currentadoptblock && ((delta.sign() != UncertainDouble::SignMagnitudeDefined) || mpol.isEmpty())) {
                 // create gamma map
                 QMap<Energy, QString> e2g;
-                foreach (const QString &g, adptlvl) {
+                foreach (const QString &g, *currentadoptblock) {
                     Energy gk(parseEnsdfEnergy(g.mid(9, 10)));
                     if (gk.isValid())
                         e2g.insert(gk, g);
@@ -203,17 +201,17 @@ QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuc
             QStringList adptlvl;
             if (!adoptblocks.isEmpty()) {
                 Energy foundE;
-                const QStringList &adoptblocklst = findNearest(adoptblocks, e, &foundE);
-                if (qAbs(e - foundE) <= (adoptedLevelMaxDifference/1000.0*e))
-                    adptlvl = adoptblocklst;
+                currentadoptblock = &findNearest(adoptblocks, e, &foundE);
+                if (qAbs(e - foundE) > (adoptedLevelMaxDifference/1000.0*e))
+                    currentadoptblock = 0;
             }
 
             // if an appropriate entry was found, read its contents
             // set half life if necessary
-            if (!adptlvl.isEmpty() && !hl.isValid()) {
-                hl = HalfLife(parseHalfLife(adptlvl.at(0).mid(39, 10)));
+            if (currentadoptblock && !hl.isValid()) {
+                hl = HalfLife(parseHalfLife(currentadoptblock->at(0).mid(39, 10)));
                 if (!spin.isValid())
-                    spin = parseSpinParity(adptlvl.at(0).mid(21, 18));
+                    spin = parseSpinParity(currentadoptblock->at(0).mid(21, 18));
             }
 
             // parse continuation records
@@ -638,6 +636,18 @@ double ENSDFParser::getUncertainty(const QString value, unsigned int stdUncertai
     return stdUncertainty * pow(10.0, double(sigpos + exponent));
 }
 
+void ENSDFParser::insertAdoptedLevelsBlock(QMap<Energy, QStringList> *adoptblocks, const QStringList &newblock, char dssym)
+{
+    Q_ASSERT(adoptblocks);
+    // find xref record
+
+    /// \todo Implement filtering!
+
+    // only add record if xref to dssym exists, modify energy if necessary
+    Energy e = parseEnsdfEnergy(newblock.at(0).mid(9, 10));
+    adoptblocks->insert(e, newblock);
+}
+
 template <typename T>
 const T & ENSDFParser::findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal) const
 {
@@ -691,6 +701,7 @@ void ENSDFParser::parseBlocks()
             decaydata.daughter = nucidToNuclide(decre.capturedTexts().at(1));
             decaydata.decayType = parseDecayType(decre.capturedTexts().at(2));
             decaydata.block = block;
+            decaydata.dsid = head.mid(9,30).trimmed(); // saved for comparison with xref records
 
             QStringList precstrings = QStringList(contents.mid(block.first, block.second)).filter(QRegExp("^[\\s0-9A-Z]{5,5}\\s\\sP[\\s0-9].*$"));
             foreach (const QString &precstr, precstrings)
