@@ -168,6 +168,8 @@ Nuclei::~Nuclei()
     QSettings s;
 
     s.beginGroup("preferences");
+    s.setValue("preferences/levelTolerance", preferencesDialogUi->levelDiff->value());
+    s.setValue("preferences/gammaTolerance", preferencesDialogUi->gammaDiff->value());
     s.setValue("fontFamily", preferencesDialogUi->fontFamily->currentFont().family());
     s.setValue("fontSize", preferencesDialogUi->fontSize->value());
     s.endGroup();
@@ -221,7 +223,7 @@ void Nuclei::initialize()
     preferencesDialogUi->fontFamily->setCurrentFont(QFont(s.value("fontFamily", QFont().family()).toString()));
     preferencesDialogUi->fontSize->setValue(s.value("fontSize", 14).toInt());
     preferencesDialogUi->levelDiff->setValue(s.value("levelTolerance", 40.0).toDouble());
-    preferencesDialogUi->gammaDiff->setValue(s.value("gammaTolerance", 1.0).toDouble());
+    preferencesDialogUi->gammaDiff->setValue(s.value("gammaTolerance", 5.0).toDouble());
     s.endGroup();
 
     ENSDFDataSource *ds = new ENSDFDataSource(this);
