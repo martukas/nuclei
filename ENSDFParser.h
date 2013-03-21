@@ -56,6 +56,14 @@ private:
         QString dsid;
     };
 
+    struct StringSubList {
+        StringSubList() : first(QStringList::const_iterator()), last(first) {}
+        StringSubList(QStringList::const_iterator first, QStringList::const_iterator last) : first(first), last(last) {}
+        void clear() { first=QStringList::const_iterator(); last=first; }
+        QStringList::const_iterator first;
+        QStringList::const_iterator last;
+    };
+
     static QList<unsigned int> aList;
 
     static QString nuclideToNucid(Nuclide::Coordinates nuclide);
@@ -71,8 +79,9 @@ private:
     static UncertainDouble parseUncertainty(const QString &value, const QString &uncertaintyString);
     static double getUncertainty(const QString value, unsigned int stdUncertainty);
 
-    template <typename T> const T & findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;
-    static void insertAdoptedLevelsBlock(QMap<Energy, QStringList> *adoptblocks, const QStringList &newblock, char dssym);
+    template <typename T> T findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;
+    static void insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym);
+    static QStringList extractContinuationRecords(const StringSubList &adoptedblock, const QStringList &requestedRecords, char typeOfContinuedRecord = 'L');
 
     void parseBlocks();
 

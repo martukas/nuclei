@@ -104,6 +104,12 @@ mac {
     QXT += core gui
 }
 
+macx-clang {
+    message(Optimizing for OSX Clang)
+    QMAKE_CXXFLAGS_RELEASE += "-O4"
+    QMAKE_LFLAGS_RELEASE += "-O4"
+}
+
 win32-msvc* {
     CONFIG += static exceptions
     LIBS += ../libakk/release/akk.lib
