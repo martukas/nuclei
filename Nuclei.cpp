@@ -325,8 +325,8 @@ void Nuclei::updateDecayData(Decay::DecayDataSet data)
     ui->intEnergy->setText(data.intEnergy);
     ui->intHalfLife->setText(data.intHalfLife);
     ui->intSpin->setText(data.intSpin);
-    ui->intMu->setText(data.intMu);
-    ui->intQ->setText(data.intQ);
+    ui->intMu->setText(data.intMu + QString::fromUtf8(" µ<sub>N</sub>"));
+    ui->intQ->setText(data.intQ + " eb");
 
     ui->depopEnergy->setText(data.depopEnergy);
     ui->depopIntensity->setText(data.depopIntensity);
