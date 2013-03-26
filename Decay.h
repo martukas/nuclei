@@ -142,9 +142,11 @@ private:
     static const double parentNuclideLevelLineLength;
     static const double parentNuclideLevelLineExtraLength; // additional length of the decaying level
     static const double parentNuclideMinSpinEnergyDistance; // Minumal distance between spin and energy texts on parent level lines
-    static const double arrowHeadLength;
-    static const double arrowHeadWidth;
-    static const double arrowGap;
+    static const double feedingArrowLineLength; // initial (minimal) line length of feeding arrows
+    static const double feedingArrowHeadLength;
+    static const double feedingArrowHeadWidth;
+    static const double feedingArrowGap;
+    static const double feedingArrowTextMargin; // margin around the feeding intensity text
     static const double parentNuclideToEnergyLevelsDistance;
     static const double highlightWidth;
 };

@@ -247,21 +247,21 @@ QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuc
         // process decay information
         else if (!levels.isEmpty() && line.startsWith(dNucid + "  E ")) {
             UncertainDouble ti = parseUncertainty(line.mid(64, 10).remove("(").remove(")"), line.mid(74, 2));
-            if (ti.hasFiniteValue()) {
+            if (ti.uncertaintyType() != UncertainDouble::UndefinedType) {
                 ti.setSign(UncertainDouble::SignMagnitudeDefined);
             }
             else {
                 UncertainDouble ib = parseUncertainty(line.mid(21, 8).remove("(").remove(")"), line.mid(29, 2));
                 UncertainDouble ie = parseUncertainty(line.mid(31, 8).remove("(").remove(")"), line.mid(39, 2));
                 ti = ib;
-                if (ib.hasFiniteValue() && ie.hasFiniteValue())
+                if (ib.uncertaintyType() != UncertainDouble::UndefinedType && ie.uncertaintyType() != UncertainDouble::UndefinedType)
                     ti += ie;
-                else if (ie.hasFiniteValue())
+                else if (ie.uncertaintyType() != UncertainDouble::UndefinedType)
                     ti = ie;
                 else
                     ti = UncertainDouble();
             }
-            if (ti.hasFiniteValue())
+            if (ti.uncertaintyType() != UncertainDouble::UndefinedType)
                 currentLevel->setFeedIntensity(ti);
         }
         else if (!levels.isEmpty() && line.startsWith(dNucid + "  B ")) {
@@ -560,7 +560,7 @@ UncertainDouble ENSDFParser::parseUncertainty(const QString &value, const QStrin
                 result.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, UncertainDouble::LessEqual);
             else if (uncertaintyString == "GE")
                 result.setUncertainty(0.0, std::numeric_limits<double>::infinity(), UncertainDouble::GreaterEqual);
-            else if (uncertaintyString == "AP")
+            else if (uncertaintyString == "AP" || uncertaintyString.trimmed().isEmpty())
                 result.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::Approximately);
             else if (uncertaintyString == "CA")
                 result.setUncertainty(0.0, 0.0, UncertainDouble::Calculated);

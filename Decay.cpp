@@ -5,6 +5,7 @@
 #include <QGraphicsLineItem>
 #include <QGraphicsRectItem>
 #include <QGraphicsDropShadowEffect>
+#include <QTextDocument>
 #include <QFontMetrics>
 #include <QVector>
 #include <cmath>
@@ -21,12 +22,14 @@ const double Decay::outerGammaMargin = 50.0;
 const double Decay::outerLevelTextMargin = 4.0; // level lines extend beyond the beginning/end of the level texts by this value
 const double Decay::maxExtraLevelDistance = 120.0;
 const double Decay::levelToHalfLifeDistance = 10.0;
-const double Decay::parentNuclideLevelLineLength = 110.0;
-const double Decay::parentNuclideLevelLineExtraLength = 15.5;
+const double Decay::parentNuclideLevelLineLength = 110.0; // initial (minimal) length of parent level lines
+const double Decay::parentNuclideLevelLineExtraLength = 15.5; // extra length of "active" levels (i.e. levels decaying to the daughter nuclide)
 const double Decay::parentNuclideMinSpinEnergyDistance = 15.0;
-const double Decay::arrowHeadLength = 11.0;
-const double Decay::arrowHeadWidth = 5.0;
-const double Decay::arrowGap = 5.0;
+const double Decay::feedingArrowLineLength = 110.0;
+const double Decay::feedingArrowHeadLength = 11.0;
+const double Decay::feedingArrowHeadWidth = 5.0;
+const double Decay::feedingArrowGap = 5.0;
+const double Decay::feedingArrowTextMargin = 4.0;
 const double Decay::parentNuclideToEnergyLevelsDistance = 30.0;
 const double Decay::highlightWidth = 5.0;
 
@@ -130,7 +133,7 @@ QGraphicsScene * Decay::levelPlot()
         scene->addItem(level->item);
 
         // plot level feeding arrow if necessary
-        if (level->normalizedFeedIntensity().hasFiniteValue()) {
+        if (level->normalizedFeedIntensity().uncertaintyType() != UncertainDouble::UndefinedType) {
             // create line
             level->grafeedarrow = new QGraphicsLineItem;
             level->grafeedarrow->setPen((level->feedintens >= 10.0) ? intenseFeedArrowPen : feedArrowPen);
@@ -138,14 +141,16 @@ QGraphicsScene * Decay::levelPlot()
             // create arrow head
             QPolygonF arrowpol;
             arrowpol << QPointF(0.0, 0.0);
-            arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * arrowHeadLength, 0.5*arrowHeadWidth);
-            arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * arrowHeadLength, -0.5*arrowHeadWidth);
+            arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * feedingArrowHeadLength, 0.5*feedingArrowHeadWidth);
+            arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * feedingArrowHeadLength, -0.5*feedingArrowHeadWidth);
             level->graarrowhead = new QGraphicsPolygonItem(arrowpol);
             level->graarrowhead->setBrush(QColor(level->grafeedarrow->pen().color()));
             level->graarrowhead->setPen(Qt::NoPen);
             scene->addItem(level->graarrowhead);
             // create intensity label
-            level->grafeedintens = new QGraphicsSimpleTextItem(QString("%1 %").arg(level->normalizedFeedIntensity().toText()));
+            level->grafeedintens = new QGraphicsTextItem;
+            level->grafeedintens->setHtml(QString("%1 %").arg(level->normalizedFeedIntensity().toText()));
+            level->grafeedintens->document()->setDocumentMargin(0);
             level->grafeedintens->setFont(feedIntensityFont);
             scene->addItem(level->grafeedintens);
         }
@@ -762,15 +767,27 @@ void Decay::alignGraphicsItems()
     }
     pNucLineLength = std::ceil(pNucLineLength);
 
+    // determine line length for feeding arrows
+    double arrowLineLength = feedingArrowLineLength;
+    if (parentpos == LeftParent || parentpos == RightParent)
+        foreach (EnergyLevel *level, levels)
+            if (level->grafeedintens)
+                arrowLineLength = qMax(arrowLineLength,
+                                       level->grafeedintens->boundingRect().width() +
+                                       parentNuclideLevelLineExtraLength +
+                                       2.0 * feedingArrowTextMargin);
+
     // calculate length of level lines
     double leftlinelength = outerLevelTextMargin + maxSpinLabelWidth + outerGammaMargin + 0.5*gammaspace;
     double rightlinelength = outerLevelTextMargin + maxEnergyLabelWidth + outerGammaMargin + 0.5*gammaspace;
 
     // calculate start and end points of parent level lines
-    double normalleft = std::floor((parentpos == RightParent) ? rightlinelength : -leftlinelength - pNucLineLength) - 0.5*feedArrowPen.widthF();
-    double normalright = std::ceil((parentpos == RightParent) ? rightlinelength + pNucLineLength : -leftlinelength) + 0.5*feedArrowPen.widthF();
-    double activeleft = std::floor((parentpos == RightParent) ? normalleft : normalleft - parentNuclideLevelLineExtraLength) - 0.5*feedArrowPen.widthF();
-    double activeright = std::ceil((parentpos == RightParent) ? normalright + parentNuclideLevelLineExtraLength : normalright) + 0.5*feedArrowPen.widthF();
+    double arrowleft = std::floor((parentpos == RightParent) ? rightlinelength : -leftlinelength - arrowLineLength - parentNuclideLevelLineExtraLength) - 0.5*feedArrowPen.widthF();
+    double arrowright = std::ceil((parentpos == RightParent) ? rightlinelength + arrowLineLength + parentNuclideLevelLineExtraLength : -leftlinelength) + 0.5*feedArrowPen.widthF();
+    double activeleft = std::floor((parentpos == RightParent) ? arrowleft + arrowLineLength - pNucLineLength : arrowleft);
+    double activeright = std::ceil((parentpos == RightParent) ? arrowright : arrowright - arrowLineLength + pNucLineLength);
+    double normalleft = std::floor((parentpos == RightParent) ? activeleft : activeleft + parentNuclideLevelLineExtraLength);
+    double normalright = std::ceil((parentpos == RightParent) ? activeright - parentNuclideLevelLineExtraLength : activeright);
 
     // set level positions and sizes
     double arrowVEnd = std::numeric_limits<double>::quiet_NaN();
@@ -789,7 +806,7 @@ void Decay::alignGraphicsItems()
         level->graline->setLine(-leftlinelength, 0.0, rightlinelength, 0.0);
         level->graclickarea->setRect(-leftlinelength, -0.5*stdBoldFontMetrics.height(), leftlinelength+rightlinelength, stdBoldFontMetrics.height());
         level->graspintext->setPos(-leftlinelength + outerLevelTextMargin, -stdBoldFontMetrics.height());
-        level->graetext->setPos(rightlinelength - outerLevelTextMargin - stdBoldFontMetrics.width(level->graetext->text()), -stdBoldFontMetrics.height());
+        level->graetext->setPos(rightlinelength - outerLevelTextMargin - stdBoldFontMetrics.width(level->graetext->text()), -level->graetext->boundingRect().height());
         double levelHlPos = 0.0;
         if (parentpos == RightParent) {
             levelHlPos = -leftlinelength - levelToHalfLifeDistance - stdFontMetrics.width(level->grahltext->text());
@@ -810,14 +827,14 @@ void Decay::alignGraphicsItems()
         level->item->setPos(0.0, level->graYPos); // add 0.5*pen-width to avoid antialiasing artifacts
 
         if (level->grafeedarrow) {
-            double leftend = (parentpos == RightParent) ? rightlinelength + arrowGap + arrowHeadLength : activeleft;
-            double rightend = (parentpos == RightParent) ? activeright : -leftlinelength - arrowGap - arrowHeadLength;
+            double leftend = (parentpos == RightParent) ? rightlinelength + feedingArrowGap + feedingArrowHeadLength : arrowleft;
+            double rightend = (parentpos == RightParent) ? arrowright : -leftlinelength - feedingArrowGap - feedingArrowHeadLength;
             double arrowY = level->graYPos;
             level->grafeedarrow->setLine(leftend, arrowY, rightend, arrowY);
-            level->graarrowhead->setPos((parentpos == RightParent) ? rightlinelength + arrowGap : -leftlinelength - arrowGap, arrowY);
+            level->graarrowhead->setPos((parentpos == RightParent) ? rightlinelength + feedingArrowGap : -leftlinelength - feedingArrowGap, arrowY);
             if (boost::math::isnan(arrowVEnd))
                 arrowVEnd = arrowY + 0.5*level->grafeedarrow->pen().widthF();
-            level->grafeedintens->setPos(leftend + 15.0, arrowY - feedIntensityFontMetrics.height());
+            level->grafeedintens->setPos(leftend + 15.0, arrowY - level->grafeedintens->boundingRect().height());
         }
     }
 
@@ -832,11 +849,7 @@ void Decay::alignGraphicsItems()
                     (levels.end()-1).value()->item->boundingRect().height() -
                     pNuc->nuclideGraphicsItem()->boundingRect().height() - parentNuclideToEnergyLevelsDistance;
 
-        double parentcenter;
-        if (parentpos == RightParent)
-            parentcenter = rightlinelength + 0.5*(pNucLineLength+parentNuclideLevelLineExtraLength);
-        else
-            parentcenter = -leftlinelength - 0.5*(pNucLineLength+parentNuclideLevelLineExtraLength);
+        double parentcenter = (normalleft + normalright) / 2.0;
 
         pNuc->nuclideGraphicsItem()->setPos(parentcenter - 0.5*pNuc->nuclideGraphicsItem()->boundingRect().width(), parentY);
 

@@ -8,7 +8,7 @@ EnergyLevel::EnergyLevel(Energy energy, SpinParity spin, HalfLife halfLife, unsi
       m_e(energy), sp(spin), hl(halfLife), isonum(isomerNum),
       feedinglevel(false),
       m_Q(Q), m_mu(mu),
-      graline(0), grafeedarrow(0), graarrowhead(0), graetext(0), graspintext(0), grafeedintens(0), grahltext(0),
+      graline(0), grafeedarrow(0), graarrowhead(0), graetext(0), graspintext(0), grahltext(0), grafeedintens(0),
       graclickarea(0), grahighlighthelper(0), graYPos(0.0)
 {
 }
