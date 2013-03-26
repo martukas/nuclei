@@ -130,8 +130,7 @@ QGraphicsScene * Decay::levelPlot()
         scene->addItem(level->item);
 
         // plot level feeding arrow if necessary
-        double feedintensity = level->normalizedFeedIntensity();
-        if (boost::math::isfinite(feedintensity)) {
+        if (level->normalizedFeedIntensity().hasFiniteValue()) {
             // create line
             level->grafeedarrow = new QGraphicsLineItem;
             level->grafeedarrow->setPen((level->feedintens >= 10.0) ? intenseFeedArrowPen : feedArrowPen);
@@ -146,7 +145,7 @@ QGraphicsScene * Decay::levelPlot()
             level->graarrowhead->setPen(Qt::NoPen);
             scene->addItem(level->graarrowhead);
             // create intensity label
-            level->grafeedintens = new QGraphicsSimpleTextItem(QString("%1 %").arg(feedintensity));
+            level->grafeedintens = new QGraphicsSimpleTextItem(QString("%1 %").arg(level->normalizedFeedIntensity().toText()));
             level->grafeedintens->setFont(feedIntensityFont);
             scene->addItem(level->grafeedintens);
         }
@@ -389,8 +388,8 @@ Decay::DecayDataSet Decay::decayDataSet() const
         dataset.intEnergy = selectedEnergyLevel->energy().toString();
         dataset.intHalfLife = selectedEnergyLevel->halfLife().toString();
         dataset.intSpin = selectedEnergyLevel->spin().toString();
-        dataset.intMu = selectedEnergyLevel->mu().toString().replace("undefined", "?");
-        dataset.intQ = selectedEnergyLevel->q().toString().replace("undefined", "?");
+        dataset.intMu = selectedEnergyLevel->mu().toText().replace("undefined", "?");
+        dataset.intQ = selectedEnergyLevel->q().toText().replace("undefined", "?");
     }
 
     // gammas

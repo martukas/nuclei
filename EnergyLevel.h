@@ -35,13 +35,13 @@ public:
     SpinParity spin() const;
     HalfLife halfLife() const;
     unsigned int isomerNum() const;
-    double normalizedFeedIntensity() const;
+    UncertainDouble normalizedFeedIntensity() const;
     UncertainDouble mu() const;
     UncertainDouble q() const;
 
     const QList<GammaTransition *> &depopulatingTransitions() const;
 
-    void setFeedIntensity(double intensity);
+    void setFeedIntensity(UncertainDouble intensity);
     void setFeedingLevel(bool isfeeding);
 
     bool isFeedingLevel() const;
@@ -56,7 +56,7 @@ private:
     SpinParity sp;
     HalfLife hl;
     unsigned int isonum; // >0 for isomeric levels (counted from low energy to high), 0 otherwise
-    double feedintens; // says how often this level is directly fed per 100 parent decays
+    UncertainDouble feedintens; // says how often this level is directly fed per 100 parent decays
     bool feedinglevel; // true if this is belonging to a parent nuclide and is a starting point for decays
 
     UncertainDouble m_Q, m_mu; // quadrupole and magnetic moments

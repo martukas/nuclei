@@ -246,34 +246,39 @@ QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuc
         }
         // process decay information
         else if (!levels.isEmpty() && line.startsWith(dNucid + "  E ")) {
-            double intensity = 0.0;
-            bool cok1, cok2;
-            QString iestr(line.mid(31, 8));
-            iestr.remove('(').remove(')');
-            double ie = clocale.toDouble(iestr.trimmed(), &cok1);
-            if (cok1)
-                intensity += ie * normalizeDecIntensToPercentParentDecay;
-            QString ibstr(line.mid(21, 8));
-            ibstr.remove('(').remove(')');
-            double ib = clocale.toDouble(ibstr.trimmed(), &cok2);
-            if (cok2)
-                intensity += ib * normalizeDecIntensToPercentParentDecay;
-            if (cok1 || cok2)
-                currentLevel->setFeedIntensity(intensity);
+            UncertainDouble ti = parseUncertainty(line.mid(64, 10).remove("(").remove(")"), line.mid(74, 2));
+            if (ti.hasFiniteValue()) {
+                ti.setSign(UncertainDouble::SignMagnitudeDefined);
+            }
+            else {
+                UncertainDouble ib = parseUncertainty(line.mid(21, 8).remove("(").remove(")"), line.mid(29, 2));
+                UncertainDouble ie = parseUncertainty(line.mid(31, 8).remove("(").remove(")"), line.mid(39, 2));
+                ti = ib;
+                if (ib.hasFiniteValue() && ie.hasFiniteValue())
+                    ti += ie;
+                else if (ie.hasFiniteValue())
+                    ti = ie;
+                else
+                    ti = UncertainDouble();
+            }
+            if (ti.hasFiniteValue())
+                currentLevel->setFeedIntensity(ti);
         }
         else if (!levels.isEmpty() && line.startsWith(dNucid + "  B ")) {
-            QString ibstr(line.mid(21, 8));
-            ibstr.remove('(').remove(')');
-            double ib = clocale.toDouble(ibstr.trimmed(), &convok);
-            if (convok)
-                currentLevel->setFeedIntensity(ib * normalizeDecIntensToPercentParentDecay);
+            UncertainDouble ib = parseUncertainty(line.mid(21, 8).remove("(").remove(")"), line.mid(29, 2));
+            if (ib.hasFiniteValue()) {
+                ib.setSign(UncertainDouble::SignMagnitudeDefined);
+                ib *= normalizeDecIntensToPercentParentDecay;
+                currentLevel->setFeedIntensity(ib);
+            }
         }
         else if (!levels.isEmpty() && line.startsWith(dNucid + "  A ")) {
-            QString iastr(line.mid(21, 8));
-            iastr.remove('(').remove(')');
-            double ia = clocale.toDouble(iastr.trimmed(), &convok);
-            if (convok)
-                currentLevel->setFeedIntensity(ia * normalizeDecIntensToPercentParentDecay);
+            UncertainDouble ia = parseUncertainty(line.mid(21, 8).remove("(").remove(")"), line.mid(29, 2));
+            if (ia.hasFiniteValue()) {
+                ia.setSign(UncertainDouble::SignMagnitudeDefined);
+                ia *= normalizeDecIntensToPercentParentDecay;
+                currentLevel->setFeedIntensity(ia);
+            }
         }
         // process normalization records
         else if (line.startsWith(dNucid + "  N ")) {
@@ -531,7 +536,7 @@ UncertainDouble ENSDFParser::parseUncertainty(const QString &value, const QStrin
 {
     QString v(value.trimmed());
 
-    if (value.trimmed().isEmpty())
+    if (v.isEmpty())
         return UncertainDouble();
 
     QLocale clocale("C");

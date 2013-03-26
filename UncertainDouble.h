@@ -51,6 +51,9 @@ public:
     QString toString() const;
     QString toText() const; // outputs formatted text
 
+    UncertainDouble & operator*=(double other);
+    UncertainDouble & operator+=(const UncertainDouble &other);
+    UncertainDouble & operator+(const UncertainDouble &other);
     operator double() const;
 
     friend QDataStream & operator<<(QDataStream &out, const UncertainDouble &u);

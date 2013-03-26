@@ -6,7 +6,7 @@
 EnergyLevel::EnergyLevel(Energy energy, SpinParity spin, HalfLife halfLife, unsigned int isomerNum, UncertainDouble Q, UncertainDouble mu)
     : ClickableItem(ClickableItem::EnergyLevelType),
       m_e(energy), sp(spin), hl(halfLife), isonum(isomerNum),
-      feedintens(std::numeric_limits<double>::quiet_NaN()), feedinglevel(false),
+      feedinglevel(false),
       m_Q(Q), m_mu(mu),
       graline(0), grafeedarrow(0), graarrowhead(0), graetext(0), graspintext(0), grafeedintens(0), grahltext(0),
       graclickarea(0), grahighlighthelper(0), graYPos(0.0)
@@ -41,7 +41,7 @@ unsigned int EnergyLevel::isomerNum() const
     return isonum;
 }
 
-double EnergyLevel::normalizedFeedIntensity() const
+UncertainDouble EnergyLevel::normalizedFeedIntensity() const
 {
     return feedintens;
 }
@@ -65,7 +65,7 @@ const QList<GammaTransition *> & EnergyLevel::depopulatingTransitions() const
     return m_depopulatingTransitions;
 }
 
-void EnergyLevel::setFeedIntensity(double intensity)
+void EnergyLevel::setFeedIntensity(UncertainDouble intensity)
 {
     feedintens = intensity;
 }

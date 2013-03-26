@@ -193,10 +193,10 @@ QString UncertainDouble::toString() const
         if (precision < 0) {
             result = QString("(%1)").arg(QString::number(val, 'g', 0));
         }
-        // use standard notation inside ]10,0.01]
-        else if (qAbs(val) < 10.0 && qAbs(val) >= 0.01) {
+        // use standard notation inside ]10,0.01] OR inside ]1000,0.01] if error is < 10
+        else if ((qAbs(val) < 10.0 && qAbs(val) >= 0.01) || ((orderOfUncert < 1 && qAbs(val) >= 0.01))) {
             // fix Qt's strange idea of precision...
-            int qtprecision = std::abs(val) < 1.0 ? precision+1 : precision;
+            int qtprecision = std::abs(val) < 1.0 ? precision+1 : qMax(0, -orderOfUncert);
             if (std::abs(val) < 0.1)
                 qtprecision++;
 
@@ -222,7 +222,54 @@ QString UncertainDouble::toText() const
     result.replace("(systematics)", "<i>(systematics)</i>");
     result.replace("(calculated)", "<i>(calculated)</i>");
     result.replace("(systematics)", "<i>(systematics)</i>");
+    result.replace("<", "&lt;");
+    result.replace(">", "&gt;");
     //result.replace(QRegExp("e([-+][0-9][0-9])"), QString::fromUtf8("⋅10<sup>\\1</sup>"));
+    return result;
+}
+
+UncertainDouble & UncertainDouble::operator*=(double other)
+{
+    setValue(value() * other);
+    if (other >= 0.0 ||
+            uncertaintyType() == SymmetricUncertainty ||
+            uncertaintyType() == Approximately ||
+            uncertaintyType() == Calculated ||
+            uncertaintyType() == Systematics
+            ) {
+        setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, uncertaintyType());
+    }
+    else { // "other" is always negative in this branch!
+        if (uncertaintyType() == AsymmetricUncertainty)
+            setUncertainty(upperUncertainty() * other, lowerUncertainty() * other, uncertaintyType());
+        else if (uncertaintyType() == LessThan)
+            setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, GreaterThan);
+        else if (uncertaintyType() == LessEqual)
+            setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, GreaterEqual);
+        else if (uncertaintyType() == GreaterThan)
+            setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, LessThan);
+        else if (uncertaintyType() == GreaterEqual)
+            setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, LessEqual);
+        else
+            setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, uncertaintyType());
+    }
+
+    return *this;
+}
+
+UncertainDouble &UncertainDouble::operator +=(const UncertainDouble &other)
+{
+    setValue(value() + other.value());
+    if (uncertaintyType() == other.uncertaintyType())
+        setUncertainty(lowerUncertainty() + other.lowerUncertainty(), upperUncertainty() + other.upperUncertainty(), uncertaintyType());
+    else
+        setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UndefinedType);
+}
+
+UncertainDouble &UncertainDouble::operator +(const UncertainDouble &other)
+{
+    UncertainDouble result(*this);
+    result += other;
     return result;
 }
 
