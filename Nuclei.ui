@@ -66,7 +66,17 @@
               </font>
              </property>
              <property name="text">
-              <string>Angular correlation coefficients:</string>
+              <string>Angular correlation coefficients</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="Line" name="line">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
              </property>
             </widget>
            </item>

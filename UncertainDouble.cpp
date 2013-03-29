@@ -264,9 +264,10 @@ UncertainDouble &UncertainDouble::operator +=(const UncertainDouble &other)
         setUncertainty(lowerUncertainty() + other.lowerUncertainty(), upperUncertainty() + other.upperUncertainty(), uncertaintyType());
     else
         setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UndefinedType);
+    return *this;
 }
 
-UncertainDouble &UncertainDouble::operator +(const UncertainDouble &other)
+UncertainDouble UncertainDouble::operator +(const UncertainDouble &other)
 {
     UncertainDouble result(*this);
     result += other;
