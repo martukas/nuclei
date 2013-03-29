@@ -49,8 +49,8 @@ QStringList SearchConstraints::toStringList() const
     if (boost::math::isfinite(minA44))
         r.append(QString("Min. A44: %1").arg(minA44));
     if (skipUnknownAnisotropies)
-        r.append("Skipping unknown anisotropies");
-    r.append(QString("Logical combination of anisotropies: %1").arg(anisotropiesORCombined ? "OR" : "AND"));
+        r.append("Skipping unknown angular correlation coefficients");
+    r.append(QString("Logical combination of angular correlation coefficients: %1").arg(anisotropiesORCombined ? "OR" : "AND"));
 
     return r;
 }

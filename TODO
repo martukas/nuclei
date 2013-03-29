@@ -1,10 +1,8 @@
+Improvements
 - Peak color in energy spectra should not depend on order of highlighting but on population/depopulation
-- Allow (at least temporary) changes to nuclear data to fix calculations for user-fixed data
-- Check strange output for Yb-169->Tm-169, 570keV -> 475keV and 570keV->118keV
-- Why is exponential style used for the anisotropy of Ag-111->Cd-111, 342keV->245keV->0keV?
-
 
 Feature requests:
+- Allow (at least temporary) changes to nuclear data to fix calculations for user-fixed data
 
 Nuclide Search
 - Allow to auto-skip levels with short half-life in cascade search

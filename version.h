@@ -9,7 +9,7 @@
 #define NUCLEIURL "http://nuclei.sf.net"
 
 #define NUCLEIABOUT "\
-<p><b>Nuclei</b></p><p>shows decay schemes, computes anisotropies of decay cascades and \
+<p><b>Nuclei</b></p><p>shows decay schemes, computes angular correlation coefficients of decay cascades and \
 shows the expected photo peak spectra.</p> \
 \
 <p>Copyright 2012-2013 Matthias Nagl, Georg-August Universität Göttingen</p> \
@@ -17,7 +17,7 @@ shows the expected photo peak spectra.</p> \
 "
 
 #define LIBAKKABOUT "\
-<p>Nuclei uses <b>libakk</b> for anisotropy calculations</p> \
+<p>Nuclei uses <b>libakk</b> for angular correlation coefficient calculations</p> \
 <p>Copyright 2012 João Guilherme Martins Correia & Marcelo Baptista Barbosa, CERN</p> \
 "
 

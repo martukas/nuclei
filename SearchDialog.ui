@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>533</width>
-    <height>584</height>
+    <width>580</width>
+    <height>725</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -387,7 +387,7 @@
    <item>
     <widget class="QGroupBox" name="anisotropyGroupBox">
      <property name="title">
-      <string>Minimal Anisotropies</string>
+      <string>Minimal Angular Correlation Coefficients</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="1" column="6">
@@ -479,7 +479,7 @@
            <bool>false</bool>
           </property>
           <property name="toolTip">
-           <string>If checked only cascades fulfilling all enabled anisotropy constraints simultaneously will be added to the search result</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked only cascades fulfilling all enabled angular correlation coefficient constraints simultaneously will be added to the search result&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Require ALL conditions (AND)</string>
@@ -495,7 +495,7 @@
            <bool>false</bool>
           </property>
           <property name="toolTip">
-           <string>If checked all cascades fulfilling at least one of the anisotropy constraints will be added to the search result</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked all cascades fulfilling at least one of the angular correlation coefficient constraints will be added to the search result&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Require one condition (OR)</string>
@@ -510,7 +510,7 @@
          <string>If δ or spin values are unknown and this box is checked the cascades will be added to the search results despite it is not possible to test the A&lt;sub&gt;kk&lt;/sub&gt; constraints.</string>
         </property>
         <property name="text">
-         <string>Skip checking these conditions if anisotropies are unknown</string>
+         <string>Skip checking these conditions if angular correlation coefficients are unknown</string>
         </property>
        </widget>
       </item>
