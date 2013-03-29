@@ -12,13 +12,13 @@
 <p><b>Nuclei</b></p><p>shows decay schemes, computes angular correlation coefficients of decay cascades and \
 shows the expected photo peak spectra.</p> \
 \
-<p>Copyright 2012-2013 Matthias Nagl, Georg-August Universität Göttingen</p> \
+<p>Copyright 2012-2013 Matthias A. Nagl, Georg-August Universität, Göttingen, Germany</p> \
 <p><a href=\"" NUCLEIURL "\">" NUCLEIURL "</a></p> \
 "
 
 #define LIBAKKABOUT "\
-<p>Nuclei uses <b>libakk</b> for angular correlation coefficient calculations</p> \
-<p>Copyright 2012 João Guilherme Martins Correia & Marcelo Baptista Barbosa, CERN</p> \
+<p>Nuclei uses <b>libAkk</b> for angular correlation coefficient calculations</p> \
+<p>Copyright 2012 João Guilherme Martins Correia & Marcelo Baptista Barbosa, CERN, Geneva, Switzerland</p> \
 "
 
 #define GPL "\
