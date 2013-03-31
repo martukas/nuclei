@@ -110,6 +110,13 @@ macx-clang {
     QMAKE_LFLAGS_RELEASE += "-O4"
 }
 
+# enable building of universal binary on old macs
+macx-g++ {
+    QMAKE_MAC_SDK=/Developer/SDKs/MacOSX10.5.sdk
+    CONFIG += ppc x86
+}
+
+
 win32-msvc* {
     CONFIG += static exceptions
     LIBS += ../libakk/release/akk.lib
