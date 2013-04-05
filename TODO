@@ -3,6 +3,7 @@ Open Bugs:
 - 1:1 button should restore default scaling
 
 Improvements
+- Show used database version
 - Peak color in energy spectra should not depend on order of highlighting but on population/depopulation
 
 Feature requests:
