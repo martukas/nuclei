@@ -1,3 +1,7 @@
+Open Bugs:
+- Energy spectra should stick to the x-axis when zooming via button
+- 1:1 button should restore default scaling
+
 Improvements
 - Peak color in energy spectra should not depend on order of highlighting but on population/depopulation
 
