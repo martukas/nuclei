@@ -181,7 +181,7 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
             bool minok = false;
             bool maxok = false;
             foreach (HalfLife hl, phls) {
-                if (hl > m_constraints.minParentHl)
+                if (hl >= m_constraints.minParentHl)
                     minok = true;
                 if (hl < m_constraints.maxParentHl)
                     maxok = true;

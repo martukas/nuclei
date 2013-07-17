@@ -16,6 +16,7 @@ public:
     static QString secsToString(double secs, bool tagUncertain);
 
     bool operator>(const HalfLife &right) const;
+    bool operator>=(const HalfLife &right) const;
     bool operator<(const HalfLife &right) const;
 
 private:

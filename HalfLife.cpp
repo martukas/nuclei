@@ -82,6 +82,11 @@ bool HalfLife::operator >(const HalfLife &right) const
     return sec > right.sec;
 }
 
+bool HalfLife::operator >=(const HalfLife &right) const
+{
+    return sec >= right.sec;
+}
+
 bool HalfLife::operator <(const HalfLife &right) const
 {
     return sec < right.sec;
