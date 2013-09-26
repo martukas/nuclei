@@ -62,6 +62,11 @@ Nuclei::Nuclei(QWidget *parent) :
     ui->setupUi(this);
     setWindowTitle(QCoreApplication::applicationName() + QString(" ") + QCoreApplication::applicationVersion());
 
+    QLabel *referto = new QLabel(PAPERSTATUSBAR, statusBar());
+    referto->setAlignment(Qt::AlignRight);
+    referto->setOpenExternalLinks(true);
+    statusBar()->addPermanentWidget(referto);
+
     preferencesDialogUi->setupUi(preferencesDialog);
 
     // add toolbar widgets

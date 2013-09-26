@@ -1,12 +1,16 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define VERSION "2.6"
+#define VERSION "2.7"
 
 // used to save windows state. must be incremented if window layout changes!
 #define UIVERSION 0
 
 #define NUCLEIURL "http://nuclei.sf.net"
+
+#define PAPERDOI "[doi:10.1016/j.nima.2013.05.045]"
+#define PAPER "<a href=\"http://dx.doi.org/10.1016/j.nima.2013.05.045\">M. Nagl, et al., NIM A <b>726</b> (2013), 17-30 " PAPERDOI "</a>"
+#define PAPERSTATUSBAR "Please refer to: " PAPER
 
 #define NUCLEIABOUT "\
 <p><b>Nuclei</b></p><p>shows decay schemes, computes angular correlation coefficients of decay cascades and \
