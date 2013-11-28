@@ -37,7 +37,7 @@
 class PlotZoomer : public QwtPlotZoomer
 {
 public:
-    PlotZoomer(QwtPlotCanvas *c)
+    PlotZoomer(QWidget *c)
         : QwtPlotZoomer(c)
     {
     }
@@ -112,8 +112,8 @@ Nuclei::Nuclei(QWidget *parent) :
 
     QwtPlotGrid *grid = new QwtPlotGrid();
     grid->attach(plot);
-    grid->setMajPen(QPen(Qt::gray));
-    grid->setMinPen(QPen(QBrush(Qt::lightGray), 1.0, Qt::DotLine, Qt::SquareCap, Qt::BevelJoin));
+    grid->setMajorPen(QPen(Qt::gray));
+    grid->setMinorPen(QPen(QBrush(Qt::lightGray), 1.0, Qt::DotLine, Qt::SquareCap, Qt::BevelJoin));
     grid->enableXMin(true);
     grid->enableYMin(true);
 
@@ -439,7 +439,7 @@ void Nuclei::svgExport()
             return;
 
         QwtPlotRenderer r(this);
-        r.setLayoutFlags(QwtPlotRenderer::KeepFrames);
+        // r.setLayoutFlags(QwtPlotRenderer::KeepFrames); // invalid for qwt 6.1
         r.renderDocument(plot, fn, "svg", QSizeF(180.0, 120.0), 300);
     }
 }
@@ -481,7 +481,7 @@ void Nuclei::pdfExport()
             return;
 
         QwtPlotRenderer r(this);
-        r.setLayoutFlags(QwtPlotRenderer::KeepFrames);
+        //r.setLayoutFlags(QwtPlotRenderer::KeepFrames); // invalid for qwt 6.1
         r.renderDocument(plot, fn, "pdf", QSizeF(180.0, 120.0), 300);
     }
 }
@@ -512,9 +512,9 @@ void Nuclei::zoomIn()
     }
     else {
         if (int(zoomer->zoomRectIndex() + 1) >= zoomer->zoomStack().size()) {
-            const QwtScaleDiv *xs = plot->axisScaleDiv(QwtPlot::xBottom);
-            const QwtScaleDiv *ys = plot->axisScaleDiv(QwtPlot::yLeft);
-            QRectF cr(xs->lowerBound(), ys->lowerBound(), xs->range(), ys->range());
+            const QwtScaleDiv &xs = plot->axisScaleDiv(QwtPlot::xBottom);
+            const QwtScaleDiv &ys = plot->axisScaleDiv(QwtPlot::yLeft);
+            QRectF cr(xs.lowerBound(), ys.lowerBound(), xs.range(), ys.range());
             cr = cr.normalized();
             zoomer->zoom(QRectF(cr.left()+0.1*cr.width(), cr.top()+0.1*cr.height(), 0.8*cr.width(), 0.8*cr.height()));
         }
@@ -558,7 +558,7 @@ void Nuclei::setPlotLog()
 {
     zoomer->zoom(0);
     ui->actionLinear->setChecked(false);
-    plot->setAxisScaleEngine(QwtPlot::yLeft, new QwtLog10ScaleEngine);
+    plot->setAxisScaleEngine(QwtPlot::yLeft, new QwtLogScaleEngine);
     plot->setAxisScale(QwtPlot::yLeft, 1E-8, 10.0);
     zoomer->setZoomBase();
     ui->tabWidget->setCurrentWidget(ui->energySpectrumTab);
