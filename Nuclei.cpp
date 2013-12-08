@@ -48,6 +48,65 @@ protected:
     }
 };
 
+// this redefined class provides zooming limited to positive axis values
+class PlotMagnifier : public QwtPlotMagnifier
+{
+    Q_OBJECT
+public:
+    PlotMagnifier(QWidget *canvas)
+        : QwtPlotMagnifier(canvas)
+    {
+    }
+protected:
+    virtual void rescale(double factor)
+    {
+        // this block contains adopted code from QwtPlotMagnifier::rescale
+        QwtPlot* plt = plot();
+        if (plt == NULL)
+            return;
+        factor = qAbs(factor);
+        if (factor == 1.0 || factor == 0.0)
+            return;
+        bool doReplot = false;
+        const bool autoReplot = plt->autoReplot();
+        plt->setAutoReplot(false);
+        for (int axisId = 0; axisId < QwtPlot::axisCnt; axisId++)
+        {
+            const QwtScaleDiv &scaleDiv = plt->axisScaleDiv(axisId);
+            if (isAxisEnabled(axisId))
+            {
+                if (factor <= 1.0) {
+                    // keep bottom's position if zooming in
+                    plt->setAxisScale(axisId, scaleDiv.lowerBound(),
+                                      scaleDiv.lowerBound() + scaleDiv.range() * factor);
+                }
+                else {
+                    // zoom out centered until bottom line hits x axis
+                    const double center =
+                            scaleDiv.lowerBound() + scaleDiv.range() / 2;
+                    const double width_2 = scaleDiv.range() / 2 * factor;
+                    double lower = center - width_2;
+                    double upper = center + width_2;
+                    if (lower < 0.0) {
+                        upper -= lower;
+                        lower = 0.0;
+                    }
+                    plt->setAxisScale(axisId, lower, upper);
+                }
+                doReplot = true;
+            }
+        }
+        plt->setAutoReplot(autoReplot);
+        if (doReplot)
+            plt->replot();
+    }
+};
+// MOC workaround
+#include "Nuclei.moc"
+
+
+
+
 Nuclei::Nuclei(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::NucleiMainWindow),
@@ -108,7 +167,7 @@ Nuclei::Nuclei(QWidget *parent) :
     zoomer->setMousePattern(QwtEventPattern::MouseSelect2, Qt::RightButton, Qt::ControlModifier);
     zoomer->setMousePattern(QwtEventPattern::MouseSelect3, Qt::RightButton);
 
-    new QwtPlotMagnifier(plot->canvas());
+    new PlotMagnifier(plot->canvas());
 
     QwtPlotPanner *panner = new QwtPlotPanner(plot->canvas());
     panner->setMouseButton(Qt::MidButton);
@@ -232,6 +291,7 @@ void Nuclei::initialize()
     preferencesDialogUi->fontSize->setValue(s.value("fontSize", 14).toInt());
     preferencesDialogUi->levelDiff->setValue(s.value("levelTolerance", 40.0).toDouble());
     preferencesDialogUi->gammaDiff->setValue(s.value("gammaTolerance", 5.0).toDouble());
+    preferencesDialogUi->buttonBox->setFocus();
     s.endGroup();
 
     ENSDFDataSource *ds = new ENSDFDataSource(this);
@@ -284,7 +344,9 @@ void Nuclei::initialize()
         m_decay->setCurrentSelection(s.value("selectedCascade", QVariant::fromValue(Decay::CascadeIdentifier())).value<Decay::CascadeIdentifier>());
 
     // update ensdf version label
-    ensdfversion->setText("ENSDF version: " + s.value("ensdfVersion").toString());
+    QString evtext("Current ENSDF version: " + s.value("ensdfVersion").toString());
+    ensdfversion->setText(evtext);
+    preferencesDialogUi->ensdfVersionLabel->setText(evtext);
 }
 
 void Nuclei::loadSelectedDecay(const QModelIndex &index)
@@ -508,7 +570,12 @@ void Nuclei::showAll()
 
 void Nuclei::showOriginalSize()
 {
-    ui->decayView->setTransform(QTransform());
+    if (ui->tabWidget->currentWidget() == ui->decayCascadeTab) {
+        ui->decayView->setTransform(QTransform());
+    }
+    else {
+        zoomer->zoom(0);
+    }
 }
 
 void Nuclei::zoomIn()

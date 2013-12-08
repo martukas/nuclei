@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>405</width>
-    <height>272</height>
+    <width>436</width>
+    <height>362</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -129,20 +129,31 @@
      <property name="title">
       <string>Reset Data Sources</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <widget class="QPushButton" name="resetCacheButton">
+       <widget class="QLabel" name="ensdfVersionLabel">
         <property name="text">
-         <string>Reset Cache &amp;&amp; Restart</string>
+         <string/>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="resetDatabaseButton">
-        <property name="text">
-         <string>Reset Database &amp;&amp; Restart</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QPushButton" name="resetCacheButton">
+          <property name="text">
+           <string>Reset Cache &amp;&amp; Restart</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="resetDatabaseButton">
+          <property name="text">
+           <string>Reset Database &amp;&amp; Restart</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
