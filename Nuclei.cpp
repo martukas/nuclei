@@ -62,6 +62,9 @@ Nuclei::Nuclei(QWidget *parent) :
     ui->setupUi(this);
     setWindowTitle(QCoreApplication::applicationName() + QString(" ") + QCoreApplication::applicationVersion());
 
+    ensdfversion = new QLabel(statusBar());
+    ensdfversion->setAlignment(Qt::AlignLeft);
+    statusBar()->addWidget(ensdfversion);
     QLabel *referto = new QLabel(PAPERSTATUSBAR, statusBar());
     referto->setAlignment(Qt::AlignRight);
     referto->setOpenExternalLinks(true);
@@ -279,6 +282,9 @@ void Nuclei::initialize()
 
     if (m_decay)
         m_decay->setCurrentSelection(s.value("selectedCascade", QVariant::fromValue(Decay::CascadeIdentifier())).value<Decay::CascadeIdentifier>());
+
+    // update ensdf version label
+    ensdfversion->setText("ENSDF version: " + s.value("ensdfVersion").toString());
 }
 
 void Nuclei::loadSelectedDecay(const QModelIndex &index)
@@ -578,7 +584,7 @@ void Nuclei::showAbout()
 {
     QMessageBox::about(this,
                        QString("About: %1 %2").arg(QCoreApplication::applicationName(), QCoreApplication::applicationVersion()),
-                       QString::fromUtf8(NUCLEIABOUT "<hr />" LIBAKKABOUT "<hr />" GPL)
+                       QString::fromUtf8(NUCLEIABOUT "<hr />" PAPERTEXT "<hr />" LIBAKKABOUT "<hr />" GPL)
                        );
 }
 

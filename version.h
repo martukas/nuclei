@@ -9,15 +9,17 @@
 #define NUCLEIURL "http://nuclei.sf.net"
 
 #define PAPERDOI "[doi:10.1016/j.nima.2013.05.045]"
-#define PAPER "<a href=\"http://dx.doi.org/10.1016/j.nima.2013.05.045\">M. Nagl, et al., NIM A <b>726</b> (2013), 17-30 " PAPERDOI "</a>"
-#define PAPERSTATUSBAR "Please refer to: " PAPER
+#define PAPERSHORT "M. Nagl, et al., NIM A <b>726</b> (2013), 17-30"
+#define PAPERURL "http://dx.doi.org/10.1016/j.nima.2013.05.045"
+#define PAPERSTATUSBAR "Please refer to: <a href=\"" PAPERURL "\">" PAPERSHORT " " PAPERDOI "</a>"
+#define PAPERTEXT "<p>For a detailed description, please refer to:<br /><a href=\"" PAPERURL "\">" PAPERSHORT "</a><br />" PAPERDOI "</p>"
 
 #define NUCLEIABOUT "\
 <p><b>Nuclei</b></p><p>shows decay schemes, computes angular correlation coefficients of decay cascades and \
 shows the expected photo peak spectra.</p> \
 \
-<p>Copyright 2012-2013 Matthias A. Nagl, Georg-August Universität, Göttingen, Germany</p> \
 <p><a href=\"" NUCLEIURL "\">" NUCLEIURL "</a></p> \
+<p>Copyright 2012-2013 Matthias A. Nagl, Georg-August Universität, Göttingen, Germany</p> \
 "
 
 #define LIBAKKABOUT "\

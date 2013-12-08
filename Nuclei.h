@@ -19,6 +19,7 @@ class SearchDialog;
 class DecayCascadeItemModel;
 class DecayCascadeFilterProxyModel;
 class SearchResultDataSource;
+class QLabel;
 
 class Nuclei : public QMainWindow
 {
@@ -77,6 +78,7 @@ private:
     QwtPlot *plot;
     QwtPlotZoomer *zoomer;
     QwtPlotIntervalCurve *curve, *g1curve, *g2curve;
+    QLabel *ensdfversion;
 };
 
 #endif // NUCLEI_H
