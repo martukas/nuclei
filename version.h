@@ -11,7 +11,7 @@
 #define PAPERDOI "[doi:10.1016/j.nima.2013.05.045]"
 #define PAPERSHORT "M. Nagl, et al., NIM A <b>726</b> (2013), 17-30"
 #define PAPERURL "http://dx.doi.org/10.1016/j.nima.2013.05.045"
-#define PAPERSTATUSBAR "Please refer to: <a href=\"" PAPERURL "\">" PAPERSHORT " " PAPERDOI "</a>"
+#define PAPERSTATUSBAR "Please refer to: <a href=\"" PAPERURL "\">" PAPERSHORT "</a> " PAPERDOI
 #define PAPERTEXT "<p>For a detailed description, please refer to:<br /><a href=\"" PAPERURL "\">" PAPERSHORT "</a><br />" PAPERDOI "</p>"
 
 #define NUCLEIABOUT "\

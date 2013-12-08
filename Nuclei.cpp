@@ -121,11 +121,13 @@ Nuclei::Nuclei(QWidget *parent) :
     ui->setupUi(this);
     setWindowTitle(QCoreApplication::applicationName() + QString(" ") + QCoreApplication::applicationVersion());
 
+    // add status bar widgets
     ensdfversion = new QLabel(statusBar());
     ensdfversion->setAlignment(Qt::AlignLeft);
     statusBar()->addWidget(ensdfversion);
     QLabel *referto = new QLabel(PAPERSTATUSBAR, statusBar());
     referto->setAlignment(Qt::AlignRight);
+    referto->setTextInteractionFlags(Qt::TextBrowserInteraction);
     referto->setOpenExternalLinks(true);
     statusBar()->addPermanentWidget(referto);
 
