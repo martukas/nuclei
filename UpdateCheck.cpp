@@ -18,7 +18,7 @@ UpdateCheck::UpdateCheck(QObject *parent) :
 
     QNetworkRequest request;
     request.setUrl(url);
-    request.setRawHeader("Nuclei", "Nuclei " VERSION);
+    request.setRawHeader("User-Agent", "Nuclei " VERSION);
     qDebug() << "Requesting " << url.toString();
     manager->get(request);
 }
