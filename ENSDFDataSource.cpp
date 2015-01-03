@@ -18,7 +18,7 @@ ENSDFDataSource::ENSDFDataSource(QObject *parent)
     : AbstractDataSource(parent), root(new ENSDFTreeItem(AbstractTreeItem::RootType)), mccache(0)
 {
     // initialize cache path
-    cachePath = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
+    cachePath = QStandardPaths::displayName(QStandardPaths::DataLocation);
     if (cachePath.isEmpty())
         cachePath = qApp->applicationDirPath();
 
@@ -188,7 +188,7 @@ void ENSDFDataSource::createENSDFCache()
         ENSDFParser *mc = new ENSDFParser(a);
 
         foreach (const Nuclide::Coordinates &daughter, mc->daughterNuclides()) {
-            ENSDFTreeItem *d = new ENSDFTreeItem(AbstractTreeItem::DaughterType, QList<QVariant>() << Nuclide::nameOf(daughter), daughter.first, daughter.second, false, root);
+            ENSDFTreeItem *d = new ENSDFTreeItem(AbstractTreeItem::DaughterType, QList<QVariant>() << Nuclide::symbolicName(daughter).toUpper(), daughter.first, daughter.second, false, root);
             typedef QPair<QString, Nuclide::Coordinates> DecayType;
             foreach (const DecayType &decay, mc->decays(daughter))
                 new ENSDFTreeItem(AbstractTreeItem::DecayType, QList<QVariant>() << decay.first, decay.second.first, decay.second.second, true, d);

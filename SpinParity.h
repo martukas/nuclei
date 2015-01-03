@@ -1,35 +1,26 @@
 #ifndef SPINPARITY_H
 #define SPINPARITY_H
 
-#include <QString>
+#include "Parity.h"
+#include "Spin.h"
+#include <vector>
 
 class SpinParity
 {
 public:
-    enum Parity {
-        Plus,
-        Minus,
-        Undefined
-    };
 
-    SpinParity();
+  SpinParity();
 
-    SpinParity(unsigned int numerator, unsigned int denominator,
-               Parity parity = Undefined, bool weakarguments = false,
-               bool valid = true, const QString &invalidText = QString());
+  static SpinParity from_ensdf(std::string data);
 
-    bool isValid() const;
+  bool valid() const;
 
-    int doubledSpin() const;
-    QString toString() const;
+  int doubled_spin() const;
+  std::string to_string() const;
 
 private:
-    bool m_valid;
-    unsigned int num;
-    unsigned int denom;
-    Parity p;
-    bool weakarg;
-    QString invalidText;
+  Parity parity_;
+  std::vector<Spin> spins_;
 };
 
 #endif // SPINPARITY_H

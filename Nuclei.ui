@@ -22,270 +22,260 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout_3">
-    <property name="margin">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
      <number>0</number>
     </property>
     <item>
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="decayCascadeTab">
-       <attribute name="title">
-        <string>Decay Level Scheme</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <property name="margin">
-         <number>4</number>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QGraphicsView" name="decayView">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
-        <item>
-         <widget class="QGraphicsView" name="decayView">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>1</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QFrame" name="frame">
-          <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Raised</enum>
-          </property>
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <widget class="QLabel" name="anisotropyLabel">
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Angular correlation coefficients</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="Line" name="line">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="a22Label">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;22&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="a22">
-             <property name="font">
-              <font>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;22&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>-</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-             <property name="textInteractionFlags">
-              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="a24Label">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;24&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="a24">
-             <property name="font">
-              <font>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;24&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>-</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-             <property name="textInteractionFlags">
-              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="a42Label">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;42&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="a42">
-             <property name="font">
-              <font>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;42&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>-</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-             <property name="textInteractionFlags">
-              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="a44Label">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;44&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="a44">
-             <property name="font">
-              <font>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;44&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="text">
-              <string>-</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-             <property name="textInteractionFlags">
-              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="energySpectrumTab">
-       <attribute name="title">
-        <string>Photo Peaks</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="energySpectrumLayout"/>
-      </widget>
-     </widget>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="frame">
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="anisotropyLabel">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Angular correlation coefficients</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="a22Label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;22&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="a22">
+           <property name="font">
+            <font>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;22&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>-</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="a24Label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;24&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="a24">
+           <property name="font">
+            <font>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;24&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>-</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="a42Label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;42&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="a42">
+           <property name="font">
+            <font>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;42&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>-</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="a44Label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;44&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="a44">
+           <property name="font">
+            <font>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;44&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>-</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -313,7 +303,6 @@
    <addaction name="actionOriginal_Size"/>
    <addaction name="actionShow_all"/>
    <addaction name="separator"/>
-   <addaction name="actionFind_Decay"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="decaySelectorDock">
@@ -328,154 +317,74 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
     <layout class="QVBoxLayout" name="verticalLayout">
-     <property name="margin">
+     <property name="leftMargin">
+      <number>1</number>
+     </property>
+     <property name="topMargin">
+      <number>1</number>
+     </property>
+     <property name="rightMargin">
+      <number>1</number>
+     </property>
+     <property name="bottomMargin">
       <number>1</number>
      </property>
      <item>
-      <widget class="QTabWidget" name="selectionTabWidget">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="LineEdit" name="decayFilterLineEdit">
+         <property name="placeholderText">
+          <string>Enter Filter Text</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="decayTreeCollapseButton">
+         <property name="toolTip">
+          <string>Collapse Tree</string>
+         </property>
+         <property name="text">
+          <string>C</string>
+         </property>
+         <property name="icon">
+          <iconset resource="nuclei.qrc">
+           <normaloff>:/format-justify-fill.png</normaloff>:/format-justify-fill.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="decayTreeExpandButton">
+         <property name="toolTip">
+          <string>Expand Tree</string>
+         </property>
+         <property name="text">
+          <string>X</string>
+         </property>
+         <property name="icon">
+          <iconset resource="nuclei.qrc">
+           <normaloff>:/format-indent-more.png</normaloff>:/format-indent-more.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="TreeView" name="decayTreeView">
+       <property name="alternatingRowColors">
+        <bool>true</bool>
        </property>
-       <property name="currentIndex">
-        <number>0</number>
+       <property name="allColumnsShowFocus">
+        <bool>true</bool>
        </property>
-       <widget class="QWidget" name="allDecayTab">
-        <attribute name="title">
-         <string>All Decays</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <property name="horizontalSpacing">
-          <number>1</number>
-         </property>
-         <property name="margin">
-          <number>1</number>
-         </property>
-         <item row="0" column="0">
-          <widget class="LineEdit" name="decayFilterLineEdit">
-           <property name="placeholderText">
-            <string>Enter Filter Text</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QToolButton" name="decayTreeExpandButton">
-           <property name="toolTip">
-            <string>Expand Tree</string>
-           </property>
-           <property name="text">
-            <string>X</string>
-           </property>
-           <property name="icon">
-            <iconset resource="nuclei.qrc">
-             <normaloff>:/format-indent-more.png</normaloff>:/format-indent-more.png</iconset>
-           </property>
-           <property name="autoRaise">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QToolButton" name="decayTreeCollapseButton">
-           <property name="toolTip">
-            <string>Collapse Tree</string>
-           </property>
-           <property name="text">
-            <string>C</string>
-           </property>
-           <property name="icon">
-            <iconset resource="nuclei.qrc">
-             <normaloff>:/format-justify-fill.png</normaloff>:/format-justify-fill.png</iconset>
-           </property>
-           <property name="autoRaise">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0" colspan="3">
-          <widget class="TreeView" name="decayTreeView">
-           <property name="alternatingRowColors">
-            <bool>true</bool>
-           </property>
-           <property name="allColumnsShowFocus">
-            <bool>true</bool>
-           </property>
-           <attribute name="headerVisible">
-            <bool>false</bool>
-           </attribute>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="searchResultTab">
-        <attribute name="title">
-         <string>Search Results</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout">
-         <property name="horizontalSpacing">
-          <number>1</number>
-         </property>
-         <property name="margin">
-          <number>1</number>
-         </property>
-         <item row="0" column="0">
-          <widget class="LineEdit" name="searchFilterLineEdit">
-           <property name="placeholderText">
-            <string>Enter Filter Text</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QToolButton" name="searchTreeCollapseButton">
-           <property name="toolTip">
-            <string>Collapse Tree</string>
-           </property>
-           <property name="text">
-            <string>C</string>
-           </property>
-           <property name="icon">
-            <iconset resource="nuclei.qrc">
-             <normaloff>:/format-justify-fill.png</normaloff>:/format-justify-fill.png</iconset>
-           </property>
-           <property name="autoRaise">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QToolButton" name="searchTreeExpandButton">
-           <property name="toolTip">
-            <string>Expand Tree</string>
-           </property>
-           <property name="text">
-            <string>X</string>
-           </property>
-           <property name="icon">
-            <iconset resource="nuclei.qrc">
-             <normaloff>:/format-indent-more.png</normaloff>:/format-indent-more.png</iconset>
-           </property>
-           <property name="autoRaise">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0" colspan="3">
-          <widget class="TreeView" name="searchTreeView">
-           <property name="alternatingRowColors">
-            <bool>true</bool>
-           </property>
-           <property name="allColumnsShowFocus">
-            <bool>true</bool>
-           </property>
-           <attribute name="headerVisible">
-            <bool>false</bool>
-           </attribute>
-          </widget>
-         </item>
-        </layout>
-       </widget>
+       <attribute name="headerVisible">
+        <bool>false</bool>
+       </attribute>
       </widget>
      </item>
     </layout>
@@ -943,25 +852,6 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QToolBar" name="energySpectrumBar">
-   <property name="windowTitle">
-    <string>Energy Spectrum Tool Bar</string>
-   </property>
-   <property name="iconSize">
-    <size>
-     <width>32</width>
-     <height>32</height>
-    </size>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionLinear"/>
-   <addaction name="actionLogarithmic"/>
-  </widget>
   <widget class="QToolBar" name="extrasBar">
    <property name="windowTitle">
     <string>About Tool Bar</string>
@@ -1050,31 +940,6 @@
     <string>Ctrl+I</string>
    </property>
   </action>
-  <action name="actionLinear">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Lin</string>
-   </property>
-   <property name="toolTip">
-    <string>Linear Y-Axis Scaling</string>
-   </property>
-  </action>
-  <action name="actionLogarithmic">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Log</string>
-   </property>
-   <property name="toolTip">
-    <string>Logarithmic Y-Axis Scaling</string>
-   </property>
-  </action>
   <action name="actionSVG_Export">
    <property name="icon">
     <iconset resource="nuclei.qrc">
@@ -1114,21 +979,6 @@
     <string>Change application preferences</string>
    </property>
   </action>
-  <action name="actionFind_Decay">
-   <property name="icon">
-    <iconset resource="nuclei.qrc">
-     <normaloff>:/toolbar/edit-find.png</normaloff>:/toolbar/edit-find.png</iconset>
-   </property>
-   <property name="text">
-    <string>Find Decay</string>
-   </property>
-   <property name="toolTip">
-    <string>Parametric decay cascade search</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+F</string>
-   </property>
-  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -1143,10 +993,6 @@
    <header>TreeView.h</header>
   </customwidget>
  </customwidgets>
- <tabstops>
-  <tabstop>tabWidget</tabstop>
-  <tabstop>decayView</tabstop>
- </tabstops>
  <resources>
   <include location="nuclei.qrc"/>
  </resources>

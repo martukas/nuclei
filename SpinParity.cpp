@@ -1,55 +1,54 @@
 #include "SpinParity.h"
-#include <QStringList>
+#include <boost/algorithm/string.hpp>
+#include "custom_logger.h"
 
 SpinParity::SpinParity()
-    : m_valid(false), num(0), denom(1), p(Undefined), weakarg(false)
 {
 }
 
-SpinParity::SpinParity(unsigned int numerator, unsigned int denominator,
-                       Parity parity, bool weakarguments, bool valid,
-                       const QString &invalidText)
-    : m_valid(valid), num(numerator), denom(denominator), p(parity),
-      weakarg(weakarguments), invalidText(invalidText)
+
+SpinParity SpinParity::from_ensdf(std::string data)
 {
+  //what if tentative only parity or spin only?
+
+  boost::trim(data);
+  SpinParity ret;
+  ret.parity_.from_string(data);
+  ret.spins_.clear();
+  std::vector<std::string> spin_strs;
+  boost::split(spin_strs, data, boost::is_any_of(","));
+  for (auto &token : spin_strs) {
+    Spin spin;
+    spin.from_string(token);
+    spin.set_quality(ret.parity_.quality(data));
+    ret.spins_.push_back(spin);
+  }
+//  if (!ret.parity_.is_quality(DataQuality::kKnown))
+//    DBG << "SpinParity " << data << " --> " << ret.to_string();
+  return ret;
 }
 
-bool SpinParity::isValid() const
+
+bool SpinParity::valid() const
 {
-    return m_valid;
+  return ( !parity_.is_quality(DataQuality::kUnknown) && (spins_.size() == 1) );
 }
 
-int SpinParity::doubledSpin() const
+int SpinParity::doubled_spin() const
 {
-    return (denom == 1) ? num * 2 : num;
+  if (spins_.size() < 1)
+    return 0;
+  else
+    return spins_[0].doubled_spin();
 }
 
-QString SpinParity::toString() const
+std::string SpinParity::to_string() const
 {
-    if (!m_valid)
-        return invalidText;
-
-    QString sign;
-    switch (p) {
-    case Plus:
-        sign = "+";
-        break;
-    case Minus:
-        sign = "-";
-        break;
-    default:
-        break;
-    }
-
-    QString result = QString::number(num);
-
-    if (denom != 1)
-        result += QString("/%1").arg(denom);
-
-    result += sign;
-
-    if (weakarg)
-        result = "(" + result + ")";
-
-    return result;
+  std::string ret;
+  for (int i=0; i < spins_.size(); ++i) {
+    ret += spins_[i].to_string() + parity_.to_string();
+    ret += ((i+1) < spins_.size()) ? "," : "";
+  }
+  ret = parity_.add_qualifiers(ret);
+  return ret;
 }

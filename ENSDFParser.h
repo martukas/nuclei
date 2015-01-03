@@ -69,15 +69,9 @@ private:
     static QString nuclideToNucid(Nuclide::Coordinates nuclide);
     static Nuclide::Coordinates nucidToNuclide(const QString &nucid);
     static Decay::Type parseDecayType(const QString &tstring);
-    static Energy parseEnsdfEnergy(const QString &estr);
-    static HalfLife parseHalfLife(const QString &hlstr);
-    static SpinParity parseSpinParity(const QString &sstr);
-    static UncertainDouble parseEnsdfMixing(const QString &s, const QString &multipolarity);
     static ParentRecord parseParentRecord(const QString &precstr);
-    static UncertainDouble parseMoment(const QString &s);
 
-    static UncertainDouble parseUncertainty(const QString &value, const QString &uncertaintyString);
-    static double getUncertainty(const QString value, unsigned int stdUncertainty);
+    static UncertainDouble parseEnsdfMixing(const QString &s, const QString &multipolarity);
 
     template <typename T> T findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;
     static void insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym);

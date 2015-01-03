@@ -143,7 +143,7 @@ ActiveGraphicsItemGroup *GammaTransition::createGammaGraphicsItem(const QFont &g
     QString intensstr = intensityAsText();
     if (!intensstr.isEmpty())
         intensstr += " ";
-    QString textstr = QString("<html><body bgcolor=\"white\">%1<b>%2</b> %3</body></html>").arg(intensstr).arg(energy().toString()).arg(m_mpol);
+    QString textstr = QString("<html><body bgcolor=\"white\">%1<b>%2</b> %3</body></html>").arg(intensstr).arg(QString::fromStdString(energy().to_string())).arg(m_mpol);
     text = new QGraphicsTextItem;
     text->setFont(gammaFont);
     text->document()->setDocumentMargin(0.0);
