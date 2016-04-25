@@ -3,20 +3,20 @@
 #include <QVariant>
 
 AbstractTreeItem::AbstractTreeItem(ItemType type, AbstractTreeItem *parent)
-    : m_A(0), m_Z(0), parentItem(parent), m_isSelectable(false), m_type(type)
+    : parentItem(parent), m_isSelectable(false), m_type(type)
 {
     itemData.append(QVariant());
     setParent(parent);
 }
 
-AbstractTreeItem::AbstractTreeItem(ItemType type, unsigned int A, unsigned int Z, const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent)
-    : m_A(A), m_Z(Z), itemData(data), parentItem(parent), m_isSelectable(selectable), m_type(type)
+AbstractTreeItem::AbstractTreeItem(ItemType type, NuclideId id, const QList<QVariant> &data, bool selectable, AbstractTreeItem *parent)
+    : nid(id), itemData(data), parentItem(parent), m_isSelectable(selectable), m_type(type)
 {
     setParent(parent);
 }
 
 AbstractTreeItem::AbstractTreeItem(const AbstractTreeItem &original)
-    : m_A(original.m_A), m_Z(original.m_Z), itemData(original.itemData), m_isSelectable(original.m_isSelectable), m_type(original.m_type)
+    : nid(original.nid), itemData(original.itemData), m_isSelectable(original.m_isSelectable), m_type(original.m_type)
 {
 }
 
@@ -83,16 +83,6 @@ int AbstractTreeItem::row() const
         return parentItem->childItems.indexOf(const_cast<AbstractTreeItem*>(this));
 
     return 0;
-}
-
-unsigned int AbstractTreeItem::A() const
-{
-    return m_A;
-}
-
-unsigned int AbstractTreeItem::Z() const
-{
-    return m_Z;
 }
 
 AbstractTreeItem::ItemType AbstractTreeItem::type() const

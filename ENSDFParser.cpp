@@ -16,6 +16,75 @@
 #include "custom_logger.h"
 #include "qpx_util.h"
 
+#include <list>
+#include <utility>
+#include <boost/regex.hpp>
+
+
+ParentRecord ParentRecord::from_ensdf(const std::string &record)
+{
+  ParentRecord prec;
+  if (record.size() < 50)
+    return prec;
+  prec.nuclide = NuclideId::from_ensdf(record.substr(0,5));
+  prec.energy = Energy::from_nsdf(record.substr(9, 12));
+  prec.hl = HalfLife::from_ensdf(record.substr(39, 16));
+  prec.spin = SpinParity::from_ensdf(record.substr(21, 18));
+  return prec;
+}
+
+std::string ParentRecord::to_string() const
+{
+  std::string ret;
+  ret = nuclide.verboseName()
+      + " " + energy.to_string()
+      + " " + spin.to_string()
+      + " " + hl.to_string();
+  return ret;
+}
+
+BasicDecayData BasicDecayData::from_ensdf(const std::string &header, BlockIndices block)
+{
+  BasicDecayData decaydata;
+
+  boost::regex decay_expr("^([\\sA-Z0-9]{5,5})\\s{4,4}[0-9]{1,3}[A-Z]{1,2}\\s+((?:B-|B\\+|EC|IT|A)\\sDECAY).*$");
+  boost::smatch what;
+  if (!boost::regex_match(header, what, decay_expr) || (what.size() < 2))
+    return decaydata;
+
+  decaydata.daughter = NuclideId::from_ensdf(what[1]);
+  decaydata.decayType = parseDecayType(what[2]);
+  decaydata.block = block;
+  decaydata.dsid = boost::trim_copy(header.substr(9,30)); // saved for comparison with xref records
+  return decaydata;
+}
+
+Decay::Type BasicDecayData::parseDecayType(const std::string &tstring)
+{
+  if (tstring == "EC DECAY")
+    return Decay::ElectronCapture;
+  if (tstring == "B+ DECAY")
+    return Decay::BetaPlus;
+  if (tstring == "B- DECAY")
+    return Decay::BetaMinus;
+  if (tstring == "IT DECAY")
+    return Decay::IsomericTransition;
+  if (tstring == "A DECAY")
+    return Decay::Alpha;
+  return Decay::Undefined;
+}
+
+std::string BasicDecayData::to_string() const
+{
+  std::string ret;
+  ret = daughter.verboseName() + " "
+      + Decay::decayTypeAsText(decayType).toStdString()
+      + " block=" + std::to_string(block.first) + "-" + std::to_string(block.second)
+      + " dsid=\"" + dsid + "\"";
+  return ret;
+}
+
+
 QList<unsigned int> ENSDFParser::aList;
 
 ENSDFParser::ENSDFParser(unsigned int A)
@@ -25,9 +94,9 @@ ENSDFParser::ENSDFParser(unsigned int A)
   // read data
   QFile f(s.value("ensdfPath", ".").toString() + QString("/ensdf.%1").arg(a, int(3), int(10), QChar('0')));
   f.open(QIODevice::ReadOnly | QIODevice::Text);
-  QString c = QString::fromUtf8(f.readAll());
+  std::string c = QString::fromUtf8(f.readAll()).toStdString();
 
-  contents = c.split('\n');
+  boost::split(contents, c, boost::is_any_of("\n"));
 
   parseBlocks();
 }
@@ -59,40 +128,43 @@ unsigned int ENSDFParser::aValue() const
   return a;
 }
 
-const QList<Nuclide::Coordinates> ENSDFParser::daughterNuclides() const
+const std::list<NuclideId> ENSDFParser::daughterNuclides() const
 {
-  Q_ASSERT(m_decays.size() == m_decays.keys().toSet().size()); // check for duplicates
-  return m_decays.keys();
+//  Q_ASSERT(m_decays.size() == m_decays.keys().toSet().size()); // check for duplicates
+  std::list<NuclideId> ret;
+  for (auto &n : m_decays)
+    ret.push_back(n.first);
+  return ret;
 }
 
-const QList< QPair<QString, Nuclide::Coordinates> > ENSDFParser::decays(const Nuclide::Coordinates &daughterNuclide) const
+const std::list< std::pair<QString, NuclideId> > ENSDFParser::decays(const NuclideId &daughterNuclide) const
 {
-  Q_ASSERT(m_decays.value(daughterNuclide).size() == m_decays.value(daughterNuclide).keys().toSet().size()); // check for duplicates
-  QList< QPair<QString, Nuclide::Coordinates> > result;
-  QMapIterator<QString, BasicDecayData> i(m_decays.value(daughterNuclide));
-  while (i.hasNext()) {
-    i.next();
-    result.append(QPair<QString, Nuclide::Coordinates>(i.key(), i.value().parents.at(0).nuclide));
-  }
+//  Q_ASSERT(m_decays.value(daughterNuclide).size() == m_decays.value(daughterNuclide).keys().toSet().size()); // check for duplicates
+  std::list< std::pair<QString, NuclideId> > result;
+  for (auto &i : m_decays.at(daughterNuclide))
+    result.push_back(std::pair<QString, NuclideId>(QString::fromStdString(i.first), i.second.parents.at(0).nuclide));
   return result;
 }
 
-QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuclide, const QString &decayName) const
+QSharedPointer<Decay> ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &decayName) const
 {
+  if (!m_adoptedlevels.count(daughterNuclide) ||
+      !m_decays.count(daughterNuclide) ||
+      !m_decays.at(daughterNuclide).count(decayName))
+    return QSharedPointer<Decay>();
+
   QSettings s;
   double adoptedLevelMaxDifference = s.value("preferences/levelTolerance", 1.0).toDouble();
   double gammaMaxDifference = s.value("preferences/gammaTolerance", 1.0).toDouble();
 
-  QStringList momentsRequestList;
-  momentsRequestList << "MOME2" << "MOMM1";
 
   QMap<Energy, EnergyLevel*> levels;
 
-  BlockIndices alpos = m_adoptedlevels.value(daughterNuclide);
-  BasicDecayData decaydata = m_decays.value(daughterNuclide).value(decayName);
+  BlockIndices alpos = m_adoptedlevels.at(daughterNuclide);
+  BasicDecayData decaydata = m_decays.at(daughterNuclide).at(decayName);
   double normalizeDecIntensToPercentParentDecay = 1.0;
   double normalizeGammaIntensToPercentParentDecay = 1.0;
-  QString dNucid = nuclideToNucid(daughterNuclide);
+  QString dNucid = QString::fromStdString(daughterNuclide.to_ensdf());
 
 //  DBG << "parsing " << dNucid.toStdString();
 
@@ -102,43 +174,42 @@ QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuc
   bool convok;
   // create index map for adopted levels
   QMap<Energy, StringSubList> adoptblocks;
-  QMap<QString, char> xrefs; // maps DSID to DSSYM (single letter)
-  int laststart = -1;
-  for (int i=alpos.first; i < alpos.first+alpos.second; i++) {
-    const QString &line = contents.at(i);
+  std::map<std::string, char> xrefs; // maps DSID to DSSYM (single letter)
+  size_t laststart = -1;
+  for (int i=alpos.first; i < alpos.second; i++) {
+    const QString line = QString::fromStdString(contents.at(i));
     // extract cross reference records as long as first level was found (cross reference must be before 1st level)
     if (laststart == -1) {
       if (line.startsWith(dNucid + "  X"))
-        xrefs.insert(line.mid(9, 30).trimmed(), line.at(8).toLatin1());
+        xrefs[line.mid(9, 30).trimmed().toStdString()] = line.at(8).toLatin1();
     }
     // find level records
     if (line.startsWith(dNucid + "  L ")) {
       if (laststart > 0) {
-        StringSubList sl(contents.constBegin() + laststart, contents.constBegin() + i);
-        Q_ASSERT(!(sl.last > contents.end()));
-        Q_ASSERT(sl.first <= sl.last);
-        insertAdoptedLevelsBlock(&adoptblocks, sl, xrefs.value(decaydata.dsid));
+        size_t i1 = laststart;
+        size_t i2 = i;
+        StringSubList sl(i1, i2);
+        if ((sl.first < sl.last) && (sl.last < contents.size()) && xrefs.count(decaydata.dsid))
+          insertAdoptedLevelsBlock(&adoptblocks, sl, xrefs.at(decaydata.dsid));
       }
       laststart = i;
     }
   }
   if (laststart > 0) {
-    StringSubList sl(contents.constBegin() + laststart, contents.constBegin() + alpos.first + alpos.second);
-    Q_ASSERT(!(sl.last > contents.end()));
-    Q_ASSERT(sl.first <= sl.last);
-    insertAdoptedLevelsBlock(&adoptblocks, sl, xrefs.value(decaydata.dsid));
+    StringSubList sl(laststart, alpos.second);
+    if ((sl.first < sl.last) && (sl.last < contents.size()) && xrefs.count(decaydata.dsid))
+      insertAdoptedLevelsBlock(&adoptblocks, sl, xrefs.at(decaydata.dsid));
   }
 
   // adopted levels block of current level in decay data set
   StringSubList currentadoptblock;
 
   // process decay block
-  const QStringList decaylines(contents.mid(decaydata.block.first, decaydata.block.second));
 
 //  DBG << "parsing size " << decaylines.size();
 
-  for (int k=0; k<decaylines.size(); k++) {
-    const QString &line(decaylines.at(k));
+  for (int k=decaydata.block.first; k < decaydata.block.second; k++) {
+    const QString line = QString::fromStdString(contents.at(k));
 
 //    DBG << "c line " << line.toStdString();
 
@@ -171,14 +242,13 @@ QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuc
       if ((delta.sign() != UncertainDouble::SignMagnitudeDefined) || mpol.isEmpty()) {
         // create gamma map
         QMap<Energy, QString> e2g;
-        QStringList::const_iterator it(currentadoptblock.first);
-        while (it != currentadoptblock.last) {
-          if ((*it).startsWith(dNucid + "  G ")) {
-            Energy gk = Energy::from_nsdf((*it).mid(9, 12).toStdString());
+        for (size_t i = currentadoptblock.first; i < currentadoptblock.last; ++i) {
+          QString ln = QString::fromStdString(contents.at(i));
+          if (ln.startsWith(dNucid + "  G ")) {
+            Energy gk = Energy::from_nsdf(ln.mid(9, 12).toStdString());
             if (gk.isValid())
-              e2g.insert(gk, (*it));
+              e2g.insert(gk, ln);
           }
-          it++;
         }
         // find gamma
         if (!e2g.isEmpty()) {
@@ -229,17 +299,20 @@ QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuc
       // if an appropriate entry was found, read its contents
       // set half life if necessary
       if (currentadoptblock.first != currentadoptblock.last) {
-        QString levelfirstline(*(currentadoptblock.first));
+        std::string levelfirstline(contents.at(currentadoptblock.first));
         if (!currentLevel->halfLife().isValid()) {
-          currentLevel->set_halflife(HalfLife::from_ensdf(levelfirstline.mid(39, 16).toStdString()));
+          currentLevel->set_halflife(HalfLife::from_ensdf(levelfirstline.substr(39, 16)));
           if (!currentLevel->spin().valid())
-            currentLevel->set_spin(SpinParity::from_ensdf(levelfirstline.mid(21, 18).toStdString()));
+            currentLevel->set_spin(SpinParity::from_ensdf(levelfirstline.substr(21, 18)));
         }
         // parse continuation records
-        QStringList moms = extractContinuationRecords(currentadoptblock, momentsRequestList);
-        currentLevel->set_q(Moment::from_ensdf(moms.value(0).toStdString()));
-        currentLevel->set_mu(Moment::from_ensdf(moms.value(1).toStdString()));
-        DBG << levelfirstline.toStdString()  << " === " << currentLevel->to_string();
+        std::list<std::string> momentsRequestList;
+        momentsRequestList.push_back("MOME2");
+        momentsRequestList.push_back("MOMM1");
+        std::vector<std::string> moms = extractContinuationRecords(currentadoptblock, momentsRequestList);
+        currentLevel->set_q(Moment::from_ensdf(moms.at(0)));
+        currentLevel->set_mu(Moment::from_ensdf(moms.at(1)));
+//        DBG << levelfirstline << " === " << currentLevel->to_string();
       }
 
       levels.insert(currentLevel->energy(), currentLevel);
@@ -329,9 +402,9 @@ QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuc
 
   // create relevant parent levels and collect parent half-lifes
   QMap<Energy, EnergyLevel*> plevels;
-  QList<HalfLife> pHl;
+  std::vector<HalfLife> pHl;
   foreach (ParentRecord p, decaydata.parents) {
-    pHl.append(p.hl);
+    pHl.push_back(p.hl);
 
     EnergyLevel *plv = new EnergyLevel(p.energy, p.spin, p.hl);
     plv->setFeedingLevel(true);
@@ -345,50 +418,13 @@ QSharedPointer<Decay> ENSDFParser::decay(const Nuclide::Coordinates &daughterNuc
     }
   }
 
-  Nuclide *pNuc = new Nuclide(decaydata.parents.value(0).nuclide.first, decaydata.parents.value(0).nuclide.second, pHl);
+  Nuclide *pNuc = new Nuclide(decaydata.parents.value(0).nuclide, pHl);
   pNuc->addLevels(plevels);
-  Nuclide *dNuc = new Nuclide(decaydata.daughter.first, decaydata.daughter.second);
+  Nuclide *dNuc = new Nuclide(decaydata.daughter);
   dNuc->addLevels(levels);
 
-  return QSharedPointer<Decay>(new Decay(decayName, pNuc, dNuc, decaydata.decayType));
+  return QSharedPointer<Decay>(new Decay(QString::fromStdString(decayName), pNuc, dNuc, decaydata.decayType));
 }
-
-QString ENSDFParser::nuclideToNucid(Nuclide::Coordinates nuclide)
-{
-  QString nucid(QString::number(nuclide.first).rightJustified(3, ' '));
-  nucid.append(Nuclide::symbolOf(nuclide.second).toUpper().leftJustified(2, ' '));
-  return nucid;
-}
-
-Nuclide::Coordinates ENSDFParser::nucidToNuclide(const QString &nucid)
-{
-  if (nucid.size() != 5)
-    return Nuclide::Coordinates(0, 0);
-
-  Nuclide::Coordinates ret(nucid.left(3).trimmed().toUInt(), Nuclide::zOfSymbol(nucid.right(2).trimmed()));
-  if (ret.second < 0) {
-    QString st = "1" + nucid.right(2).trimmed();
-    ret.second = st.toInt();
-  }
-
-  return ret;
-}
-
-Decay::Type ENSDFParser::parseDecayType(const QString &tstring)
-{
-  if (tstring == "EC DECAY")
-    return Decay::ElectronCapture;
-  if (tstring == "B+ DECAY")
-    return Decay::BetaPlus;
-  if (tstring == "B- DECAY")
-    return Decay::BetaMinus;
-  if (tstring == "IT DECAY")
-    return Decay::IsomericTransition;
-  if (tstring == "A DECAY")
-    return Decay::Alpha;
-  return Decay::Undefined;
-}
-
 
 UncertainDouble ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipolarity)
 {
@@ -410,43 +446,21 @@ UncertainDouble ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString
 
 }
 
-ENSDFParser::ParentRecord ENSDFParser::parseParentRecord(const QString &precstr)
-{
-  Q_ASSERT(precstr.size() >= 50);
-
-  ParentRecord prec;
-
-  // determine parent data
-  prec.nuclide = nucidToNuclide(precstr.left(5));
-
-  // determine parent's half-life
-  prec.hl = HalfLife::from_ensdf(precstr.mid(39, 16).toStdString());
-
-  // determine decaying level's energy
-  prec.energy = Energy::from_nsdf(precstr.mid(9, 12).toStdString());
-
-
-  // determine parent level's spin
-  prec.spin = SpinParity::from_ensdf(precstr.mid(21, 18).toStdString());
-
-  return prec;
-}
-
 /**
  * @brief ENSDFParser::insertAdoptedLevelsBlock
  * @param adoptblocks map of adopted levels (target)
  * @param newblock block to add
  * @param dssym Symbol of the current decay. Used to filter levels and adjust energies according to XREF records
  */
-void ENSDFParser::insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym)
+void ENSDFParser::insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym) const
 {
   Q_ASSERT(adoptblocks);
   // get xref record
 
-  QStringList req;
-  req << "XREF";
-  QStringList xreflist = extractContinuationRecords(newblock, req);
-  QString xref = xreflist.value(0);
+  std::list<std::string> req;
+  req.push_back("XREF");
+  std::vector<std::string> xreflist = extractContinuationRecords(newblock, req);
+  QString xref = QString::fromStdString(xreflist.at(0));
 
   // filter data sets
 
@@ -462,7 +476,7 @@ void ENSDFParser::insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblo
   // if this point is reached the level will be added in any case
 
   // read energy from level record
-  Energy e = Energy::from_nsdf((*newblock.first).mid(9, 12).toStdString());
+  Energy e = Energy::from_nsdf(contents.at(newblock.first).substr(9, 12));
 
 
   // for the A(E1) case the energy must be modified
@@ -490,38 +504,42 @@ void ENSDFParser::insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblo
  * @param typeOfContinuedRecord type of record (default: L(evel))
  * @return list of found records (same size as requestedRecords, empty strings if no record was found)
  */
-QStringList ENSDFParser::extractContinuationRecords(const StringSubList &adoptedblock, const QStringList &requestedRecords, char typeOfContinuedRecord)
+std::vector<std::string> ENSDFParser::extractContinuationRecords(const StringSubList &adoptedblock,
+                                                                 const std::list<std::string> &requestedRecords,
+                                                                 char typeOfContinuedRecord) const
 {
   // fetch records
-  QRegExp crecre("^[A-Z0-9\\s]{5,5}[A-RT-Z0-9] " + QString(typeOfContinuedRecord) + " (.*)$");
-  QStringList crecs;
-  QStringList::const_iterator i(adoptedblock.first);
-  while (i != adoptedblock.last) {
-    if (i->contains(crecre))
-      crecs.append(*i);
-    i++;
+  boost::regex crecre("^[A-Z0-9\\s]{5,5}[A-RT-Z0-9] " + std::string(1,typeOfContinuedRecord) + " (.*)$");
+  std::vector<std::string> crecs;
+  for (size_t i = adoptedblock.first; i < adoptedblock.last; ++i) {
+    boost::smatch what;
+    if (boost::regex_search(contents.at(i), what, crecre) && (what.size() > 1))
+      crecs.push_back(what[1]);
   }
+  QStringList crecs2;
   // remove record id from beginning of string
-  for (int i=0; i<crecs.size(); i++)
-    crecs[i].remove(0, 9);
+  for (int i=0; i<crecs.size(); i++) {
+    crecs[i].erase(0, 9);
+    crecs2.append(QString::fromStdString(crecs.at(i)));
+  }
   // join lines and then split records
-  QString tmp(crecs.join("$"));
-  crecs = tmp.split('$');
-  for (int i=0; i<crecs.size(); i++)
-    crecs[i] = crecs[i].trimmed();
+  QString tmp(crecs2.join("$"));
+  crecs2 = tmp.split('$');
+  for (int i=0; i<crecs2.size(); i++)
+    crecs2[i] = crecs2[i].trimmed();
   // search and parse requested fields
-  QStringList result;
-  foreach (const QString &req, requestedRecords) {
+  std::vector<std::string> result;
+  for ( auto &req : requestedRecords) {
     QString rstr;
-    for (int i=0; i<crecs.size(); i++) {
-      if (crecs.at(i).startsWith(req)) {
-        rstr = crecs.at(i).mid(5).trimmed();
+    for (int i=0; i<crecs2.size(); i++) {
+      if (crecs2.at(i).startsWith(QString::fromStdString(req))) {
+        rstr = crecs2.at(i).mid(5).trimmed();
         break;
       }
     }
     if (rstr.startsWith('='))
       rstr.remove(0, 1);
-    result << rstr;
+    result.push_back(rstr.toStdString());
   }
   return result;
 }
@@ -549,71 +567,91 @@ void ENSDFParser::parseBlocks()
 {
   // create list of block boundaries
   // end index points behind last line of block!
-  QList< QPair<int, int> > bb;
-  int from = 0;
-  QRegExp emptyline("^\\s*$");
-  int bidx = contents.indexOf(emptyline, from);
-  while (bidx > 0) {
-    if (bidx-from > 1)
-      bb.append(BlockIndices(from, bidx-from));
-    from = bidx + 1;
-    bidx = contents.indexOf(emptyline, from);
+  std::list<BlockIndices> bb;
+  size_t from = 0;
+  boost::regex emptyline("^\\s*$");
+  for (size_t i=0; i < contents.size(); ++i) {
+    if (boost::regex_match(contents.at(i), emptyline)) {
+      if (i-from > 1)
+        bb.push_back(BlockIndices(from, i));
+      from = i + 1;
+    }
   }
-  bb.append(QPair<int, int>(from, contents.size()-1));
+  if (from < contents.size())
+    bb.push_back(BlockIndices(from, contents.size()-1));
 
   // prepare regexps
-  QRegExp alre("^([\\sA-Z0-9]{5,5})    ADOPTED LEVELS.*$");
-  QRegExp decre("^([\\sA-Z0-9]{5,5})\\s{4,4}[0-9]{1,3}[A-Z]{1,2}\\s+((?:B-|B\\+|EC|IT|A)\\sDECAY).*$");
+  boost::regex adopted_levels_expr("^([\\sA-Z0-9]{5,5})    ADOPTED LEVELS.*$");
+  boost::regex decay_expr("^([\\sA-Z0-9]{5,5})\\s{4,4}[0-9]{1,3}[A-Z]{1,2}\\s+((?:B-|B\\+|EC|IT|A)\\sDECAY).*$");
 
   // recognize blocks
   foreach (const BlockIndices &block, bb) {
-    const QString &head(contents.value(block.first));
+    std::string header = contents.at(block.first);
+//    DBG << "examining block [" << block.first << "-" << block.second << "] " << header;
 
     // adopted levels
-    if (alre.exactMatch(head)) {
-      m_adoptedlevels.insert(nucidToNuclide(alre.capturedTexts().at(1)), block);
+    boost::smatch what;
+    if (boost::regex_match(header, what, adopted_levels_expr) && (what.size() > 1)) {
+      m_adoptedlevels[NuclideId::from_ensdf(what[1])] = block;
+//      DBG << "Adopted levels   " << NuclideId::from_ensdf(what[1]).verboseName()
+//          << " block=" << block.first << "-" << block.second;
+//      for (size_t i=block.first; i < block.second; ++i)
+//        DBG << "             AL  "<< contents.at(i);
     }
 
     // decays
-    else if (decre.exactMatch(head)) {
-      BasicDecayData decaydata;
+    else if (boost::regex_match(header, what, decay_expr) && (what.size() > 1)) {
+      BasicDecayData decaydata = BasicDecayData::from_ensdf(header, block);
 
-      decaydata.daughter = nucidToNuclide(decre.capturedTexts().at(1));
-      decaydata.decayType = parseDecayType(decre.capturedTexts().at(2));
-      decaydata.block = block;
-      decaydata.dsid = head.mid(9,30).trimmed(); // saved for comparison with xref records
+//      DBG << "Basic decay data " << decaydata.to_string();
 
-      QStringList precstrings = QStringList(contents.mid(block.first, block.second)).filter(QRegExp("^[\\s0-9A-Z]{5,5}\\s\\sP[\\s0-9].*$"));
-      foreach (const QString &precstr, precstrings)
-        decaydata.parents.append(parseParentRecord(precstr));
+      boost::regex filter("^[\\s0-9A-Z]{5,5}\\s\\sP[\\s0-9].*$");
+      for (size_t i=block.first; i < block.second; ++i) {
+        if (boost::regex_match(contents.at(i), filter)) {
+          decaydata.parents.append(ParentRecord::from_ensdf(contents.at(i)));
+//          DBG << "  Parent         " << decaydata.parents.back().to_string();
+        }
+//        else
+//          DBG << "             DEC " << contents.at(i);
+      }
 
-      if (decaydata.parents.isEmpty()) // broken records. skipping
+      if (decaydata.parents.isEmpty()) {
+        DBG <<   " BROKEN RECORD FOR " << decaydata.to_string();
+        // broken records. skipping
         continue;
+      }
 
       // create decay string
       //   get reference to daughter map to work with (create and insert if necessary)
-      QMap<QString, BasicDecayData > &decmap = m_decays[decaydata.daughter];
+      std::map<std::string, BasicDecayData> &decmap = m_decays[decaydata.daughter];
 
-      QStringList hlstrings;
+      std::vector<std::string> hlstrings;
       foreach (const ParentRecord &prec, decaydata.parents) {
         Q_ASSERT(prec.nuclide == decaydata.parents.at(0).nuclide); // check "same parent/different half-life" scheme
-        hlstrings.append(QString::fromStdString(prec.hl.to_string()));
+        hlstrings.push_back(prec.hl.to_string());
       }
 
       const ParentRecord &prec(decaydata.parents.at(0));
-      QString decayname(Nuclide::symbolicName(prec.nuclide));
+      std::string decayname  = prec.nuclide.symbolicName();
       if (prec.energy > 0.0)
-        decayname.append("m");
-      decayname.append(QString::fromUtf8(" → "))
-          .append(Decay::decayTypeAsText(decaydata.decayType))
-          .append(", ")
-          .append(hlstrings.join(" + "));
+        decayname += "m";
+      decayname += " → "
+                + Decay::decayTypeAsText(decaydata.decayType).toStdString();
+                + ", " + join(hlstrings, " + ");
 
       // insert into decay map
-      while (decmap.contains(decayname))
-        decayname.append(" (alt.)");
-      decmap.insert(decayname, decaydata);
+      while (decmap.count(decayname))
+        decayname += " (alt.)";
+      decmap[decayname] = decaydata;
     }
+    else
+    {
+//      DBG << "Unprocessed block begin " << block.first;
+//      for (size_t i=block.first; i < block.second; ++i)
+//        DBG << contents.at(i);
+//      DBG << "Unprocessed block end " << block.second;
+    }
+
   }
 }
 

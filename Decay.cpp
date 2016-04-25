@@ -176,7 +176,7 @@ QGraphicsScene * Decay::levelPlot()
     scene->addItem(pNucGra);
 
     // create half-life label
-    pNucHl = new QGraphicsSimpleTextItem(pNuc->halfLifeAsText());
+    pNucHl = new QGraphicsSimpleTextItem(QString::fromStdString(pNuc->halfLifeAsText()));
     pNucHl->setFont(parentHlFont);
     scene->addItem(pNucHl);
 

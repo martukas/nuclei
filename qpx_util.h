@@ -64,6 +64,17 @@ inline std::string trim_all(std::string text)
   return text;
 }
 
+inline std::string join(const std::vector<std::string> &list, std::string spacer = "")
+{
+  std::string ret;
+  for (size_t i=0; i < list.size(); ++i) {
+    ret += list.at(i);
+    if ((i > 0) && ((i+1) < list.size()))
+      ret += spacer;
+  }
+  return ret;
+}
+
 inline std::string to_str_decimals(double number, int decimals = 0) {
   std::ostringstream ss;
   ss << std::fixed << std::setprecision(decimals) << number;
