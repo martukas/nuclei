@@ -1,0 +1,278 @@
+#include "NuclideId.h"
+#include <boost/algorithm/string.hpp>
+#include "custom_logger.h"
+#include "qpx_util.h"
+
+void NuclideId::set_A(uint16_t a)
+{
+  // keeps Z the same;
+  if (a < Z_)
+    a = Z_;
+  N_ = a - Z_;
+}
+
+void NuclideId::set_N(uint16_t n)
+{
+  N_ = n;
+}
+
+void NuclideId::set_Z(uint16_t z)
+{
+  Z_ = z;
+}
+
+
+NuclideId NuclideId::fromAZ(uint16_t a, uint16_t z)
+{
+  if (a < z)
+    return NuclideId();
+  NuclideId ret;
+  ret.Z_ = z;
+  ret.N_ = a - z;
+  return ret;
+}
+
+NuclideId NuclideId::fromZN(uint16_t z, uint16_t n)
+{
+  NuclideId ret;
+  ret.Z_ = z;
+  ret.N_ = n;
+  return ret;
+}
+
+std::string NuclideId::symbolicName() const
+{
+  if (!valid())
+    return "";
+  return symbolOf(Z_) + "-" + std::to_string(A());
+}
+
+std::string NuclideId::verboseName() const
+{
+  if (!valid())
+    return "";
+  return nameOf(Z_) + "-" + std::to_string(A());
+}
+
+
+std::string NuclideId::element() const
+{
+  return symbolOf(Z_);
+}
+
+std::string NuclideId::symbolOf(uint16_t Z)
+{
+  if (names.count(Z))
+    return names.at(Z).symbol;
+  else
+    return "";
+}
+
+
+std::string NuclideId::nameOf(uint16_t Z)
+{
+  if (names.count(Z))
+    return names.at(Z).name;
+  else
+    return "";
+}
+
+std::string NuclideId::to_ensdf() const
+{
+  std::string nucid = std::to_string(A());
+  while (nucid.size() < 3)
+    nucid = " " + nucid;
+  nucid += boost::to_upper_copy(NuclideId::symbolOf(Z_));
+  while (nucid.size() < 5)
+    nucid += " ";
+  return nucid;
+}
+
+NuclideId NuclideId::from_ensdf(std::string id)
+{
+  if (id.size() != 5)
+    return NuclideId();
+
+  std::string A = id.substr(0,3);
+  std::string Z = id.substr(3,2);
+  boost::trim(A);
+
+  if (!is_number(A))
+    return NuclideId();
+
+  return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), NuclideId::zOfSymbol(Z));
+}
+
+int16_t NuclideId::zOfSymbol(std::string name)
+{
+  boost::to_upper(name);
+  boost::trim(name);
+
+  for (auto &nom : names) {
+    if ((boost::to_upper_copy(nom.second.symbol) == name)
+        || (boost::to_upper_copy(nom.second.name) == name)) {
+      return nom.first;
+    }
+  }
+
+  if (is_number(name)) {
+    name = "1" + name;
+    int val = boost::lexical_cast<uint16_t>(name);
+    if (names.count(val))
+      return val;
+  }
+
+  DBG << "<Nuclide> not found " << name;
+  return -1;
+}
+
+bool operator==(const NuclideId &left, const NuclideId &right)
+{
+  return ((left.N_==right.N_) && (left.Z_ == right.Z_));
+}
+
+bool operator<(const NuclideId &left, const NuclideId &right)
+{
+  if (left.Z_ == right.Z_)
+    return (left.N_ < right.N_);
+  else
+    return (left.Z_ < right.Z_);
+}
+
+bool operator>(const NuclideId &left, const NuclideId &right)
+{
+  if (left.Z_ == right.Z_)
+    return (left.N_ > right.N_);
+  else
+    return (left.Z_ > right.Z_);
+}
+
+
+const std::map<uint16_t, NuclideNomenclature> NuclideId::names = initNames();
+
+std::map<uint16_t, NuclideNomenclature> NuclideId::initNames()
+{
+  std::map<uint16_t, NuclideNomenclature> result;
+//  result[0]   = NuclideNomenclature("n", "neutron");
+
+  result[0]   = NuclideNomenclature("nn", "neutron");
+  result[1]   = NuclideNomenclature("H",  "Hydrogen");
+  result[2]   = NuclideNomenclature("He", "Helium");
+  result[3]   = NuclideNomenclature("Li", "Lithium");
+  result[4]   = NuclideNomenclature("Be", "Beryllium");
+  result[5]   = NuclideNomenclature("B",  "Boron");
+  result[6]   = NuclideNomenclature("C",  "Carbon");
+  result[7]   = NuclideNomenclature("N",  "Nitrogen");
+  result[8]   = NuclideNomenclature("O",  "Oxygen");
+  result[9]   = NuclideNomenclature("F",  "Fluorine");
+  result[10]  = NuclideNomenclature("Ne", "Neon");
+  result[11]  = NuclideNomenclature("Na", "Sodium");
+  result[12]  = NuclideNomenclature("Mg", "Magnesium");
+  result[13]  = NuclideNomenclature("Al", "Aluminium");
+  result[14]  = NuclideNomenclature("Si", "Silicon");
+  result[15]  = NuclideNomenclature("P",  "Phosphorus");
+  result[16]  = NuclideNomenclature("S",  "Sulfur");
+  result[17]  = NuclideNomenclature("Cl", "Chlorine");
+  result[18]  = NuclideNomenclature("Ar", "Argon");
+  result[19]  = NuclideNomenclature("K",  "Potassium");
+  result[20]  = NuclideNomenclature("Ca", "Calcium");
+  result[21]  = NuclideNomenclature("Sc", "Scandium");
+  result[22]  = NuclideNomenclature("Ti", "Titanium");
+  result[23]  = NuclideNomenclature("V",  "Vanadium");
+  result[24]  = NuclideNomenclature("Cr", "Chromium");
+  result[25]  = NuclideNomenclature("Mn", "Manganese");
+  result[26]  = NuclideNomenclature("Fe", "Iron");
+  result[27]  = NuclideNomenclature("Co", "Cobalt");
+  result[28]  = NuclideNomenclature("Ni", "Nickel");
+  result[29]  = NuclideNomenclature("Cu", "Copper");
+  result[30]  = NuclideNomenclature("Zn", "Zinc");
+  result[31]  = NuclideNomenclature("Ga", "Gallium");
+  result[32]  = NuclideNomenclature("Ge", "Germanium");
+  result[33]  = NuclideNomenclature("As", "Arsenic");
+  result[34]  = NuclideNomenclature("Se", "Selenium");
+  result[35]  = NuclideNomenclature("Br", "Bromine");
+  result[36]  = NuclideNomenclature("Kr", "Krypton");
+  result[37]  = NuclideNomenclature("Rb", "Rubidium");
+  result[38]  = NuclideNomenclature("Sr", "Strontium");
+  result[39]  = NuclideNomenclature("Y",  "Yttrium");
+  result[40]  = NuclideNomenclature("Zr", "Zirconium");
+  result[41]  = NuclideNomenclature("Nb", "Niobium");
+  result[42]  = NuclideNomenclature("Mo", "Molybdenum");
+  result[43]  = NuclideNomenclature("Tc", "Technetium");
+  result[44]  = NuclideNomenclature("Ru", "Ruthenium");
+  result[45]  = NuclideNomenclature("Rh", "Rhodium");
+  result[46]  = NuclideNomenclature("Pd", "Palladium");
+  result[47]  = NuclideNomenclature("Ag", "Silver");
+  result[48]  = NuclideNomenclature("Cd", "Cadmium");
+  result[49]  = NuclideNomenclature("In", "Indium");
+  result[50]  = NuclideNomenclature("Sn", "Tin");
+  result[51]  = NuclideNomenclature("Sb", "Antimony");
+  result[52]  = NuclideNomenclature("Te", "Tellurium");
+  result[53]  = NuclideNomenclature("I",  "Iodine");
+  result[54]  = NuclideNomenclature("Xe", "Xenon");
+  result[55]  = NuclideNomenclature("Cs", "Caesium");
+  result[56]  = NuclideNomenclature("Ba", "Barium");
+  result[57]  = NuclideNomenclature("La", "Lanthanum");
+  result[58]  = NuclideNomenclature("Ce", "Cerium");
+  result[59]  = NuclideNomenclature("Pr", "Praseodynium");
+  result[60]  = NuclideNomenclature("Nd", "Neodynium");
+  result[61]  = NuclideNomenclature("Pm", "Promethium");
+  result[62]  = NuclideNomenclature("Sm", "Samarium");
+  result[63]  = NuclideNomenclature("Eu", "Europium");
+  result[64]  = NuclideNomenclature("Gd", "Gadolinium");
+  result[65]  = NuclideNomenclature("Tb", "Terbium");
+  result[66]  = NuclideNomenclature("Dy", "Dysprosium");
+  result[67]  = NuclideNomenclature("Ho", "Holmium");
+  result[68]  = NuclideNomenclature("Er", "Erbium");
+  result[69]  = NuclideNomenclature("Tm", "Thulium");
+  result[70]  = NuclideNomenclature("Yb", "Ytterbium");
+  result[71]  = NuclideNomenclature("Lu", "Lutetium");
+  result[72]  = NuclideNomenclature("Hf", "Hafnium");
+  result[73]  = NuclideNomenclature("Ta", "Tantalum");
+  result[74]  = NuclideNomenclature("W",  "Tungsten");
+  result[75]  = NuclideNomenclature("Re", "Rhenium");
+  result[76]  = NuclideNomenclature("Os", "Osmium");
+  result[77]  = NuclideNomenclature("Ir", "Iridium");
+  result[78]  = NuclideNomenclature("Pt", "Platinum");
+  result[79]  = NuclideNomenclature("Au", "Gold");
+  result[80]  = NuclideNomenclature("Hg", "Mercury");
+  result[81]  = NuclideNomenclature("Tl", "Thallium");
+  result[82]  = NuclideNomenclature("Pb", "Lead");
+  result[83]  = NuclideNomenclature("Bi", "Bismuth");
+  result[84]  = NuclideNomenclature("Po", "Polonium");
+  result[85]  = NuclideNomenclature("At", "Astanine");
+  result[86]  = NuclideNomenclature("Rn", "Radon");
+  result[87]  = NuclideNomenclature("Fr", "Francium");
+  result[88]  = NuclideNomenclature("Ra", "Radium");
+  result[89]  = NuclideNomenclature("Ac", "Actinium");
+  result[90]  = NuclideNomenclature("Th", "Thorium");
+  result[91]  = NuclideNomenclature("Pa", "Protactinium");
+  result[92]  = NuclideNomenclature("U",  "Uranium");
+  result[93]  = NuclideNomenclature("Np", "Neptunium");
+  result[94]  = NuclideNomenclature("Pu", "Plutonium");
+  result[95]  = NuclideNomenclature("Am", "Americium");
+  result[96]  = NuclideNomenclature("Cm", "Curium");
+  result[97]  = NuclideNomenclature("Bk", "Berkelium");
+  result[98]  = NuclideNomenclature("Cf", "Californium");
+  result[99]  = NuclideNomenclature("Es", "Einsteinium");
+  result[100] = NuclideNomenclature("Fm", "Fermium");
+  result[101] = NuclideNomenclature("Md", "Mendelevium");
+  result[102] = NuclideNomenclature("No", "Nobelium");
+  result[103] = NuclideNomenclature("Lr", "Lawrencium");
+  result[104] = NuclideNomenclature("Rf", "Rutherfordium");
+  result[105] = NuclideNomenclature("Db", "Dubnium");
+  result[106] = NuclideNomenclature("Sg", "Seaborgium");
+  result[107] = NuclideNomenclature("Bh", "Bohrium");
+  result[108] = NuclideNomenclature("Hs", "Hassium");
+  result[109] = NuclideNomenclature("Mt", "Meitnerium");
+  result[110] = NuclideNomenclature("Ds", "Darmstadtium");
+  result[111] = NuclideNomenclature("Rg", "Roentgenium");
+  result[112] = NuclideNomenclature("Cn",  "Copernicium");
+  result[113] = NuclideNomenclature("Uut", "Ununtrium");
+  result[114] = NuclideNomenclature("Fl",  "Flerovium");
+  result[115] = NuclideNomenclature("Uup", "Ununpentium");
+  result[116] = NuclideNomenclature("Lv",  "Livermorium");
+  result[117] = NuclideNomenclature("Uus", "Ununseptium");
+  result[118] = NuclideNomenclature("Uuo", "Ununoctium");
+  return result;
+}
