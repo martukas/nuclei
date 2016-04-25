@@ -1,0 +1,20 @@
+Open Bugs:
+- n.a.
+
+Improvements
+- Peak color in energy spectra should not depend on order of highlighting but on population/depopulation
+
+Feature requests:
+- Allow (at least temporary) changes to nuclear data to fix calculations for user-fixed data
+
+Nuclide Search
+- Allow to auto-skip levels with short half-life in cascade search
+- Allow to limit search on nuclides where N-1 is stable (for neutron reactions)
+- Allow to limit search for nuclides with reasonably high N-1 fraction in natural isotope mix and sufficient cross section for pulsed neutron activation
+- Search facilities for n-gamma measurements
+
+Others
+- Add conversion x-rays in photo peak plot
+- Allow to auto-skip levels with short half-life in cascade selection
+- Sort mass chain according to Z (in the tree on the left)
+
