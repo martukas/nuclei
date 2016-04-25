@@ -43,7 +43,7 @@ EnergyLevel EnergyLevel::from_ensdf(std::string record)
   }
 
   EnergyLevel ret(e, spin, hl, isonum);
-  DBG << record << " --> " << ret.to_string();
+//  DBG << record << " --> " << ret.to_string();
   return ret;
 }
 

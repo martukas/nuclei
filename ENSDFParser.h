@@ -7,84 +7,74 @@
 #include "Energy.h"
 #include "Nuclide.h"
 
+#include <utility>
+
 class HalfLife;
+
+typedef std::pair<int,int> BlockIndices; // [startidx, size]
+
+struct ParentRecord {
+    NuclideId nuclide;
+    Energy energy;
+    HalfLife hl;
+    SpinParity spin;
+
+    static ParentRecord from_ensdf(const std::string &precstr);
+    std::string to_string() const;
+};
+
+struct BasicDecayData {
+    QList<ParentRecord> parents;
+    NuclideId daughter;
+    Decay::Type decayType;
+    BlockIndices block;
+    std::string dsid;
+
+    static BasicDecayData from_ensdf(const std::string &header, BlockIndices block);
+    std::string to_string() const;
+private:
+    static Decay::Type parseDecayType(const std::string &tstring);
+};
 
 class ENSDFParser
 {
 public:
-
-    explicit ENSDFParser(unsigned int A);
-
     static const QList<unsigned int> &aValues();
 
+    explicit ENSDFParser(unsigned int A);
     unsigned int aValue() const;
-    const QList<Nuclide::Coordinates> daughterNuclides() const;
 
-    /**
-     * @brief Lists with basic decay path data for a given daughter
-     * @param daughterNuclide daughter
-     * @return List of (Decay String, Parent Nucleus Coordinate) pairs
-     */
-    const QList< QPair<QString, Nuclide::Coordinates> > decays(const Nuclide::Coordinates &daughterNuclide) const;
+    const std::list<NuclideId> daughterNuclides() const;
+    const std::list< std::pair<QString, NuclideId> > decays(const NuclideId &daughterNuclide) const;
 
-    /**
-     * @brief decay
-     * @param daughterNuclideName
-     * @param decayName
-     * @param adoptedLevelMaxDifference Maximal acceptable difference between energy levels (in eV) in decay and adopted level blocks
-     * @param gammaMaxDifference Maximal difference between the energy of gammas in decay records and adopted levels
-     * @return
-     */
-    QSharedPointer<Decay> decay(const Nuclide::Coordinates &daughterNuclide, const QString &decayName) const;
 
+    QSharedPointer<Decay> decay(const NuclideId &daughterNuclide, const std::string &decayName) const;
 private:
-    typedef QPair<int,int> BlockIndices; // [startidx, size]
-
-    struct ParentRecord {
-        Nuclide::Coordinates nuclide;
-        Energy energy;
-        HalfLife hl;
-        SpinParity spin;
-
-    };
-
-    struct BasicDecayData {
-        QList<ParentRecord> parents;
-        Nuclide::Coordinates daughter;
-        Decay::Type decayType;
-        BlockIndices block;
-        QString dsid;
-    };
 
     struct StringSubList {
-        StringSubList() : first(QStringList::const_iterator()), last(first) {}
-        StringSubList(QStringList::const_iterator first, QStringList::const_iterator last) : first(first), last(last) {}
-        void clear() { first=QStringList::const_iterator(); last=first; }
-        QStringList::const_iterator first;
-        QStringList::const_iterator last;
+        StringSubList() : first(0), last(0) {}
+        StringSubList(size_t first, size_t last) : first(first), last(last) {}
+        void clear() { first=0; last=first; }
+        size_t first;
+        size_t last;
     };
 
     static QList<unsigned int> aList;
 
-    static QString nuclideToNucid(Nuclide::Coordinates nuclide);
-    static Nuclide::Coordinates nucidToNuclide(const QString &nucid);
-    static Decay::Type parseDecayType(const QString &tstring);
-    static ParentRecord parseParentRecord(const QString &precstr);
-
     static UncertainDouble parseEnsdfMixing(const QString &s, const QString &multipolarity);
 
     template <typename T> T findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;
-    static void insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym);
-    static QStringList extractContinuationRecords(const StringSubList &adoptedblock, const QStringList &requestedRecords, char typeOfContinuedRecord = 'L');
+    void insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym) const;
+    std::vector<std::string> extractContinuationRecords(const StringSubList &adoptedblock, const std::list<std::string> &requestedRecords, char typeOfContinuedRecord = 'L') const;
 
     void parseBlocks();
 
     const unsigned int a;
 
-    QStringList contents;
-    QMap<Nuclide::Coordinates, BlockIndices> m_adoptedlevels; // daughter coordignates: [startidx, size]
-    QMap<Nuclide::Coordinates, QMap<QString, BasicDecayData > > m_decays; // daughter coordinates: (decay name: basic data)
-    mutable QMap<Nuclide::Coordinates, QStringList> m_decayNames; // daughter coordinates: decay
+    std::vector<std::string> contents;
+    std::map<NuclideId, BlockIndices> m_adoptedlevels; // daughter coordignates
+    std::map<NuclideId, std::map<std::string, BasicDecayData > > m_decays; // daughter coordinates: (decay name: basic data)
+    mutable std::map<NuclideId, std::list<std::string>> m_decayNames; // daughter coordinates: decay
 };
 
 #endif // ENSDF_H

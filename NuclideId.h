@@ -1,0 +1,60 @@
+#ifndef NUCLIDE_ID_H
+#define NUCLIDE_ID_H
+
+#include <map>
+#include <string>
+#include <cinttypes>
+
+class QGraphicsItem;
+class QGraphicsItemGroup;
+class EnergyLevel;
+
+struct NuclideNomenclature {
+  NuclideNomenclature() {}
+  NuclideNomenclature(std::string s, std::string n) { symbol=s; name=n; }
+  std::string symbol;
+  std::string name;
+};
+
+class NuclideId
+{
+public:
+  NuclideId() : N_(0), Z_(0) {}
+
+  static NuclideId fromAZ(uint16_t a, uint16_t z);
+  static NuclideId fromZN(uint16_t z, uint16_t n);
+  static NuclideId from_ensdf(std::string nucid);
+
+  inline bool valid() const { return 0 != A(); }
+
+  inline uint16_t A() const { return N_ + Z_; }
+  inline uint16_t N() const { return N_; }
+  inline uint16_t Z() const { return Z_; }
+  void set_A(uint16_t a);
+  void set_N(uint16_t n);
+  void set_Z(uint16_t z);
+
+  friend bool operator==(const NuclideId &left, const NuclideId &right);
+  friend bool operator<(const NuclideId &left, const NuclideId &right);
+  friend bool operator>(const NuclideId &left, const NuclideId &right);
+
+  std::string element() const;
+  std::string symbolicName() const;
+  std::string verboseName() const;
+  std::string to_ensdf() const;
+
+private:
+  int16_t Z_;   // number of protons
+  int16_t N_;   // number of neutrons
+  //      A_;   // total number of nucleons derived from other two
+
+  static const std::map<uint16_t, NuclideNomenclature> names;
+  static std::map<uint16_t, NuclideNomenclature> initNames();
+
+  static std::string symbolOf(uint16_t Z);
+  static std::string nameOf(uint16_t Z);
+  static int16_t zOfSymbol(std::string name);
+};
+
+
+#endif // NUCLIDE_ID_H
