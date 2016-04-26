@@ -48,12 +48,20 @@ QSharedPointer<Decay> ENSDFDataSource::decay(const AbstractTreeItem *item) const
   if (!eitem->parent() || !eitem->isSelectable())
     return QSharedPointer<Decay>();
 
-  if (mccache && mccache->aValue() == eitem->parent()->id().A())
-    return mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString());
 
-  delete mccache;
-  mccache = new ENSDFParser(eitem->parent()->id().A());
-  return mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString());
+  return QSharedPointer<Decay>();
+
+
+//  if (mccache && mccache->aValue() == eitem->parent()->id().A()) {
+//    QSharedPointer<Decay> dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
+//    return dec;
+//  }
+
+//  delete mccache;
+//  mccache = new ENSDFParser(eitem->parent()->id().A());
+//  QSharedPointer<Decay> dec;
+//  (*dec) = Decay(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
+//  return dec;
 }
 
 void ENSDFDataSource::deleteDatabaseAndCache()
@@ -62,10 +70,10 @@ void ENSDFDataSource::deleteDatabaseAndCache()
   deleteCache();
 
   // get A (mass number) strings
-  QList<unsigned int> aList(getAvailableDataFileNumbers());
+  QList<uint16_t> aList(getAvailableDataFileNumbers());
   if (aList.isEmpty())
     return;
-  foreach (unsigned int a, aList) {
+  foreach (uint16_t a, aList) {
     QFile f(s.value("ensdfPath", ".").toString() + QString("/ensdf.%1").arg(a, int(3), int(10), QChar('0')));
     if (f.exists())
       f.remove();
@@ -83,30 +91,30 @@ void ENSDFDataSource::deleteCache()
   QCoreApplication::exit(6000); // tells the code in main.cpp to restart the application!
 }
 
-QList<unsigned int> ENSDFDataSource::getAvailableDataFileNumbers() const
+QList<uint16_t> ENSDFDataSource::getAvailableDataFileNumbers() const
 {
   QWidget *pwid = qobject_cast<QWidget*>(parent());
 
   // get A (mass number) strings or exit application
-  QList<unsigned int> aList(ENSDFParser::aValues());
+  std::list<uint16_t> aList(ENSDFParser::aValues());
   bool firsttry = true;
-  while (aList.isEmpty()) {
+  while (aList.empty()) {
     if (!firsttry)
       if (QMessageBox::Close == QMessageBox::warning(pwid, "Selected Folder is Empty", "Please select a folder containing the ENSDF database or use the download feature!", QMessageBox::Ok | QMessageBox::Close, QMessageBox::Ok)) {
         qApp->quit();
-        return QList<unsigned int>();
+        return QList<uint16_t>();
       }
     ENSDFDownloader downloader(pwid);
     if (downloader.exec() != QDialog::Accepted) {
       qApp->quit();
-      return QList<unsigned int>();
+      return QList<uint16_t>();
     }
 
     aList = ENSDFParser::aValues();
     firsttry = false;
   }
 
-  return aList;
+  return QList<uint16_t>::fromStdList(aList);
 }
 
 
@@ -150,7 +158,7 @@ void ENSDFDataSource::createENSDFCache()
   QWidget *pwid = qobject_cast<QWidget*>(parent());
 
   // get A (mass number) strings or exit application
-  QList<unsigned int> aList(getAvailableDataFileNumbers());
+  QList<uint16_t> aList(getAvailableDataFileNumbers());
   if (aList.isEmpty())
     return;
 
@@ -190,8 +198,10 @@ void ENSDFDataSource::createENSDFCache()
     for (auto &daughter : mc->daughterNuclides()) {
       ENSDFTreeItem *d = new ENSDFTreeItem(AbstractTreeItem::DaughterType, QList<QVariant>() << QString::fromStdString(daughter.symbolicName()).toUpper(), daughter, false, root);
       typedef QPair<QString, NuclideId> DecayType;
-      for (auto &decay : mc->decays(daughter))
-        new ENSDFTreeItem(AbstractTreeItem::DecayType, QList<QVariant>() << decay.first, decay.second, true, d);
+      for (auto &decay : mc->decays(daughter)) {
+        QString st = QString::fromStdString(decay.first);
+        new ENSDFTreeItem(AbstractTreeItem::DecayType, QList<QVariant>() << st, decay.second, true, d);
+      }
     }
 
     delete mc;

@@ -1,13 +1,10 @@
 #ifndef ENSDFPARSER_H
 #define ENSDFPARSER_H
-#include <QStringList>
-#include <QSharedPointer>
-#include <QPair>
-#include "Decay.h"
+#include "XDecay.h"
 #include "Energy.h"
-#include "Nuclide.h"
-
+#include "XNuclide.h"
 #include <utility>
+#include <memory>
 
 class HalfLife;
 
@@ -24,31 +21,31 @@ struct ParentRecord {
 };
 
 struct BasicDecayData {
-    QList<ParentRecord> parents;
+    std::vector<ParentRecord> parents;
     NuclideId daughter;
-    Decay::Type decayType;
+    XDecay::Type decayType;
     BlockIndices block;
     std::string dsid;
 
     static BasicDecayData from_ensdf(const std::string &header, BlockIndices block);
     std::string to_string() const;
 private:
-    static Decay::Type parseDecayType(const std::string &tstring);
+    static XDecay::Type parseDecayType(const std::string &tstring);
 };
 
 class ENSDFParser
 {
 public:
-    static const QList<unsigned int> &aValues();
+    static const std::list<uint16_t> &aValues();
 
-    explicit ENSDFParser(unsigned int A);
-    unsigned int aValue() const;
+    explicit ENSDFParser(uint16_t A);
+    uint16_t aValue() const;
 
     const std::list<NuclideId> daughterNuclides() const;
-    const std::list< std::pair<QString, NuclideId> > decays(const NuclideId &daughterNuclide) const;
+    const std::list< std::pair<std::string, NuclideId> > decays(const NuclideId &daughterNuclide) const;
 
 
-    QSharedPointer<Decay> decay(const NuclideId &daughterNuclide, const std::string &decayName) const;
+    XDecay decay(const NuclideId &daughterNuclide, const std::string &decayName) const;
 private:
 
     struct StringSubList {
@@ -59,22 +56,24 @@ private:
         size_t last;
     };
 
-    static QList<unsigned int> aList;
+    static std::list<uint16_t> aList;
 
-    static UncertainDouble parseEnsdfMixing(const QString &s, const QString &multipolarity);
+    static UncertainDouble parseEnsdfMixing(const std::string &s, const std::string &multipolarity);
 
-    template <typename T> T findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;
-    void insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym) const;
+    template <typename T> T findNearest(const std::map<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;
+    void insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym) const;
     std::vector<std::string> extractContinuationRecords(const StringSubList &adoptedblock, const std::list<std::string> &requestedRecords, char typeOfContinuedRecord = 'L') const;
 
     void parseBlocks();
 
-    const unsigned int a;
+    const uint16_t a;
 
     std::vector<std::string> contents;
     std::map<NuclideId, BlockIndices> m_adoptedlevels; // daughter coordignates
     std::map<NuclideId, std::map<std::string, BasicDecayData > > m_decays; // daughter coordinates: (decay name: basic data)
     mutable std::map<NuclideId, std::list<std::string>> m_decayNames; // daughter coordinates: decay
+
+    static double norm(std::string rec, double def_value);
 };
 
 #endif // ENSDF_H

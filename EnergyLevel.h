@@ -11,6 +11,7 @@
 #include "ClickableItem.h"
 #include "UncertainDouble.h"
 #include "Moment.h"
+#include <memory>
 
 class ActiveGraphicsItemGroup;
 class QGraphicsLineItem;
@@ -93,5 +94,7 @@ private:
     GraphicsHighlightItem *grahighlighthelper;
     double graYPos;
 };
+
+typedef std::shared_ptr<EnergyLevel> EnergyLevelPtr;
 
 #endif // ENERGYLEVEL_H
