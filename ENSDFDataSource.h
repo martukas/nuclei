@@ -42,7 +42,7 @@ public slots:
     void deleteCache();
 
 private:
-    QList<unsigned int> getAvailableDataFileNumbers() const;
+    QList<uint16_t> getAvailableDataFileNumbers() const;
 
     QString cachePath;
 

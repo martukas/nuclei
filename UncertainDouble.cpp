@@ -168,7 +168,7 @@ UncertainDouble UncertainDouble::from_nsdf(std::string val, std::string uncert)
   {
     boost::replace_all(val, "[", "");
     boost::replace_all(val, "]", "");
-    flag_tentative = true;
+    flag_theoretical = true;
   }
 
   if (val.empty() || !is_number(val))
