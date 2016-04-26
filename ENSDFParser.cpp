@@ -1,18 +1,11 @@
 #include "ENSDFParser.h"
-#include <QDir>
-#include <QFile>
-#include <QChar>
-#include <QMap>
-#include <QLocale>
-#include <QSettings>
-#include <QSet>
 #include <cmath>
 #include <iostream>
 
-#include "Decay.h"
-#include "Nuclide.h"
-#include "EnergyLevel.h"
-#include "GammaTransition.h"
+#include "XDecay.h"
+#include "XNuclide.h"
+#include "XEnergyLevel.h"
+#include "XGammaTransition.h"
 #include "custom_logger.h"
 #include "qpx_util.h"
 
@@ -59,71 +52,71 @@ BasicDecayData BasicDecayData::from_ensdf(const std::string &header, BlockIndice
   return decaydata;
 }
 
-Decay::Type BasicDecayData::parseDecayType(const std::string &tstring)
+XDecay::Type BasicDecayData::parseDecayType(const std::string &tstring)
 {
   if (tstring == "EC DECAY")
-    return Decay::ElectronCapture;
+    return XDecay::ElectronCapture;
   if (tstring == "B+ DECAY")
-    return Decay::BetaPlus;
+    return XDecay::BetaPlus;
   if (tstring == "B- DECAY")
-    return Decay::BetaMinus;
+    return XDecay::BetaMinus;
   if (tstring == "IT DECAY")
-    return Decay::IsomericTransition;
+    return XDecay::IsomericTransition;
   if (tstring == "A DECAY")
-    return Decay::Alpha;
-  return Decay::Undefined;
+    return XDecay::Alpha;
+  return XDecay::Undefined;
 }
 
 std::string BasicDecayData::to_string() const
 {
   std::string ret;
   ret = daughter.verboseName() + " "
-      + Decay::decayTypeAsText(decayType).toStdString()
+      + XDecay::DecayTypeAsText(decayType)
       + " block=" + std::to_string(block.first) + "-" + std::to_string(block.second)
       + " dsid=\"" + dsid + "\"";
   return ret;
 }
 
 
-QList<unsigned int> ENSDFParser::aList;
+std::list<uint16_t> ENSDFParser::aList;
 
-ENSDFParser::ENSDFParser(unsigned int A)
+ENSDFParser::ENSDFParser(uint16_t A)
   : a(A)
 {
-  QSettings s;
-  // read data
-  QFile f(s.value("ensdfPath", ".").toString() + QString("/ensdf.%1").arg(a, int(3), int(10), QChar('0')));
-  f.open(QIODevice::ReadOnly | QIODevice::Text);
-  std::string c = QString::fromUtf8(f.readAll()).toStdString();
+//  QSettings s;
+//  // read data
+//  QFile f(s.value("ensdfPath", ".").toString() + QString("/ensdf.%1").arg(a, int(3), int(10), QChar('0')));
+//  f.open(QIODevice::ReadOnly | QIODevice::Text);
+//  std::string c = QString::fromUtf8(f.readAll()).toStdString();
 
-  boost::split(contents, c, boost::is_any_of("\n"));
+//  boost::split(contents, c, boost::is_any_of("\n"));
 
   parseBlocks();
 }
 
-const QList<unsigned int> &ENSDFParser::aValues() // static
+const std::list<uint16_t> &ENSDFParser::aValues() // static
 {
-  if (!aList.isEmpty())
-    return aList;
+//  if (!aList.empty())
+//    return aList;
 
-  QSettings s;
-  if (!s.contains("ensdfPath"))
-    return aList;
+//  QSettings s;
+//  if (!s.contains("ensdfPath"))
+//    return aList;
 
-  QDir dir(s.value("ensdfPath").toString());
-  if (!dir.exists())
-    return aList;
+//  QDir dir(s.value("ensdfPath").toString());
+//  if (!dir.exists())
+//    return aList;
 
-  QStringList tmp(dir.entryList(QStringList("ensdf.???"), QDir::Files | QDir::Readable, QDir::Name));
+//  QStringList tmp(dir.entryList(QStringList("ensdf.???"), QDir::Files | QDir::Readable, QDir::Name));
 
-  for (int i=0; i<tmp.size(); i++) {
-    const QString aStr(tmp.at(i).right(3).remove(QRegExp("^0+")));
-    aList.append(aStr.toUInt());
-  }
+//  for (int i=0; i<tmp.size(); i++) {
+//    const QString aStr(tmp.at(i).right(3).remove(QRegExp("^0+")));
+//    aList.push_back(aStr.toUInt());
+//  }
   return aList;
 }
 
-unsigned int ENSDFParser::aValue() const
+uint16_t ENSDFParser::aValue() const
 {
   return a;
 }
@@ -137,54 +130,54 @@ const std::list<NuclideId> ENSDFParser::daughterNuclides() const
   return ret;
 }
 
-const std::list< std::pair<QString, NuclideId> > ENSDFParser::decays(const NuclideId &daughterNuclide) const
+const std::list< std::pair<std::string, NuclideId> > ENSDFParser::decays(const NuclideId &daughterNuclide) const
 {
 //  Q_ASSERT(m_decays.value(daughterNuclide).size() == m_decays.value(daughterNuclide).keys().toSet().size()); // check for duplicates
-  std::list< std::pair<QString, NuclideId> > result;
+  std::list< std::pair<std::string, NuclideId> > result;
   for (auto &i : m_decays.at(daughterNuclide))
-    result.push_back(std::pair<QString, NuclideId>(QString::fromStdString(i.first), i.second.parents.at(0).nuclide));
+    result.push_back(std::pair<std::string, NuclideId>(i.first, i.second.parents.at(0).nuclide));
   return result;
 }
 
-QSharedPointer<Decay> ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &decayName) const
+XDecay ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &decayName) const
 {
   if (!m_adoptedlevels.count(daughterNuclide) ||
       !m_decays.count(daughterNuclide) ||
       !m_decays.at(daughterNuclide).count(decayName))
-    return QSharedPointer<Decay>();
+    return XDecay();
 
-  QSettings s;
-  double adoptedLevelMaxDifference = s.value("preferences/levelTolerance", 1.0).toDouble();
-  double gammaMaxDifference = s.value("preferences/gammaTolerance", 1.0).toDouble();
+//  QSettings s;
+//  double adoptedLevelMaxDifference = s.value("preferences/levelTolerance", 1.0).toDouble();
+//  double gammaMaxDifference = s.value("preferences/gammaTolerance", 1.0).toDouble();
 
+  double adoptedLevelMaxDifference = 1.0;
+  double gammaMaxDifference = 1.0;
 
-  QMap<Energy, EnergyLevel*> levels;
+  std::map<Energy, XEnergyLevelPtr> levels;
 
   BlockIndices alpos = m_adoptedlevels.at(daughterNuclide);
   BasicDecayData decaydata = m_decays.at(daughterNuclide).at(decayName);
   double normalizeDecIntensToPercentParentDecay = 1.0;
   double normalizeGammaIntensToPercentParentDecay = 1.0;
-  QString dNucid = QString::fromStdString(daughterNuclide.to_ensdf());
+  std::string dNucid = daughterNuclide.to_ensdf();
 
 //  DBG << "parsing " << dNucid.toStdString();
 
   // process all adopted level sub-blocks
-  EnergyLevel *currentLevel = 0;
-  QLocale clocale("C");
-  bool convok;
+  XEnergyLevelPtr currentLevel(nullptr);
   // create index map for adopted levels
-  QMap<Energy, StringSubList> adoptblocks;
+  std::map<Energy, StringSubList> adoptblocks;
   std::map<std::string, char> xrefs; // maps DSID to DSSYM (single letter)
   size_t laststart = -1;
   for (int i=alpos.first; i < alpos.second; i++) {
-    const QString line = QString::fromStdString(contents.at(i));
+    const std::string line = contents.at(i);
     // extract cross reference records as long as first level was found (cross reference must be before 1st level)
     if (laststart == -1) {
-      if (line.startsWith(dNucid + "  X"))
-        xrefs[line.mid(9, 30).trimmed().toStdString()] = line.at(8).toLatin1();
+      if (line.substr(0,8) == (dNucid + "  X"))
+        xrefs[boost::trim_copy(line.substr(9, 30))] = line[8];
     }
     // find level records
-    if (line.startsWith(dNucid + "  L ")) {
+    if (line.substr(0,9) == (dNucid + "  L ")) {
       if (laststart > 0) {
         size_t i1 = laststart;
         size_t i2 = i;
@@ -209,57 +202,57 @@ QSharedPointer<Decay> ENSDFParser::decay(const NuclideId &daughterNuclide, const
 //  DBG << "parsing size " << decaylines.size();
 
   for (int k=decaydata.block.first; k < decaydata.block.second; k++) {
-    const QString line = QString::fromStdString(contents.at(k));
+    const std::string line = contents.at(k);
 
 //    DBG << "c line " << line.toStdString();
 
     // process new gamma
-    if ((levels.size() > 1) && line.startsWith(dNucid + "  G ")) {
+    if ((levels.size() >= 8) && (line.substr(0,9) == (dNucid + "  G "))) {
 
 //      DBG << "c1";
 
-      Q_ASSERT(!levels.isEmpty());
+      Q_ASSERT(!levels.empty());
 
       // determine energy
-      Energy e = Energy::from_nsdf(line.mid(9, 12).toStdString());
+      Energy e = Energy::from_nsdf(line.substr(9, 12));
 
       // determine intensity
-      QString instr(line.mid(21,8));
-      instr.remove('(').remove(')');
-      double in = clocale.toDouble(instr, &convok);
-      if (!convok)
-        in = std::numeric_limits<double>::quiet_NaN();
-      else
-        in *= normalizeGammaIntensToPercentParentDecay;
+      std::string instr = line.substr(21,8);
+      boost::replace_all(instr, "(", "");
+      boost::replace_all(instr, ")", "");
+      boost::trim(instr);
+      double  in = std::numeric_limits<double>::quiet_NaN();
+      if (is_number(instr))
+        in = boost::lexical_cast<double>(instr) * normalizeGammaIntensToPercentParentDecay;
 
       // determine multipolarity
-      QString mpol(line.mid(31, 10).trimmed());
+      std::string mpol = boost::trim_copy(line.substr(31, 10));
 
       // determine delta
-      UncertainDouble delta = parseEnsdfMixing(line.mid(41, 14), mpol);
+      UncertainDouble delta = parseEnsdfMixing(line.substr(41, 14), mpol);
 
       // parse adopted levels if necessary
-      if ((delta.sign() != UncertainDouble::SignMagnitudeDefined) || mpol.isEmpty()) {
+      if ((delta.sign() != UncertainDouble::SignMagnitudeDefined) || mpol.empty()) {
         // create gamma map
-        QMap<Energy, QString> e2g;
+        std::map<Energy, std::string> e2g;
         for (size_t i = currentadoptblock.first; i < currentadoptblock.last; ++i) {
-          QString ln = QString::fromStdString(contents.at(i));
-          if (ln.startsWith(dNucid + "  G ")) {
-            Energy gk = Energy::from_nsdf(ln.mid(9, 12).toStdString());
+          std::string ln = contents.at(i);
+          if (ln.substr(0,9) ==  (dNucid + "  G ")) {
+            Energy gk = Energy::from_nsdf(ln.substr(9, 12));
             if (gk.isValid())
-              e2g.insert(gk, ln);
+              e2g[gk] = ln;
           }
         }
         // find gamma
-        if (!e2g.isEmpty()) {
+        if (!e2g.empty()) {
           Energy foundE;
-          const QString gammastr = findNearest(e2g, e, &foundE);
+          const std::string gammastr = findNearest(e2g, e, &foundE);
           if (e-foundE < gammaMaxDifference/1000.0*e) {
-            if (mpol.isEmpty())
-              mpol = gammastr.mid(31, 10).trimmed();
+            if (mpol.empty())
+              mpol = boost::trim_copy(gammastr.substr(31, 10));
 
             if (delta.sign() != UncertainDouble::SignMagnitudeDefined) {
-              UncertainDouble adptdelta = parseEnsdfMixing(gammastr.mid(41, 14), mpol);
+              UncertainDouble adptdelta = parseEnsdfMixing(gammastr.substr(41, 14), mpol);
               if (adptdelta.sign() > delta.sign())
                 delta = adptdelta;
             }
@@ -268,22 +261,22 @@ QSharedPointer<Decay> ENSDFParser::decay(const NuclideId &daughterNuclide, const
       }
 
       // determine levels
-      if (!levels.isEmpty()) {
-        EnergyLevel *start = currentLevel;
-        EnergyLevel *destlvl = findNearest(levels, start->energy() - e);
+      if (!levels.empty()) {
+        XEnergyLevelPtr start = currentLevel;
+        XEnergyLevelPtr destlvl = findNearest(levels, start->energy() - e);
 
         // gamma registers itself with the start and dest levels
-        new GammaTransition(e, in, mpol, delta, start, destlvl);
+        new XGammaTransition(e, in, mpol, delta, start, destlvl);
       }
     }
     // process new level
-    else if (line.startsWith(dNucid + "  L ")) {
+    else if (line.substr(0,9) == (dNucid + "  L ")) {
 
-      currentLevel = new EnergyLevel(EnergyLevel::from_ensdf(line.toStdString()));
+      currentLevel = XEnergyLevelPtr(new XEnergyLevel(XEnergyLevel::from_ensdf(line)));
 
       // get additional data from adopted leves record
       //   find closest entry
-      if (!adoptblocks.isEmpty()) {
+      if (!adoptblocks.empty()) {
         Energy foundE;
         currentadoptblock.clear();
         currentadoptblock = findNearest(adoptblocks, currentLevel->energy(), &foundE);
@@ -315,23 +308,17 @@ QSharedPointer<Decay> ENSDFParser::decay(const NuclideId &daughterNuclide, const
 //        DBG << levelfirstline << " === " << currentLevel->to_string();
       }
 
-      levels.insert(currentLevel->energy(), currentLevel);
+      levels[currentLevel->energy()] = currentLevel;
     }
     // process decay information
-    else if (!levels.isEmpty() && line.startsWith(dNucid + "  E ")) {
-//      UncertainDouble ti = parseUncertainty(line.mid(64, 10).remove("(").remove(")"), line.mid(74, 2));
-      UncertainDouble ti = UncertainDouble::from_nsdf(line.mid(64, 10).remove("(").remove(")").toStdString(),
-                                        line.mid(74, 2).toStdString());
+    else if (!levels.empty() && (line.substr(0,9) == (dNucid + "  E "))) {
+      UncertainDouble ti = UncertainDouble::from_nsdf(line.substr(64, 10), line.substr(74, 2));
       if (ti.uncertaintyType() != UncertainDouble::UndefinedType) {
         ti.setSign(UncertainDouble::SignMagnitudeDefined);
       }
       else {
-//        UncertainDouble ib = parseUncertainty(line.mid(21, 8).remove("(").remove(")"), line.mid(29, 2));
-//        UncertainDouble ie = parseUncertainty(line.mid(31, 8).remove("(").remove(")"), line.mid(39, 2));
-        UncertainDouble ib = UncertainDouble::from_nsdf(line.mid(21, 8).remove("(").remove(")").toStdString(),
-                                                        line.mid(29, 2).toStdString());
-        UncertainDouble ie = UncertainDouble::from_nsdf(line.mid(31, 8).remove("(").remove(")").toStdString(),
-                                                        line.mid(39, 2).toStdString());
+        UncertainDouble ib = UncertainDouble::from_nsdf(line.substr(21, 8), line.substr(29, 2));
+        UncertainDouble ie = UncertainDouble::from_nsdf(line.substr(31, 8), line.substr(39, 2));
         ti = ib;
         if (ib.uncertaintyType() != UncertainDouble::UndefinedType && ie.uncertaintyType() != UncertainDouble::UndefinedType)
           ti += ie;
@@ -343,20 +330,16 @@ QSharedPointer<Decay> ENSDFParser::decay(const NuclideId &daughterNuclide, const
       if (ti.uncertaintyType() != UncertainDouble::UndefinedType)
         currentLevel->setFeedIntensity(ti);
     }
-    else if (!levels.isEmpty() && line.startsWith(dNucid + "  B ")) {
-//      UncertainDouble ib = parseUncertainty(line.mid(21, 8).remove("(").remove(")"), line.mid(29, 2));
-      UncertainDouble ib = UncertainDouble::from_nsdf(line.mid(21, 8).remove("(").remove(")").toStdString(),
-                                                      line.mid(29, 2).toStdString());
+    else if (!levels.empty() && (line.substr(0,9) == (dNucid + "  B "))) {
+      UncertainDouble ib = UncertainDouble::from_nsdf(line.substr(21, 8), line.substr(29, 2));
       if (ib.hasFiniteValue()) {
         ib.setSign(UncertainDouble::SignMagnitudeDefined);
         ib *= normalizeDecIntensToPercentParentDecay;
         currentLevel->setFeedIntensity(ib);
       }
     }
-    else if (!levels.isEmpty() && line.startsWith(dNucid + "  A ")) {
-//      UncertainDouble ia = parseUncertainty(line.mid(21, 8).remove("(").remove(")"), line.mid(29, 2));
-      UncertainDouble ia = UncertainDouble::from_nsdf(line.mid(21, 8).remove("(").remove(")").toStdString(),
-                                                      line.mid(29, 2).toStdString());
+    else if (!levels.empty() && (line.substr(0,9) == (dNucid + "  A "))) {
+      UncertainDouble ia = UncertainDouble::from_nsdf(line.substr(21, 8), line.substr(29, 2));
       if (ia.hasFiniteValue()) {
         ia.setSign(UncertainDouble::SignMagnitudeDefined);
         ia *= normalizeDecIntensToPercentParentDecay;
@@ -364,77 +347,67 @@ QSharedPointer<Decay> ENSDFParser::decay(const NuclideId &daughterNuclide, const
       }
     }
     // process normalization records
-    else if (line.startsWith(dNucid + "  N ")) {
-      QString brstr(line.mid(31, 8));
-      brstr.remove('(').remove(')');
-      double br = clocale.toDouble(brstr.trimmed(), &convok);
-      if (!convok)
-        br = 1.0;
-
-      QString nbstr(line.mid(41, 8));
-      nbstr.remove('(').remove(')');
-      double nb = clocale.toDouble(nbstr.trimmed(), &convok);
-      if (!convok)
-        nb = 1.0;
+    else if (line.substr(0,9) == (dNucid + "  N ")) {
+      double br = norm(line.substr(31, 8), 1.0);
+      double nb = norm(line.substr(41, 8), 1.0);
       normalizeDecIntensToPercentParentDecay = nb * br;
-
-      QString nrstr(line.mid(9, 10));
-      nrstr.remove('(').remove(')');
-      double nr = clocale.toDouble(nrstr.trimmed(), &convok);
-      if (!convok)
-        nr = 1.0;
+      double nr = norm(line.substr(9, 10), 1.0);
       normalizeGammaIntensToPercentParentDecay = nr * br;
     }
-    else if (line.startsWith(dNucid + " PN ")) {
-      QString nbbrstr(line.mid(41, 8));
-      nbbrstr.remove('(').remove(')');
-      double nbbr = clocale.toDouble(nbbrstr.trimmed(), &convok);
-      if (convok)
-        normalizeDecIntensToPercentParentDecay = nbbr;
-
-      QString nrbrstr(line.mid(9, 10));
-      nrbrstr.remove('(').remove(')');
-      double nrbr = clocale.toDouble(nrbrstr.trimmed(), &convok);
-      if (convok)
-        normalizeGammaIntensToPercentParentDecay = nrbr;
+    else if (line.substr(0,9) == (dNucid + " PN ")) {
+      normalizeDecIntensToPercentParentDecay = norm(line.substr(41, 8), normalizeDecIntensToPercentParentDecay);
+      normalizeGammaIntensToPercentParentDecay = norm(line.substr(9, 10), normalizeGammaIntensToPercentParentDecay);
     }
   }
 
   // create relevant parent levels and collect parent half-lifes
-  QMap<Energy, EnergyLevel*> plevels;
+  std::map<Energy, XEnergyLevelPtr> plevels;
   std::vector<HalfLife> pHl;
   foreach (ParentRecord p, decaydata.parents) {
     pHl.push_back(p.hl);
 
-    EnergyLevel *plv = new EnergyLevel(p.energy, p.spin, p.hl);
+    XEnergyLevelPtr plv(new XEnergyLevel(p.energy, p.spin, p.hl));
     plv->setFeedingLevel(true);
-    plevels.insert(p.energy, plv);
+    plevels[p.energy] = plv;
   }
-  if (!plevels.isEmpty()) {
-    if (plevels.begin().value()->energy() > 0.0) {
-      EnergyLevel *plv = new EnergyLevel(Energy(0.0, UncertainDouble::SignMagnitudeDefined), SpinParity(), HalfLife());
+
+  if (!plevels.empty() && (plevels.begin()->second->energy() > 0.0))
+  {
+      XEnergyLevelPtr plv(new XEnergyLevel(Energy(0.0, UncertainDouble::SignMagnitudeDefined), SpinParity(), HalfLife()));
       plv->setFeedingLevel(false);
-      plevels.insert(Energy(0.0, UncertainDouble::SignMagnitudeDefined), plv);
-    }
+      plevels[plv->energy()] = plv;
   }
 
-  Nuclide *pNuc = new Nuclide(decaydata.parents.value(0).nuclide, pHl);
-  pNuc->addLevels(plevels);
-  Nuclide *dNuc = new Nuclide(decaydata.daughter);
-  dNuc->addLevels(levels);
+  XNuclidePtr parent_nuclide(new XNuclide(decaydata.parents.at(0).nuclide, pHl));
+  parent_nuclide->addLevels(plevels);
+  XNuclidePtr daughter_nuclide(new XNuclide(decaydata.daughter));
+  daughter_nuclide->addLevels(levels);
 
-  return QSharedPointer<Decay>(new Decay(QString::fromStdString(decayName), pNuc, dNuc, decaydata.decayType));
+  return XDecay(decayName, parent_nuclide, daughter_nuclide, decaydata.decayType);
 }
 
-UncertainDouble ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString &multipolarity)
+double ENSDFParser::norm(std::string rec, double def_value)
+{
+  boost::replace_all(rec, "(", "");
+  boost::replace_all(rec, ")", "");
+  boost::trim(rec);
+  if (is_number(rec))
+    def_value = boost::lexical_cast<double>(rec);
+  return def_value;
+}
+
+
+
+UncertainDouble ENSDFParser::parseEnsdfMixing(const std::string &mstr, const std::string &multipolarity)
 {
   Q_ASSERT(mstr.size() == 14);
 
   // special case for pure multipolarities
-  if (mstr.trimmed().isEmpty()) {
-    QString tmp(multipolarity);
-    tmp.remove('(').remove(')');
-    if (tmp.count() == 2)
+  if (boost::trim_copy(mstr).empty()) {
+    std::string tmp(multipolarity);
+    boost::replace_all(tmp, "(", "");
+    boost::replace_all(tmp, ")", "");
+    if (tmp.size() == 2)
       return UncertainDouble(0.0, 1, UncertainDouble::SignMagnitudeDefined);
     else
       return UncertainDouble();
@@ -442,7 +415,7 @@ UncertainDouble ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString
 
   // mixed case
 //  return parseUncertainty(mstr.left(8).trimmed(), mstr.right(6).trimmed().replace(' ', ""));
-  return UncertainDouble::from_nsdf(mstr.left(8).toStdString(), mstr.right(6).replace(' ', "").toStdString());
+  return UncertainDouble::from_nsdf(mstr.substr(0,8), mstr.substr(8,6));
 
 }
 
@@ -452,7 +425,7 @@ UncertainDouble ENSDFParser::parseEnsdfMixing(const QString &mstr, const QString
  * @param newblock block to add
  * @param dssym Symbol of the current decay. Used to filter levels and adjust energies according to XREF records
  */
-void ENSDFParser::insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym) const
+void ENSDFParser::insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym) const
 {
   Q_ASSERT(adoptblocks);
   // get xref record
@@ -460,17 +433,21 @@ void ENSDFParser::insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblo
   std::list<std::string> req;
   req.push_back("XREF");
   std::vector<std::string> xreflist = extractContinuationRecords(newblock, req);
-  QString xref = QString::fromStdString(xreflist.at(0));
+  std::string xref = xreflist.at(0);
 
   // filter data sets
 
   // -(AB) case (do not add level if dssym is contained in the parentheses)
-  if (xref.startsWith("-(") && xref.endsWith(")") && xref.contains(dssym))
+  if ((xref.substr(0,2) == "-(")
+      && (xref[xref.size()-1] == ')')
+      && boost::contains(xref, std::string(1,dssym)))
     return;
 
   // exit if xref is neither "+" (level valid for all datasets) nor -(...) not containing dssymb
   // nor contains dssym
-  if (xref != "+" && !xref.startsWith("-(") && !xref.contains(dssym))
+  if (xref != "+"
+      && !(xref.substr(0,20) == "-(")
+      && !boost::contains(xref,std::string(1,dssym)))
     return;
 
   // if this point is reached the level will be added in any case
@@ -481,7 +458,8 @@ void ENSDFParser::insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblo
 
   // for the A(E1) case the energy must be modified
   QRegExp er(QString(dssym) + "\\(([.\\d]+)\\)");
-  if (er.indexIn(xref) >= 0) {
+  QString xs = QString::fromStdString(xref);
+  if (er.indexIn(xs) >= 0) {
     Energy matchedE = Energy::from_nsdf(er.cap(1).toStdString());
     DBG << "ENERGY FROM REGEXP " << er.cap(1).toStdString() << " --> " << matchedE.to_string() << " valid " << matchedE.isValid();
 
@@ -494,7 +472,7 @@ void ENSDFParser::insertAdoptedLevelsBlock(QMap<Energy, StringSubList> *adoptblo
   Q_ASSERT(newblock.last >= newblock.first);
 
   // add record
-  adoptblocks->insert(e, newblock);
+  (*adoptblocks)[e] = newblock;
 }
 
 /**
@@ -545,22 +523,25 @@ std::vector<std::string> ENSDFParser::extractContinuationRecords(const StringSub
 }
 
 template <typename T>
-T ENSDFParser::findNearest(const QMap<Energy, T> &map, const Energy &val, Energy *foundVal) const
+T ENSDFParser::findNearest(const std::map<Energy, T> &map, const Energy &val, Energy *foundVal) const
 {
-  Q_ASSERT(!map.isEmpty());
+  Q_ASSERT(!map.empty());
 
-  typename QMap<Energy, T>::const_iterator i = map.lowerBound(val);
-
-  if (i == map.end())
-    i--;
-  else if (i != map.begin())
-    if (qAbs(val - (i-1).key()) < qAbs(val - i.key()))
-      i--;
+  typename std::map<Energy, T>::const_iterator low, prev;
+  low = map.lower_bound(val);
+  if (low == map.end())
+    low--;
+   else if (low != map.begin()) {
+      prev = low;
+      --prev;
+      if ((val - prev->first) < (low->first - val))
+        low = prev;
+  }
 
   if (foundVal)
-    (*foundVal) = i.key();
+    (*foundVal) = low->first;
 
-  return i.value();
+  return low->second;
 }
 
 void ENSDFParser::parseBlocks()
@@ -608,14 +589,14 @@ void ENSDFParser::parseBlocks()
       boost::regex filter("^[\\s0-9A-Z]{5,5}\\s\\sP[\\s0-9].*$");
       for (size_t i=block.first; i < block.second; ++i) {
         if (boost::regex_match(contents.at(i), filter)) {
-          decaydata.parents.append(ParentRecord::from_ensdf(contents.at(i)));
+          decaydata.parents.push_back(ParentRecord::from_ensdf(contents.at(i)));
 //          DBG << "  Parent         " << decaydata.parents.back().to_string();
         }
 //        else
 //          DBG << "             DEC " << contents.at(i);
       }
 
-      if (decaydata.parents.isEmpty()) {
+      if (decaydata.parents.empty()) {
         DBG <<   " BROKEN RECORD FOR " << decaydata.to_string();
         // broken records. skipping
         continue;
@@ -635,9 +616,9 @@ void ENSDFParser::parseBlocks()
       std::string decayname  = prec.nuclide.symbolicName();
       if (prec.energy > 0.0)
         decayname += "m";
-      decayname += " → "
-                + Decay::decayTypeAsText(decaydata.decayType).toStdString();
-                + ", " + join(hlstrings, " + ");
+      decayname += " → " + XDecay::DecayTypeAsText(decaydata.decayType);
+      if (!hlstrings.empty())
+        decayname += ", " + join(hlstrings, " + ");
 
       // insert into decay map
       while (decmap.count(decayname))
