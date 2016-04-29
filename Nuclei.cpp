@@ -175,7 +175,7 @@ void Nuclei::loadSelectedDecay(const QModelIndex &index)
   if (!decaySelectionModel)
     return;
 
-  XDecayPtr decay(decaySelectionModel->decay(decayProxyModel->mapToSource(index)));
+  DecaySchemePtr decay(decaySelectionModel->decay(decayProxyModel->mapToSource(index)));
 
   if (!decay || !decay->valid())
     return;
@@ -193,7 +193,7 @@ void Nuclei::loadSearchResultCascade(const QModelIndex &index)
   if (!searchResultSelectionModel)
     return;
 
-  XDecayPtr decay(searchResultSelectionModel->decay(searchProxyModel->mapToSource(index)));
+  DecaySchemePtr decay(searchResultSelectionModel->decay(searchProxyModel->mapToSource(index)));
 
   if (!decay || !decay->valid())
     return;
@@ -343,7 +343,7 @@ void Nuclei::closeEvent(QCloseEvent *event)
   QMainWindow::closeEvent(event);
 }
 
-void Nuclei::loadDecay(XDecayPtr decay)
+void Nuclei::loadDecay(DecaySchemePtr decay)
 {
   QSettings s;
   s.setValue("preferences/levelTolerance", preferencesDialogUi->levelDiff->value());

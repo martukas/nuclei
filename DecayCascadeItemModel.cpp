@@ -108,7 +108,7 @@ Qt::ItemFlags DecayCascadeItemModel::flags(const QModelIndex &index) const
   return result;
 }
 
-XDecayPtr DecayCascadeItemModel::decay(const QModelIndex &index) const
+DecaySchemePtr DecayCascadeItemModel::decay(const QModelIndex &index) const
 {
   if (!index.isValid())
     return nullptr;

@@ -1,14 +1,14 @@
 #ifndef ENSDFPARSER_H
 #define ENSDFPARSER_H
-#include "XDecay.h"
+#include "DecayScheme.h"
 #include "Energy.h"
-#include "XNuclide.h"
+#include "Nuclide.h"
 #include <utility>
 #include <memory>
 
 class HalfLife;
 
-typedef std::pair<int,int> BlockIndices; // [startidx, size]
+typedef std::pair<size_t, size_t> BlockIndices; // [startidx, size]
 
 struct ParentRecord {
     NuclideId nuclide;
@@ -23,14 +23,14 @@ struct ParentRecord {
 struct BasicDecayData {
     std::vector<ParentRecord> parents;
     NuclideId daughter;
-    XDecay::Type decayType;
+    DecayScheme::Type decayType;
     BlockIndices block;
     std::string dsid;
 
     static BasicDecayData from_ensdf(const std::string &header, BlockIndices block);
     std::string to_string() const;
 private:
-    static XDecay::Type parseDecayType(const std::string &tstring);
+    static DecayScheme::Type parseDecayType(const std::string &tstring);
 };
 
 class ENSDFParser
@@ -45,7 +45,7 @@ public:
     const std::list< std::pair<std::string, NuclideId> > decays(const NuclideId &daughterNuclide) const;
 
 
-    XDecayPtr decay(const NuclideId &daughterNuclide, const std::string &decayName) const;
+    DecaySchemePtr decay(const NuclideId &daughterNuclide, const std::string &decayName) const;
 private:
 
     struct StringSubList {

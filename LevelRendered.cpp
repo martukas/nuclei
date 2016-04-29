@@ -14,7 +14,7 @@ LevelRendered::LevelRendered()
 {
 }
 
-LevelRendered::LevelRendered(XEnergyLevelPtr level, ParentPosition parentpos,
+LevelRendered::LevelRendered(LevelPtr level, ParentPosition parentpos,
                              SchemeVisualSettings vis, QGraphicsScene *scene)
   : LevelRendered()
 {

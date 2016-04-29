@@ -1,12 +1,12 @@
 #include <cmath>
-#include "XEnergyLevel.h"
-#include "XGammaTransition.h"
+#include "Level.h"
+#include "Transition.h"
 #include "custom_logger.h"
 #include "qpx_util.h"
 
-XEnergyLevel::XEnergyLevel(Energy energy, SpinParity spin, HalfLife halfLife,
+Level::Level(Energy energy, SpinParity spin, HalfLife halfLife,
                            unsigned int isomerNum)
-  : XEnergyLevel()
+  : Level()
 {
   m_e = energy;
   sp = spin;
@@ -14,10 +14,10 @@ XEnergyLevel::XEnergyLevel(Energy energy, SpinParity spin, HalfLife halfLife,
   isonum = isomerNum;
 }
 
-XEnergyLevel XEnergyLevel::from_ensdf(std::string record)
+Level Level::from_ensdf(std::string record)
 {
   if (record.size() != 80)
-    return XEnergyLevel();
+    return Level();
 
   Energy        e = Energy::from_nsdf(record.substr(9,12));
   SpinParity spin = SpinParity::from_ensdf(record.substr(21, 18));
@@ -33,12 +33,12 @@ XEnergyLevel XEnergyLevel::from_ensdf(std::string record)
       isonum = 1;
   }
 
-  XEnergyLevel ret(e, spin, hl, isonum);
+  Level ret(e, spin, hl, isonum);
 //  DBG << record << " --> " << ret.to_string();
   return ret;
 }
 
-std::string XEnergyLevel::to_string() const
+std::string Level::to_string() const
 {
   std::string ret = energy().to_string();
   if (sp.valid())
@@ -54,57 +54,57 @@ std::string XEnergyLevel::to_string() const
   return ret;
 }
 
-Energy XEnergyLevel::energy() const
+Energy Level::energy() const
 {
   return m_e;
 }
 
-SpinParity XEnergyLevel::spin() const
+SpinParity Level::spin() const
 {
   return sp;
 }
 
-HalfLife XEnergyLevel::halfLife() const
+HalfLife Level::halfLife() const
 {
   return hl;
 }
 
-unsigned int XEnergyLevel::isomerNum() const
+unsigned int Level::isomerNum() const
 {
   return isonum;
 }
 
-UncertainDouble XEnergyLevel::normalizedFeedIntensity() const
+UncertainDouble Level::normalizedFeedIntensity() const
 {
   return feedintens;
 }
 
-Moment XEnergyLevel::mu() const
+Moment Level::mu() const
 {
   return m_mu;
 }
 
-Moment XEnergyLevel::q() const
+Moment Level::q() const
 {
   return m_Q;
 }
 
-void XEnergyLevel::set_mu(const Moment &m)
+void Level::set_mu(const Moment &m)
 {
   m_mu = m;
 }
 
-void XEnergyLevel::set_q(const Moment &m)
+void Level::set_q(const Moment &m)
 {
   m_Q = m;
 }
 
-void XEnergyLevel::set_halflife(const HalfLife& h)
+void Level::set_halflife(const HalfLife& h)
 {
   hl = h;
 }
 
-void XEnergyLevel::set_spin(const SpinParity& s)
+void Level::set_spin(const SpinParity& s)
 {
   sp = s;
 }
@@ -114,31 +114,31 @@ void XEnergyLevel::set_spin(const SpinParity& s)
 /**
   * \return Sorted list of transitions, lowest energy gamma first
   */
-const std::list<std::shared_ptr<XGammaTransition>> & XEnergyLevel::depopulatingTransitions() const
+const std::list<std::shared_ptr<Transition>> & Level::depopulatingTransitions() const
 {
-  m_depopulatingTransitions.sort([](const XGammaTransitionPtr & a, const XGammaTransitionPtr & b)
+  m_depopulatingTransitions.sort([](const TransitionPtr & a, const TransitionPtr & b)
                                    { return a->energy() < b->energy(); });
   return m_depopulatingTransitions;
 }
 
-const std::list<std::shared_ptr<XGammaTransition>> & XEnergyLevel::populatingTransitions() const
+const std::list<std::shared_ptr<Transition>> & Level::populatingTransitions() const
 {
-  m_populatingTransitions.sort([](const XGammaTransitionPtr & a, const XGammaTransitionPtr & b)
+  m_populatingTransitions.sort([](const TransitionPtr & a, const TransitionPtr & b)
                                    { return a->energy() < b->energy(); });
   return m_populatingTransitions;
 }
 
-void XEnergyLevel::setFeedIntensity(UncertainDouble intensity)
+void Level::setFeedIntensity(UncertainDouble intensity)
 {
   feedintens = intensity;
 }
 
-void XEnergyLevel::setFeedingLevel(bool isfeeding)
+void Level::setFeedingLevel(bool isfeeding)
 {
   feedinglevel = isfeeding;
 }
 
-bool XEnergyLevel::isFeedingLevel() const
+bool Level::isFeedingLevel() const
 {
   return feedinglevel;
 }

@@ -39,7 +39,7 @@ AbstractTreeItem *ENSDFDataSource::rootItem() const
   return root;
 }
 
-XDecayPtr ENSDFDataSource::decay(const AbstractTreeItem *item) const
+DecaySchemePtr ENSDFDataSource::decay(const AbstractTreeItem *item) const
 {
   QMutexLocker locker(&m);
   const ENSDFTreeItem *eitem = dynamic_cast<const ENSDFTreeItem*>(item);
@@ -49,7 +49,7 @@ XDecayPtr ENSDFDataSource::decay(const AbstractTreeItem *item) const
   if (!eitem->parent() || !eitem->isSelectable())
     return nullptr;
   if (mccache && mccache->aValue() == eitem->parent()->id().A()) {
-    XDecayPtr dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
+    DecaySchemePtr dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
     return dec;
   }
 
@@ -57,7 +57,7 @@ XDecayPtr ENSDFDataSource::decay(const AbstractTreeItem *item) const
   QSettings s;
   QString dir =  s.value("ensdfPath", ".").toString();
   mccache = new ENSDFParser(eitem->parent()->id().A(), dir.toStdString());
-  XDecayPtr dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
+  DecaySchemePtr dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
   return dec;
 }
 
@@ -198,7 +198,6 @@ void ENSDFDataSource::createENSDFCache()
 
     for (auto &daughter : mc->daughterNuclides()) {
       ENSDFTreeItem *d = new ENSDFTreeItem(AbstractTreeItem::DaughterType, QList<QVariant>() << QString::fromStdString(daughter.symbolicName()).toUpper(), daughter, false, root);
-      typedef QPair<QString, NuclideId> DecayType;
       for (auto &decay : mc->decays(daughter)) {
         QString st = QString::fromStdString(decay.first);
         new ENSDFTreeItem(AbstractTreeItem::DecayType, QList<QVariant>() << st, decay.second, true, d);

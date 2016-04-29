@@ -25,7 +25,7 @@ public:
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 
-    virtual XDecayPtr decay(const QModelIndex &index) const;
+    virtual DecaySchemePtr decay(const QModelIndex &index) const;
 //    virtual Decay::CascadeIdentifier cascade(const QModelIndex &index) const;
     
 signals:

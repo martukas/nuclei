@@ -2,7 +2,7 @@
 #define NUCLEI_H
 
 #include <QMainWindow>
-#include "XDecay.h"
+#include "DecayScheme.h"
 #include "SchemePlayer.h"
 
 namespace Ui {
@@ -47,7 +47,7 @@ protected:
     void closeEvent(QCloseEvent * event);
 
 private:
-    void loadDecay(XDecayPtr decay);
+    void loadDecay(DecaySchemePtr decay);
 
     Ui::NucleiMainWindow *ui;
     QDialog *preferencesDialog;

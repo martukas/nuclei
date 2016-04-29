@@ -6,7 +6,7 @@
 #include <QFont>
 #include <QPair>
 #include "ClickableItem.h"
-#include "XNuclide.h"
+#include "Nuclide.h"
 
 class QGraphicsItem;
 class QGraphicsItemGroup;
@@ -18,7 +18,7 @@ class NuclideRendered : public ClickableItem
 {
 public:
   NuclideRendered();
-  NuclideRendered(XNuclidePtr nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene);
+  NuclideRendered(NuclidePtr nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene);
 
   QGraphicsSimpleTextItem *pNucHl;
   QGraphicsLineItem *pNucVerticalArrow;

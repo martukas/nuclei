@@ -18,7 +18,7 @@
 
 #include "custom_logger.h"
 
-SchemePlayer::SchemePlayer(XDecayPtr scheme, QObject *parent)
+SchemePlayer::SchemePlayer(DecaySchemePtr scheme, QObject *parent)
   : QObject(parent), scheme_(scheme),
     scene_(0)
 {
@@ -37,9 +37,9 @@ QGraphicsScene * SchemePlayer::levelPlot()
   // decide if parent nuclide should be printed on the left side (beta-),
   // on the right side (EC, beta+, alpha) or not at all (isomeric)
   ParentPosition parentpos = RightParent;
-  if (scheme_->type() == XDecay::IsomericTransition)
+  if (scheme_->type() == DecayScheme::IsomericTransition)
     parentpos = NoParent;
-  else if (scheme_->type() == XDecay::BetaMinus)
+  else if (scheme_->type() == DecayScheme::BetaMinus)
     parentpos = LeftParent;
 
   for (auto &level : scheme_->daughterNuclide()->levels()) {
@@ -49,8 +49,8 @@ QGraphicsScene * SchemePlayer::levelPlot()
     connect(levrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
     levels_.insert(levrend->energy_,levrend);
     // create gammas
-    std::list<XGammaTransitionPtr> levelgammas = level.second->depopulatingTransitions();
-    for (XGammaTransitionPtr gamma : levelgammas) {
+    std::list<TransitionPtr> levelgammas = level.second->depopulatingTransitions();
+    for (TransitionPtr gamma : levelgammas) {
       TransitionRendered *transrend = new TransitionRendered(gamma, vis, scene_);
 //      ActiveGraphicsItemGroup *item = gamma->createGammaGraphicsItem(gammaFont, gammaPen, intenseGammaPen);
       connect(this, SIGNAL(enabledShadow(bool)), transrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
@@ -103,9 +103,9 @@ void SchemePlayer::alignGraphicsItems()
   // decide if parent nuclide should be printed on the left side (beta-),
   // on the right side (EC, beta+, alpha) or not at all (isomeric)
   ParentPosition parentpos = RightParent;
-  if (scheme_->type() == XDecay::IsomericTransition)
+  if (scheme_->type() == DecayScheme::IsomericTransition)
     parentpos = NoParent;
-  else if (scheme_->type() == XDecay::BetaMinus)
+  else if (scheme_->type() == DecayScheme::BetaMinus)
     parentpos = LeftParent;
 
   QFontMetrics stdFontMetrics(vis.stdFont);

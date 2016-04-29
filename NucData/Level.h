@@ -1,5 +1,5 @@
-#ifndef XEnergyLevel_H
-#define XEnergyLevel_H
+#ifndef Level_H
+#define Level_H
 
 #include <stdint.h>
 #include <limits>
@@ -10,23 +10,23 @@
 #include "SpinParity.h"
 #include "Moment.h"
 
-class XGammaTransition;
+class Transition;
 
 
-class XEnergyLevel
+class Level
 {
 public:
 
-  XEnergyLevel()
+  Level()
     : isonum(0)
     , feedinglevel(false)
   {}
 
-    XEnergyLevel(Energy energy, SpinParity spin,
+    Level(Energy energy, SpinParity spin,
                 HalfLife halfLife = HalfLife(std::numeric_limits<double>::infinity()),
                 unsigned int isomerNum = 0);
 
-    static XEnergyLevel from_ensdf(std::string record);
+    static Level from_ensdf(std::string record);
 
     Energy energy() const;
     SpinParity spin() const;
@@ -41,8 +41,8 @@ public:
     void set_halflife(const HalfLife&);
     void set_spin(const SpinParity&);
 
-    const std::list<std::shared_ptr<XGammaTransition>> &depopulatingTransitions() const;
-    const std::list<std::shared_ptr<XGammaTransition>> &populatingTransitions() const;
+    const std::list<std::shared_ptr<Transition>> &depopulatingTransitions() const;
+    const std::list<std::shared_ptr<Transition>> &populatingTransitions() const;
 
     std::string to_string() const;
 
@@ -51,7 +51,7 @@ public:
 
     bool isFeedingLevel() const;
 
-    friend class XGammaTransition;
+    friend class Transition;
 
 private:
     Energy m_e;
@@ -66,10 +66,10 @@ private:
     bool feedinglevel; // true if this is belonging to a parent nuclide and is a starting point for decays
 
 
-    mutable std::list<std::shared_ptr<XGammaTransition>> m_populatingTransitions;
-    mutable std::list<std::shared_ptr<XGammaTransition>> m_depopulatingTransitions;
+    mutable std::list<std::shared_ptr<Transition>> m_populatingTransitions;
+    mutable std::list<std::shared_ptr<Transition>> m_depopulatingTransitions;
 };
 
-typedef std::shared_ptr<XEnergyLevel> XEnergyLevelPtr;
+typedef std::shared_ptr<Level> LevelPtr;
 
-#endif // XEnergyLevel_H
+#endif // Level_H

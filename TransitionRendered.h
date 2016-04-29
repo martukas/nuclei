@@ -5,7 +5,7 @@
 #include <QFont>
 #include <QPen>
 #include "ClickableItem.h"
-#include "XGammaTransition.h"
+#include "Transition.h"
 
 class QGraphicsItem;
 class ActiveGraphicsItemGroup;
@@ -21,7 +21,7 @@ class TransitionRendered : public ClickableItem
 public:
 
   TransitionRendered();
-  TransitionRendered(XGammaTransitionPtr transition, SchemeVisualSettings vis, QGraphicsScene *scene);
+  TransitionRendered(TransitionPtr transition, SchemeVisualSettings vis, QGraphicsScene *scene);
 
   virtual ~TransitionRendered();
 

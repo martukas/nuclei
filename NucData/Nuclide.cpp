@@ -1,49 +1,49 @@
-#include "XNuclide.h"
+#include "Nuclide.h"
 #include <boost/algorithm/string.hpp>
 #include "custom_logger.h"
 #include "qpx_util.h"
 
-XNuclide::XNuclide()
+Nuclide::Nuclide()
 {
 }
 
-XNuclide::XNuclide(NuclideId id, const HalfLife &halfLife)
+Nuclide::Nuclide(NuclideId id, const HalfLife &halfLife)
   : nid_(id)
 {
   hl.push_back(halfLife);
 }
 
-XNuclide::XNuclide(NuclideId id, const std::vector<HalfLife> &halfLifes)
+Nuclide::Nuclide(NuclideId id, const std::vector<HalfLife> &halfLifes)
   : nid_(id), hl(halfLifes)
 {
 }
 
-NuclideId XNuclide::id() const
+NuclideId Nuclide::id() const
 {
   return nid_;
 }
 
-bool XNuclide::empty() const
+bool Nuclide::empty() const
 {
   return (!nid_.valid() || m_levels.empty() || hl.empty());
 }
 
-void XNuclide::addLevels(const std::map<Energy, XEnergyLevelPtr> &levels)
+void Nuclide::addLevels(const std::map<Energy, LevelPtr> &levels)
 {
   m_levels.insert(levels.begin(), levels.end());
 }
 
-std::map<Energy, XEnergyLevelPtr> &XNuclide::levels()
+std::map<Energy, LevelPtr> &Nuclide::levels()
 {
   return m_levels;
 }
 
-std::vector<HalfLife> XNuclide::halfLifes() const
+std::vector<HalfLife> Nuclide::halfLifes() const
 {
   return hl;
 }
 
-std::string XNuclide::halfLifeAsText() const
+std::string Nuclide::halfLifeAsText() const
 {
   std::vector<std::string> results;
   for (auto &h : hl)

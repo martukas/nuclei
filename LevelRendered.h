@@ -2,7 +2,7 @@
 #define LEVEL_RENDERED_H
 
 #include "ClickableItem.h"
-#include "XEnergyLevel.h"
+#include "Level.h"
 
 class ActiveGraphicsItemGroup;
 class QGraphicsLineItem;
@@ -18,7 +18,7 @@ class LevelRendered : public ClickableItem
 {
 public:
   LevelRendered();
-  LevelRendered(XEnergyLevelPtr level, ParentPosition parentpos, SchemeVisualSettings vis, QGraphicsScene *scene);
+  LevelRendered(LevelPtr level, ParentPosition parentpos, SchemeVisualSettings vis, QGraphicsScene *scene);
 
   //returns feeding arrow height, if any
   double align(double leftlinelength, double rightlinelength, double arrowleft, double arrowright,
