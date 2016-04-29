@@ -27,6 +27,7 @@ Makefile*
 
 debug/*
 release/*
+Application\ Data/*
 ui/*
 nuclei
 
