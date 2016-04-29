@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "XNuclide.h"
+#include "XGammaTransition.h"
 #include "SpinParity.h"
 
 class XEnergyLevel;
@@ -28,25 +29,22 @@ public:
 
     static std::string DecayTypeAsText(Type type);
 
+    bool valid() const;
     std::string name() const;
     Type type() const;
 
     XNuclidePtr parentNuclide() const;
     XNuclidePtr daughterNuclide() const;
 
-    struct CascadeIdentifier {
-        CascadeIdentifier();
-        Energy start;
-        Energy pop;
-        Energy intermediate;
-        bool highlightIntermediate;
-        Energy depop;
-    };
+    XEnergyLevelPtr getLevel(Energy) const;
+    XGammaTransitionPtr getTransition(Energy) const;
 
 private:
     std::string m_name;
     XNuclidePtr pNuc, dNuc;
     Type t;
 };
+
+typedef std::shared_ptr<XDecay> XDecayPtr;
 
 #endif // XDecay_H

@@ -15,6 +15,8 @@ SpinParity SpinParity::from_ensdf(std::string data)
   SpinParity ret;
   ret.parity_.from_string(data);
   ret.spins_.clear();
+  boost::replace_all(data, "(", "");
+  boost::replace_all(data, ")", "");
   std::vector<std::string> spin_strs;
   boost::split(spin_strs, data, boost::is_any_of(","));
   for (auto &token : spin_strs) {

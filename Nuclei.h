@@ -2,7 +2,8 @@
 #define NUCLEI_H
 
 #include <QMainWindow>
-#include "Decay.h"
+#include "XDecay.h"
+#include "SchemePlayer.h"
 
 namespace Ui {
 class NucleiMainWindow;
@@ -29,7 +30,7 @@ private slots:
     void loadSelectedDecay(const QModelIndex &index);
     void loadSearchResultCascade(const QModelIndex &index);
 
-    void updateDecayData(Decay::DecayDataSet data);
+    void updateDecayData(SchemePlayer::SchemePlayerDataSet data);
 
     void svgExport();
     void pdfExport();
@@ -46,7 +47,7 @@ protected:
     void closeEvent(QCloseEvent * event);
 
 private:
-    void loadDecay(QSharedPointer<Decay> decay);
+    void loadDecay(XDecayPtr decay);
 
     Ui::NucleiMainWindow *ui;
     QDialog *preferencesDialog;
@@ -54,7 +55,7 @@ private:
 
     DecayCascadeItemModel *decaySelectionModel, *searchResultSelectionModel;
     DecayCascadeFilterProxyModel *decayProxyModel, *searchProxyModel;
-    QSharedPointer<Decay> m_decay;
+    QSharedPointer<SchemePlayer> m_decay;
 
     QLabel *ensdfversion;
 };

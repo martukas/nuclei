@@ -35,7 +35,7 @@ public:
 
     virtual AbstractTreeItem * rootItem() const;
 
-    virtual QSharedPointer<Decay> decay(const AbstractTreeItem *item) const;
+    virtual XDecayPtr decay(const AbstractTreeItem *item) const;
 
 public slots:
     void deleteDatabaseAndCache();

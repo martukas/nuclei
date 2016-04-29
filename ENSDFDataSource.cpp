@@ -10,6 +10,7 @@
 
 #include "ENSDFDownloader.h"
 #include "ENSDFParser.h"
+#include "custom_logger.h"
 
 const quint32 ENSDFDataSource::magicNumber = 0x4b616945;
 const quint32 ENSDFDataSource::cacheVersion = 5;
@@ -38,30 +39,26 @@ AbstractTreeItem *ENSDFDataSource::rootItem() const
   return root;
 }
 
-QSharedPointer<Decay> ENSDFDataSource::decay(const AbstractTreeItem *item) const
+XDecayPtr ENSDFDataSource::decay(const AbstractTreeItem *item) const
 {
   QMutexLocker locker(&m);
   const ENSDFTreeItem *eitem = dynamic_cast<const ENSDFTreeItem*>(item);
   if (!eitem)
-    return QSharedPointer<Decay>();
+    return nullptr;
 
   if (!eitem->parent() || !eitem->isSelectable())
-    return QSharedPointer<Decay>();
+    return nullptr;
+  if (mccache && mccache->aValue() == eitem->parent()->id().A()) {
+    XDecayPtr dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
+    return dec;
+  }
 
-
-  return QSharedPointer<Decay>();
-
-
-//  if (mccache && mccache->aValue() == eitem->parent()->id().A()) {
-//    QSharedPointer<Decay> dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
-//    return dec;
-//  }
-
-//  delete mccache;
-//  mccache = new ENSDFParser(eitem->parent()->id().A());
-//  QSharedPointer<Decay> dec;
-//  (*dec) = Decay(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
-//  return dec;
+  delete mccache;
+  QSettings s;
+  QString dir =  s.value("ensdfPath", ".").toString();
+  mccache = new ENSDFParser(eitem->parent()->id().A(), dir.toStdString());
+  XDecayPtr dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
+  return dec;
 }
 
 void ENSDFDataSource::deleteDatabaseAndCache()
@@ -95,8 +92,11 @@ QList<uint16_t> ENSDFDataSource::getAvailableDataFileNumbers() const
 {
   QWidget *pwid = qobject_cast<QWidget*>(parent());
 
+  QSettings s;
+  QString dir =  s.value("ensdfPath", ".").toString();
+
   // get A (mass number) strings or exit application
-  std::list<uint16_t> aList(ENSDFParser::aValues());
+  std::list<uint16_t> aList(ENSDFParser::aValues(dir.toStdString()));
   bool firsttry = true;
   while (aList.empty()) {
     if (!firsttry)
@@ -110,7 +110,7 @@ QList<uint16_t> ENSDFDataSource::getAvailableDataFileNumbers() const
       return QList<uint16_t>();
     }
 
-    aList = ENSDFParser::aValues();
+    aList = ENSDFParser::aValues(dir.toStdString());
     firsttry = false;
   }
 
@@ -168,6 +168,7 @@ void ENSDFDataSource::createENSDFCache()
     return;
 
   QSettings s;
+  QString ensdf_dir =  s.value("ensdfPath", ".").toString();
   //create directory if it does not exist
   QDir cacheDir(cachePath);
   if (!cacheDir.exists())
@@ -193,7 +194,7 @@ void ENSDFDataSource::createENSDFCache()
   pd.setWindowModality(Qt::WindowModal);
   pd.setCancelButton(0);
   for (auto &a : aList) {
-    ENSDFParser *mc = new ENSDFParser(a);
+    ENSDFParser *mc = new ENSDFParser(a, ensdf_dir.toStdString());
 
     for (auto &daughter : mc->daughterNuclides()) {
       ENSDFTreeItem *d = new ENSDFTreeItem(AbstractTreeItem::DaughterType, QList<QVariant>() << QString::fromStdString(daughter.symbolicName()).toUpper(), daughter, false, root);

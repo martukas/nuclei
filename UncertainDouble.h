@@ -52,7 +52,7 @@ public:
 
     bool hasFiniteValue() const;
 
-    std::string to_string(bool prefix_magn) const;
+    std::string to_string(bool prefix_magn, bool with_uncert = true) const;
     std::string to_markup() const; // outputs formatted text
 
     UncertainDouble & operator*=(double other);

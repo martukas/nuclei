@@ -12,6 +12,7 @@
 #include <list>
 #include <utility>
 #include <boost/regex.hpp>
+#include <boost/filesystem.hpp>
 
 
 ParentRecord ParentRecord::from_ensdf(const std::string &record)
@@ -80,39 +81,58 @@ std::string BasicDecayData::to_string() const
 
 std::list<uint16_t> ENSDFParser::aList;
 
-ENSDFParser::ENSDFParser(uint16_t A)
+ENSDFParser::ENSDFParser(uint16_t A, std::string directory)
   : a(A)
 {
-//  QSettings s;
-//  // read data
-//  QFile f(s.value("ensdfPath", ".").toString() + QString("/ensdf.%1").arg(a, int(3), int(10), QChar('0')));
-//  f.open(QIODevice::ReadOnly | QIODevice::Text);
-//  std::string c = QString::fromUtf8(f.readAll()).toStdString();
+  std::string num = std::to_string(A);
+  if (num.size() < 3)
+    num = std::string(3-num.size(), '0') + num;
+  std::string file = directory + "/ensdf." + num;
 
-//  boost::split(contents, c, boost::is_any_of("\n"));
+  std::ifstream t(file);
+  std::string str;
+
+  t.seekg(0, std::ios::end);
+  str.reserve(t.tellg());
+  t.seekg(0, std::ios::beg);
+
+  str.assign((std::istreambuf_iterator<char>(t)),
+             std::istreambuf_iterator<char>());
+
+  boost::split(contents, str, boost::is_any_of("\n"));
 
   parseBlocks();
 }
 
-const std::list<uint16_t> &ENSDFParser::aValues() // static
+const std::list<uint16_t> &ENSDFParser::aValues(std::string directory) // static
 {
-//  if (!aList.empty())
-//    return aList;
+  if (!aList.empty())
+    return aList;
 
-//  QSettings s;
-//  if (!s.contains("ensdfPath"))
-//    return aList;
+  if (directory.empty())
+    return aList;
 
-//  QDir dir(s.value("ensdfPath").toString());
-//  if (!dir.exists())
-//    return aList;
+  boost::system::error_code c;
+  boost::filesystem::path path(directory);
+  bool is_dir = boost::filesystem::is_directory(path, c);
 
-//  QStringList tmp(dir.entryList(QStringList("ensdf.???"), QDir::Files | QDir::Readable, QDir::Name));
+  if (!is_dir)
+    return aList;
 
-//  for (int i=0; i<tmp.size(); i++) {
-//    const QString aStr(tmp.at(i).right(3).remove(QRegExp("^0+")));
-//    aList.push_back(aStr.toUInt());
-//  }
+  boost::filesystem::directory_iterator end_iter;
+
+  std::set<uint16_t> aSet;
+  for( boost::filesystem::directory_iterator dir_iter(path) ; dir_iter != end_iter ; ++dir_iter)
+    if (boost::filesystem::is_regular_file(dir_iter->status()) && (dir_iter->path().string().size() > 3))
+    {
+      std::string filename = dir_iter->path().string();
+      std::string a_num = filename.substr(filename.size()-3, 3);
+      if (is_number(a_num))
+        aSet.insert(boost::lexical_cast<uint16_t>(a_num));
+    }
+
+  aList = std::list<uint16_t>(aSet.begin(), aSet.end());
+
   return aList;
 }
 
@@ -123,7 +143,7 @@ uint16_t ENSDFParser::aValue() const
 
 const std::list<NuclideId> ENSDFParser::daughterNuclides() const
 {
-//  Q_ASSERT(m_decays.size() == m_decays.keys().toSet().size()); // check for duplicates
+  //  Q_ASSERT(m_decays.size() == m_decays.keys().toSet().size()); // check for duplicates
   std::list<NuclideId> ret;
   for (auto &n : m_decays)
     ret.push_back(n.first);
@@ -132,23 +152,23 @@ const std::list<NuclideId> ENSDFParser::daughterNuclides() const
 
 const std::list< std::pair<std::string, NuclideId> > ENSDFParser::decays(const NuclideId &daughterNuclide) const
 {
-//  Q_ASSERT(m_decays.value(daughterNuclide).size() == m_decays.value(daughterNuclide).keys().toSet().size()); // check for duplicates
+  //  Q_ASSERT(m_decays.value(daughterNuclide).size() == m_decays.value(daughterNuclide).keys().toSet().size()); // check for duplicates
   std::list< std::pair<std::string, NuclideId> > result;
   for (auto &i : m_decays.at(daughterNuclide))
     result.push_back(std::pair<std::string, NuclideId>(i.first, i.second.parents.at(0).nuclide));
   return result;
 }
 
-XDecay ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &decayName) const
+XDecayPtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &decayName) const
 {
   if (!m_adoptedlevels.count(daughterNuclide) ||
       !m_decays.count(daughterNuclide) ||
       !m_decays.at(daughterNuclide).count(decayName))
-    return XDecay();
+    return nullptr;
 
-//  QSettings s;
-//  double adoptedLevelMaxDifference = s.value("preferences/levelTolerance", 1.0).toDouble();
-//  double gammaMaxDifference = s.value("preferences/gammaTolerance", 1.0).toDouble();
+  //  QSettings s;
+  //  double adoptedLevelMaxDifference = s.value("preferences/levelTolerance", 1.0).toDouble();
+  //  double gammaMaxDifference = s.value("preferences/gammaTolerance", 1.0).toDouble();
 
   double adoptedLevelMaxDifference = 1.0;
   double gammaMaxDifference = 1.0;
@@ -161,7 +181,7 @@ XDecay ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &d
   double normalizeGammaIntensToPercentParentDecay = 1.0;
   std::string dNucid = daughterNuclide.to_ensdf();
 
-//  DBG << "parsing " << dNucid.toStdString();
+  //  DBG << "parsing " << dNucid.toStdString();
 
   // process all adopted level sub-blocks
   XEnergyLevelPtr currentLevel(nullptr);
@@ -199,19 +219,15 @@ XDecay ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &d
 
   // process decay block
 
-//  DBG << "parsing size " << decaylines.size();
+  //  DBG << "parsing size " << decaylines.size();
 
   for (int k=decaydata.block.first; k < decaydata.block.second; k++) {
     const std::string line = contents.at(k);
 
-//    DBG << "c line " << line.toStdString();
+    //    DBG << "c line " << line.toStdString();
 
     // process new gamma
-    if ((levels.size() >= 8) && (line.substr(0,9) == (dNucid + "  G "))) {
-
-//      DBG << "c1";
-
-      Q_ASSERT(!levels.empty());
+    if ((line.size() >= 8) && (line.substr(0,9) == (dNucid + "  G ")) && !levels.empty()) {
 
       // determine energy
       Energy e = Energy::from_nsdf(line.substr(9, 12));
@@ -264,7 +280,6 @@ XDecay ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &d
       if (!levels.empty()) {
         XEnergyLevelPtr start = currentLevel;
         XEnergyLevelPtr destlvl = findNearest(levels, start->energy() - e);
-
         // gamma registers itself with the start and dest levels
         new XGammaTransition(e, in, mpol, delta, start, destlvl);
       }
@@ -280,23 +295,24 @@ XDecay ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &d
         Energy foundE;
         currentadoptblock.clear();
         currentadoptblock = findNearest(adoptblocks, currentLevel->energy(), &foundE);
-        Q_ASSERT(currentadoptblock.last >= currentadoptblock.first);
-        if (qAbs((currentLevel->energy() - foundE).operator double()) > (adoptedLevelMaxDifference/1000.0*currentLevel->energy()))
+        //        Q_ASSERT(currentadoptblock.last >= currentadoptblock.first);
+        if (abs((currentLevel->energy() - foundE).operator double()) > (adoptedLevelMaxDifference/1000.0*currentLevel->energy()))
           currentadoptblock.clear();
       }
-      else {
+      else
         currentadoptblock.clear();
-        Q_ASSERT(currentadoptblock.last >= currentadoptblock.first);
-      }
 
       // if an appropriate entry was found, read its contents
       // set half life if necessary
       if (currentadoptblock.first != currentadoptblock.last) {
+
         std::string levelfirstline(contents.at(currentadoptblock.first));
+//                DBG << levelfirstline << " === " << currentLevel->to_string();
         if (!currentLevel->halfLife().isValid()) {
           currentLevel->set_halflife(HalfLife::from_ensdf(levelfirstline.substr(39, 16)));
           if (!currentLevel->spin().valid())
             currentLevel->set_spin(SpinParity::from_ensdf(levelfirstline.substr(21, 18)));
+//          DBG << "newhl" << currentLevel->halfLife().to_string();
         }
         // parse continuation records
         std::list<std::string> momentsRequestList;
@@ -305,7 +321,7 @@ XDecay ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &d
         std::vector<std::string> moms = extractContinuationRecords(currentadoptblock, momentsRequestList);
         currentLevel->set_q(Moment::from_ensdf(moms.at(0)));
         currentLevel->set_mu(Moment::from_ensdf(moms.at(1)));
-//        DBG << levelfirstline << " === " << currentLevel->to_string();
+//                DBG << levelfirstline << " === " << currentLevel->to_string();
       }
 
       levels[currentLevel->energy()] = currentLevel;
@@ -363,7 +379,7 @@ XDecay ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &d
   // create relevant parent levels and collect parent half-lifes
   std::map<Energy, XEnergyLevelPtr> plevels;
   std::vector<HalfLife> pHl;
-  foreach (ParentRecord p, decaydata.parents) {
+  for (ParentRecord p : decaydata.parents) {
     pHl.push_back(p.hl);
 
     XEnergyLevelPtr plv(new XEnergyLevel(p.energy, p.spin, p.hl));
@@ -373,9 +389,9 @@ XDecay ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &d
 
   if (!plevels.empty() && (plevels.begin()->second->energy() > 0.0))
   {
-      XEnergyLevelPtr plv(new XEnergyLevel(Energy(0.0, UncertainDouble::SignMagnitudeDefined), SpinParity(), HalfLife()));
-      plv->setFeedingLevel(false);
-      plevels[plv->energy()] = plv;
+    XEnergyLevelPtr plv(new XEnergyLevel(Energy(0.0, UncertainDouble::SignMagnitudeDefined), SpinParity(), HalfLife()));
+    plv->setFeedingLevel(false);
+    plevels[plv->energy()] = plv;
   }
 
   XNuclidePtr parent_nuclide(new XNuclide(decaydata.parents.at(0).nuclide, pHl));
@@ -383,7 +399,7 @@ XDecay ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &d
   XNuclidePtr daughter_nuclide(new XNuclide(decaydata.daughter));
   daughter_nuclide->addLevels(levels);
 
-  return XDecay(decayName, parent_nuclide, daughter_nuclide, decaydata.decayType);
+  return XDecayPtr(new XDecay(decayName, parent_nuclide, daughter_nuclide, decaydata.decayType));
 }
 
 double ENSDFParser::norm(std::string rec, double def_value)
@@ -400,7 +416,8 @@ double ENSDFParser::norm(std::string rec, double def_value)
 
 UncertainDouble ENSDFParser::parseEnsdfMixing(const std::string &mstr, const std::string &multipolarity)
 {
-  Q_ASSERT(mstr.size() == 14);
+  if (mstr.size() != 14)
+    return UncertainDouble();
 
   // special case for pure multipolarities
   if (boost::trim_copy(mstr).empty()) {
@@ -414,7 +431,7 @@ UncertainDouble ENSDFParser::parseEnsdfMixing(const std::string &mstr, const std
   }
 
   // mixed case
-//  return parseUncertainty(mstr.left(8).trimmed(), mstr.right(6).trimmed().replace(' ', ""));
+  //  return parseUncertainty(mstr.left(8).trimmed(), mstr.right(6).trimmed().replace(' ', ""));
   return UncertainDouble::from_nsdf(mstr.substr(0,8), mstr.substr(8,6));
 
 }
@@ -427,9 +444,10 @@ UncertainDouble ENSDFParser::parseEnsdfMixing(const std::string &mstr, const std
  */
 void ENSDFParser::insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym) const
 {
-  Q_ASSERT(adoptblocks);
-  // get xref record
+  if (!adoptblocks || (newblock.last < newblock.first))
+    return;
 
+  // get xref record
   std::list<std::string> req;
   req.push_back("XREF");
   std::vector<std::string> xreflist = extractContinuationRecords(newblock, req);
@@ -446,7 +464,7 @@ void ENSDFParser::insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adop
   // exit if xref is neither "+" (level valid for all datasets) nor -(...) not containing dssymb
   // nor contains dssym
   if (xref != "+"
-      && !(xref.substr(0,20) == "-(")
+      && (xref.substr(0,2) != "-(")
       && !boost::contains(xref,std::string(1,dssym)))
     return;
 
@@ -455,21 +473,18 @@ void ENSDFParser::insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adop
   // read energy from level record
   Energy e = Energy::from_nsdf(contents.at(newblock.first).substr(9, 12));
 
-
   // for the A(E1) case the energy must be modified
-  QRegExp er(QString(dssym) + "\\(([.\\d]+)\\)");
-  QString xs = QString::fromStdString(xref);
-  if (er.indexIn(xs) >= 0) {
-    Energy matchedE = Energy::from_nsdf(er.cap(1).toStdString());
-    DBG << "ENERGY FROM REGEXP " << er.cap(1).toStdString() << " --> " << matchedE.to_string() << " valid " << matchedE.isValid();
+  boost::regex er(dssym + "\\(([.\\d]+)\\)");
+  boost::smatch what;
+  if (boost::regex_match(xref, what, er) && (what.size() > 1)) {
+    Energy matchedE = Energy::from_nsdf(what[1]);
+    DBG << "ENERGY FROM REGEXP " << xref << " --> " << matchedE.to_string() << " valid " << matchedE.isValid();
 
     //std::cerr << "Current xref: " << xref.toStdString() << " current dssymb: " << dssym << std::endl;
     //std::cerr << "Energy translation, old: " << e << " new: " << matchedE << std::endl;
     if (matchedE.isValid())
       e = matchedE;
   }
-
-  Q_ASSERT(newblock.last >= newblock.first);
 
   // add record
   (*adoptblocks)[e] = newblock;
@@ -492,32 +507,34 @@ std::vector<std::string> ENSDFParser::extractContinuationRecords(const StringSub
   for (size_t i = adoptedblock.first; i < adoptedblock.last; ++i) {
     boost::smatch what;
     if (boost::regex_search(contents.at(i), what, crecre) && (what.size() > 1))
-      crecs.push_back(what[1]);
+       {
+      crecs.push_back(contents.at(i));
+    }
   }
-  QStringList crecs2;
+  std::vector<std::string> crecs2;
   // remove record id from beginning of string
   for (int i=0; i<crecs.size(); i++) {
     crecs[i].erase(0, 9);
-    crecs2.append(QString::fromStdString(crecs.at(i)));
+    crecs2.push_back(crecs.at(i));
   }
   // join lines and then split records
-  QString tmp(crecs2.join("$"));
-  crecs2 = tmp.split('$');
+  std::string tmp = join(crecs2, "$");
+  boost::split(crecs2, tmp, boost::is_any_of("$"));
   for (int i=0; i<crecs2.size(); i++)
-    crecs2[i] = crecs2[i].trimmed();
+    crecs2[i] = boost::trim_copy(crecs2[i]);
   // search and parse requested fields
   std::vector<std::string> result;
   for ( auto &req : requestedRecords) {
-    QString rstr;
+    std::string rstr;
     for (int i=0; i<crecs2.size(); i++) {
-      if (crecs2.at(i).startsWith(QString::fromStdString(req))) {
-        rstr = crecs2.at(i).mid(5).trimmed();
+      if ((crecs2.at(i).size() >= req.size()) && (crecs2.at(i).substr(0, req.size()) == req)) {
+        rstr = boost::trim_copy(crecs2.at(i).substr(5, crecs2.at(i).size() - 5));
         break;
       }
     }
-    if (rstr.startsWith('='))
-      rstr.remove(0, 1);
-    result.push_back(rstr.toStdString());
+    if (!rstr.empty() && (rstr[0] == '='))
+      rstr = rstr.substr(1, rstr.size()-1);
+    result.push_back(rstr);
   }
   return result;
 }
@@ -525,17 +542,18 @@ std::vector<std::string> ENSDFParser::extractContinuationRecords(const StringSub
 template <typename T>
 T ENSDFParser::findNearest(const std::map<Energy, T> &map, const Energy &val, Energy *foundVal) const
 {
-  Q_ASSERT(!map.empty());
+  if (map.empty())
+    return T();
 
   typename std::map<Energy, T>::const_iterator low, prev;
   low = map.lower_bound(val);
   if (low == map.end())
     low--;
-   else if (low != map.begin()) {
-      prev = low;
-      --prev;
-      if ((val - prev->first) < (low->first - val))
-        low = prev;
+  else if (low != map.begin()) {
+    prev = low;
+    --prev;
+    if (abs(val - prev->first) < abs(low->first - val))
+      low = prev;
   }
 
   if (foundVal)
@@ -566,34 +584,34 @@ void ENSDFParser::parseBlocks()
   boost::regex decay_expr("^([\\sA-Z0-9]{5,5})\\s{4,4}[0-9]{1,3}[A-Z]{1,2}\\s+((?:B-|B\\+|EC|IT|A)\\sDECAY).*$");
 
   // recognize blocks
-  foreach (const BlockIndices &block, bb) {
+  for (BlockIndices &block : bb) {
     std::string header = contents.at(block.first);
-//    DBG << "examining block [" << block.first << "-" << block.second << "] " << header;
+//        DBG << "examining block [" << block.first << "-" << block.second << "] " << header;
 
     // adopted levels
     boost::smatch what;
     if (boost::regex_match(header, what, adopted_levels_expr) && (what.size() > 1)) {
       m_adoptedlevels[NuclideId::from_ensdf(what[1])] = block;
-//      DBG << "Adopted levels   " << NuclideId::from_ensdf(what[1]).verboseName()
-//          << " block=" << block.first << "-" << block.second;
-//      for (size_t i=block.first; i < block.second; ++i)
-//        DBG << "             AL  "<< contents.at(i);
+//            DBG << "Adopted levels   " << NuclideId::from_ensdf(what[1]).verboseName()
+//                << " block=" << block.first << "-" << block.second;
+//            for (size_t i=block.first; i < block.second; ++i)
+//              DBG << "             AL  "<< contents.at(i);
     }
 
     // decays
     else if (boost::regex_match(header, what, decay_expr) && (what.size() > 1)) {
       BasicDecayData decaydata = BasicDecayData::from_ensdf(header, block);
 
-//      DBG << "Basic decay data " << decaydata.to_string();
+//            DBG << "Basic decay data " << decaydata.to_string();
 
       boost::regex filter("^[\\s0-9A-Z]{5,5}\\s\\sP[\\s0-9].*$");
       for (size_t i=block.first; i < block.second; ++i) {
         if (boost::regex_match(contents.at(i), filter)) {
           decaydata.parents.push_back(ParentRecord::from_ensdf(contents.at(i)));
-//          DBG << "  Parent         " << decaydata.parents.back().to_string();
+//                    DBG << "  Parent         " << decaydata.parents.back().to_string();
         }
-//        else
-//          DBG << "             DEC " << contents.at(i);
+//                else
+//                  DBG << "             DEC " << contents.at(i);
       }
 
       if (decaydata.parents.empty()) {
@@ -607,9 +625,9 @@ void ENSDFParser::parseBlocks()
       std::map<std::string, BasicDecayData> &decmap = m_decays[decaydata.daughter];
 
       std::vector<std::string> hlstrings;
-      foreach (const ParentRecord &prec, decaydata.parents) {
-        Q_ASSERT(prec.nuclide == decaydata.parents.at(0).nuclide); // check "same parent/different half-life" scheme
-        hlstrings.push_back(prec.hl.to_string());
+      for (const ParentRecord &prec : decaydata.parents) {
+        if (prec.nuclide == decaydata.parents.at(0).nuclide) // check "same parent/different half-life" scheme
+          hlstrings.push_back(prec.hl.to_string(false));
       }
 
       const ParentRecord &prec(decaydata.parents.at(0));
@@ -627,10 +645,10 @@ void ENSDFParser::parseBlocks()
     }
     else
     {
-//      DBG << "Unprocessed block begin " << block.first;
-//      for (size_t i=block.first; i < block.second; ++i)
-//        DBG << contents.at(i);
-//      DBG << "Unprocessed block end " << block.second;
+      //      DBG << "Unprocessed block begin " << block.first;
+      //      for (size_t i=block.first; i < block.second; ++i)
+      //        DBG << contents.at(i);
+      //      DBG << "Unprocessed block end " << block.second;
     }
 
   }
