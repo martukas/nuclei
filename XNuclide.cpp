@@ -23,6 +23,11 @@ NuclideId XNuclide::id() const
   return nid_;
 }
 
+bool XNuclide::empty() const
+{
+  return (!nid_.valid() || m_levels.empty() || hl.empty());
+}
+
 void XNuclide::addLevels(const std::map<Energy, XEnergyLevelPtr> &levels)
 {
   m_levels.insert(levels.begin(), levels.end());

@@ -90,9 +90,9 @@ AbstractTreeItem::ItemType AbstractTreeItem::type() const
     return m_type;
 }
 
-Decay::CascadeIdentifier AbstractDataSource::cascade(const AbstractTreeItem *) const
-{
-    return Decay::CascadeIdentifier();
-}
+//Decay::CascadeIdentifier AbstractDataSource::cascade(const AbstractTreeItem *) const
+//{
+//    return Decay::CascadeIdentifier();
+//}
 
 

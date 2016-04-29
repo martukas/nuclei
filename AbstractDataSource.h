@@ -5,7 +5,7 @@
 #include <QStringList>
 #include <QSharedPointer>
 
-#include "Decay.h"
+#include "XDecay.h"
 
 class AbstractTreeItem
 {
@@ -67,8 +67,8 @@ public:
 
     virtual AbstractTreeItem * rootItem() const = 0;
 
-    virtual QSharedPointer<Decay> decay(const AbstractTreeItem *item) const = 0;
-    virtual Decay::CascadeIdentifier cascade(const AbstractTreeItem *item) const;
+    virtual XDecayPtr decay(const AbstractTreeItem *item) const = 0;
+//    virtual XDecay::CascadeIdentifier cascade(const AbstractTreeItem *item) const;
 };
 
 #endif // DATASOURCE_H

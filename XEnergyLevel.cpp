@@ -34,7 +34,7 @@ XEnergyLevel XEnergyLevel::from_ensdf(std::string record)
   }
 
   XEnergyLevel ret(e, spin, hl, isonum);
-  //  DBG << record << " --> " << ret.to_string();
+//  DBG << record << " --> " << ret.to_string();
   return ret;
 }
 

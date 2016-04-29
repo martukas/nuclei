@@ -3,6 +3,7 @@
 #include "XGammaTransition.h"
 #include "XEnergyLevel.h"
 #include "qpx_util.h"
+#include "custom_logger.h"
 
 XGammaTransition::XGammaTransition(Energy energy, double intensity,
                                    const std::string &multipol, UncertainDouble delta,
@@ -52,8 +53,8 @@ std::string XGammaTransition::intensityAsText() const
 
 std::string XGammaTransition::multipolarityAsText() const
 {
-  if (m_mpol.empty())
-    return "<i>unknown</i>";
+//  if (m_mpol.empty())
+//    return "<i>unknown</i>";
   return m_mpol;
 }
 

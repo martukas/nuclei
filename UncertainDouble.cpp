@@ -271,7 +271,7 @@ UncertainDouble UncertainDouble::from_nsdf(std::string val, std::string uncert)
 }
 
 
-std::string UncertainDouble::to_string(bool prefix_magn) const
+std::string UncertainDouble::to_string(bool prefix_magn, bool with_uncert) const
 {
   std::string plusminus("\u00B1");
   std::string times_ten("\u00D710");
@@ -385,7 +385,11 @@ std::string UncertainDouble::to_string(bool prefix_magn) const
     } else
       uncertstr = "~";
 
-    std::string result = val_str + uncertstr;
+    std::string result = val_str;
+
+    if (with_uncert)
+     result += uncertstr;
+
     if (exponent)
       result = "(" + result + ")" + times_ten + UTF_superscript(exponent);
 

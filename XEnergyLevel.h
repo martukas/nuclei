@@ -51,7 +51,6 @@ public:
 
     bool isFeedingLevel() const;
 
-    friend class Decay;
     friend class XGammaTransition;
 
 private:
