@@ -1,5 +1,5 @@
-#ifndef TransitionRendered_H
-#define TransitionRendered_H
+#ifndef TransitionItem_H
+#define TransitionItem_H
 
 #include <stdint.h>
 #include <QFont>
@@ -16,14 +16,14 @@ class QGraphicsRectItem;
 class GraphicsHighlightItem;
 class QGraphicsScene;
 
-class TransitionRendered : public ClickableItem
+class TransitionItem : public ClickableItem
 {
 public:
 
-  TransitionRendered();
-  TransitionRendered(TransitionPtr transition, SchemeVisualSettings vis, QGraphicsScene *scene);
+  TransitionItem();
+  TransitionItem(TransitionPtr transition, SchemeVisualSettings vis, QGraphicsScene *scene);
 
-  virtual ~TransitionRendered();
+  virtual ~TransitionItem();
 
   void updateArrow(double arrowDestY);
   double minimalXDistance() const;
@@ -57,4 +57,4 @@ private:
   static QPolygonF initArrowBase();
 };
 
-#endif // TransitionRendered_H
+#endif // TransitionItem_H

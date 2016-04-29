@@ -1,4 +1,4 @@
-#include "LevelRendered.h"
+#include "LevelItem.h"
 #include "ActiveGraphicsItemGroup.h"
 #include "GraphicsHighlightItem.h"
 #include <QFontMetrics>
@@ -7,16 +7,16 @@
 #include <QTextDocument>
 #include "custom_logger.h"
 
-LevelRendered::LevelRendered()
+LevelItem::LevelItem()
   : ClickableItem(ClickableItem::EnergyLevelType),
   graline(0), grafeedarrow(0), graarrowhead(0), graetext(0), graspintext(0), grahltext(0), grafeedintens(0),
   graclickarea(0), grahighlighthelper(0), graYPos(0.0)
 {
 }
 
-LevelRendered::LevelRendered(LevelPtr level, ParentPosition parentpos,
+LevelItem::LevelItem(LevelPtr level, ParentPosition parentpos,
                              SchemeVisualSettings vis, QGraphicsScene *scene)
-  : LevelRendered()
+  : LevelItem()
 {
   if (!level)
     return;
@@ -92,7 +92,7 @@ LevelRendered::LevelRendered(LevelPtr level, ParentPosition parentpos,
   }
 }
 
-double LevelRendered::align(double leftlinelength, double rightlinelength, double arrowleft, double arrowright,
+double LevelItem::align(double leftlinelength, double rightlinelength, double arrowleft, double arrowright,
                           SchemeVisualSettings vis, ParentPosition parentpos)
 {
   QFontMetrics stdFontMetrics(vis.stdFont);
