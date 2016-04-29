@@ -10,11 +10,11 @@
 
 NuclideRendered::NuclideRendered()
   : ClickableItem(ClickableItem::InvalidType),
-    pNucVerticalArrow(0), pNucHl(0)
+    pNucHl(0), pNucVerticalArrow(0)
 {
 }
 
-NuclideRendered::NuclideRendered(XNuclidePtr nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene)
+NuclideRendered::NuclideRendered(NuclidePtr nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene)
   : NuclideRendered()
 {
   if (!nuc)

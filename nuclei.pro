@@ -21,9 +21,11 @@ QMAKE_CXXFLAGS += -std=c++11
 DEFINES += PRINT_SEARCH_RESULTS
 
 SOURCES += $$files($$PWD/*.cpp) \
+           $$files($$PWD/NucData/*.cpp) \
            libakk/Akk.cpp
 
 HEADERS  += $$files($$PWD/*.h) \
+            $$files($$PWD/NucData/*.h) \
             libakk/Akk.h \
             libakk/akk_global.h
 
@@ -31,6 +33,7 @@ target.path = /usr/local/bin/
 INSTALLS = target
 
 INCLUDEPATH += $$PWD \
+               $$PWD/NucData \
                $$PWD/libakk
 
 FORMS += $$files($$PWD/*.ui)

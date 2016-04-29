@@ -19,7 +19,7 @@ struct NuclideNomenclature {
 class NuclideId
 {
 public:
-  NuclideId() : N_(0), Z_(0) {}
+  NuclideId() : Z_(0), N_(0)  {}
 
   static NuclideId fromAZ(uint16_t a, uint16_t z);
   static NuclideId fromZN(uint16_t z, uint16_t n);

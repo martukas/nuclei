@@ -47,7 +47,7 @@ int SpinParity::doubled_spin() const
 std::string SpinParity::to_string() const
 {
   std::string ret;
-  for (int i=0; i < spins_.size(); ++i) {
+  for (size_t i=0; i < spins_.size(); ++i) {
     ret += spins_[i].to_string() + parity_.to_string();
     ret += ((i+1) < spins_.size()) ? "," : "";
   }

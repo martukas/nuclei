@@ -104,7 +104,7 @@ inline uint16_t sig_digits(std::string st)
   }
   //assume only one number in string
   uint16_t count=0; bool past_zeros = false;
-  for(int i=0;i<st.size();i++) {
+  for(size_t i=0;i<st.size();i++) {
     bool digit = std::isdigit(st[i]);
     if (digit && (st[i] != '0'))
       past_zeros = true;

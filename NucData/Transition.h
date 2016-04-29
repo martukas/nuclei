@@ -1,21 +1,21 @@
-#ifndef XGammaTransition_H
-#define XGammaTransition_H
+#ifndef Transition_H
+#define Transition_H
 
 #include <stdint.h>
 #include <memory>
 #include "Energy.h"
 #include "UncertainDouble.h"
 
-class XEnergyLevel;
+class Level;
 
-class XGammaTransition
+class Transition
 {
 public:
-    XGammaTransition(Energy energy, double intensity,
+    Transition(Energy energy, double intensity,
                     const std::string &multipol, UncertainDouble delta,
-                    std::shared_ptr<XEnergyLevel> start, std::shared_ptr<XEnergyLevel> dest);
+                    std::shared_ptr<Level> start, std::shared_ptr<Level> dest);
 
-    virtual ~XGammaTransition();
+    virtual ~Transition();
 
     Energy energy() const;
     double intensity() const;
@@ -25,8 +25,8 @@ public:
     std::string intensityAsText() const;
     std::string multipolarityAsText() const;
 
-    std::shared_ptr<XEnergyLevel> depopulatedLevel() const;
-    std::shared_ptr<XEnergyLevel> populatedLevel() const;
+    std::shared_ptr<Level> depopulatedLevel() const;
+    std::shared_ptr<Level> populatedLevel() const;
 
     double widthFromOrigin() const;
 
@@ -37,10 +37,10 @@ private:
     double intens;
     std::string m_mpol;
     UncertainDouble m_delta;
-    std::shared_ptr<XEnergyLevel> m_start, m_dest;
+    std::shared_ptr<Level> m_start, m_dest;
 
 };
 
-typedef std::shared_ptr<XGammaTransition> XGammaTransitionPtr;
+typedef std::shared_ptr<Transition> TransitionPtr;
 
-#endif // XGammaTransition_H
+#endif // Transition_H

@@ -106,7 +106,7 @@ Energy Energy::from_nsdf(std::string record)
 
   std::string offset;
   bool hasoffset = false;
-  for (int i=0; i < val.size(); ++i) {
+  for (size_t i=0; i < val.size(); ++i) {
     if (std::isupper(val[i]) && hasoffset)
       offset += val.substr(i,1);
     else if (val[i] == '+')

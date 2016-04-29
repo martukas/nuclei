@@ -13,7 +13,7 @@
 #endif
 
 #include "ActiveGraphicsItemGroup.h"
-#include "XEnergyLevel.h"
+#include "Level.h"
 #include "GraphicsHighlightItem.h"
 #include "custom_logger.h"
 
@@ -34,7 +34,7 @@ TransitionRendered::TransitionRendered()
 
 }
 
-TransitionRendered::TransitionRendered(XGammaTransitionPtr transition, SchemeVisualSettings vis, QGraphicsScene *scene)
+TransitionRendered::TransitionRendered(TransitionPtr transition, SchemeVisualSettings vis, QGraphicsScene *scene)
   : TransitionRendered()
 {
   if (!transition)
