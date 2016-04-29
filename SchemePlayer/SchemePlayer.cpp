@@ -26,6 +26,14 @@ SchemePlayer::SchemePlayer(DecaySchemePtr scheme, QObject *parent)
   : QObject(parent), scheme_(scheme),
     scene_(0)
 {
+  // decide if parent nuclide should be printed on the left side (beta-),
+  // on the right side (EC, beta+, alpha) or not at all (isomeric)
+  if (scheme_) {
+    if (scheme_->type() == DecayScheme::IsomericTransition)
+      vis.parentpos = NoParent;
+    else if (scheme_->type() == DecayScheme::BetaMinus)
+      vis.parentpos = LeftParent;
+  }
 }
 
 QGraphicsScene * SchemePlayer::levelPlot()
@@ -38,17 +46,9 @@ QGraphicsScene * SchemePlayer::levelPlot()
   if (!scheme_)
     return scene_;
 
-  // decide if parent nuclide should be printed on the left side (beta-),
-  // on the right side (EC, beta+, alpha) or not at all (isomeric)
-  ParentPosition parentpos = RightParent;
-  if (scheme_->type() == DecayScheme::IsomericTransition)
-    parentpos = NoParent;
-  else if (scheme_->type() == DecayScheme::BetaMinus)
-    parentpos = LeftParent;
-
   for (auto &level : scheme_->daughterNuclide()->levels()) {
     // create level
-    LevelItem *levrend = new LevelItem(level.second, parentpos, vis, scene_);
+    LevelItem *levrend = new LevelItem(level.second, vis, scene_);
     connect(this, SIGNAL(enabledShadow(bool)), levrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
     connect(levrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
     levels_.insert(levrend->energy_,levrend);
@@ -67,28 +67,13 @@ QGraphicsScene * SchemePlayer::levelPlot()
   daughter_ = NuclideItem(scheme_->daughterNuclide(), ClickableItem::DaughterNuclideType, vis, scene_);
 
   // create parent nuclide label and level(s)
-  if (parentpos == LeftParent || parentpos == RightParent) {
+  if (vis.parentpos != NoParent) {
     parent_ = NuclideItem(scheme_->parentNuclide(), ClickableItem::ParentNuclideType, vis, scene_);
-
     for (auto &level : scheme_->parentNuclide()->levels()) {
-
-      LevelItem *levrend = new LevelItem(level.second, NoParent, vis, scene_);
+      SchemeVisualSettings vis_ovrd = vis;
+      vis_ovrd.parentpos = NoParent;
+      LevelItem *levrend = new LevelItem(level.second, vis, scene_);
       parent_levels_.insert(levrend->energy_,levrend);
-
-
-//      QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
-
-//      level->graline = new QGraphicsLineItem;
-//      level->graline->setPen(vis.stableLevelPen);
-//      scene->addItem(level->graline);
-
-//      level->graetext = new QGraphicsSimpleTextItem(QString::fromStdString(level->energy().to_string()));
-//      level->graetext->setFont(vis.stdBoldFont);
-//      scene->addItem(level->graetext);
-
-//      level->graspintext = new QGraphicsSimpleTextItem(QString::fromStdString(level->spin().to_string()));
-//      level->graspintext->setFont(vis.stdBoldFont);
-//      scene->addItem(level->graspintext);
     }
   }
 
@@ -104,13 +89,6 @@ void SchemePlayer::alignGraphicsItems()
 //  QMap<Energy, EnergyLevel*> &levels(dNuc->levels());
 
 //  DBG << "<SchemePlayer> levelsize " << levels.size();
-  // decide if parent nuclide should be printed on the left side (beta-),
-  // on the right side (EC, beta+, alpha) or not at all (isomeric)
-  ParentPosition parentpos = RightParent;
-  if (scheme_->type() == DecayScheme::IsomericTransition)
-    parentpos = NoParent;
-  else if (scheme_->type() == DecayScheme::BetaMinus)
-    parentpos = LeftParent;
 
   QFontMetrics stdFontMetrics(vis.stdFont);
   QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
@@ -179,7 +157,7 @@ void SchemePlayer::alignGraphicsItems()
 
   // determine line length for parent levels
   double pNucLineLength = vis.parentNuclideLevelLineLength;
-  if (parentpos == LeftParent || parentpos == RightParent) {
+  if (vis.parentpos != NoParent) {
     pNucLineLength = qMax(vis.parentNuclideLevelLineLength, parent_.graphicsItem()->boundingRect().width() + 20.0);
     foreach (LevelItem *level, parent_levels_) {
       pNucLineLength = qMax(pNucLineLength,
@@ -193,7 +171,7 @@ void SchemePlayer::alignGraphicsItems()
 
   // determine line length for feeding arrows
   double arrowLineLength = vis.feedingArrowLineLength;
-  if (parentpos == LeftParent || parentpos == RightParent)
+  if (vis.parentpos != NoParent)
     foreach (LevelItem *level, levels_)
       if (level->grafeedintens)
         arrowLineLength = qMax(arrowLineLength,
@@ -206,17 +184,17 @@ void SchemePlayer::alignGraphicsItems()
   double rightlinelength = vis.outerLevelTextMargin + maxEnergyLabelWidth + vis.outerGammaMargin + 0.5*gammaspace;
 
   // calculate start and end points of parent level lines
-  double arrowleft = std::floor((parentpos == RightParent) ? rightlinelength : -leftlinelength - arrowLineLength - vis.parentNuclideLevelLineExtraLength) - 0.5*vis.feedArrowPen.widthF();
-  double arrowright = std::ceil((parentpos == RightParent) ? rightlinelength + arrowLineLength + vis.parentNuclideLevelLineExtraLength : -leftlinelength) + 0.5*vis.feedArrowPen.widthF();
-  double activeleft = std::floor((parentpos == RightParent) ? arrowleft + arrowLineLength - pNucLineLength : arrowleft);
-  double activeright = std::ceil((parentpos == RightParent) ? arrowright : arrowright - arrowLineLength + pNucLineLength);
-  double normalleft = std::floor((parentpos == RightParent) ? activeleft : activeleft + vis.parentNuclideLevelLineExtraLength);
-  double normalright = std::ceil((parentpos == RightParent) ? activeright - vis.parentNuclideLevelLineExtraLength : activeright);
+  double arrowleft = std::floor((vis.parentpos == RightParent) ? rightlinelength : -leftlinelength - arrowLineLength - vis.parentNuclideLevelLineExtraLength) - 0.5*vis.feedArrowPen.widthF();
+  double arrowright = std::ceil((vis.parentpos == RightParent) ? rightlinelength + arrowLineLength + vis.parentNuclideLevelLineExtraLength : -leftlinelength) + 0.5*vis.feedArrowPen.widthF();
+  double activeleft = std::floor((vis.parentpos == RightParent) ? arrowleft + arrowLineLength - pNucLineLength : arrowleft);
+  double activeright = std::ceil((vis.parentpos == RightParent) ? arrowright : arrowright - arrowLineLength + pNucLineLength);
+  double normalleft = std::floor((vis.parentpos == RightParent) ? activeleft : activeleft + vis.parentNuclideLevelLineExtraLength);
+  double normalright = std::ceil((vis.parentpos == RightParent) ? activeright - vis.parentNuclideLevelLineExtraLength : activeright);
 
   // set level positions and sizes
   double arrowVEnd = std::numeric_limits<double>::quiet_NaN();
   foreach (LevelItem *level, levels_) {
-    double newVEnd = level->align(leftlinelength, rightlinelength, arrowleft, arrowright, vis, parentpos);
+    double newVEnd = level->align(leftlinelength, rightlinelength, arrowleft, arrowright, vis);
     if (boost::math::isnan(arrowVEnd) && !boost::math::isnan(newVEnd))
       arrowVEnd = newVEnd;
   }
@@ -225,7 +203,7 @@ void SchemePlayer::alignGraphicsItems()
   daughter_.graphicsItem()->setPos(-0.5*daughter_.graphicsItem()->boundingRect().width(), 0.3*daughter_.graphicsItem()->boundingRect().height());
 
   // set position of parent nuclide
-  if (parentpos == LeftParent || parentpos == RightParent) {
+  if (vis.parentpos != NoParent) {
     double parentY = std::numeric_limits<double>::quiet_NaN();
     if (!levels_.empty())
       parentY = (levels_.end()-1).value()->graphicsItem()->y() -
@@ -257,7 +235,7 @@ void SchemePlayer::alignGraphicsItems()
     }
 
     double arrowVStart = topMostLevel - 0.5*vis.stableLevelPen.widthF();
-    double arrowX = (parentpos == RightParent) ? activeright : activeleft;
+    double arrowX = (vis.parentpos == RightParent) ? activeright : activeleft;
     if (boost::math::isfinite(arrowVStart) && boost::math::isfinite(arrowVEnd))
       parent_.pNucVerticalArrow->setLine(arrowX, arrowVStart, arrowX, arrowVEnd);
 
@@ -358,9 +336,9 @@ void SchemePlayer::setCurrentSelection(const SchemePlayer::CascadeIdentifier &id
 //  triggerSchemePlayerDataUpdate();
 }
 
-SchemePlayer::SchemePlayerDataSet SchemePlayer::decayDataSet() const
+SchemePlayer::DecayDataSet SchemePlayer::decayDataSet() const
 {
-  SchemePlayerDataSet dataset;
+  DecayDataSet dataset;
 
 //  // intermediate level
 //  if (selectedEnergyLevel) {
@@ -649,7 +627,7 @@ void SchemePlayer::clickedEnergyLevel(LevelItem *e)
 
 void SchemePlayer::triggerDataUpdate()
 {
-  emit updatedSchemePlayerData(decayDataSet());
+  emit updatedData(decayDataSet());
 }
 
 void SchemePlayer::setStyle(const QFont &fontfamily, unsigned int sizePx)
@@ -662,7 +640,7 @@ SchemePlayer::CascadeIdentifier::CascadeIdentifier()
 {
 }
 
-SchemePlayer::SchemePlayerDataSet::SchemePlayerDataSet()
+SchemePlayer::DecayDataSet::DecayDataSet()
   : startEnergy("? keV"), startSpin("/"),
     popEnergy("? keV"), popIntensity("? %"), popMultipolarity("<i>unknown</i>"), popMixing("<i>unknown</i>"),
     intEnergy("? keV"), intHalfLife("? ns"), intSpin("/"), intMu("?"), intQ("?"),

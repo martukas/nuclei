@@ -205,7 +205,7 @@ void Nuclei::loadSearchResultCascade(const QModelIndex &index)
 //    m_decay->setCurrentSelection(ci);
 }
 
-void Nuclei::updateDecayData(SchemePlayer::SchemePlayerDataSet data)
+void Nuclei::updateDecayData(SchemePlayer::DecayDataSet data)
 {
   ui->startEnergy->setText(data.startEnergy);
   ui->startSpin->setText(data.startSpin);
@@ -352,7 +352,7 @@ void Nuclei::loadDecay(DecaySchemePtr decay)
 
   m_decay = QSharedPointer<SchemePlayer>(new SchemePlayer(decay, this));
 
-  connect(m_decay.data(), SIGNAL(updatedDecayData(Decay::DecayDataSet)), this, SLOT(updateDecayData(Decay::DecayDataSet)));
+  connect(m_decay.data(), SIGNAL(updatedData(SchemePlayer::DecayDataSet)), this, SLOT(updateDecayData(SchemePlayer::DecayDataSet)));
   m_decay->setStyle(preferencesDialogUi->fontFamily->currentFont(), preferencesDialogUi->fontSize->value());
   QGraphicsScene *scene = m_decay->levelPlot();
   ui->decayView->setScene(scene);

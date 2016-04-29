@@ -14,8 +14,7 @@ LevelItem::LevelItem()
 {
 }
 
-LevelItem::LevelItem(LevelPtr level, ParentPosition parentpos,
-                             SchemeVisualSettings vis, QGraphicsScene *scene)
+LevelItem::LevelItem(LevelPtr level, SchemeVisualSettings vis, QGraphicsScene *scene)
   : LevelItem()
 {
   if (!level)
@@ -53,7 +52,7 @@ LevelItem::LevelItem(LevelPtr level, ParentPosition parentpos,
   graspintext->setFont(vis.stdBoldFont);
   graspintext->setPos(0.0, -stdBoldFontMetrics.height());
 
-  if (parentpos != NoParent) {
+  if (vis.parentpos != NoParent) {
     QString hltext = QString::fromStdString(level->halfLife().to_string());
     grahltext = new QGraphicsSimpleTextItem(hltext, item);
     grahltext->setFont(vis.stdFont);
@@ -77,8 +76,8 @@ LevelItem::LevelItem(LevelPtr level, ParentPosition parentpos,
     // create arrow head
     QPolygonF arrowpol;
     arrowpol << QPointF(0.0, 0.0);
-    arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * vis.feedingArrowHeadLength, 0.5*vis.feedingArrowHeadWidth);
-    arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * vis.feedingArrowHeadLength, -0.5*vis.feedingArrowHeadWidth);
+    arrowpol << QPointF((vis.parentpos == RightParent ? 1.0 : -1.0) * vis.feedingArrowHeadLength, 0.5*vis.feedingArrowHeadWidth);
+    arrowpol << QPointF((vis.parentpos == RightParent ? 1.0 : -1.0) * vis.feedingArrowHeadLength, -0.5*vis.feedingArrowHeadWidth);
     graarrowhead = new QGraphicsPolygonItem(arrowpol);
     graarrowhead->setBrush(QColor(grafeedarrow->pen().color()));
     graarrowhead->setPen(Qt::NoPen);
@@ -93,18 +92,19 @@ LevelItem::LevelItem(LevelPtr level, ParentPosition parentpos,
 }
 
 double LevelItem::align(double leftlinelength, double rightlinelength, double arrowleft, double arrowright,
-                          SchemeVisualSettings vis, ParentPosition parentpos)
+                          SchemeVisualSettings vis)
 {
   QFontMetrics stdFontMetrics(vis.stdFont);
   QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
 
   // temporarily remove items from group (workaround)
-  item->removeFromGroup(grahltext);
   item->removeFromGroup(graspintext);
   item->removeFromGroup(graetext);
   item->removeFromGroup(graclickarea);
   item->removeFromGroup(graline);
   item->removeHighlightHelper(grahighlighthelper);
+  if (vis.parentpos != NoParent)
+    item->removeFromGroup(grahltext);
 
   // rescale
   grahighlighthelper->setRect(-leftlinelength, -0.5*vis.highlightWidth, leftlinelength+rightlinelength, vis.highlightWidth);
@@ -113,13 +113,13 @@ double LevelItem::align(double leftlinelength, double rightlinelength, double ar
   graspintext->setPos(-leftlinelength + vis.outerLevelTextMargin, -stdBoldFontMetrics.height());
   graetext->setPos(rightlinelength - vis.outerLevelTextMargin - stdBoldFontMetrics.width(graetext->text()), -graetext->boundingRect().height());
   double levelHlPos = 0.0;
-  if (parentpos == RightParent) {
+  if (vis.parentpos == RightParent && grahltext)
     levelHlPos = -leftlinelength - vis.levelToHalfLifeDistance - stdFontMetrics.width(grahltext->text());
-  }
-  else {
+  else
     levelHlPos = rightlinelength + vis.levelToHalfLifeDistance;
-  }
-  grahltext->setPos(levelHlPos, -0.5*stdBoldFontMetrics.height());
+
+  if (vis.parentpos != NoParent)
+    grahltext->setPos(levelHlPos, -0.5*stdBoldFontMetrics.height());
 
   // re-add items to group
   item->addHighlightHelper(grahighlighthelper);
@@ -132,11 +132,11 @@ double LevelItem::align(double leftlinelength, double rightlinelength, double ar
   item->setPos(0.0, graYPos); // add 0.5*pen-width to avoid antialiasing artifacts
 
   if (grafeedarrow) {
-    double leftend = (parentpos == RightParent) ? rightlinelength + vis.feedingArrowGap + vis.feedingArrowHeadLength : arrowleft;
-    double rightend = (parentpos == RightParent) ? arrowright : -leftlinelength - vis.feedingArrowGap - vis.feedingArrowHeadLength;
+    double leftend = (vis.parentpos == RightParent) ? rightlinelength + vis.feedingArrowGap + vis.feedingArrowHeadLength : arrowleft;
+    double rightend = (vis.parentpos == RightParent) ? arrowright : -leftlinelength - vis.feedingArrowGap - vis.feedingArrowHeadLength;
     double arrowY = graYPos;
     grafeedarrow->setLine(leftend, arrowY, rightend, arrowY);
-    graarrowhead->setPos((parentpos == RightParent) ? rightlinelength + vis.feedingArrowGap : -leftlinelength - vis.feedingArrowGap, arrowY);
+    graarrowhead->setPos((vis.parentpos == RightParent) ? rightlinelength + vis.feedingArrowGap : -leftlinelength - vis.feedingArrowGap, arrowY);
     grafeedintens->setPos(leftend + 15.0, arrowY - grafeedintens->boundingRect().height());
     return arrowY + 0.5*grafeedarrow->pen().widthF();
   }

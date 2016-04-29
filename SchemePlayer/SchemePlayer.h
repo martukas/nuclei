@@ -41,8 +41,8 @@ public:
     CascadeIdentifier currentSelection() const;
     void setCurrentSelection(const CascadeIdentifier &identifier);
 
-    struct SchemePlayerDataSet {
-        SchemePlayerDataSet();
+    struct DecayDataSet {
+        DecayDataSet();
 
         QString startEnergy;
         QString startSpin;
@@ -72,12 +72,12 @@ public:
         QString a44;
     };
 
-    SchemePlayerDataSet decayDataSet() const;
+    DecayDataSet decayDataSet() const;
     void triggerDataUpdate();
 
 signals:
     void enabledShadow(bool enable);
-    void updatedSchemePlayerData(SchemePlayer::SchemePlayerDataSet data);
+    void updatedData(SchemePlayer::DecayDataSet data);
     
 private slots:
     void itemClicked(ClickableItem *item);

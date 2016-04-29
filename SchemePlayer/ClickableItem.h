@@ -57,6 +57,8 @@ struct SchemeVisualSettings
   double feedingArrowTextMargin; // margin around the feeding intensity text
   double parentNuclideToEnergyLevelsDistance;
   double highlightWidth;
+
+  ParentPosition parentpos;
 };
 
 #endif // CLICKABLEITEM_H
