@@ -19,6 +19,8 @@ ActiveGraphicsItemGroup *ClickableItem::graphicsItem() const
 
 SchemeVisualSettings::SchemeVisualSettings()
 {
+  parentpos = NoParent;
+
   outerGammaMargin = 50.0;
   outerLevelTextMargin = 4.0; // level lines extend beyond the beginning/end of the level texts by this value
   maxExtraLevelDistance = 120.0;

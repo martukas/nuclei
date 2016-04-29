@@ -18,11 +18,11 @@ class LevelItem : public ClickableItem
 {
 public:
   LevelItem();
-  LevelItem(LevelPtr level, ParentPosition parentpos, SchemeVisualSettings vis, QGraphicsScene *scene);
+  LevelItem(LevelPtr level, SchemeVisualSettings vis, QGraphicsScene *scene);
 
   //returns feeding arrow height, if any
   double align(double leftlinelength, double rightlinelength, double arrowleft, double arrowright,
-             SchemeVisualSettings vis, ParentPosition parentpos);
+             SchemeVisualSettings vis);
 
 //private:
   QGraphicsLineItem *graline, *grafeedarrow;

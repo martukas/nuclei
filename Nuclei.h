@@ -30,7 +30,7 @@ private slots:
     void loadSelectedDecay(const QModelIndex &index);
     void loadSearchResultCascade(const QModelIndex &index);
 
-    void updateDecayData(SchemePlayer::SchemePlayerDataSet data);
+    void updateDecayData(SchemePlayer::DecayDataSet data);
 
     void svgExport();
     void pdfExport();
