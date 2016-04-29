@@ -1,35 +1,35 @@
-#include "XDecay.h"
+#include "DecayScheme.h"
 #include <cmath>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <algorithm>
 #include "custom_logger.h"
 
-XDecay::XDecay()
-  : m_name("")
-  , t(Undefined)
+DecayScheme::DecayScheme()
+  : t(Undefined)
+  , m_name("")
   , pNuc(0)
   , dNuc(0)
 {
 
 }
 
-XDecay::XDecay(const std::string &name,
-               XNuclidePtr parentNuclide,
-               XNuclidePtr daughterNuclide,
-               Type XDecayType)
-  : m_name(name)
+DecayScheme::DecayScheme(const std::string &name,
+               NuclidePtr parentNuclide,
+               NuclidePtr daughterNuclide,
+               Type DecaySchemeType)
+  : t(DecaySchemeType)
+  , m_name(name)
   , pNuc(parentNuclide)
   , dNuc(daughterNuclide)
-  , t(XDecayType)
 {
 }
 
-bool XDecay::valid() const
+bool DecayScheme::valid() const
 {
   return (pNuc && dNuc && !pNuc->empty() && !dNuc->empty());
 }
 
-std::string XDecay::DecayTypeAsText(Type type)
+std::string DecayScheme::DecayTypeAsText(Type type)
 {
   switch (type) {
   case ElectronCapture:
@@ -47,22 +47,22 @@ std::string XDecay::DecayTypeAsText(Type type)
   }
 }
 
-std::string XDecay::name() const
+std::string DecayScheme::name() const
 {
   return m_name;
 }
 
-XDecay::Type XDecay::type() const
+DecayScheme::Type DecayScheme::type() const
 {
   return t;
 }
 
-XNuclidePtr XDecay::parentNuclide() const
+NuclidePtr DecayScheme::parentNuclide() const
 {
   return pNuc;
 }
 
-XNuclidePtr XDecay::daughterNuclide() const
+NuclidePtr DecayScheme::daughterNuclide() const
 {
   return dNuc;
 }

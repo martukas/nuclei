@@ -2,10 +2,10 @@
 #include <cmath>
 #include <iostream>
 
-#include "XDecay.h"
-#include "XNuclide.h"
-#include "XEnergyLevel.h"
-#include "XGammaTransition.h"
+#include "DecayScheme.h"
+#include "Nuclide.h"
+#include "Level.h"
+#include "Transition.h"
 #include "custom_logger.h"
 #include "qpx_util.h"
 
@@ -53,26 +53,26 @@ BasicDecayData BasicDecayData::from_ensdf(const std::string &header, BlockIndice
   return decaydata;
 }
 
-XDecay::Type BasicDecayData::parseDecayType(const std::string &tstring)
+DecayScheme::Type BasicDecayData::parseDecayType(const std::string &tstring)
 {
   if (tstring == "EC DECAY")
-    return XDecay::ElectronCapture;
+    return DecayScheme::ElectronCapture;
   if (tstring == "B+ DECAY")
-    return XDecay::BetaPlus;
+    return DecayScheme::BetaPlus;
   if (tstring == "B- DECAY")
-    return XDecay::BetaMinus;
+    return DecayScheme::BetaMinus;
   if (tstring == "IT DECAY")
-    return XDecay::IsomericTransition;
+    return DecayScheme::IsomericTransition;
   if (tstring == "A DECAY")
-    return XDecay::Alpha;
-  return XDecay::Undefined;
+    return DecayScheme::Alpha;
+  return DecayScheme::Undefined;
 }
 
 std::string BasicDecayData::to_string() const
 {
   std::string ret;
   ret = daughter.verboseName() + " "
-      + XDecay::DecayTypeAsText(decayType)
+      + DecayScheme::DecayTypeAsText(decayType)
       + " block=" + std::to_string(block.first) + "-" + std::to_string(block.second)
       + " dsid=\"" + dsid + "\"";
   return ret;
@@ -159,7 +159,7 @@ const std::list< std::pair<std::string, NuclideId> > ENSDFParser::decays(const N
   return result;
 }
 
-XDecayPtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &decayName) const
+DecaySchemePtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &decayName) const
 {
   if (!m_adoptedlevels.count(daughterNuclide) ||
       !m_decays.count(daughterNuclide) ||
@@ -173,7 +173,7 @@ XDecayPtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string
   double adoptedLevelMaxDifference = 1.0;
   double gammaMaxDifference = 1.0;
 
-  std::map<Energy, XEnergyLevelPtr> levels;
+  std::map<Energy, LevelPtr> levels;
 
   BlockIndices alpos = m_adoptedlevels.at(daughterNuclide);
   BasicDecayData decaydata = m_decays.at(daughterNuclide).at(decayName);
@@ -184,12 +184,12 @@ XDecayPtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string
   //  DBG << "parsing " << dNucid.toStdString();
 
   // process all adopted level sub-blocks
-  XEnergyLevelPtr currentLevel(nullptr);
+  LevelPtr currentLevel(nullptr);
   // create index map for adopted levels
   std::map<Energy, StringSubList> adoptblocks;
   std::map<std::string, char> xrefs; // maps DSID to DSSYM (single letter)
-  size_t laststart = -1;
-  for (int i=alpos.first; i < alpos.second; i++) {
+  int laststart = -1;
+  for (size_t i=alpos.first; i < alpos.second; i++) {
     const std::string line = contents.at(i);
     // extract cross reference records as long as first level was found (cross reference must be before 1st level)
     if (laststart == -1) {
@@ -221,7 +221,7 @@ XDecayPtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string
 
   //  DBG << "parsing size " << decaylines.size();
 
-  for (int k=decaydata.block.first; k < decaydata.block.second; k++) {
+  for (size_t k=decaydata.block.first; k < decaydata.block.second; k++) {
     const std::string line = contents.at(k);
 
     //    DBG << "c line " << line.toStdString();
@@ -278,16 +278,16 @@ XDecayPtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string
 
       // determine levels
       if (!levels.empty()) {
-        XEnergyLevelPtr start = currentLevel;
-        XEnergyLevelPtr destlvl = findNearest(levels, start->energy() - e);
+        LevelPtr start = currentLevel;
+        LevelPtr destlvl = findNearest(levels, start->energy() - e);
         // gamma registers itself with the start and dest levels
-        new XGammaTransition(e, in, mpol, delta, start, destlvl);
+        new Transition(e, in, mpol, delta, start, destlvl);
       }
     }
     // process new level
     else if (line.substr(0,9) == (dNucid + "  L ")) {
 
-      currentLevel = XEnergyLevelPtr(new XEnergyLevel(XEnergyLevel::from_ensdf(line)));
+      currentLevel = LevelPtr(new Level(Level::from_ensdf(line)));
 
       // get additional data from adopted leves record
       //   find closest entry
@@ -377,29 +377,29 @@ XDecayPtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string
   }
 
   // create relevant parent levels and collect parent half-lifes
-  std::map<Energy, XEnergyLevelPtr> plevels;
+  std::map<Energy, LevelPtr> plevels;
   std::vector<HalfLife> pHl;
   for (ParentRecord p : decaydata.parents) {
     pHl.push_back(p.hl);
 
-    XEnergyLevelPtr plv(new XEnergyLevel(p.energy, p.spin, p.hl));
+    LevelPtr plv(new Level(p.energy, p.spin, p.hl));
     plv->setFeedingLevel(true);
     plevels[p.energy] = plv;
   }
 
   if (!plevels.empty() && (plevels.begin()->second->energy() > 0.0))
   {
-    XEnergyLevelPtr plv(new XEnergyLevel(Energy(0.0, UncertainDouble::SignMagnitudeDefined), SpinParity(), HalfLife()));
+    LevelPtr plv(new Level(Energy(0.0, UncertainDouble::SignMagnitudeDefined), SpinParity(), HalfLife()));
     plv->setFeedingLevel(false);
     plevels[plv->energy()] = plv;
   }
 
-  XNuclidePtr parent_nuclide(new XNuclide(decaydata.parents.at(0).nuclide, pHl));
+  NuclidePtr parent_nuclide(new Nuclide(decaydata.parents.at(0).nuclide, pHl));
   parent_nuclide->addLevels(plevels);
-  XNuclidePtr daughter_nuclide(new XNuclide(decaydata.daughter));
+  NuclidePtr daughter_nuclide(new Nuclide(decaydata.daughter));
   daughter_nuclide->addLevels(levels);
 
-  return XDecayPtr(new XDecay(decayName, parent_nuclide, daughter_nuclide, decaydata.decayType));
+  return DecaySchemePtr(new DecayScheme(decayName, parent_nuclide, daughter_nuclide, decaydata.decayType));
 }
 
 double ENSDFParser::norm(std::string rec, double def_value)
@@ -513,20 +513,20 @@ std::vector<std::string> ENSDFParser::extractContinuationRecords(const StringSub
   }
   std::vector<std::string> crecs2;
   // remove record id from beginning of string
-  for (int i=0; i<crecs.size(); i++) {
+  for (size_t i=0; i<crecs.size(); i++) {
     crecs[i].erase(0, 9);
     crecs2.push_back(crecs.at(i));
   }
   // join lines and then split records
   std::string tmp = join(crecs2, "$");
   boost::split(crecs2, tmp, boost::is_any_of("$"));
-  for (int i=0; i<crecs2.size(); i++)
+  for (size_t i=0; i<crecs2.size(); i++)
     crecs2[i] = boost::trim_copy(crecs2[i]);
   // search and parse requested fields
   std::vector<std::string> result;
   for ( auto &req : requestedRecords) {
     std::string rstr;
-    for (int i=0; i<crecs2.size(); i++) {
+    for (size_t i=0; i<crecs2.size(); i++) {
       if ((crecs2.at(i).size() >= req.size()) && (crecs2.at(i).substr(0, req.size()) == req)) {
         rstr = boost::trim_copy(crecs2.at(i).substr(5, crecs2.at(i).size() - 5));
         break;
@@ -634,7 +634,7 @@ void ENSDFParser::parseBlocks()
       std::string decayname  = prec.nuclide.symbolicName();
       if (prec.energy > 0.0)
         decayname += "m";
-      decayname += " → " + XDecay::DecayTypeAsText(decaydata.decayType);
+      decayname += " → " + DecayScheme::DecayTypeAsText(decaydata.decayType);
       if (!hlstrings.empty())
         decayname += ", " + join(hlstrings, " + ");
 

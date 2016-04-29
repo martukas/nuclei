@@ -8,7 +8,7 @@
 #include <QFont>
 #include <QPen>
 #include <QMetaType>
-#include "XDecay.h"
+#include "DecayScheme.h"
 
 #include "LevelRendered.h"
 #include "TransitionRendered.h"
@@ -24,7 +24,7 @@ class SchemePlayer : public QObject
     Q_OBJECT
 public:
 
-    explicit SchemePlayer(XDecayPtr scheme, QObject *parent = 0);
+    explicit SchemePlayer(DecaySchemePtr scheme, QObject *parent = 0);
 
     void setStyle(const QFont &fontfamily, unsigned int sizePx);
     QGraphicsScene * levelPlot();
@@ -87,7 +87,7 @@ private slots:
     void itemClicked(ClickableItem *item);
 
 private:
-    XDecayPtr scheme_;
+    DecaySchemePtr scheme_;
 
     void clickedGamma(TransitionRendered *g);
     void clickedEnergyLevel(LevelRendered *e);
