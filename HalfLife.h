@@ -16,7 +16,7 @@ public:
     bool isValid() const;
     double seconds() const;
     bool isStable() const;
-    std::string to_string() const;
+    std::string to_string(bool with_uncert = true) const;
 
     bool operator>(const HalfLife &right) const;
     bool operator>=(const HalfLife &right) const;

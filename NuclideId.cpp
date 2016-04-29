@@ -133,18 +133,18 @@ bool operator==(const NuclideId &left, const NuclideId &right)
 
 bool operator<(const NuclideId &left, const NuclideId &right)
 {
-  if (left.Z_ == right.Z_)
+  if (left.A() == right.A())
     return (left.N_ < right.N_);
   else
-    return (left.Z_ < right.Z_);
+    return (left.A() < right.A());
 }
 
 bool operator>(const NuclideId &left, const NuclideId &right)
 {
-  if (left.Z_ == right.Z_)
+  if (left.A() == right.A())
     return (left.N_ > right.N_);
   else
-    return (left.Z_ > right.Z_);
+    return (left.A() > right.A());
 }
 
 

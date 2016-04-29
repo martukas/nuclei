@@ -158,8 +158,8 @@ void Nuclei::initialize()
     loadSelectedDecay(mi);
   }
 
-  if (m_decay)
-    m_decay->setCurrentSelection(s.value("selectedCascade", QVariant::fromValue(Decay::CascadeIdentifier())).value<Decay::CascadeIdentifier>());
+//  if (m_decay)
+//    m_decay->setCurrentSelection(s.value("selectedCascade", QVariant::fromValue(Decay::CascadeIdentifier())).value<Decay::CascadeIdentifier>());
 
   // update ensdf version label
   QString evtext("Current ENSDF version: " + s.value("ensdfVersion").toString());
@@ -175,9 +175,9 @@ void Nuclei::loadSelectedDecay(const QModelIndex &index)
   if (!decaySelectionModel)
     return;
 
-  QSharedPointer<Decay> decay(decaySelectionModel->decay(decayProxyModel->mapToSource(index)));
+  XDecayPtr decay(decaySelectionModel->decay(decayProxyModel->mapToSource(index)));
 
-  if (!decay)
+  if (!decay || !decay->valid())
     return;
 
 //  DBG << "<Nuclei> decay " << decay->name().toStdString() << " type " << (int)decay->type();
@@ -193,19 +193,19 @@ void Nuclei::loadSearchResultCascade(const QModelIndex &index)
   if (!searchResultSelectionModel)
     return;
 
-  QSharedPointer<Decay> decay(searchResultSelectionModel->decay(searchProxyModel->mapToSource(index)));
+  XDecayPtr decay(searchResultSelectionModel->decay(searchProxyModel->mapToSource(index)));
 
-  if (!decay)
+  if (!decay || !decay->valid())
     return;
 
   loadDecay(decay);
 
-  Decay::CascadeIdentifier ci = searchResultSelectionModel->cascade(searchProxyModel->mapToSource(index));
-  if (m_decay)
-    m_decay->setCurrentSelection(ci);
+//  Decay::CascadeIdentifier ci = searchResultSelectionModel->cascade(searchProxyModel->mapToSource(index));
+//  if (m_decay)
+//    m_decay->setCurrentSelection(ci);
 }
 
-void Nuclei::updateDecayData(Decay::DecayDataSet data)
+void Nuclei::updateDecayData(SchemePlayer::SchemePlayerDataSet data)
 {
   ui->startEnergy->setText(data.startEnergy);
   ui->startSpin->setText(data.startSpin);
@@ -321,10 +321,10 @@ void Nuclei::showPreferences()
 {
   preferencesDialog->exec();
 
-  if (m_decay) {
-    Decay::CascadeIdentifier ci = m_decay->currentSelection();
-    m_decay->setCurrentSelection(ci);
-  }
+//  if (m_decay) {
+//    Decay::CascadeIdentifier ci = m_decay->currentSelection();
+//    m_decay->setCurrentSelection(ci);
+//  }
 }
 
 void Nuclei::showAbout()
@@ -343,14 +343,14 @@ void Nuclei::closeEvent(QCloseEvent *event)
   QMainWindow::closeEvent(event);
 }
 
-void Nuclei::loadDecay(QSharedPointer<Decay> decay)
+void Nuclei::loadDecay(XDecayPtr decay)
 {
   QSettings s;
   s.setValue("preferences/levelTolerance", preferencesDialogUi->levelDiff->value());
   s.setValue("preferences/gammaTolerance", preferencesDialogUi->gammaDiff->value());
   s.sync();
 
-  m_decay = decay;
+  m_decay = QSharedPointer<SchemePlayer>(new SchemePlayer(decay, this));
 
   connect(m_decay.data(), SIGNAL(updatedDecayData(Decay::DecayDataSet)), this, SLOT(updateDecayData(Decay::DecayDataSet)));
   m_decay->setStyle(preferencesDialogUi->fontFamily->currentFont(), preferencesDialogUi->fontSize->value());
@@ -359,6 +359,6 @@ void Nuclei::loadDecay(QSharedPointer<Decay> decay)
   ui->decayView->setSceneRect(scene->sceneRect().adjusted(-20, -20, 20, 20));
 
   // update plot
-  m_decay->triggerDecayDataUpdate();
+  m_decay->triggerDataUpdate();
 }
 

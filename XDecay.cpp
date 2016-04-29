@@ -24,6 +24,11 @@ XDecay::XDecay(const std::string &name,
 {
 }
 
+bool XDecay::valid() const
+{
+  return (pNuc && dNuc && !pNuc->empty() && !dNuc->empty());
+}
+
 std::string XDecay::DecayTypeAsText(Type type)
 {
   switch (type) {

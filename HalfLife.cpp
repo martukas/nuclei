@@ -82,13 +82,13 @@ bool HalfLife::isStable() const
   return boost::math::isinf(time_.value());
 }
 
-std::string HalfLife::to_string() const
+std::string HalfLife::to_string(bool with_uncert) const
 {
   if (!isValid())
     return "";
   if (isStable())
     return "stable";
-  return time_.to_string(false) + units_;
+  return time_.to_string(false, with_uncert) + units_;
 }
 
 std::string HalfLife::preferred_units(double secs)

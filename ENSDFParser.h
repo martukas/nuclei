@@ -36,16 +36,16 @@ private:
 class ENSDFParser
 {
 public:
-    static const std::list<uint16_t> &aValues();
+    static const std::list<uint16_t> &aValues(std::string directory);
 
-    explicit ENSDFParser(uint16_t A);
+    explicit ENSDFParser(uint16_t A, std::string directory);
     uint16_t aValue() const;
 
     const std::list<NuclideId> daughterNuclides() const;
     const std::list< std::pair<std::string, NuclideId> > decays(const NuclideId &daughterNuclide) const;
 
 
-    XDecay decay(const NuclideId &daughterNuclide, const std::string &decayName) const;
+    XDecayPtr decay(const NuclideId &daughterNuclide, const std::string &decayName) const;
 private:
 
     struct StringSubList {

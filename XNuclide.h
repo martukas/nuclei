@@ -18,6 +18,8 @@ public:
 
   NuclideId id() const;
 
+  bool empty() const;
+
   void addLevels(const std::map<Energy, XEnergyLevelPtr> &levels);
   std::map<Energy, XEnergyLevelPtr> & levels();
 
