@@ -1,4 +1,4 @@
-#include "NuclideRendered.h"
+#include "NuclideItem.h"
 #include <QGraphicsScene>
 #include "ActiveGraphicsItemGroup.h"
 #include <QGraphicsSimpleTextItem>
@@ -8,14 +8,14 @@
 #include "custom_logger.h"
 #include "qpx_util.h"
 
-NuclideRendered::NuclideRendered()
+NuclideItem::NuclideItem()
   : ClickableItem(ClickableItem::InvalidType),
     pNucHl(0), pNucVerticalArrow(0)
 {
 }
 
-NuclideRendered::NuclideRendered(NuclidePtr nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene)
-  : NuclideRendered()
+NuclideItem::NuclideItem(NuclidePtr nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene)
+  : NuclideItem()
 {
   if (!nuc)
     return;
