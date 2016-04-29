@@ -14,11 +14,11 @@ class QGraphicsRectItem;
 class QGraphicsScene;
 class QGraphicsItemGroup;
 
-class LevelRendered : public ClickableItem
+class LevelItem : public ClickableItem
 {
 public:
-  LevelRendered();
-  LevelRendered(LevelPtr level, ParentPosition parentpos, SchemeVisualSettings vis, QGraphicsScene *scene);
+  LevelItem();
+  LevelItem(LevelPtr level, ParentPosition parentpos, SchemeVisualSettings vis, QGraphicsScene *scene);
 
   //returns feeding arrow height, if any
   double align(double leftlinelength, double rightlinelength, double arrowleft, double arrowright,

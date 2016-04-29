@@ -1,4 +1,4 @@
-#include "TransitionRendered.h"
+#include "TransitionItem.h"
 
 #include <QGraphicsTextItem>
 #include <QFontMetrics>
@@ -17,25 +17,25 @@
 #include "GraphicsHighlightItem.h"
 #include "custom_logger.h"
 
-const double TransitionRendered::textAngle = -60.0;
-const double TransitionRendered::arrowHeadLength = 11.0;
-const double TransitionRendered::arrowBaseLength = 7.0;
-const double TransitionRendered::arrowHeadWidth = 5.0;
-const double TransitionRendered::arrowBaseWidth = 5.0;
-const double TransitionRendered::highlightWidth = 5.0;
-const QPolygonF TransitionRendered::arrowHeadShape = initArrowHead();
-const QPolygonF TransitionRendered::arrowBaseShape = initArrowBase();
+const double TransitionItem::textAngle = -60.0;
+const double TransitionItem::arrowHeadLength = 11.0;
+const double TransitionItem::arrowBaseLength = 7.0;
+const double TransitionItem::arrowHeadWidth = 5.0;
+const double TransitionItem::arrowBaseWidth = 5.0;
+const double TransitionItem::highlightWidth = 5.0;
+const QPolygonF TransitionItem::arrowHeadShape = initArrowHead();
+const QPolygonF TransitionItem::arrowBaseShape = initArrowBase();
 
 
-TransitionRendered::TransitionRendered()
+TransitionItem::TransitionItem()
   : ClickableItem(ClickableItem::GammaTransitionType),
     arrow(0), text(0), arrowhead(0), arrowbase(0), clickarea(0), highlightHelper(0), mindist(0.0)
 {
 
 }
 
-TransitionRendered::TransitionRendered(TransitionPtr transition, SchemeVisualSettings vis, QGraphicsScene *scene)
-  : TransitionRendered()
+TransitionItem::TransitionItem(TransitionPtr transition, SchemeVisualSettings vis, QGraphicsScene *scene)
+  : TransitionItem()
 {
   if (!transition)
     return;
@@ -99,11 +99,11 @@ TransitionRendered::TransitionRendered(TransitionPtr transition, SchemeVisualSet
 //  updateArrow();
 }
 
-TransitionRendered::~TransitionRendered()
+TransitionItem::~TransitionItem()
 {
 }
 
-void TransitionRendered::updateArrow(double arrowDestY)
+void TransitionItem::updateArrow(double arrowDestY)
 {
   item->removeFromGroup(clickarea);
   item->removeFromGroup(arrowhead);
@@ -121,22 +121,22 @@ void TransitionRendered::updateArrow(double arrowDestY)
   item->addToGroup(clickarea);
 }
 
-double TransitionRendered::minimalXDistance() const
+double TransitionItem::minimalXDistance() const
 {
   return mindist;
 }
 
-double TransitionRendered::widthFromOrigin() const
+double TransitionItem::widthFromOrigin() const
 {
   return item->childrenBoundingRect().right();
 }
 
-QPen TransitionRendered::pen() const
+QPen TransitionItem::pen() const
 {
   return m_pen;
 }
 
-QPolygonF TransitionRendered::initArrowHead()
+QPolygonF TransitionItem::initArrowHead()
 {
   QPolygonF arrowheadpol;
   arrowheadpol << QPointF(0.0, 0.0);
@@ -145,7 +145,7 @@ QPolygonF TransitionRendered::initArrowHead()
   return arrowheadpol;
 }
 
-QPolygonF TransitionRendered::initArrowBase()
+QPolygonF TransitionItem::initArrowBase()
 {
   QPolygonF arrowbasepol;
   arrowbasepol << QPointF(0.0, arrowBaseLength);

@@ -14,11 +14,11 @@ class QGraphicsScene;
 class QGraphicsLineItem;
 class QGraphicsSimpleTextItem;
 
-class NuclideRendered : public ClickableItem
+class NuclideItem : public ClickableItem
 {
 public:
-  NuclideRendered();
-  NuclideRendered(NuclidePtr nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene);
+  NuclideItem();
+  NuclideItem(NuclidePtr nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene);
 
   QGraphicsSimpleTextItem *pNucHl;
   QGraphicsLineItem *pNucVerticalArrow;

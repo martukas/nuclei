@@ -18,6 +18,10 @@
 
 #include "custom_logger.h"
 
+#include "LevelItem.h"
+#include "TransitionItem.h"
+
+
 SchemePlayer::SchemePlayer(DecaySchemePtr scheme, QObject *parent)
   : QObject(parent), scheme_(scheme),
     scene_(0)
@@ -44,14 +48,14 @@ QGraphicsScene * SchemePlayer::levelPlot()
 
   for (auto &level : scheme_->daughterNuclide()->levels()) {
     // create level
-    LevelRendered *levrend = new LevelRendered(level.second, parentpos, vis, scene_);
+    LevelItem *levrend = new LevelItem(level.second, parentpos, vis, scene_);
     connect(this, SIGNAL(enabledShadow(bool)), levrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
     connect(levrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
     levels_.insert(levrend->energy_,levrend);
     // create gammas
     std::list<TransitionPtr> levelgammas = level.second->depopulatingTransitions();
     for (TransitionPtr gamma : levelgammas) {
-      TransitionRendered *transrend = new TransitionRendered(gamma, vis, scene_);
+      TransitionItem *transrend = new TransitionItem(gamma, vis, scene_);
 //      ActiveGraphicsItemGroup *item = gamma->createGammaGraphicsItem(gammaFont, gammaPen, intenseGammaPen);
       connect(this, SIGNAL(enabledShadow(bool)), transrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
       connect(transrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
@@ -60,15 +64,15 @@ QGraphicsScene * SchemePlayer::levelPlot()
   }
 
   // create daughter nuclide label
-  daughter_ = NuclideRendered(scheme_->daughterNuclide(), ClickableItem::DaughterNuclideType, vis, scene_);
+  daughter_ = NuclideItem(scheme_->daughterNuclide(), ClickableItem::DaughterNuclideType, vis, scene_);
 
   // create parent nuclide label and level(s)
   if (parentpos == LeftParent || parentpos == RightParent) {
-    parent_ = NuclideRendered(scheme_->parentNuclide(), ClickableItem::ParentNuclideType, vis, scene_);
+    parent_ = NuclideItem(scheme_->parentNuclide(), ClickableItem::ParentNuclideType, vis, scene_);
 
     for (auto &level : scheme_->parentNuclide()->levels()) {
 
-      LevelRendered *levrend = new LevelRendered(level.second, NoParent, vis, scene_);
+      LevelItem *levrend = new LevelItem(level.second, NoParent, vis, scene_);
       parent_levels_.insert(levrend->energy_,levrend);
 
 
@@ -117,7 +121,7 @@ void SchemePlayer::alignGraphicsItems()
   double maxEnergyLabelWidth = 0.0;
   double maxSpinLabelWidth = 0.0;
 
-  foreach (LevelRendered *level, levels_) {
+  foreach (LevelItem *level, levels_) {
     if (stdBoldFontMetrics.width(level->graspintext->text()) > maxSpinLabelWidth)
       maxSpinLabelWidth = stdBoldFontMetrics.width(level->graspintext->text());
     if (stdBoldFontMetrics.width(level->graetext->text()) > maxEnergyLabelWidth)
@@ -127,11 +131,11 @@ void SchemePlayer::alignGraphicsItems()
   // determine y coordinates for all levels
   double maxEnergyGap = 0.0;
   if (!levels_.empty()) {
-    for (QMap<Energy, LevelRendered*>::const_iterator i=levels_.begin()+1; i!=levels_.end(); i++) {
+    for (QMap<Energy, LevelItem*>::const_iterator i=levels_.begin()+1; i!=levels_.end(); i++) {
       double diff = i.key() - (i-1).key();
       maxEnergyGap = qMax(maxEnergyGap, diff);
     }
-    for (QMap<Energy, LevelRendered*>::const_iterator i=levels_.begin()+1; i!=levels_.end(); i++) {
+    for (QMap<Energy, LevelItem*>::const_iterator i=levels_.begin()+1; i!=levels_.end(); i++) {
       double minheight = 0.5*(i.value()->graphicsItem()->boundingRect().height() + (i-1).value()->graphicsItem()->boundingRect().height());
       double extraheight = vis.maxExtraLevelDistance * (i.key() - (i-1).key()) / maxEnergyGap;
       i.value()->graYPos = std::floor((i-1).value()->graYPos - minheight - extraheight) + 0.5*i.value()->graline->pen().widthF();
@@ -162,13 +166,13 @@ void SchemePlayer::alignGraphicsItems()
     }
 
     if (levels_.contains(gamma->from_) && levels_.contains(gamma->to_)) {
-      LevelRendered *from = levels_.value(gamma->from_);
-      LevelRendered *to = levels_.value(gamma->to_);
+      LevelItem *from = levels_.value(gamma->from_);
+      LevelItem *to = levels_.value(gamma->to_);
       double arrowDestY = to->graYPos - from->graYPos;
       gamma->updateArrow(arrowDestY);
     }
     if (levels_.contains(gamma->from_)) {
-      LevelRendered *from = levels_.value(gamma->from_);
+      LevelItem *from = levels_.value(gamma->from_);
       gamma->graphicsItem()->setPos(std::floor(currentgammapos)+0.5*gamma->pen().widthF(), from->graYPos + 0.5*from->graline->pen().widthF());
     }
   }
@@ -177,7 +181,7 @@ void SchemePlayer::alignGraphicsItems()
   double pNucLineLength = vis.parentNuclideLevelLineLength;
   if (parentpos == LeftParent || parentpos == RightParent) {
     pNucLineLength = qMax(vis.parentNuclideLevelLineLength, parent_.graphicsItem()->boundingRect().width() + 20.0);
-    foreach (LevelRendered *level, parent_levels_) {
+    foreach (LevelItem *level, parent_levels_) {
       pNucLineLength = qMax(pNucLineLength,
                             level->graetext->boundingRect().width() +
                             level->graspintext->boundingRect().width() +
@@ -190,7 +194,7 @@ void SchemePlayer::alignGraphicsItems()
   // determine line length for feeding arrows
   double arrowLineLength = vis.feedingArrowLineLength;
   if (parentpos == LeftParent || parentpos == RightParent)
-    foreach (LevelRendered *level, levels_)
+    foreach (LevelItem *level, levels_)
       if (level->grafeedintens)
         arrowLineLength = qMax(arrowLineLength,
                                level->grafeedintens->boundingRect().width() +
@@ -211,7 +215,7 @@ void SchemePlayer::alignGraphicsItems()
 
   // set level positions and sizes
   double arrowVEnd = std::numeric_limits<double>::quiet_NaN();
-  foreach (LevelRendered *level, levels_) {
+  foreach (LevelItem *level, levels_) {
     double newVEnd = level->align(leftlinelength, rightlinelength, arrowleft, arrowright, vis, parentpos);
     if (boost::math::isnan(arrowVEnd) && !boost::math::isnan(newVEnd))
       arrowVEnd = newVEnd;
@@ -235,7 +239,7 @@ void SchemePlayer::alignGraphicsItems()
     // set position of parent levels
     double topMostLevel = 0.0;
     double y = qRound(parentY - 0.3*parent_.graphicsItem()->boundingRect().height()) + 0.5*vis.stableLevelPen.widthF();
-    foreach (LevelRendered *level, parent_levels_) {
+    foreach (LevelItem *level, parent_levels_) {
       bool feeding = false;
       if (scheme_->parentNuclide()->levels().count(level->energy_))
         feeding = scheme_->parentNuclide()->levels().at(level->energy_)->isFeedingLevel();
@@ -508,12 +512,12 @@ SchemePlayer::SchemePlayerDataSet SchemePlayer::decayDataSet() const
 void SchemePlayer::itemClicked(ClickableItem *item)
 {
   if (item->type() == ClickableItem::EnergyLevelType)
-    clickedEnergyLevel(dynamic_cast<LevelRendered*>(item));
+    clickedEnergyLevel(dynamic_cast<LevelItem*>(item));
   else if (item->type() == ClickableItem::GammaTransitionType)
-    clickedGamma(dynamic_cast<TransitionRendered*>(item));
+    clickedGamma(dynamic_cast<TransitionItem*>(item));
 }
 
-void SchemePlayer::clickedGamma(TransitionRendered *g)
+void SchemePlayer::clickedGamma(TransitionItem *g)
 {
   if (!g)
     return;
@@ -598,7 +602,7 @@ void SchemePlayer::clickedGamma(TransitionRendered *g)
   triggerDataUpdate();
 }
 
-void SchemePlayer::clickedEnergyLevel(LevelRendered *e)
+void SchemePlayer::clickedEnergyLevel(LevelItem *e)
 {
   if (!e)
     return;

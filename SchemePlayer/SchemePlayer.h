@@ -1,23 +1,19 @@
 #ifndef SCHEME_PLAYER_H
 #define SCHEME_PLAYER_H
 
-#include <stdint.h>
 #include <QObject>
-#include <QStringList>
 #include <QMap>
 #include <QFont>
-#include <QPen>
 #include <QMetaType>
 #include "DecayScheme.h"
 
-#include "LevelRendered.h"
-#include "TransitionRendered.h"
-#include "NuclideRendered.h"
+#include "NuclideItem.h"
+
+#include "ClickableItem.h"
 
 class QGraphicsScene;
-class QGraphicsLineItem;
-class QGraphicsSimpleTextItem;
-class ClickableItem;
+class LevelItem;
+class TransitionItem;
 
 class SchemePlayer : public QObject
 {
@@ -89,8 +85,8 @@ private slots:
 private:
     DecaySchemePtr scheme_;
 
-    void clickedGamma(TransitionRendered *g);
-    void clickedEnergyLevel(LevelRendered *e);
+    void clickedGamma(TransitionItem *g);
+    void clickedEnergyLevel(LevelItem *e);
     void alignGraphicsItems();
 
 
@@ -102,10 +98,10 @@ private:
 
     SchemeVisualSettings vis;
 
-    NuclideRendered parent_, daughter_;
-    QMap<Energy,LevelRendered*> levels_;
-    QMap<Energy,LevelRendered*> parent_levels_;
-    QList<TransitionRendered*> transitions_;
+    NuclideItem parent_, daughter_;
+    QMap<Energy,LevelItem*> levels_;
+    QMap<Energy,LevelItem*> parent_levels_;
+    QList<TransitionItem*> transitions_;
 
 };
 

@@ -22,10 +22,12 @@ DEFINES += PRINT_SEARCH_RESULTS
 
 SOURCES += $$files($$PWD/*.cpp) \
            $$files($$PWD/NucData/*.cpp) \
+           $$files($$PWD/SchemePlayer/*.cpp) \
            libakk/Akk.cpp
 
 HEADERS  += $$files($$PWD/*.h) \
             $$files($$PWD/NucData/*.h) \
+            $$files($$PWD/SchemePlayer/*.h) \
             libakk/Akk.h \
             libakk/akk_global.h
 
@@ -34,6 +36,7 @@ INSTALLS = target
 
 INCLUDEPATH += $$PWD \
                $$PWD/NucData \
+               $$PWD/SchemePlayer \
                $$PWD/libakk
 
 FORMS += $$files($$PWD/*.ui)
