@@ -33,11 +33,11 @@ public:
 private:
     static double gauss(const double x, const double sigma);
 
-    Energy m_e;
-    double intens;
+    Energy energy_;
+    double intensity_;
     std::string m_mpol;
     UncertainDouble m_delta;
-    std::shared_ptr<Level> m_start, m_dest;
+    std::shared_ptr<Level> from_, to_;
 
 };
 

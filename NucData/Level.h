@@ -54,12 +54,11 @@ public:
     friend class Transition;
 
 private:
-    Energy m_e;
-    SpinParity sp;
-    HalfLife hl;
+    Energy energy_;
+    SpinParity spin_;
+    HalfLife halflife_;
     Moment m_Q, m_mu; // quadrupole and magnetic moments
     unsigned int isonum; // >0 for isomeric levels (counted from low energy to high), 0 otherwise
-
 
 
     UncertainDouble feedintens; // says how often this level is directly fed per 100 parent decays

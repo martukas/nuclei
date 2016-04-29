@@ -8,12 +8,12 @@
 Transition::Transition(Energy energy, double intensity,
                                    const std::string &multipol, UncertainDouble delta,
                                    LevelPtr start, LevelPtr dest)
-  : m_e(energy),
-    intens(intensity),
+  : energy_(energy),
+    intensity_(intensity),
     m_mpol(multipol),
     m_delta(delta),
-    m_start(start),
-    m_dest(dest)
+    from_(start),
+    to_(dest)
 {
   start->m_depopulatingTransitions.push_back(TransitionPtr(this));
   dest->m_populatingTransitions.push_back(TransitionPtr(this));
@@ -25,12 +25,12 @@ Transition::~Transition()
 
 Energy Transition::energy() const
 {
-  return m_e;
+  return energy_;
 }
 
 double Transition::intensity() const
 {
-  return intens;
+  return intensity_;
 }
 
 std::string Transition::multipolarity() const
@@ -46,8 +46,8 @@ const UncertainDouble & Transition::delta() const
 std::string Transition::intensityAsText() const
 {
   std::string intensstr;
-  if (!boost::math::isnan(intens))
-    intensstr = to_str_precision(intens, 3) + " %";
+  if (!boost::math::isnan(intensity_))
+    intensstr = to_str_precision(intensity_, 3) + " %";
   return intensstr;
 }
 
@@ -60,11 +60,11 @@ std::string Transition::multipolarityAsText() const
 
 LevelPtr Transition::depopulatedLevel() const
 {
-  return m_start;
+  return from_;
 }
 
 LevelPtr Transition::populatedLevel() const
 {
-  return m_dest;
+  return to_;
 }
 

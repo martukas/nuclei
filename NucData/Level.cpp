@@ -8,9 +8,9 @@ Level::Level(Energy energy, SpinParity spin, HalfLife halfLife,
                            unsigned int isomerNum)
   : Level()
 {
-  m_e = energy;
-  sp = spin;
-  hl = halfLife;
+  energy_ = energy;
+  spin_ = spin;
+  halflife_ = halfLife;
   isonum = isomerNum;
 }
 
@@ -21,7 +21,7 @@ Level Level::from_ensdf(std::string record)
 
   Energy        e = Energy::from_nsdf(record.substr(9,12));
   SpinParity spin = SpinParity::from_ensdf(record.substr(21, 18));
-  HalfLife     hl = HalfLife::from_ensdf(record.substr(39, 16));
+  HalfLife     halflife = HalfLife::from_ensdf(record.substr(39, 16));
 
   // determine isomer number
   unsigned int isonum = 0;
@@ -33,7 +33,7 @@ Level Level::from_ensdf(std::string record)
       isonum = 1;
   }
 
-  Level ret(e, spin, hl, isonum);
+  Level ret(e, spin, halflife, isonum);
 //  DBG << record << " --> " << ret.to_string();
   return ret;
 }
@@ -41,10 +41,10 @@ Level Level::from_ensdf(std::string record)
 std::string Level::to_string() const
 {
   std::string ret = energy().to_string();
-  if (sp.valid())
+  if (spin_.valid())
     ret += " " + spin().to_string();
-  if (hl.isValid())
-    ret += " " + hl.to_string();
+  if (halflife_.isValid())
+    ret += " " + halflife_.to_string();
   if (m_Q.valid())
     ret += " Q=" + m_Q.to_string();
   if (m_mu.valid())
@@ -56,17 +56,17 @@ std::string Level::to_string() const
 
 Energy Level::energy() const
 {
-  return m_e;
+  return energy_;
 }
 
 SpinParity Level::spin() const
 {
-  return sp;
+  return spin_;
 }
 
 HalfLife Level::halfLife() const
 {
-  return hl;
+  return halflife_;
 }
 
 unsigned int Level::isomerNum() const
@@ -101,12 +101,12 @@ void Level::set_q(const Moment &m)
 
 void Level::set_halflife(const HalfLife& h)
 {
-  hl = h;
+  halflife_ = h;
 }
 
 void Level::set_spin(const SpinParity& s)
 {
-  sp = s;
+  spin_ = s;
 }
 
 
