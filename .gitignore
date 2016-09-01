@@ -30,6 +30,7 @@ release/*
 Application\ Data/*
 ui/*
 nuclei
+*.app
 
 # QtCreator
 
