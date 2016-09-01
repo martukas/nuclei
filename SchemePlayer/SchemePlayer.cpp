@@ -12,7 +12,6 @@
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <algorithm>
 #include <functional>
-#include <Akk.h>
 #include "ActiveGraphicsItemGroup.h"
 #include "GraphicsHighlightItem.h"
 
