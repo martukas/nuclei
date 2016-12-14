@@ -8,9 +8,9 @@
 
 #include <cmath>
 #include <boost/math/special_functions/fpclassify.hpp>
-#if !defined(M_PI)
-#define M_PI        3.14159265358979323846264338327950288
-#endif
+//#if !defined(M_PI)
+//#define M_PI        3.14159265358979323846264338327950288
+//#endif
 
 #include "ActiveGraphicsItemGroup.h"
 #include "Level.h"
@@ -34,17 +34,17 @@ TransitionItem::TransitionItem()
 
 }
 
-TransitionItem::TransitionItem(TransitionPtr transition, SchemeVisualSettings vis, QGraphicsScene *scene)
+TransitionItem::TransitionItem(Transition transition, SchemeVisualSettings vis, QGraphicsScene *scene)
   : TransitionItem()
 {
-  if (!transition)
+  if (!transition.energy().isValid())
     return;
 
-  from_ = transition->depopulatedLevel()->energy();
-  to_   = transition->populatedLevel()->energy();
+  from_ = transition.depopulatedLevel();
+  to_   = transition.populatedLevel();
 
   m_pen = vis.gammaPen;
-  if (transition->intensity() >= 5.0)
+  if (transition.intensity() >= 5.0)
     m_pen = vis.intenseGammaPen;
 
   // group origin is set to the start level!
@@ -63,12 +63,12 @@ TransitionItem::TransitionItem(TransitionPtr transition, SchemeVisualSettings vi
   arrow = new QGraphicsLineItem;
   arrow->setPen(m_pen);
 
-  QString intensstr = QString::fromStdString(transition->intensityAsText());
+  QString intensstr = QString::fromStdString(transition.intensity_string());
   if (!intensstr.isEmpty())
     intensstr += " ";
   QString textstr = QString("<html><body bgcolor=\"white\">%1<b>%2</b> %3</body></html>")
-      .arg(intensstr).arg(QString::fromStdString(transition->energy().to_string()))
-      .arg(QString::fromStdString(transition->multipolarityAsText()));
+      .arg(intensstr).arg(QString::fromStdString(transition.energy().to_string()))
+      .arg(QString::fromStdString(transition.multipolarity()));
   text = new QGraphicsTextItem;
   text->setFont(vis.gammaFont);
   text->document()->setDocumentMargin(0.0);

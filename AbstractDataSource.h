@@ -67,7 +67,7 @@ public:
 
     virtual AbstractTreeItem * rootItem() const = 0;
 
-    virtual DecaySchemePtr decay(const AbstractTreeItem *item) const = 0;
+    virtual DecayScheme decay(const AbstractTreeItem *item) const = 0;
 //    virtual DecayScheme::CascadeIdentifier cascade(const AbstractTreeItem *item) const;
 };
 

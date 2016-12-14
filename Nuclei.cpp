@@ -32,27 +32,12 @@ Nuclei::Nuclei(QWidget *parent) :
   ui->setupUi(this);
   setWindowTitle(QCoreApplication::applicationName() + QString(" ") + QCoreApplication::applicationVersion());
 
-  // add status bar widgets
-  ensdfversion = new QLabel(statusBar());
-  ensdfversion->setAlignment(Qt::AlignLeft);
-  statusBar()->addWidget(ensdfversion);
-  QLabel *referto = new QLabel("PAPERSTATUSBAR", statusBar());
-  referto->setAlignment(Qt::AlignRight);
-  referto->setTextInteractionFlags(Qt::TextBrowserInteraction);
-  referto->setOpenExternalLinks(true);
-  statusBar()->addPermanentWidget(referto);
-
   preferencesDialogUi->setupUi(preferencesDialog);
 
   QAction *toggleSelector = ui->decaySelectorDock->toggleViewAction();
   toggleSelector->setToolTip(toggleSelector->toolTip().prepend("Show/Hide "));
   toggleSelector->setIcon(QIcon(":/toolbar/checkbox.png"));
   ui->mainToolBar->insertAction(ui->actionZoom_In, toggleSelector);
-
-  QAction *toggleInfo = ui->decayInfoDock->toggleViewAction();
-  toggleInfo->setToolTip(toggleInfo->toolTip().prepend("Show/Hide "));
-  toggleInfo->setIcon(QIcon(":/toolbar/view-list-text.png"));
-  ui->mainToolBar->insertAction(ui->actionZoom_In, toggleInfo);
 
   ui->mainToolBar->insertSeparator(ui->actionZoom_In);
 
@@ -68,7 +53,6 @@ Nuclei::Nuclei(QWidget *parent) :
   connect(ui->actionZoom_Out, SIGNAL(triggered()), this, SLOT(zoomOut()));
 
   connect(ui->actionPreferences, SIGNAL(triggered()), this, SLOT(showPreferences()));
-  connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(showAbout()));
 
   ui->decayView->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
 
@@ -161,10 +145,6 @@ void Nuclei::initialize()
 //  if (m_decay)
 //    m_decay->setCurrentSelection(s.value("selectedCascade", QVariant::fromValue(Decay::CascadeIdentifier())).value<Decay::CascadeIdentifier>());
 
-  // update ensdf version label
-  QString evtext("Current ENSDF version: " + s.value("ensdfVersion").toString());
-  ensdfversion->setText(evtext);
-  preferencesDialogUi->ensdfVersionLabel->setText(evtext);
 }
 
 void Nuclei::loadSelectedDecay(const QModelIndex &index)
@@ -175,9 +155,9 @@ void Nuclei::loadSelectedDecay(const QModelIndex &index)
   if (!decaySelectionModel)
     return;
 
-  DecaySchemePtr decay(decaySelectionModel->decay(decayProxyModel->mapToSource(index)));
+  DecayScheme decay(decaySelectionModel->decay(decayProxyModel->mapToSource(index)));
 
-  if (!decay || !decay->valid())
+  if (!decay.valid())
     return;
 
 //  DBG << "<Nuclei> decay " << decay->name().toStdString() << " type " << (int)decay->type();
@@ -193,9 +173,9 @@ void Nuclei::loadSearchResultCascade(const QModelIndex &index)
   if (!searchResultSelectionModel)
     return;
 
-  DecaySchemePtr decay(searchResultSelectionModel->decay(searchProxyModel->mapToSource(index)));
+  DecayScheme decay(searchResultSelectionModel->decay(searchProxyModel->mapToSource(index)));
 
-  if (!decay || !decay->valid())
+  if (!decay.valid())
     return;
 
   loadDecay(decay);
@@ -203,37 +183,6 @@ void Nuclei::loadSearchResultCascade(const QModelIndex &index)
 //  Decay::CascadeIdentifier ci = searchResultSelectionModel->cascade(searchProxyModel->mapToSource(index));
 //  if (m_decay)
 //    m_decay->setCurrentSelection(ci);
-}
-
-void Nuclei::updateDecayData(SchemePlayer::DecayDataSet data)
-{
-  ui->startEnergy->setText(data.startEnergy);
-  ui->startSpin->setText(data.startSpin);
-
-  ui->popEnergy->setText(data.popEnergy);
-  ui->popIntensity->setText(data.popIntensity);
-  ui->popMultipolarity->setText(data.popMultipolarity);
-  ui->popMixing->setText(data.popMixing);
-
-  ui->intEnergy->setText(data.intEnergy);
-  ui->intHalfLife->setText(data.intHalfLife);
-  ui->intSpin->setText(data.intSpin);
-  ui->intMu->setText(data.intMu + QString::fromUtf8(" µ<sub>N</sub>"));
-  ui->intQ->setText(data.intQ + " eb");
-
-  ui->depopEnergy->setText(data.depopEnergy);
-  ui->depopIntensity->setText(data.depopIntensity);
-  ui->depopMultipolarity->setText(data.depopMultipolarity);
-  ui->depopMixing->setText(data.depopMixing);
-
-  ui->endEnergy->setText(data.endEnergy);
-  ui->endSpin->setText(data.endSpin);
-
-  ui->a22->setText(data.a22);
-  ui->a24->setText(data.a24);
-  ui->a42->setText(data.a42);
-  ui->a44->setText(data.a44);
-
 }
 
 void Nuclei::svgExport()
@@ -327,14 +276,6 @@ void Nuclei::showPreferences()
 //  }
 }
 
-void Nuclei::showAbout()
-{
-  QMessageBox::about(this,
-                     QString("About: %1 %2").arg(QCoreApplication::applicationName(), QCoreApplication::applicationVersion()),
-                     QString::fromUtf8("NUCLEIABOUT <hr /> PAPERTEXT <hr /> LIBAKKABOUT <hr /> GPL")
-                     );
-}
-
 void Nuclei::closeEvent(QCloseEvent *event)
 {
   QSettings s;
@@ -343,7 +284,7 @@ void Nuclei::closeEvent(QCloseEvent *event)
   QMainWindow::closeEvent(event);
 }
 
-void Nuclei::loadDecay(DecaySchemePtr decay)
+void Nuclei::loadDecay(DecayScheme decay)
 {
   QSettings s;
   s.setValue("preferences/levelTolerance", preferencesDialogUi->levelDiff->value());
@@ -352,7 +293,7 @@ void Nuclei::loadDecay(DecaySchemePtr decay)
 
   m_decay = QSharedPointer<SchemePlayer>(new SchemePlayer(decay, this));
 
-  connect(m_decay.data(), SIGNAL(updatedData(SchemePlayer::DecayDataSet)), this, SLOT(updateDecayData(SchemePlayer::DecayDataSet)));
+//  connect(m_decay.data(), SIGNAL(updatedData(SchemePlayer::DecayDataSet)), this, SLOT(updateDecayData(SchemePlayer::DecayDataSet)));
   m_decay->setStyle(preferencesDialogUi->fontFamily->currentFont(), preferencesDialogUi->fontSize->value());
   QGraphicsScene *scene = m_decay->levelPlot();
   ui->decayView->setScene(scene);

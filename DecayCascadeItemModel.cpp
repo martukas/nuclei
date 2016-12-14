@@ -108,10 +108,10 @@ Qt::ItemFlags DecayCascadeItemModel::flags(const QModelIndex &index) const
   return result;
 }
 
-DecaySchemePtr DecayCascadeItemModel::decay(const QModelIndex &index) const
+DecayScheme DecayCascadeItemModel::decay(const QModelIndex &index) const
 {
   if (!index.isValid())
-    return nullptr;
+    return DecayScheme();
 
   AbstractTreeItem *item = static_cast<AbstractTreeItem*>(index.internalPointer());
 

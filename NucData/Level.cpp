@@ -4,14 +4,13 @@
 #include "custom_logger.h"
 #include "qpx_util.h"
 
-Level::Level(Energy energy, SpinParity spin, HalfLife halfLife,
-                           unsigned int isomerNum)
+Level::Level(Energy energy, SpinParity spin, HalfLife halfLife, uint16_t isomerNum)
   : Level()
 {
   energy_ = energy;
   spin_ = spin;
   halflife_ = halfLife;
-  isonum = isomerNum;
+  isomeric_ = isomerNum;
 }
 
 Level Level::from_ensdf(std::string record)
@@ -24,16 +23,16 @@ Level Level::from_ensdf(std::string record)
   HalfLife     halflife = HalfLife::from_ensdf(record.substr(39, 16));
 
   // determine isomer number
-  unsigned int isonum = 0;
+  uint16_t isomeric_ = 0;
   std::string isostr(record.substr(77,2));
   if (record[77] == 'M') {
     if (is_number(record.substr(78,1)))
-      isonum = boost::lexical_cast<uint16_t>(record.substr(78,1));
+      isomeric_ = boost::lexical_cast<uint16_t>(record.substr(78,1));
     else
-      isonum = 1;
+      isomeric_ = 1;
   }
 
-  Level ret(e, spin, halflife, isonum);
+  Level ret(e, spin, halflife, isomeric_);
 //  DBG << record << " --> " << ret.to_string();
   return ret;
 }
@@ -45,12 +44,12 @@ std::string Level::to_string() const
     ret += " " + spin().to_string();
   if (halflife_.isValid())
     ret += " " + halflife_.to_string();
-  if (m_Q.valid())
-    ret += " Q=" + m_Q.to_string();
-  if (m_mu.valid())
-    ret += " mu=" + m_mu.to_string();
-  if (isonum)
-    ret += " M" + std::to_string(isonum);
+  if (q_.valid())
+    ret += " Q=" + q_.to_string();
+  if (mu_.valid())
+    ret += " mu=" + mu_.to_string();
+  if (isomeric_)
+    ret += " M" + std::to_string(isomeric_);
   return ret;
 }
 
@@ -69,34 +68,34 @@ HalfLife Level::halfLife() const
   return halflife_;
 }
 
-unsigned int Level::isomerNum() const
+uint16_t Level::isomerNum() const
 {
-  return isonum;
+  return isomeric_;
 }
 
 UncertainDouble Level::normalizedFeedIntensity() const
 {
-  return feedintens;
+  return feeding_intensity_;
 }
 
 Moment Level::mu() const
 {
-  return m_mu;
+  return mu_;
 }
 
 Moment Level::q() const
 {
-  return m_Q;
+  return q_;
 }
 
 void Level::set_mu(const Moment &m)
 {
-  m_mu = m;
+  mu_ = m;
 }
 
 void Level::set_q(const Moment &m)
 {
-  m_Q = m;
+  q_ = m;
 }
 
 void Level::set_halflife(const HalfLife& h)
@@ -109,36 +108,29 @@ void Level::set_spin(const SpinParity& s)
   spin_ = s;
 }
 
-
-
-/**
-  * \return Sorted list of transitions, lowest energy gamma first
-  */
-const std::list<std::shared_ptr<Transition>> & Level::depopulatingTransitions() const
+void Level::addPopulatingTransition(const Energy& e)
 {
-  m_depopulatingTransitions.sort([](const TransitionPtr & a, const TransitionPtr & b)
-                                   { return a->energy() < b->energy(); });
-  return m_depopulatingTransitions;
+  if (e.isValid())
+    populating_transitions_.insert(e);
 }
 
-const std::list<std::shared_ptr<Transition>> & Level::populatingTransitions() const
+void Level::addDepopulatingTransition(const Energy& e)
 {
-  m_populatingTransitions.sort([](const TransitionPtr & a, const TransitionPtr & b)
-                                   { return a->energy() < b->energy(); });
-  return m_populatingTransitions;
+  if (e.isValid())
+    depopulating_transitions_.insert(e);
 }
 
 void Level::setFeedIntensity(UncertainDouble intensity)
 {
-  feedintens = intensity;
+  feeding_intensity_ = intensity;
 }
 
 void Level::setFeedingLevel(bool isfeeding)
 {
-  feedinglevel = isfeeding;
+  feeding_level_ = isfeeding;
 }
 
 bool Level::isFeedingLevel() const
 {
-  return feedinglevel;
+  return feeding_level_;
 }
