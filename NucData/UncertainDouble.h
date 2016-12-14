@@ -60,9 +60,6 @@ public:
     UncertainDouble operator+(const UncertainDouble &other) const;
     operator double() const;
 
-//    friend QDataStream & operator<<(QDataStream &out, const UncertainDouble &u);
-//    friend QDataStream & operator>>(QDataStream &in, UncertainDouble &u);
-
 private:
     double value_;
     double lower_sigma_, upper_sigma_;
@@ -71,4 +68,4 @@ private:
     uint16_t sigfigs_;
 };
 
-#endif // UNCERTAINDOUBLE_H
+#endif

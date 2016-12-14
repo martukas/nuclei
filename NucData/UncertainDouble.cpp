@@ -465,29 +465,3 @@ UncertainDouble::operator double() const
 {
   return value_;
 }
-
-
-
-//QDataStream &operator <<(QDataStream &out, const UncertainDouble &u)
-//{
-//    out << u.value_;
-//    out << u.lower_sigma_;
-//    out << u.upper_sigma_;
-//    out << int(u.sign_);
-//    out << int(u.type_);
-//    return out;
-//}
-
-
-//QDataStream &operator >>(QDataStream &in, UncertainDouble &u)
-//{
-//    in >> u.value_;
-//    in >> u.lower_sigma_;
-//    in >> u.upper_sigma_;
-//    int tmp;
-//    in >> tmp;
-//    u.sign_ = UncertainDouble::Sign(tmp);
-//    in >> tmp;
-//    u.type_ = UncertainDouble::UncertaintyType(tmp);
-//    return in;
-//}
