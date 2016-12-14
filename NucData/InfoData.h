@@ -1,54 +1,36 @@
-/***************************************************************************
-  *   Copyright (C) 2004 by Olivier Stezowski                               *
-  *   stezow(AT)ipnl.in2p3.fr                                                  *
-  *                                                                         *
-  *   This program is free software; you can redistribute it and/or modify  *
-  *   it under the terms of the GNU General Public License as published by  *
-  *   the Free Software Foundation; either version 2 of the License, or     *
-  *   (at your option) any later version.                                   *
-  *                                                                         *
-  *   This program is distributed in the hope that it will be useful,       *
-  *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
-  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
-  *   GNU General Public License for more details.                          *
-  *                                                                         *
-  *   You should have received a copy of the GNU General Public License     *
-  *   along with this program; if not, write to the                         *
-  *   Free Software Foundation, Inc.,                                       *
-  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
-  ***************************************************************************/
-
 #ifndef GW_DataQuality_H
 #define GW_DataQuality_H
 
 #include <string>
 
-class DataQuality
+
+enum class DataQuality { kKnown = 0, kUnknown = 1, kTentative = 2, kTheoretical = 3, kAbout = 4 } ;
+
+DataQuality quality_of(const std::string&);
+std::string strip_qualifiers(const std::string& original);
+std::string add_qualifiers(const std::string& original,
+                           const DataQuality& quality,
+                           const std::string& unknown = "?");
+
+
+class QualifiedData
 {
 public:
-  enum EnumQuality { kKnown = 0, kUnknown = 1, kTentative = 2, kTheo = 3, kAbout = 4 } ;
+  QualifiedData() {}
 
-public:
-  DataQuality();
-  explicit DataQuality(DataQuality::EnumQuality info) { set_quality(info); }
-  DataQuality(const DataQuality &);
-  virtual ~DataQuality();
+  QualifiedData(const QualifiedData &other)
+    : quality_(other.quality_)
+  {}
 
-  static EnumQuality quality(const std::string);
-  static std::string strip_qualifiers(const std::string original);
-  std::string add_qualifiers(const std::string original, const std::string unknown = "?") const;
+  void set_quality(const DataQuality& q) { quality_ = q; }
+  DataQuality quality() const { return quality_; }
 
-  virtual bool is_quality(EnumQuality) const;
-  virtual void set_quality(DataQuality::EnumQuality);
-  virtual void set_quality(const std::string st) { quality_ = quality(st) ; }
 
 protected:
-  EnumQuality quality_;     // set a flag to a given data
+  DataQuality quality_ {DataQuality::kKnown};
+
+  std::string add_qualifiers(const std::string& original,
+                             const std::string& unknown = "?") const;
 };
-
-// inline members
-inline bool DataQuality::is_quality(EnumQuality info) const { return quality_ == info ;}
-inline void DataQuality::set_quality(DataQuality::EnumQuality info) { quality_ = info; }
-
 
 #endif

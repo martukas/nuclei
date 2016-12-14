@@ -80,9 +80,8 @@ Nuclei::~Nuclei()
   }
   s.setValue("decaySelection", selectionIndices);
 
-  if (m_decay)
-    s.setValue("selectedCascade", QVariant::fromValue(m_decay->currentSelection()));
-
+//  if (m_decay)
+//    s.setValue("selectedCascade", QVariant::fromValue(m_decay->currentSelection()));
 
   delete preferencesDialogUi;
   delete ui;
