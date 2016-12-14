@@ -4,34 +4,40 @@
 #include <vector>
 #include <limits>
 #include <memory>
-#include "HalfLife.h"
-#include "Energy.h"
 #include "NuclideId.h"
 #include "Level.h"
+#include "Transition.h"
 
 class Nuclide
 {
 public:
   Nuclide();
-  Nuclide(NuclideId id, const HalfLife &halfLife = HalfLife(std::numeric_limits<double>::infinity()));
-  Nuclide(NuclideId id, const std::vector<HalfLife> &halfLifes);
+  Nuclide(NuclideId id);
 
   NuclideId id() const;
 
   bool empty() const;
 
-  void addLevels(const std::map<Energy, LevelPtr> &levels);
-  std::map<Energy, LevelPtr> & levels();
+  void addLevels(const std::map<Energy, Level> &levels);
+  void addTransitions(const std::map<Energy, Transition> &tr);
+
+  void addLevel(const Level& level);
+  void addTransition(const Transition& transition);
+
+  std::map<Energy, Level> levels() const;
+  std::map<Energy, Transition> transitions() const;
+
+  void setHalflives(const std::vector<HalfLife>& hl);
+  void addHalfLife(const HalfLife& hl);
 
   std::vector<HalfLife> halfLifes() const;
   std::string halfLifeAsText() const;
 
 private:
-  NuclideId   nid_;
-  std::vector <HalfLife> hl;
-  std::map<Energy, LevelPtr> m_levels;
+  NuclideId   id_;
+  std::vector <HalfLife> halflives_;
+  std::map<Energy, Level> levels_;
+  std::map<Energy, Transition> transitions_;
 };
 
-typedef std::shared_ptr<Nuclide> NuclidePtr;
-
-#endif // Nuclide_H
+#endif

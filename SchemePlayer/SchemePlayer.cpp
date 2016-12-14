@@ -21,18 +21,16 @@
 #include "TransitionItem.h"
 
 
-SchemePlayer::SchemePlayer(DecaySchemePtr scheme, QObject *parent)
+SchemePlayer::SchemePlayer(DecayScheme scheme, QObject *parent)
   : QObject(parent), scheme_(scheme),
     scene_(0)
 {
   // decide if parent nuclide should be printed on the left side (beta-),
   // on the right side (EC, beta+, alpha) or not at all (isomeric)
-  if (scheme_) {
-    if (scheme_->type() == DecayScheme::IsomericTransition)
-      vis.parentpos = NoParent;
-    else if (scheme_->type() == DecayScheme::BetaMinus)
-      vis.parentpos = LeftParent;
-  }
+  if (scheme_.type() == DecayScheme::IsomericTransition)
+    vis.parentpos = NoParent;
+  else if (scheme_.type() == DecayScheme::BetaMinus)
+    vis.parentpos = LeftParent;
 }
 
 QGraphicsScene * SchemePlayer::levelPlot()
@@ -42,18 +40,22 @@ QGraphicsScene * SchemePlayer::levelPlot()
 
   scene_ = new QGraphicsScene(this);
 
-  if (!scheme_)
+  if (scheme_.type() == DecayScheme::Undefined)
     return scene_;
 
-  for (auto &level : scheme_->daughterNuclide()->levels()) {
+  auto transitions = scheme_.daughterNuclide().transitions();
+  for (auto &level : scheme_.daughterNuclide().levels()) {
     // create level
     LevelItem *levrend = new LevelItem(level.second, vis, scene_);
     connect(this, SIGNAL(enabledShadow(bool)), levrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
     connect(levrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
     levels_.insert(levrend->energy_,levrend);
     // create gammas
-    std::list<TransitionPtr> levelgammas = level.second->depopulatingTransitions();
-    for (TransitionPtr gamma : levelgammas) {
+    for (auto gamma_nrg : level.second.depopulatingTransitions())
+    {
+      if (!transitions.count(gamma_nrg))
+        continue;
+      Transition gamma = transitions.at(gamma_nrg);
       TransitionItem *transrend = new TransitionItem(gamma, vis, scene_);
 //      ActiveGraphicsItemGroup *item = gamma->createGammaGraphicsItem(gammaFont, gammaPen, intenseGammaPen);
       connect(this, SIGNAL(enabledShadow(bool)), transrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
@@ -63,12 +65,12 @@ QGraphicsScene * SchemePlayer::levelPlot()
   }
 
   // create daughter nuclide label
-  daughter_ = NuclideItem(scheme_->daughterNuclide(), ClickableItem::DaughterNuclideType, vis, scene_);
+  daughter_ = NuclideItem(scheme_.daughterNuclide(), ClickableItem::DaughterNuclideType, vis, scene_);
 
   // create parent nuclide label and level(s)
   if (vis.parentpos != NoParent) {
-    parent_ = NuclideItem(scheme_->parentNuclide(), ClickableItem::ParentNuclideType, vis, scene_);
-    for (auto &level : scheme_->parentNuclide()->levels()) {
+    parent_ = NuclideItem(scheme_.parentNuclide(), ClickableItem::ParentNuclideType, vis, scene_);
+    for (auto &level : scheme_.parentNuclide().levels()) {
       SchemeVisualSettings vis_ovrd = vis;
       vis_ovrd.parentpos = NoParent;
       LevelItem *levrend = new LevelItem(level.second, vis, scene_);
@@ -82,7 +84,7 @@ QGraphicsScene * SchemePlayer::levelPlot()
 
 void SchemePlayer::alignGraphicsItems()
 {
-  if (!scheme_)
+  if (scheme_.type() == DecayScheme::Undefined)
     return;
 
 //  QMap<Energy, EnergyLevel*> &levels(dNuc->levels());
@@ -218,8 +220,8 @@ void SchemePlayer::alignGraphicsItems()
     double y = qRound(parentY - 0.3*parent_.graphicsItem()->boundingRect().height()) + 0.5*vis.stableLevelPen.widthF();
     foreach (LevelItem *level, parent_levels_) {
       bool feeding = false;
-      if (scheme_->parentNuclide()->levels().count(level->energy_))
-        feeding = scheme_->parentNuclide()->levels().at(level->energy_)->isFeedingLevel();
+      if (scheme_.parentNuclide().levels().count(level->energy_))
+        feeding = scheme_.parentNuclide().levels().at(level->energy_).isFeedingLevel();
       double left = feeding ? activeleft : normalleft;
       double right = feeding ? activeright : normalright;
 
@@ -251,7 +253,7 @@ void SchemePlayer::setShadowEnabled(bool enable)
 
 QString SchemePlayer::name() const
 {
-  return QString::fromStdString(scheme_->name());
+  return QString::fromStdString(scheme_.name());
 }
 
 SchemePlayer::CascadeIdentifier SchemePlayer::currentSelection() const

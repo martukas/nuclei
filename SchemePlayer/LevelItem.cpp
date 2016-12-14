@@ -14,13 +14,13 @@ LevelItem::LevelItem()
 {
 }
 
-LevelItem::LevelItem(LevelPtr level, SchemeVisualSettings vis, QGraphicsScene *scene)
+LevelItem::LevelItem(Level level, SchemeVisualSettings vis, QGraphicsScene *scene)
   : LevelItem()
 {
-  if (!level)
+  if (!level.energy().isValid())
     return;
 
-  energy_ = level->energy();
+  energy_ = level.energy();
 
   QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
 
@@ -30,7 +30,7 @@ LevelItem::LevelItem(LevelPtr level, SchemeVisualSettings vis, QGraphicsScene *s
   graline = new QGraphicsLineItem(-vis.outerGammaMargin, 0.0, vis.outerGammaMargin, 0.0, item);
   graline->setPen(vis.levelPen);
   // thick line for stable/isomeric levels
-  if (level->halfLife().isStable() || level->isomerNum() > 0)
+  if (level.halfLife().isStable() || level.isomerNum() > 0)
     graline->setPen(vis.stableLevelPen);
 
   graclickarea = new QGraphicsRectItem(-vis.outerGammaMargin, -0.5*stdBoldFontMetrics.height(),
@@ -47,13 +47,13 @@ LevelItem::LevelItem(LevelPtr level, SchemeVisualSettings vis, QGraphicsScene *s
   graetext->setFont(vis.stdBoldFont);
   graetext->setPos(0.0, -stdBoldFontMetrics.height());
 
-  QString spintext = QString::fromStdString(level->spin().to_string());
+  QString spintext = QString::fromStdString(level.spin().to_string());
   graspintext = new QGraphicsSimpleTextItem(spintext, item);
   graspintext->setFont(vis.stdBoldFont);
   graspintext->setPos(0.0, -stdBoldFontMetrics.height());
 
   if (vis.parentpos != NoParent) {
-    QString hltext = QString::fromStdString(level->halfLife().to_string());
+    QString hltext = QString::fromStdString(level.halfLife().to_string());
     grahltext = new QGraphicsSimpleTextItem(hltext, item);
     grahltext->setFont(vis.stdFont);
     grahltext->setPos(0.0, -0.5*stdBoldFontMetrics.height());
@@ -68,10 +68,10 @@ LevelItem::LevelItem(LevelPtr level, SchemeVisualSettings vis, QGraphicsScene *s
   scene->addItem(item);
 
   // plot level feeding arrow if necessary
-  if (level->normalizedFeedIntensity().uncertaintyType() != UncertainDouble::UndefinedType) {
+  if (level.normalizedFeedIntensity().uncertaintyType() != UncertainDouble::UndefinedType) {
     // create line
     grafeedarrow = new QGraphicsLineItem;
-    grafeedarrow->setPen((level->normalizedFeedIntensity() >= 10.0) ? vis.intenseFeedArrowPen : vis.feedArrowPen);
+    grafeedarrow->setPen((level.normalizedFeedIntensity() >= 10.0) ? vis.intenseFeedArrowPen : vis.feedArrowPen);
     scene->addItem(grafeedarrow);
     // create arrow head
     QPolygonF arrowpol;
@@ -84,7 +84,7 @@ LevelItem::LevelItem(LevelPtr level, SchemeVisualSettings vis, QGraphicsScene *s
     scene->addItem(graarrowhead);
     // create intensity label
     grafeedintens = new QGraphicsTextItem;
-    grafeedintens->setHtml(QString("%1 %").arg(QString::fromStdString(level->normalizedFeedIntensity().to_markup())));
+    grafeedintens->setHtml(QString("%1 %").arg(QString::fromStdString(level.normalizedFeedIntensity().to_markup())));
     grafeedintens->document()->setDocumentMargin(0);
     grafeedintens->setFont(vis.feedIntensityFont);
     scene->addItem(grafeedintens);

@@ -30,8 +30,6 @@ private slots:
     void loadSelectedDecay(const QModelIndex &index);
     void loadSearchResultCascade(const QModelIndex &index);
 
-    void updateDecayData(SchemePlayer::DecayDataSet data);
-
     void svgExport();
     void pdfExport();
 
@@ -41,13 +39,12 @@ private slots:
     void zoomOut();
 
     void showPreferences();
-    void showAbout();
     
 protected:
     void closeEvent(QCloseEvent * event);
 
 private:
-    void loadDecay(DecaySchemePtr decay);
+    void loadDecay(DecayScheme decay);
 
     Ui::NucleiMainWindow *ui;
     QDialog *preferencesDialog;
@@ -56,8 +53,6 @@ private:
     DecayCascadeItemModel *decaySelectionModel, *searchResultSelectionModel;
     DecayCascadeFilterProxyModel *decayProxyModel, *searchProxyModel;
     QSharedPointer<SchemePlayer> m_decay;
-
-    QLabel *ensdfversion;
 };
 
 #endif // NUCLEI_H

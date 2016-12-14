@@ -14,7 +14,7 @@
    <string>Nuclei</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="nuclei.qrc">
+   <iconset resource="resources/nuclei.qrc">
     <normaloff>:/nuclei.png</normaloff>:/nuclei.png</iconset>
   </property>
   <property name="dockNestingEnabled">
@@ -44,235 +44,6 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QFrame" name="frame">
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QLabel" name="anisotropyLabel">
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Angular correlation coefficients</string>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="Line" name="line">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="a22Label">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;22&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="a22">
-           <property name="font">
-            <font>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;22&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>-</string>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-           <property name="textInteractionFlags">
-            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="a24Label">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>50</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;24&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="a24">
-           <property name="font">
-            <font>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;24&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>-</string>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-           <property name="textInteractionFlags">
-            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="a42Label">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>50</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;42&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="a42">
-           <property name="font">
-            <font>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;42&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>-</string>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-           <property name="textInteractionFlags">
-            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="a44Label">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>50</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;44&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="a44">
-           <property name="font">
-            <font>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A&lt;span style=&quot; vertical-align:sub;&quot;&gt;44&lt;/span&gt;&lt;/p&gt;&lt;p&gt;If the sign of δ&lt;sub&gt;1&lt;/sub&gt; or δ&lt;sub&gt;2&lt;/sub&gt; is unknown all possible combinations are shown. Results are then tagged with the signs of δ&lt;sub&gt;1&lt;/sub&gt; and δ&lt;sub&gt;2&lt;/sub&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>-</string>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-           <property name="textInteractionFlags">
-            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </widget>
       </item>
      </layout>
@@ -347,7 +118,7 @@
           <string>C</string>
          </property>
          <property name="icon">
-          <iconset resource="nuclei.qrc">
+          <iconset resource="resources/nuclei.qrc">
            <normaloff>:/format-justify-fill.png</normaloff>:/format-justify-fill.png</iconset>
          </property>
          <property name="autoRaise">
@@ -364,7 +135,7 @@
           <string>X</string>
          </property>
          <property name="icon">
-          <iconset resource="nuclei.qrc">
+          <iconset resource="resources/nuclei.qrc">
            <normaloff>:/format-indent-more.png</normaloff>:/format-indent-more.png</iconset>
          </property>
          <property name="autoRaise">
@@ -390,468 +161,6 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="decayInfoDock">
-   <property name="allowedAreas">
-    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
-   </property>
-   <property name="windowTitle">
-    <string>Decay Data</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents">
-    <layout class="QFormLayout" name="formLayout">
-     <property name="fieldGrowthPolicy">
-      <enum>QFormLayout::ExpandingFieldsGrow</enum>
-     </property>
-     <property name="horizontalSpacing">
-      <number>15</number>
-     </property>
-     <item row="2" column="0">
-      <widget class="QLabel" name="startEnergyLabel">
-       <property name="text">
-        <string>Energy:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="startSpinLabel">
-       <property name="text">
-        <string>Spin/Parity:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0" colspan="2">
-      <widget class="QLabel" name="popGammaLabel">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Populating Gamma</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="0" colspan="2">
-      <widget class="Line" name="line_4">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="0">
-      <widget class="QLabel" name="popEnergyLabel">
-       <property name="text">
-        <string>Energy:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="1">
-      <widget class="QLabel" name="popEnergy">
-       <property name="text">
-        <string>- keV</string>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="0">
-      <widget class="QLabel" name="popIntensityLabel">
-       <property name="text">
-        <string>Relative Intensity:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="1">
-      <widget class="QLabel" name="popIntensity">
-       <property name="text">
-        <string>- %</string>
-       </property>
-      </widget>
-     </item>
-     <item row="10" column="0">
-      <widget class="QLabel" name="popMultipolarityLabel">
-       <property name="text">
-        <string>Multipolarity:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="10" column="1">
-      <widget class="QLabel" name="popMultipolarity">
-       <property name="text">
-        <string>&lt;i&gt;unknown&lt;/i&gt;</string>
-       </property>
-      </widget>
-     </item>
-     <item row="11" column="0">
-      <widget class="QLabel" name="popMixingLabel">
-       <property name="toolTip">
-        <string>δ</string>
-       </property>
-       <property name="text">
-        <string>Mixing Ratio:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="11" column="1">
-      <widget class="QLabel" name="popMixing">
-       <property name="toolTip">
-        <string>δ</string>
-       </property>
-       <property name="text">
-        <string>-</string>
-       </property>
-      </widget>
-     </item>
-     <item row="12" column="0" colspan="2">
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>8</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="13" column="0" colspan="2">
-      <widget class="QLabel" name="intermedLevelLabel">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Intermediate Level</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="0" colspan="2">
-      <widget class="Line" name="line_3">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="0">
-      <widget class="QLabel" name="intEnergyLabel">
-       <property name="text">
-        <string>Energy:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="1">
-      <widget class="QLabel" name="intEnergy">
-       <property name="text">
-        <string> - keV</string>
-       </property>
-      </widget>
-     </item>
-     <item row="16" column="0">
-      <widget class="QLabel" name="intHalfLifeLabel">
-       <property name="text">
-        <string>Half Life:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="16" column="1">
-      <widget class="QLabel" name="intHalfLife">
-       <property name="text">
-        <string>- ns</string>
-       </property>
-      </widget>
-     </item>
-     <item row="17" column="1">
-      <widget class="QLabel" name="intSpin">
-       <property name="text">
-        <string>/</string>
-       </property>
-      </widget>
-     </item>
-     <item row="20" column="0" colspan="2">
-      <spacer name="verticalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>8</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="21" column="0" colspan="2">
-      <widget class="QLabel" name="depopGammaLabel">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Depopulating Gamma</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="22" column="0" colspan="2">
-      <widget class="Line" name="line_5">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="23" column="0">
-      <widget class="QLabel" name="depopEnergyLabel">
-       <property name="text">
-        <string>Energy:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="23" column="1">
-      <widget class="QLabel" name="depopEnergy">
-       <property name="text">
-        <string>- keV</string>
-       </property>
-      </widget>
-     </item>
-     <item row="24" column="0">
-      <widget class="QLabel" name="depopIntensityLabel">
-       <property name="text">
-        <string>Relative Intensity:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="24" column="1">
-      <widget class="QLabel" name="depopIntensity">
-       <property name="text">
-        <string>- %</string>
-       </property>
-      </widget>
-     </item>
-     <item row="25" column="0">
-      <widget class="QLabel" name="depopMultipolarityLabel">
-       <property name="text">
-        <string>Multipolarity:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="25" column="1">
-      <widget class="QLabel" name="depopMultipolarity">
-       <property name="text">
-        <string>&lt;i&gt;unknown&lt;/i&gt;</string>
-       </property>
-      </widget>
-     </item>
-     <item row="27" column="1">
-      <widget class="QLabel" name="depopMixing">
-       <property name="toolTip">
-        <string>δ</string>
-       </property>
-       <property name="text">
-        <string>-</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0" colspan="2">
-      <widget class="Line" name="line_6">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0" colspan="2">
-      <widget class="QLabel" name="startLevelLabel">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Initial Level</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0" colspan="2">
-      <spacer name="verticalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>8</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="29" column="0" colspan="2">
-      <widget class="QLabel" name="endLevelLabel">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Final Level</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="28" column="0" colspan="2">
-      <spacer name="verticalSpacer_4">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>8</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="30" column="0" colspan="2">
-      <widget class="Line" name="line_7">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="31" column="0">
-      <widget class="QLabel" name="endEnergyLabel">
-       <property name="text">
-        <string>Energy:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="32" column="0">
-      <widget class="QLabel" name="endSpinLabel">
-       <property name="text">
-        <string>Spin/Parity:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="31" column="1">
-      <widget class="QLabel" name="endEnergy">
-       <property name="text">
-        <string>- keV</string>
-       </property>
-      </widget>
-     </item>
-     <item row="32" column="1">
-      <widget class="QLabel" name="endSpin">
-       <property name="text">
-        <string>/</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLabel" name="startEnergy">
-       <property name="text">
-        <string>- keV</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QLabel" name="startSpin">
-       <property name="text">
-        <string>/</string>
-       </property>
-      </widget>
-     </item>
-     <item row="17" column="0">
-      <widget class="QLabel" name="intSpinLabel">
-       <property name="text">
-        <string>Spin/Parity:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="27" column="0">
-      <widget class="QLabel" name="depopMixingLabel">
-       <property name="toolTip">
-        <string>δ</string>
-       </property>
-       <property name="text">
-        <string>Mixing Ratio:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="18" column="0">
-      <widget class="QLabel" name="intMuLabel">
-       <property name="toolTip">
-        <string>Magnetic dipole moment of the intermediate level</string>
-       </property>
-       <property name="text">
-        <string>µ:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="19" column="0">
-      <widget class="QLabel" name="intQLabel">
-       <property name="toolTip">
-        <string>Electric quadrupole moment of the intermediate level</string>
-       </property>
-       <property name="text">
-        <string>Q:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="18" column="1">
-      <widget class="QLabel" name="intMu">
-       <property name="toolTip">
-        <string>Magnetic dipole moment of the intermediate level</string>
-       </property>
-       <property name="text">
-        <string>-</string>
-       </property>
-      </widget>
-     </item>
-     <item row="19" column="1">
-      <widget class="QLabel" name="intQ">
-       <property name="toolTip">
-        <string>Electric quadrupole moment of the intermediate level</string>
-       </property>
-       <property name="text">
-        <string>-</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
   <widget class="QToolBar" name="extrasBar">
    <property name="windowTitle">
     <string>About Tool Bar</string>
@@ -869,11 +178,10 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionPreferences"/>
-   <addaction name="actionAbout"/>
   </widget>
   <action name="actionZoom_In">
    <property name="icon">
-    <iconset resource="nuclei.qrc">
+    <iconset resource="resources/nuclei.qrc">
      <normaloff>:/toolbar/zoom-in.png</normaloff>:/toolbar/zoom-in.png</iconset>
    </property>
    <property name="text">
@@ -888,7 +196,7 @@
   </action>
   <action name="actionZoom_Out">
    <property name="icon">
-    <iconset resource="nuclei.qrc">
+    <iconset resource="resources/nuclei.qrc">
      <normaloff>:/toolbar/zoom-out.png</normaloff>:/toolbar/zoom-out.png</iconset>
    </property>
    <property name="text">
@@ -903,7 +211,7 @@
   </action>
   <action name="actionShow_all">
    <property name="icon">
-    <iconset resource="nuclei.qrc">
+    <iconset resource="resources/nuclei.qrc">
      <normaloff>:/toolbar/zoom-fit-best.png</normaloff>:/toolbar/zoom-fit-best.png</iconset>
    </property>
    <property name="text">
@@ -915,7 +223,7 @@
   </action>
   <action name="actionOriginal_Size">
    <property name="icon">
-    <iconset resource="nuclei.qrc">
+    <iconset resource="resources/nuclei.qrc">
      <normaloff>:/toolbar/zoom-original.png</normaloff>:/toolbar/zoom-original.png</iconset>
    </property>
    <property name="text">
@@ -925,24 +233,9 @@
     <string>Zoom to Original Size</string>
    </property>
   </action>
-  <action name="actionAbout">
-   <property name="icon">
-    <iconset resource="nuclei.qrc">
-     <normaloff>:/toolbar/help-about.png</normaloff>:/toolbar/help-about.png</iconset>
-   </property>
-   <property name="text">
-    <string>About</string>
-   </property>
-   <property name="toolTip">
-    <string>About Nuclei</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+I</string>
-   </property>
-  </action>
   <action name="actionSVG_Export">
    <property name="icon">
-    <iconset resource="nuclei.qrc">
+    <iconset resource="resources/nuclei.qrc">
      <normaloff>:/toolbar/image-svg+xml.png</normaloff>:/toolbar/image-svg+xml.png</iconset>
    </property>
    <property name="text">
@@ -954,7 +247,7 @@
   </action>
   <action name="actionPDF_Export">
    <property name="icon">
-    <iconset resource="nuclei.qrc">
+    <iconset resource="resources/nuclei.qrc">
      <normaloff>:/toolbar/application-pdf.png</normaloff>:/toolbar/application-pdf.png</iconset>
    </property>
    <property name="text">
@@ -969,7 +262,7 @@
   </action>
   <action name="actionPreferences">
    <property name="icon">
-    <iconset resource="nuclei.qrc">
+    <iconset resource="resources/nuclei.qrc">
      <normaloff>:/toolbar/configure.png</normaloff>:/toolbar/configure.png</iconset>
    </property>
    <property name="text">
@@ -994,7 +287,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="nuclei.qrc"/>
+  <include location="resources/nuclei.qrc"/>
  </resources>
  <connections/>
 </ui>

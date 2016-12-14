@@ -6,22 +6,15 @@
 #include "custom_logger.h"
 
 Transition::Transition(Energy energy, double intensity,
-                                   const std::string &multipol, UncertainDouble delta,
-                                   LevelPtr start, LevelPtr dest)
+                       const std::string &multipol, UncertainDouble delta,
+                       Energy from, Energy to)
   : energy_(energy),
     intensity_(intensity),
     m_mpol(multipol),
     m_delta(delta),
-    from_(start),
-    to_(dest)
-{
-  start->m_depopulatingTransitions.push_back(TransitionPtr(this));
-  dest->m_populatingTransitions.push_back(TransitionPtr(this));
-}
-
-Transition::~Transition()
-{
-}
+    from_(from),
+    to_(to)
+{}
 
 Energy Transition::energy() const
 {
@@ -35,36 +28,20 @@ double Transition::intensity() const
 
 std::string Transition::multipolarity() const
 {
+  //  if (m_mpol.empty())
+  //    return "<i>unknown</i>";
   return m_mpol;
 }
 
-const UncertainDouble & Transition::delta() const
+UncertainDouble Transition::delta() const
 {
   return m_delta;
 }
 
-std::string Transition::intensityAsText() const
+std::string Transition::intensity_string() const
 {
   std::string intensstr;
   if (!boost::math::isnan(intensity_))
     intensstr = to_str_precision(intensity_, 3) + " %";
   return intensstr;
 }
-
-std::string Transition::multipolarityAsText() const
-{
-//  if (m_mpol.empty())
-//    return "<i>unknown</i>";
-  return m_mpol;
-}
-
-LevelPtr Transition::depopulatedLevel() const
-{
-  return from_;
-}
-
-LevelPtr Transition::populatedLevel() const
-{
-  return to_;
-}
-

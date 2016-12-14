@@ -20,7 +20,7 @@ class SchemePlayer : public QObject
     Q_OBJECT
 public:
 
-    explicit SchemePlayer(DecaySchemePtr scheme, QObject *parent = 0);
+    explicit SchemePlayer(DecayScheme scheme, QObject *parent = 0);
 
     void setStyle(const QFont &fontfamily, unsigned int sizePx);
     QGraphicsScene * levelPlot();
@@ -83,7 +83,7 @@ private slots:
     void itemClicked(ClickableItem *item);
 
 private:
-    DecaySchemePtr scheme_;
+    DecayScheme scheme_;
 
     void clickedGamma(TransitionItem *g);
     void clickedEnergyLevel(LevelItem *e);
