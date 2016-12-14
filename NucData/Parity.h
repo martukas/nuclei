@@ -1,6 +1,6 @@
 /***************************************************************************
   *   Copyright (C) 2004 by Olivier Stezowski                               *
-  *   stezow(AT)ipnl.in2p3.fr                                                  *
+  *   stezow(AT)ipnl.in2p3.fr                                               *
   *                                                                         *
   *   This program is free software; you can redistribute it and/or modify  *
   *   it under the terms of the GNU General Public License as published by  *
@@ -24,35 +24,27 @@
 #include <InfoData.h>
 #include <iostream>
 
-class Parity : public DataQuality
+class Parity : public QualifiedData
 {
 public:
-  enum EnumParity { kMinus = -1, kPlus = 1 } ;
-
-private:
-  int16_t parity_;    // parity value
+  enum class EnumParity { kMinus = -1, kPlus = 1 } ;
 
 public:
-  Parity();
-  Parity(const Parity &p) : DataQuality(p) { parity_ = p.parity_; }
-  explicit Parity(Parity::EnumParity p) { set_parity(p); }
-  virtual ~Parity();
+  Parity() {}
 
-  void set_parity(Parity::EnumParity);
-  bool is_parity(Parity::EnumParity) const;
+  Parity(const Parity &other)
+    : QualifiedData(other)
+    , parity_(other.parity_)
+  {}
 
+  friend bool operator==(const Parity &left, const Parity &right);
+
+  virtual void from_string(const std::string s);
   const std::string to_string() const;
   const std::string to_qualified_string(const std::string unknown = "?") const;
 
-  virtual void from_string(const std::string s) ;
-
-  Parity& operator*= (Parity& p);
-
+private:
+  EnumParity  parity_ {EnumParity::kPlus};
 };
-// inline members
-inline void Parity::set_parity(Parity::EnumParity p) { parity_ = p; }
-inline bool Parity::is_parity(Parity::EnumParity p) const { return p == parity_; }
-
-std::ostream & operator << (std::ostream &, const Parity &);
 
 #endif

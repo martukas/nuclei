@@ -24,36 +24,20 @@
 #include "InfoData.h"
 #include <iostream>
 
-class Spin : public DataQuality
+class Spin : public QualifiedData
 {
 public:
-  //friend bool operator> (Spin &S1, Spin &S2);
-  //friend bool operator<= (Spin &S1, Spin &S2);
-
-  //friend bool operator< (Spin &S1, Spin &S2);
-  //friend bool operator>= (Spin &S1, Spin &S2);
-
-protected:
-  uint16_t numerator_; // numerator
-  uint16_t denominator_; // denominator - should be 1 or 2 for a spin
-
-public:
-  Spin();
+  Spin() {}
   Spin(uint16_t num, uint16_t denom);
-  Spin(const Spin &spin): DataQuality(spin) { numerator_ = spin.numerator_; denominator_ = spin.denominator_; }
-  virtual ~Spin();
+  Spin(const Spin &spin);
+  static Spin from_string(const std::string& s); //from_ensdf?
 
   void set(uint16_t num, uint16_t denom = 1);
-  uint16_t spin_numerator()   const  { return numerator_; }
-  uint16_t spin_denominator() const  { return denominator_; }
-  float to_float() const;
-
-  bool     is_half_int() const { return denominator_ == 2; }
-  uint16_t doubled_spin() const;
+  uint16_t numerator()   const  { return numerator_; }
+  uint16_t denominator() const  { return denominator_; }
 
   const std::string to_string() const;
   const std::string to_qualified_string(const std::string unknown = "?") const;
-  virtual void from_string(const std::string s) ;
 
   // some operators
   Spin& operator+=(uint16_t value);
@@ -68,16 +52,12 @@ public:
   bool operator< (const Spin &s) const;
   bool operator>= (const Spin &s) const;
   bool operator> (const Spin &s) const;
+
+protected:
+  uint16_t numerator_ {0};
+  uint16_t denominator_ {1}; // should be 1 or 2 for a spin
+
+  float to_float() const;
 };
-
-// inline members
-inline float Spin::to_float() const { return float(numerator_) / float(denominator_); }
-//    friend bool operator> (Spin &S1, Spin &S2);
-//    inline bool operator<= (Spin &S1, Spin &S2){}
-//    friend bool operator< (Spin &S1, Spin &S2);
-//    friend bool operator>= (Spin &S1, Spin &S2);
-
-
-std::ostream & operator << (std::ostream &, const Spin &);
 
 #endif

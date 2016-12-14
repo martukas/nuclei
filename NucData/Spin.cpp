@@ -25,28 +25,16 @@
 #include "Spin.h"
 #include "custom_logger.h"
 
-Spin::Spin()
-  : DataQuality()
-{
-  numerator_ = 0; denominator_ = 1;
-}
-
 Spin::Spin(uint16_t num, uint16_t denom)
-  : DataQuality()
 {
   set(num, denom);
 }
 
-Spin::~Spin()
-{
-}
+Spin::Spin(const Spin &spin)
+  : numerator_ (spin.numerator_)
+  , denominator_ (spin.denominator_)
+{}
 
-uint16_t Spin::doubled_spin() const
-{
-  if ( denominator_ == 1 )
-    return 2*numerator_;
-  return numerator_;
-}
 
 Spin& Spin::operator++()
 {
@@ -88,6 +76,11 @@ bool Spin::operator == (const Spin &s) const
   return false;
 }
 
+float Spin::to_float() const
+{
+  return float(numerator_) / float(denominator_);
+}
+
 bool Spin::operator<= (const Spin &s) const
 {
   if ( numerator_ == s.numerator_ && denominator_ == s.denominator_ )
@@ -111,27 +104,29 @@ bool Spin::operator> (const Spin &s) const
   return to_float() > s.to_float();
 }
 
-void Spin::from_string(const std::string s)
+Spin Spin::from_string(const std::string& s)
 {
-  std::string st = DataQuality::strip_qualifiers(s);
+  Spin ret;
+  std::string st = strip_qualifiers(s);
   std::istringstream input; input.clear();
   if ( boost::contains(st, "/") )
   {
     // not an integer
     boost::replace_all(st, "/", " ");
     input.str(st);
-    input >> numerator_ >> denominator_;
+    input >> ret.numerator_ >> ret.denominator_;
   }
   else
   {
     input.str(st);
-    input >> numerator_;
-    denominator_ = 1;
+    input >> ret.numerator_;
+    ret.denominator_ = 1;
   }
   if ( input.fail() )
-    set_quality(kUnknown);
+    ret.quality_ = DataQuality::kUnknown;
   else
-    set_quality( DataQuality::quality(s) );
+    ret.quality_ = quality_of(s);
+  return ret;
 }
 
 void Spin::set(uint16_t num, uint16_t denom)
@@ -165,7 +160,7 @@ Spin& Spin::operator+=(Spin sp)
 
 const std::string Spin::to_string() const
 {
-  if ( is_quality(DataQuality::kUnknown) )
+  if ( quality_ == DataQuality::kUnknown )
     return "";
   else if ( denominator_ == 1 )
     return std::to_string(numerator_);
@@ -176,10 +171,4 @@ const std::string Spin::to_string() const
 const std::string Spin::to_qualified_string(const std::string unknown) const
 {
   return add_qualifiers(to_string(), unknown);
-}
-
-std::ostream & operator << (std::ostream &out, const Spin &spin)
-{
-  out << spin.to_qualified_string("?");
-  return out;
 }

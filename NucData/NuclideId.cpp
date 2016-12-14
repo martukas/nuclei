@@ -148,9 +148,9 @@ bool operator>(const NuclideId &left, const NuclideId &right)
 }
 
 
-const std::map<uint16_t, NuclideNomenclature> NuclideId::names = initNames();
+const std::map<uint16_t, NuclideId::NuclideNomenclature> NuclideId::names = initNames();
 
-std::map<uint16_t, NuclideNomenclature> NuclideId::initNames()
+std::map<uint16_t, NuclideId::NuclideNomenclature> NuclideId::initNames()
 {
   std::map<uint16_t, NuclideNomenclature> result;
 //  result[0]   = NuclideNomenclature("n", "neutron");
@@ -268,11 +268,11 @@ std::map<uint16_t, NuclideNomenclature> NuclideId::initNames()
   result[110] = NuclideNomenclature("Ds", "Darmstadtium");
   result[111] = NuclideNomenclature("Rg", "Roentgenium");
   result[112] = NuclideNomenclature("Cn",  "Copernicium");
-  result[113] = NuclideNomenclature("Uut", "Ununtrium");
+  result[113] = NuclideNomenclature("Nh", "Nihonium");
   result[114] = NuclideNomenclature("Fl",  "Flerovium");
-  result[115] = NuclideNomenclature("Uup", "Ununpentium");
+  result[115] = NuclideNomenclature("Mc", "Moscovium");
   result[116] = NuclideNomenclature("Lv",  "Livermorium");
-  result[117] = NuclideNomenclature("Uus", "Ununseptium");
-  result[118] = NuclideNomenclature("Uuo", "Ununoctium");
+  result[117] = NuclideNomenclature("Ts", "Tennessine");
+  result[118] = NuclideNomenclature("Og", "Oganesson");
   return result;
 }

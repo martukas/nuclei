@@ -8,14 +8,12 @@
 class SpinParity
 {
 public:
-
-  SpinParity();
+  SpinParity() {}
 
   static SpinParity from_ensdf(std::string data);
 
   bool valid() const;
 
-  int doubled_spin() const;
   std::string to_string() const;
 
 private:
@@ -23,4 +21,4 @@ private:
   std::vector<Spin> spins_;
 };
 
-#endif // SPINPARITY_H
+#endif

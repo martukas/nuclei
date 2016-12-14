@@ -9,13 +9,6 @@ class QGraphicsItem;
 class QGraphicsItemGroup;
 class EnergyLevel;
 
-struct NuclideNomenclature {
-  NuclideNomenclature() {}
-  NuclideNomenclature(std::string s, std::string n) { symbol=s; name=n; }
-  std::string symbol;
-  std::string name;
-};
-
 class NuclideId
 {
 public:
@@ -46,15 +39,23 @@ public:
 private:
   int16_t Z_;   // number of protons
   int16_t N_;   // number of neutrons
-  //      A_;   // total number of nucleons derived from other two
-
-  static const std::map<uint16_t, NuclideNomenclature> names;
-  static std::map<uint16_t, NuclideNomenclature> initNames();
 
   static std::string symbolOf(uint16_t Z);
   static std::string nameOf(uint16_t Z);
   static int16_t zOfSymbol(std::string name);
+
+  struct NuclideNomenclature
+  {
+    NuclideNomenclature() {}
+    NuclideNomenclature(std::string s, std::string n) { symbol=s; name=n; }
+    std::string symbol;
+    std::string name;
+  };
+
+  static const std::map<uint16_t, NuclideNomenclature> names;
+  static std::map<uint16_t, NuclideNomenclature> initNames();
+
 };
 
 
-#endif // NUCLIDE_ID_H
+#endif

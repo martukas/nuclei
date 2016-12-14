@@ -22,38 +22,20 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 
-Parity::Parity()
-  : DataQuality()
-{
-  parity_ = kPlus;
-}
-
-
-Parity::~Parity()
-{
-}
-
 void Parity::from_string(const std::string s)
 {
+  quality_ = quality_of(s);
   if ( boost::contains(s, "-") )
-    parity_ = kMinus;
+    parity_ = EnumParity::kMinus;
   else
-    parity_ = kPlus;
-
-  set_quality( DataQuality::quality(s) );
-}
-
-Parity& Parity::operator*= (Parity& p)
-{
-  parity_ *= p.parity_;
-  return *this;
+    parity_ = EnumParity::kPlus;
 }
 
 const std::string Parity::to_string() const
 {
-  if ( is_quality(DataQuality::kUnknown) )
+  if ( quality_ == DataQuality::kUnknown )
     return "";
-  else if ( is_parity(Parity::kPlus) )
+  else if ( parity_ == EnumParity::kPlus )
     return "+";
   else
     return "-";
@@ -65,8 +47,7 @@ const std::string Parity::to_qualified_string(const std::string unknown) const
 }
 
 
-std::ostream & operator << (std::ostream &out, const Parity &p)
+bool operator==(const Parity &left, const Parity &right)
 {
-  out << p.to_qualified_string("?");
-  return out;
+  return (left.parity_ == right.parity_);
 }
