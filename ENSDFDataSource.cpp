@@ -39,17 +39,17 @@ AbstractTreeItem *ENSDFDataSource::rootItem() const
   return root;
 }
 
-DecaySchemePtr ENSDFDataSource::decay(const AbstractTreeItem *item) const
+DecayScheme ENSDFDataSource::decay(const AbstractTreeItem *item) const
 {
   QMutexLocker locker(&m);
   const ENSDFTreeItem *eitem = dynamic_cast<const ENSDFTreeItem*>(item);
   if (!eitem)
-    return nullptr;
+    return DecayScheme();
 
   if (!eitem->parent() || !eitem->isSelectable())
-    return nullptr;
+    return DecayScheme();
   if (mccache && mccache->aValue() == eitem->parent()->id().A()) {
-    DecaySchemePtr dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
+    DecayScheme dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
     return dec;
   }
 
@@ -57,7 +57,7 @@ DecaySchemePtr ENSDFDataSource::decay(const AbstractTreeItem *item) const
   QSettings s;
   QString dir =  s.value("ensdfPath", ".").toString();
   mccache = new ENSDFParser(eitem->parent()->id().A(), dir.toStdString());
-  DecaySchemePtr dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
+  DecayScheme dec(mccache->decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
   return dec;
 }
 

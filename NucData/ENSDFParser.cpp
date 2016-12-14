@@ -159,24 +159,26 @@ const std::list< std::pair<std::string, NuclideId> > ENSDFParser::decays(const N
   return result;
 }
 
-DecaySchemePtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::string &decayName) const
+DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
+                                  const std::string &decayName) const
 {
   if (!m_adoptedlevels.count(daughterNuclide) ||
       !m_decays.count(daughterNuclide) ||
       !m_decays.at(daughterNuclide).count(decayName))
-    return nullptr;
+    return DecayScheme();
 
   //  QSettings s;
   //  double adoptedLevelMaxDifference = s.value("preferences/levelTolerance", 1.0).toDouble();
   //  double gammaMaxDifference = s.value("preferences/gammaTolerance", 1.0).toDouble();
 
-  double adoptedLevelMaxDifference = 1.0;
-  double gammaMaxDifference = 1.0;
-
-  std::map<Energy, LevelPtr> levels;
+  double adoptedLevelMaxDifference = 40.0;
+  double gammaMaxDifference = 5.0;
 
   BlockIndices alpos = m_adoptedlevels.at(daughterNuclide);
   BasicDecayData decaydata = m_decays.at(daughterNuclide).at(decayName);
+
+  Nuclide daughter_nuclide(decaydata.daughter);
+
   double normalizeDecIntensToPercentParentDecay = 1.0;
   double normalizeGammaIntensToPercentParentDecay = 1.0;
   std::string dNucid = daughterNuclide.to_ensdf();
@@ -184,7 +186,7 @@ DecaySchemePtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::s
   //  DBG << "parsing " << dNucid.toStdString();
 
   // process all adopted level sub-blocks
-  LevelPtr currentLevel(nullptr);
+  Level currentLevel;
   // create index map for adopted levels
   std::map<Energy, StringSubList> adoptblocks;
   std::map<std::string, char> xrefs; // maps DSID to DSSYM (single letter)
@@ -227,7 +229,8 @@ DecaySchemePtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::s
     //    DBG << "c line " << line.toStdString();
 
     // process new gamma
-    if ((line.size() >= 8) && (line.substr(0,9) == (dNucid + "  G ")) && !levels.empty()) {
+    if ((line.size() >= 8) && (line.substr(0,9) == (dNucid + "  G ")))
+    {
 
       // determine energy
       Energy e = Energy::from_nsdf(line.substr(9, 12));
@@ -262,7 +265,7 @@ DecaySchemePtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::s
         // find gamma
         if (!e2g.empty()) {
           Energy foundE;
-          const std::string gammastr = findNearest(e2g, e, &foundE);
+          const std::string gammastr = e2g.at(findNearest(e2g, e, &foundE));
           if (e-foundE < gammaMaxDifference/1000.0*e) {
             if (mpol.empty())
               mpol = boost::trim_copy(gammastr.substr(31, 10));
@@ -277,26 +280,26 @@ DecaySchemePtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::s
       }
 
       // determine levels
-      if (!levels.empty()) {
-        LevelPtr start = currentLevel;
-        LevelPtr destlvl = findNearest(levels, start->energy() - e);
-        // gamma registers itself with the start and dest levels
-        new Transition(e, in, mpol, delta, start, destlvl);
+      if (!daughter_nuclide.empty())
+      {
+        Energy start = currentLevel.energy();
+        Energy destlvl = findNearest(daughter_nuclide.levels(), start - e);
+        daughter_nuclide.addTransition(Transition(e, in, mpol, delta, start, destlvl));
       }
     }
     // process new level
     else if (line.substr(0,9) == (dNucid + "  L ")) {
 
-      currentLevel = LevelPtr(new Level(Level::from_ensdf(line)));
+      currentLevel = Level::from_ensdf(line);
 
       // get additional data from adopted leves record
       //   find closest entry
       if (!adoptblocks.empty()) {
         Energy foundE;
         currentadoptblock.clear();
-        currentadoptblock = findNearest(adoptblocks, currentLevel->energy(), &foundE);
+        currentadoptblock = adoptblocks.at(findNearest(adoptblocks, currentLevel.energy(), &foundE));
         //        Q_ASSERT(currentadoptblock.last >= currentadoptblock.first);
-        if (abs((currentLevel->energy() - foundE).operator double()) > (adoptedLevelMaxDifference/1000.0*currentLevel->energy()))
+        if (abs((currentLevel.energy() - foundE).operator double()) > (adoptedLevelMaxDifference/1000.0*currentLevel.energy()))
           currentadoptblock.clear();
       }
       else
@@ -308,10 +311,10 @@ DecaySchemePtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::s
 
         std::string levelfirstline(contents.at(currentadoptblock.first));
 //                DBG << levelfirstline << " === " << currentLevel->to_string();
-        if (!currentLevel->halfLife().isValid()) {
-          currentLevel->set_halflife(HalfLife::from_ensdf(levelfirstline.substr(39, 16)));
-          if (!currentLevel->spin().valid())
-            currentLevel->set_spin(SpinParity::from_ensdf(levelfirstline.substr(21, 18)));
+        if (!currentLevel.halfLife().isValid()) {
+          currentLevel.set_halflife(HalfLife::from_ensdf(levelfirstline.substr(39, 16)));
+          if (!currentLevel.spin().valid())
+            currentLevel.set_spin(SpinParity::from_ensdf(levelfirstline.substr(21, 18)));
 //          DBG << "newhl" << currentLevel->halfLife().to_string();
         }
         // parse continuation records
@@ -319,15 +322,15 @@ DecaySchemePtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::s
         momentsRequestList.push_back("MOME2");
         momentsRequestList.push_back("MOMM1");
         std::vector<std::string> moms = extractContinuationRecords(currentadoptblock, momentsRequestList);
-        currentLevel->set_q(Moment::from_ensdf(moms.at(0)));
-        currentLevel->set_mu(Moment::from_ensdf(moms.at(1)));
+        currentLevel.set_q(Moment::from_ensdf(moms.at(0)));
+        currentLevel.set_mu(Moment::from_ensdf(moms.at(1)));
 //                DBG << levelfirstline << " === " << currentLevel->to_string();
       }
 
-      levels[currentLevel->energy()] = currentLevel;
+      daughter_nuclide.addLevel(currentLevel);
     }
     // process decay information
-    else if (!levels.empty() && (line.substr(0,9) == (dNucid + "  E "))) {
+    else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  E "))) {
       UncertainDouble ti = UncertainDouble::from_nsdf(line.substr(64, 10), line.substr(74, 2));
       if (ti.uncertaintyType() != UncertainDouble::UndefinedType) {
         ti.setSign(UncertainDouble::SignMagnitudeDefined);
@@ -344,22 +347,27 @@ DecaySchemePtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::s
           ti = UncertainDouble();
       }
       if (ti.uncertaintyType() != UncertainDouble::UndefinedType)
-        currentLevel->setFeedIntensity(ti);
+      {
+        currentLevel.setFeedIntensity(ti);
+        daughter_nuclide.addLevel(currentLevel);
+      }
     }
-    else if (!levels.empty() && (line.substr(0,9) == (dNucid + "  B "))) {
+    else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  B "))) {
       UncertainDouble ib = UncertainDouble::from_nsdf(line.substr(21, 8), line.substr(29, 2));
       if (ib.hasFiniteValue()) {
         ib.setSign(UncertainDouble::SignMagnitudeDefined);
         ib *= normalizeDecIntensToPercentParentDecay;
-        currentLevel->setFeedIntensity(ib);
+        currentLevel.setFeedIntensity(ib);
+        daughter_nuclide.addLevel(currentLevel);
       }
     }
-    else if (!levels.empty() && (line.substr(0,9) == (dNucid + "  A "))) {
+    else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  A "))) {
       UncertainDouble ia = UncertainDouble::from_nsdf(line.substr(21, 8), line.substr(29, 2));
       if (ia.hasFiniteValue()) {
         ia.setSign(UncertainDouble::SignMagnitudeDefined);
         ia *= normalizeDecIntensToPercentParentDecay;
-        currentLevel->setFeedIntensity(ia);
+        currentLevel.setFeedIntensity(ia);
+        daughter_nuclide.addLevel(currentLevel);
       }
     }
     // process normalization records
@@ -377,29 +385,28 @@ DecaySchemePtr ENSDFParser::decay(const NuclideId &daughterNuclide, const std::s
   }
 
   // create relevant parent levels and collect parent half-lifes
-  std::map<Energy, LevelPtr> plevels;
-  std::vector<HalfLife> pHl;
-  for (ParentRecord p : decaydata.parents) {
-    pHl.push_back(p.hl);
-
-    LevelPtr plv(new Level(p.energy, p.spin, p.hl));
-    plv->setFeedingLevel(true);
-    plevels[p.energy] = plv;
-  }
-
-  if (!plevels.empty() && (plevels.begin()->second->energy() > 0.0))
+  Nuclide parent_nuclide(decaydata.parents.at(0).nuclide);
+  for (ParentRecord p : decaydata.parents)
   {
-    LevelPtr plv(new Level(Energy(0.0, UncertainDouble::SignMagnitudeDefined), SpinParity(), HalfLife()));
-    plv->setFeedingLevel(false);
-    plevels[plv->energy()] = plv;
+    parent_nuclide.addHalfLife(p.hl);
+
+    Level plv(p.energy, p.spin, p.hl);
+    plv.setFeedingLevel(true);
+    parent_nuclide.addLevel(plv);
   }
 
-  NuclidePtr parent_nuclide(new Nuclide(decaydata.parents.at(0).nuclide, pHl));
-  parent_nuclide->addLevels(plevels);
-  NuclidePtr daughter_nuclide(new Nuclide(decaydata.daughter));
-  daughter_nuclide->addLevels(levels);
+  if (!parent_nuclide.empty() &&
+      (parent_nuclide.levels().begin()->second.energy() > 0.0))
+  {
+    Level plv(Energy(0.0, UncertainDouble::SignMagnitudeDefined), SpinParity(), HalfLife());
+    plv.setFeedingLevel(false);
+    parent_nuclide.addLevel(plv);
+  }
 
-  return DecaySchemePtr(new DecayScheme(decayName, parent_nuclide, daughter_nuclide, decaydata.decayType));
+//  daughter_nuclide.addLevels(levels);
+//  daughter_nuclide.addTransitions(transitions);
+
+  return DecayScheme(decayName, parent_nuclide, daughter_nuclide, decaydata.decayType);
 }
 
 double ENSDFParser::norm(std::string rec, double def_value)
@@ -540,10 +547,10 @@ std::vector<std::string> ENSDFParser::extractContinuationRecords(const StringSub
 }
 
 template <typename T>
-T ENSDFParser::findNearest(const std::map<Energy, T> &map, const Energy &val, Energy *foundVal) const
+Energy ENSDFParser::findNearest(const std::map<Energy, T> &map, const Energy &val, Energy *foundVal) const
 {
   if (map.empty())
-    return T();
+    return Energy();
 
   typename std::map<Energy, T>::const_iterator low, prev;
   low = map.lower_bound(val);
@@ -559,7 +566,7 @@ T ENSDFParser::findNearest(const std::map<Energy, T> &map, const Energy &val, En
   if (foundVal)
     (*foundVal) = low->first;
 
-  return low->second;
+  return low->first;
 }
 
 void ENSDFParser::parseBlocks()

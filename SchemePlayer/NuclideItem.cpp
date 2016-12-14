@@ -14,17 +14,17 @@ NuclideItem::NuclideItem()
 {
 }
 
-NuclideItem::NuclideItem(NuclidePtr nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene)
+NuclideItem::NuclideItem(const Nuclide &nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene)
   : NuclideItem()
 {
-  if (!nuc)
+  if (nuc.empty())
     return;
 
   if ((tp != ParentNuclideType) && (tp != DaughterNuclideType))
     return;
 
   t = tp;
-  id_ = nuc->id();
+  id_ = nuc.id();
 
   item = new ActiveGraphicsItemGroup(this);
 
@@ -33,15 +33,15 @@ NuclideItem::NuclideItem(NuclidePtr nuc, Type tp, SchemeVisualSettings vis, QGra
   QFontMetrics nucFontMetrics(vis.nucFont);
   QFontMetrics nucIndexFontMetrics(vis.nucIndexFont);
 
-  QGraphicsSimpleTextItem *granuc = new QGraphicsSimpleTextItem(QString::fromStdString(nuc->id().element()), item);
+  QGraphicsSimpleTextItem *granuc = new QGraphicsSimpleTextItem(QString::fromStdString(nuc.id().element()), item);
   granuc->setFont(vis.nucFont);
   granuc->setBrush(QBrush(QColor(64, 166, 255)));
 
-  QGraphicsSimpleTextItem *graA = new QGraphicsSimpleTextItem(QString::number(nuc->id().A()), item);
+  QGraphicsSimpleTextItem *graA = new QGraphicsSimpleTextItem(QString::number(nuc.id().A()), item);
   graA->setFont(vis.nucIndexFont);
   graA->setBrush(QBrush(QColor(64, 166, 255)));
 
-  QGraphicsSimpleTextItem *graZ = new QGraphicsSimpleTextItem(QString::number(nuc->id().Z()), item);
+  QGraphicsSimpleTextItem *graZ = new QGraphicsSimpleTextItem(QString::number(nuc.id().Z()), item);
   graZ->setFont(vis.nucIndexFont);
   graZ->setBrush(QBrush(QColor(64, 166, 255)));
 
@@ -60,7 +60,7 @@ NuclideItem::NuclideItem(NuclidePtr nuc, Type tp, SchemeVisualSettings vis, QGra
   if (tp == ParentNuclideType)
   {
     // create half-life label
-    pNucHl = new QGraphicsSimpleTextItem(QString::fromStdString(nuc->halfLifeAsText()));
+    pNucHl = new QGraphicsSimpleTextItem(QString::fromStdString(nuc.halfLifeAsText()));
     pNucHl->setFont(vis.parentHlFont);
     scene->addItem(pNucHl);
 

@@ -35,7 +35,7 @@ public:
 
     virtual AbstractTreeItem * rootItem() const;
 
-    virtual DecaySchemePtr decay(const AbstractTreeItem *item) const;
+    virtual DecayScheme decay(const AbstractTreeItem *item) const;
 
 public slots:
     void deleteDatabaseAndCache();

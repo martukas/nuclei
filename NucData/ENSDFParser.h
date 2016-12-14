@@ -5,6 +5,7 @@
 #include "Nuclide.h"
 #include <utility>
 #include <memory>
+#include <list>
 
 class HalfLife;
 
@@ -45,7 +46,7 @@ public:
     const std::list< std::pair<std::string, NuclideId> > decays(const NuclideId &daughterNuclide) const;
 
 
-    DecaySchemePtr decay(const NuclideId &daughterNuclide, const std::string &decayName) const;
+    DecayScheme decay(const NuclideId &daughterNuclide, const std::string &decayName) const;
 private:
 
     struct StringSubList {
@@ -60,7 +61,7 @@ private:
 
     static UncertainDouble parseEnsdfMixing(const std::string &s, const std::string &multipolarity);
 
-    template <typename T> T findNearest(const std::map<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;
+    template <typename T> Energy findNearest(const std::map<Energy, T> &map, const Energy &val, Energy *foundVal = 0) const;
     void insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym) const;
     std::vector<std::string> extractContinuationRecords(const StringSubList &adoptedblock, const std::list<std::string> &requestedRecords, char typeOfContinuedRecord = 'L') const;
 

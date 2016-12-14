@@ -4,29 +4,20 @@
 #include <algorithm>
 #include "custom_logger.h"
 
-DecayScheme::DecayScheme()
-  : t(Undefined)
-  , m_name("")
-  , pNuc(0)
-  , dNuc(0)
-{
-
-}
-
 DecayScheme::DecayScheme(const std::string &name,
-               NuclidePtr parentNuclide,
-               NuclidePtr daughterNuclide,
+               const Nuclide &parentNuclide,
+               const Nuclide &daughterNuclide,
                Type DecaySchemeType)
-  : t(DecaySchemeType)
-  , m_name(name)
-  , pNuc(parentNuclide)
-  , dNuc(daughterNuclide)
+  : decay_type_(DecaySchemeType)
+  , name_(name)
+  , parent_(parentNuclide)
+  , daughter_(daughterNuclide)
 {
 }
 
 bool DecayScheme::valid() const
 {
-  return (pNuc && dNuc && !pNuc->empty() && !dNuc->empty());
+  return (!parent_.empty() && !daughter_.empty());
 }
 
 std::string DecayScheme::DecayTypeAsText(Type type)
@@ -49,20 +40,20 @@ std::string DecayScheme::DecayTypeAsText(Type type)
 
 std::string DecayScheme::name() const
 {
-  return m_name;
+  return name_;
 }
 
 DecayScheme::Type DecayScheme::type() const
 {
-  return t;
+  return decay_type_;
 }
 
-NuclidePtr DecayScheme::parentNuclide() const
+Nuclide DecayScheme::parentNuclide() const
 {
-  return pNuc;
+  return parent_;
 }
 
-NuclidePtr DecayScheme::daughterNuclide() const
+Nuclide DecayScheme::daughterNuclide() const
 {
-  return dNuc;
+  return daughter_;
 }

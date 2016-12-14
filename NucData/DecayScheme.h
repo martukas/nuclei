@@ -6,8 +6,6 @@
 #include "Transition.h"
 #include "SpinParity.h"
 
-class Level;
-
 class DecayScheme
 {
 public:
@@ -20,11 +18,11 @@ public:
         Alpha
     };
 
-    DecayScheme();
+    DecayScheme() {}
 
     DecayScheme(const std::string &name,
-                    NuclidePtr parentNuclide,
-                    NuclidePtr daughterNuclide,
+                    const Nuclide& parentNuclide,
+                    const Nuclide& daughterNuclide,
                     Type DecayType);
 
     static std::string DecayTypeAsText(Type type);
@@ -33,18 +31,16 @@ public:
     std::string name() const;
     Type type() const;
 
-    NuclidePtr parentNuclide() const;
-    NuclidePtr daughterNuclide() const;
+    Nuclide parentNuclide() const;
+    Nuclide daughterNuclide() const;
 
-    LevelPtr getLevel(Energy) const;
-    TransitionPtr getTransition(Energy) const;
+//    Level getLevel(Energy) const;
+//    Transition getTransition(Energy) const;
 
 private:
-    Type t;
-    std::string m_name;
-    NuclidePtr pNuc, dNuc;
+    Type decay_type_ {Undefined};
+    std::string name_;
+    Nuclide parent_, daughter_;
 };
 
-typedef std::shared_ptr<DecayScheme> DecaySchemePtr;
-
-#endif // DecayScheme_H
+#endif
