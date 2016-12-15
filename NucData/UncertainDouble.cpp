@@ -293,7 +293,7 @@ std::string UncertainDouble::to_string(bool prefix_magn, bool with_uncert) const
   case Calculated:
     return signprefix + to_str_precision(val) + " (calc)";
   case Approximately:
-    return "~" + signprefix + to_str_precision(val);
+    return ( (value_ != 0) ? "~" : "") + signprefix + to_str_precision(val);
   case GreaterEqual:
     return "≥" + signprefix + to_str_precision(val);
   case GreaterThan:
@@ -381,7 +381,7 @@ std::string UncertainDouble::to_string(bool prefix_magn, bool with_uncert) const
         if (!unc_str_l.empty())
           uncertstr += "\u208B" + unc_str_l;
       }
-    } else
+    } else if (value_ != 0)
       uncertstr = "~";
 
     std::string result = val_str;

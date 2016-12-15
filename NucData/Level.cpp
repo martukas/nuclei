@@ -39,18 +39,19 @@ Level Level::from_ensdf(std::string record)
 
 std::string Level::to_string() const
 {
-  std::string ret = energy().to_string();
+  std::stringstream ss;
+  ss << std::setw(16) << energy().to_string();
   if (spin_.valid())
-    ret += " " + spin().to_string();
+    ss << std::setw(7) << spin().to_string();
   if (halflife_.isValid())
-    ret += " " + halflife_.to_string();
+    ss << std::setw(13) << halflife_.to_string();
   if (q_.valid())
-    ret += " Q=" + q_.to_string();
+    ss << " Q=" + q_.to_string();
   if (mu_.valid())
-    ret += " mu=" + mu_.to_string();
+    ss << " mu=" + mu_.to_string();
   if (isomeric_)
-    ret += " M" + std::to_string(isomeric_);
-  return ret;
+    ss << " M" + std::to_string(isomeric_);
+  return ss.str();
 }
 
 Energy Level::energy() const
