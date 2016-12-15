@@ -51,12 +51,16 @@ private:
     Energy firstSelectedGamma, secondSelectedGamma;
     Energy selectedEnergyLevel;
 
-    SchemeVisualSettings vis;
+    SchemeVisualSettings visual_settings_;
 
     NuclideItem parent_, daughter_;
     std::map<Energy,LevelItem*> levels_;
     std::map<Energy,LevelItem*> parent_levels_;
     QList<TransitionItem*> transitions_;
+
+    void addLevel(Level level, SchemeVisualSettings vis);
+    void addParentLevel(Level level, SchemeVisualSettings vis);
+    void addTransition(Transition transition, SchemeVisualSettings vis);
 
 };
 

@@ -25,7 +25,7 @@ public:
 
   virtual ~TransitionItem();
 
-  void updateArrow(double arrowDestY);
+  void updateArrow(double arrowDestY, double max_intensity);
   double minimalXDistance() const;
   /**
      * Distance between origin and right edge of the bounding rect
@@ -34,15 +34,16 @@ public:
 
   QPen pen() const;
 
-  QGraphicsLineItem *arrow;
-  QGraphicsTextItem *text;
-  QGraphicsPolygonItem *arrowhead, *arrowbase;
-  QGraphicsRectItem *clickarea;
-  GraphicsHighlightItem *highlightHelper;
-  double mindist;
+  QGraphicsLineItem* arrow {nullptr};
+  QGraphicsTextItem* text {nullptr};
+  QGraphicsPolygonItem* arrowhead {nullptr};
+  QGraphicsPolygonItem* arrowbase {nullptr};
+  QGraphicsRectItem* clickarea {nullptr};
+  GraphicsHighlightItem* highlightHelper {nullptr};
+  double mindist {0.0};
   QPen m_pen;
 
-  Energy from_, to_;
+  Transition transition_;
 
 private:
   static const double textAngle;
@@ -51,10 +52,11 @@ private:
   static const double arrowHeadWidth;
   static const double arrowBaseWidth;
   static const double highlightWidth;
+  static const double maxwidth;
 
   static const QPolygonF arrowHeadShape, arrowBaseShape;
-  static QPolygonF initArrowHead();
-  static QPolygonF initArrowBase();
+  static QPolygonF initArrowHead(double width);
+  static QPolygonF initArrowBase(double width);
 };
 
 #endif // TransitionItem_H

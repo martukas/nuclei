@@ -20,8 +20,8 @@ public:
 
   std::string intensity_string() const;
 
-  Energy depopulatedLevel() const { return from_; }
-  Energy populatedLevel() const { return to_; }
+  Energy from() const { return from_; }
+  Energy to() const { return to_; }
 
   std::string to_string() const;
 

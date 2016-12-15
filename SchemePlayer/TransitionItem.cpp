@@ -20,42 +20,36 @@
 const double TransitionItem::textAngle = -60.0;
 const double TransitionItem::arrowHeadLength = 11.0;
 const double TransitionItem::arrowBaseLength = 7.0;
-const double TransitionItem::arrowHeadWidth = 5.0;
+const double TransitionItem::arrowHeadWidth = 7.0;
 const double TransitionItem::arrowBaseWidth = 5.0;
 const double TransitionItem::highlightWidth = 5.0;
-const QPolygonF TransitionItem::arrowHeadShape = initArrowHead();
-const QPolygonF TransitionItem::arrowBaseShape = initArrowBase();
-
+const double TransitionItem::maxwidth = 0;//50;
 
 TransitionItem::TransitionItem()
-  : ClickableItem(ClickableItem::GammaTransitionType),
-    arrow(0), text(0), arrowhead(0), arrowbase(0), clickarea(0), highlightHelper(0), mindist(0.0)
-{
+  : ClickableItem(ClickableItem::GammaTransitionType)
+{}
 
-}
-
-TransitionItem::TransitionItem(Transition transition, SchemeVisualSettings vis, QGraphicsScene *scene)
+TransitionItem::TransitionItem(Transition transition,
+                               SchemeVisualSettings vis,
+                               QGraphicsScene *scene)
   : TransitionItem()
 {
   if (!transition.energy().isValid())
     return;
 
-  from_ = transition.depopulatedLevel();
-  to_   = transition.populatedLevel();
+  transition_ = transition;
 
   m_pen = vis.gammaPen;
-  if (transition.intensity() >= 5.0)
-    m_pen = vis.intenseGammaPen;
 
   // group origin is set to the start level!
   item = new ActiveGraphicsItemGroup(this);
   item->setActiveColor(QColor(64, 166, 255, 180));
 
-  arrowhead = new QGraphicsPolygonItem(arrowHeadShape);
+  arrowhead = new QGraphicsPolygonItem(initArrowHead(arrowHeadWidth));
   arrowhead->setBrush(QBrush(m_pen.color()));
   arrowhead->setPen(Qt::NoPen);
 
-  arrowbase = new QGraphicsPolygonItem(arrowBaseShape);
+  arrowbase = new QGraphicsPolygonItem(initArrowBase(arrowBaseWidth));
   arrowbase->setBrush(QBrush(m_pen.color()));
   arrowbase->setPen(Qt::NoPen);
   arrowbase->setPos(0.0, 0.0);
@@ -73,7 +67,7 @@ TransitionItem::TransitionItem(Transition transition, SchemeVisualSettings vis, 
   text->setFont(vis.gammaFont);
   text->document()->setDocumentMargin(0.0);
   text->setHtml(textstr);
-  //new QGraphicsRectItem(text->boundingRect(), text);
+//  new QGraphicsRectItem(text->boundingRect(), text);
   double textheight = text->boundingRect().height();
   text->setPos(0.0, -textheight);
   text->setTransformOriginPoint(0.0, 0.5*textheight);
@@ -103,14 +97,14 @@ TransitionItem::~TransitionItem()
 {
 }
 
-void TransitionItem::updateArrow(double arrowDestY)
+void TransitionItem::updateArrow(double arrowDestY, double max_intensity)
 {
   item->removeFromGroup(clickarea);
   item->removeFromGroup(arrowhead);
   item->removeFromGroup(arrowbase);
   item->removeFromGroup(arrow);
   item->removeHighlightHelper(highlightHelper);
-  arrowhead->setPos(0.0, arrowDestY);
+  arrowhead->setPos(0.0, arrowDestY - arrowHeadLength);
   arrow->setLine(0.0, 0.0, 0.0, arrowDestY - arrowHeadLength);
   clickarea->setRect(-0.5*mindist, 0.0, mindist, arrowDestY);
   highlightHelper->setRect(-0.5*highlightWidth, 0.0, highlightWidth, arrowDestY - arrowHeadLength);
@@ -119,11 +113,20 @@ void TransitionItem::updateArrow(double arrowDestY)
   item->addToGroup(arrowbase);
   item->addToGroup(arrowhead);
   item->addToGroup(clickarea);
+
+//  double width = std::ceil(maxwidth * transition_.intensity() / max_intensity);
+
+//  auto linepen = m_pen;
+//  linepen.setWidth(width);
+//  arrow->setPen(linepen);
+
+//  arrowhead->setPolygon(initArrowBase(width + arrowHeadWidth));
+//  arrowbase->setPolygon(initArrowBase(width + arrowBaseWidth));
 }
 
 double TransitionItem::minimalXDistance() const
 {
-  return mindist;
+  return std::max(mindist, maxwidth);
 }
 
 double TransitionItem::widthFromOrigin() const
@@ -136,20 +139,20 @@ QPen TransitionItem::pen() const
   return m_pen;
 }
 
-QPolygonF TransitionItem::initArrowHead()
+QPolygonF TransitionItem::initArrowHead(double width)
 {
   QPolygonF arrowheadpol;
-  arrowheadpol << QPointF(0.0, 0.0);
-  arrowheadpol << QPointF(0.5*arrowHeadWidth, -arrowHeadLength);
-  arrowheadpol << QPointF(-0.5*arrowHeadWidth, -arrowHeadLength);
+  arrowheadpol << QPointF( 0.0, arrowHeadLength);
+  arrowheadpol << QPointF( 0.5*width, 0);
+  arrowheadpol << QPointF(-0.5*width, 0);
   return arrowheadpol;
 }
 
-QPolygonF TransitionItem::initArrowBase()
+QPolygonF TransitionItem::initArrowBase(double width)
 {
   QPolygonF arrowbasepol;
-  arrowbasepol << QPointF(0.0, arrowBaseLength);
-  arrowbasepol << QPointF(0.5*arrowBaseWidth, 0.0);
-  arrowbasepol << QPointF(-0.5*arrowBaseWidth, 0.0);
+  arrowbasepol << QPointF( 0.0, arrowBaseLength);
+  arrowbasepol << QPointF( 0.5*width, 0.0);
+  arrowbasepol << QPointF(-0.5*width, 0.0);
   return arrowbasepol;
 }
