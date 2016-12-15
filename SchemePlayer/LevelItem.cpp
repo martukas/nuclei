@@ -71,7 +71,7 @@ LevelItem::LevelItem(Level level, SchemeVisualSettings vis, QGraphicsScene *scen
   if (level.normalizedFeedIntensity().uncertaintyType() != UncertainDouble::UndefinedType) {
     // create line
     grafeedarrow = new QGraphicsLineItem;
-    grafeedarrow->setPen((level.normalizedFeedIntensity() >= 10.0) ? vis.intenseFeedArrowPen : vis.feedArrowPen);
+    grafeedarrow->setPen(vis.feedArrowPen);
     scene->addItem(grafeedarrow);
     // create arrow head
     QPolygonF arrowpol;

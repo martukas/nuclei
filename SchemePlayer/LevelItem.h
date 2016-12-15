@@ -36,4 +36,4 @@ public:
   Energy energy_;
 };
 
-#endif // ENERGYLEVEL_H
+#endif

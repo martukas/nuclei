@@ -66,12 +66,6 @@ void SchemeVisualSettings::setStyle(const QFont &fontfamily, unsigned int sizePx
   stableLevelPen.setCapStyle(Qt::FlatCap);
   feedArrowPen.setWidthF(1.0);
   feedArrowPen.setCapStyle(Qt::FlatCap);
-  intenseFeedArrowPen.setWidthF(2.0);
-  intenseFeedArrowPen.setColor(QColor(232, 95, 92));
-  intenseFeedArrowPen.setCapStyle(Qt::FlatCap);
   gammaPen.setWidthF(1.0);
   gammaPen.setCapStyle(Qt::FlatCap);
-  intenseGammaPen.setWidthF(2.0);
-  intenseGammaPen.setColor(QColor(232, 95, 92));
-  intenseGammaPen.setCapStyle(Qt::FlatCap);
 }
