@@ -74,15 +74,52 @@ void Nuclide::addLevel(const Level& level)
 
 void Nuclide::addTransition(const Transition& transition)
 {
-  if (transition.energy().isValid()
-//      && levels_.count(transition.populatedLevel())
-//      && levels_.count(transition.depopulatedLevel())
-      )
+  if (!transition.energy().isValid())
   {
-    transitions_[transition.energy()] = transition;
-    levels_[transition.depopulatedLevel()].addPopulatingTransition(transition.energy());
-    levels_[transition.populatedLevel()].addDepopulatingTransition(transition.energy());
+    WARN << "Could not add invalid transition " << transition.to_string()
+        << " to " << id_.verboseName();
+    return;
+  }
+  transitions_[transition.energy()] = transition;
+}
+
+void Nuclide::finalize()
+{
+  for (auto t : transitions_)
+  {
+    if (!levels_.count(t.second.populatedLevel()) ||
+        !levels_.count(t.second.depopulatedLevel()))
+    {
+      WARN << "Transition cannot be linked to levels: " << t.second.to_string()
+          << " for " << id_.verboseName();
+      continue;
+    }
+    levels_[t.second.depopulatedLevel()].addDepopulatingTransition(t.second.energy());
+    levels_[t.second.populatedLevel()].addPopulatingTransition(t.second.energy());
   }
 }
+
+
+std::string Nuclide::to_string() const
+{
+  std::string ret = id_.symbolicName() + " ";
+  for (auto h : halflives_)
+    ret += h.to_string();
+  ret += "\n";
+  if (levels_.size())
+  {
+    ret += "Levels (" + boost::lexical_cast<std::string>(levels_.size()) +")\n";
+    for (auto l : levels_)
+      ret += l.second.to_string() +  "\n";
+  }
+  if (transitions_.size())
+  {
+    ret += "Transitions (" + boost::lexical_cast<std::string>(transitions_.size()) + ")\n";
+    for (auto t : transitions_)
+      ret += "  " + t.second.to_string() +  "\n";
+  }
+  return ret;
+}
+
 
 

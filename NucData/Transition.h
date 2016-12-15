@@ -23,6 +23,8 @@ public:
   Energy depopulatedLevel() const { return from_; }
   Energy populatedLevel() const { return to_; }
 
+  std::string to_string() const;
+
 private:
 
   Energy energy_;

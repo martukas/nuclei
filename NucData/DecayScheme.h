@@ -34,6 +34,8 @@ public:
     Nuclide parentNuclide() const;
     Nuclide daughterNuclide() const;
 
+    std::string to_string() const;
+
 //    Level getLevel(Energy) const;
 //    Transition getTransition(Energy) const;
 

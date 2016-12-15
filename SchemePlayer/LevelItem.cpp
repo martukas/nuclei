@@ -131,7 +131,8 @@ double LevelItem::align(double leftlinelength, double rightlinelength, double ar
 
   item->setPos(0.0, graYPos); // add 0.5*pen-width to avoid antialiasing artifacts
 
-  if (grafeedarrow) {
+  if (grafeedarrow)
+  {
     double leftend = (vis.parentpos == RightParent) ? rightlinelength + vis.feedingArrowGap + vis.feedingArrowHeadLength : arrowleft;
     double rightend = (vis.parentpos == RightParent) ? arrowright : -leftlinelength - vis.feedingArrowGap - vis.feedingArrowHeadLength;
     double arrowY = graYPos;
