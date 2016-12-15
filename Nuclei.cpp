@@ -300,5 +300,6 @@ void Nuclei::loadDecay(DecayScheme decay)
 
   // update plot
   m_decay->triggerDataUpdate();
+  showAll();
 }
 

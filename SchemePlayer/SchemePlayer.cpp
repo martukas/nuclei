@@ -22,8 +22,8 @@
 
 
 SchemePlayer::SchemePlayer(DecayScheme scheme, QObject *parent)
-  : QObject(parent), scheme_(scheme),
-    scene_(0)
+  : QObject(parent)
+  , scheme_(scheme)
 {
   // decide if parent nuclide should be printed on the left side (beta-),
   // on the right side (EC, beta+, alpha) or not at all (isomeric)
@@ -31,6 +31,8 @@ SchemePlayer::SchemePlayer(DecayScheme scheme, QObject *parent)
     vis.parentpos = NoParent;
   else if (scheme_.type() == DecayScheme::BetaMinus)
     vis.parentpos = LeftParent;
+
+//  DBG << "Creating scheme player for:\n" << scheme_.to_string();
 }
 
 QGraphicsScene * SchemePlayer::levelPlot()
@@ -54,11 +56,9 @@ QGraphicsScene * SchemePlayer::levelPlot()
     // create gammas
     for (auto gamma_nrg : level.second.depopulatingTransitions())
     {
-      if (!transitions.count(gamma_nrg))
-        continue;
       Transition gamma = transitions.at(gamma_nrg);
       TransitionItem *transrend = new TransitionItem(gamma, vis, scene_);
-      //      ActiveGraphicsItemGroup *item = gamma->createGammaGraphicsItem(gammaFont, gammaPen, intenseGammaPen);
+//      ActiveGraphicsItemGroup *item = gamma->createGammaGraphicsItem(gammaFont, gammaPen, intenseGammaPen);
       connect(this, SIGNAL(enabledShadow(bool)), transrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
       connect(transrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
       transitions_.append(transrend);
@@ -70,11 +70,14 @@ QGraphicsScene * SchemePlayer::levelPlot()
 
   // create parent nuclide label and level(s)
   if (vis.parentpos != NoParent) {
-    parent_ = NuclideItem(scheme_.parentNuclide(), ClickableItem::ParentNuclideType, vis, scene_);
-    for (auto &level : scheme_.parentNuclide().levels()) {
-      SchemeVisualSettings vis_ovrd = vis;
-      vis_ovrd.parentpos = NoParent;
-      LevelItem *levrend = new LevelItem(level.second, vis, scene_);
+    SchemeVisualSettings vis_ovrd = vis;
+    vis_ovrd.parentpos = NoParent;
+//    parent_ = NuclideItem(scheme_.parentNuclide(), ClickableItem::ParentNuclideType, vis, scene_);
+    parent_ = NuclideItem(scheme_.parentNuclide(), ClickableItem::ParentNuclideType, vis_ovrd, scene_);
+    for (auto &level : scheme_.parentNuclide().levels())
+    {
+      LevelItem *levrend = new LevelItem(level.second, vis_ovrd, scene_);
+//      LevelItem *levrend = new LevelItem(level.second, vis, scene_);
       parent_levels_[levrend->energy_] = levrend;
     }
   }
@@ -118,12 +121,15 @@ void SchemePlayer::alignGraphicsItems()
       maxEnergyGap = qMax(maxEnergyGap, diff);
       prev_energy = i.first;
     }
+    if (!maxEnergyGap)
+      maxEnergyGap = 1;
     auto prev_level = levels_.begin()->second;
     prev_energy = levels_.begin()->first;
     for (auto i : levels_)
     {
       double minheight = 0.5*(i.second->graphicsItem()->boundingRect().height() + prev_level->graphicsItem()->boundingRect().height());
       double extraheight = vis.maxExtraLevelDistance * (i.first - prev_energy) / maxEnergyGap;
+
       i.second->graYPos = std::floor(prev_level->graYPos - minheight - extraheight) + 0.5 * prev_level->graline->pen().widthF();
       prev_energy = i.first;
       prev_level = i.second;
@@ -214,15 +220,16 @@ void SchemePlayer::alignGraphicsItems()
   }
 
   // set position of daughter nuclide
-  daughter_.graphicsItem()->setPos(-0.5*daughter_.graphicsItem()->boundingRect().width(), 0.3*daughter_.graphicsItem()->boundingRect().height());
+  daughter_.graphicsItem()->setPos(-0.5*daughter_.graphicsItem()->boundingRect().width(),
+                                   0.3*daughter_.graphicsItem()->boundingRect().height());
 
   // set position of parent nuclide
   if (vis.parentpos != NoParent)
   {
     double parentY = std::numeric_limits<double>::quiet_NaN();
     if (!levels_.empty())
-      parentY = levels_.rend()->second->graphicsItem()->y() -
-          levels_.rend()->second->graphicsItem()->boundingRect().height() -
+      parentY = levels_.rbegin()->second->graphicsItem()->y() -
+          levels_.rbegin()->second->graphicsItem()->boundingRect().height() -
           parent_.graphicsItem()->boundingRect().height() - vis.parentNuclideToEnergyLevelsDistance;
 
     double parentcenter = (normalleft + normalright) / 2.0;
@@ -412,7 +419,7 @@ void SchemePlayer::clickedEnergyLevel(LevelItem *e)
 
 void SchemePlayer::triggerDataUpdate()
 {
-//  emit updatedData(decayDataSet());
+  //  emit updatedData(decayDataSet());
 }
 
 void SchemePlayer::setStyle(const QFont &fontfamily, unsigned int sizePx)

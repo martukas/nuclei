@@ -45,7 +45,7 @@ private:
     void alignGraphicsItems();
 
 
-    QGraphicsScene *scene_;
+    QGraphicsScene *scene_ {nullptr};
 
     // highlighted items
     Energy firstSelectedGamma, secondSelectedGamma;

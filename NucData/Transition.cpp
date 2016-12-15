@@ -45,3 +45,17 @@ std::string Transition::intensity_string() const
     intensstr = to_str_precision(intensity_, 3) + " %";
   return intensstr;
 }
+
+std::string Transition::to_string() const
+{
+  std::stringstream ss;
+  ss << std::setw(16) << energy_.to_string() << "   "
+     << std::setw(15) << from_.to_string()
+     << " --> "
+     << std::setw(15) << to_.to_string()
+     << std::setw(7)  << intensity() << "%"
+     << std::setw(12) << multipolarity_;
+  if (delta_.hasFiniteValue())
+    ss << "  delta="  << delta_.to_string(false);
+  return ss.str();
+}

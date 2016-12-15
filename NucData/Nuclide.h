@@ -21,6 +21,7 @@ public:
 
   void addLevel(const Level& level);
   void addTransition(const Transition& transition);
+  void finalize();
 
   std::map<Energy, Level> levels() const;
   std::map<Energy, Transition> transitions() const;
@@ -30,6 +31,8 @@ public:
 
   std::vector<HalfLife> halfLifes() const;
   std::string halfLifeAsText() const;
+
+  std::string to_string() const;
 
 private:
   NuclideId   id_;

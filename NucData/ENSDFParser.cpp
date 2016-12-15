@@ -403,9 +403,8 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
     parent_nuclide.addLevel(plv);
   }
 
-//  daughter_nuclide.addLevels(levels);
-//  daughter_nuclide.addTransitions(transitions);
-
+  parent_nuclide.finalize();
+  daughter_nuclide.finalize();
   return DecayScheme(decayName, parent_nuclide, daughter_nuclide, decaydata.decayType);
 }
 
