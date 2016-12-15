@@ -1,12 +1,8 @@
-#ifndef Transition_H
-#define Transition_H
+#ifndef TRANSITION_H
+#define TRANSITION_H
 
 #include <stdint.h>
-#include <memory>
 #include "Energy.h"
-#include "UncertainDouble.h"
-
-class Level;
 
 class Transition
 {
@@ -31,8 +27,8 @@ private:
 
   Energy energy_;
   double intensity_ {0};
-  std::string m_mpol;
-  UncertainDouble m_delta;
+  std::string multipolarity_;
+  UncertainDouble delta_;
   Energy from_, to_;
 };
 

@@ -1,6 +1,5 @@
 #include "UncertainDouble.h"
 
-#include <iostream>
 #include <limits>
 #include <cmath>
 #include <boost/algorithm/string.hpp>

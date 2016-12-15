@@ -1,7 +1,6 @@
 #ifndef ENERGY_H
 #define ENERGY_H
 
-#include <string>
 #include "UncertainDouble.h"
 
 class Energy
@@ -25,10 +24,10 @@ public:
     friend bool operator==(const Energy &left, const Energy &right);
     operator double() const;
 
-    Energy operator-(Energy d);
+    Energy operator-(Energy other);
 
 private:
-    UncertainDouble e;
+    UncertainDouble value_;
 };
 
-#endif // ENERGY_H
+#endif

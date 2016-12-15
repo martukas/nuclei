@@ -1,9 +1,7 @@
-#ifndef XNuclide_H
-#define XNuclide_H
+#ifndef NUCLIDE_H
+#define NUCLIDE_H
 
 #include <vector>
-#include <limits>
-#include <memory>
 #include "NuclideId.h"
 #include "Level.h"
 #include "Transition.h"
