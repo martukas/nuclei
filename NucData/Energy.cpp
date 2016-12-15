@@ -11,83 +11,82 @@ Energy::Energy()
 }
 
 Energy::Energy(double energy, UncertainDouble::Sign s)
-  : e(energy, order_of(energy), s) //sigfig hack
+  : value_(energy, order_of(energy), s) //sigfig hack
 {
   if (energy == 0)
-    e.setSymmetricUncertainty(0);
+    value_.setSymmetricUncertainty(0);
   else
     DBG << "made energy with " << energy;
 }
 
 bool Energy::isValid() const
 {
-  return e.hasFiniteValue();
+  return value_.hasFiniteValue();
 }
 
 Energy::operator double() const
 {
-  return e;
+  return value_;
 }
 
 
 std::string Energy::to_string() const
 {
-  if (!boost::math::isfinite(e))
+  if (!boost::math::isfinite(value_))
     return "";
 
-  if (e >= 10000.0) {
-    UncertainDouble mev = e;
+  if (value_ >= 10000.0)
+  {
+    UncertainDouble mev = value_;
     mev *= 0.001;
-//    DBG << "transformed " << e.to_string(false, true) << " to " << mev.to_string(false, true);
     return mev.to_string(false) + " MeV";
   }
-//  DBG << "untransformed" << e.to_string(false, true);
-  return e.to_string(false) + " keV";
+  return value_.to_string(false) + " keV";
 }
 
 Energy & Energy::operator=(const Energy &energy)
 {
-  e = energy.e;
+  value_ = energy.value_;
   return *this;
 }
 
 //Energy & Energy::operator=(double energy)
 //{
-//  e = energy;
+//  value_ = energy;
 //  return *this;
 //}
 
 bool operator<(const Energy &left, const Energy &right)
 {
-  return left.e < right.e;
+  return left.value_ < right.value_;
 }
 
 bool operator<(const Energy &left, const double &right)
 {
-  return left.e < right;
+  return left.value_ < right;
 }
 
 bool operator>(const Energy &left, const Energy &right)
 {
-  return left.e > right.e;
+  return left.value_ > right.value_;
 }
 
 bool operator>(const Energy &left, const double &right)
 {
-  return left.e > right;
+  return left.value_ > right;
 }
 
 bool operator==(const Energy &left, const Energy &right)
 {
-//  return qFuzzyCompare(left.e, right.e);
-  return (left.e == right.e);
+//  return qFuzzyCompare(left.value_, right.value_);
+  return (left.value_ == right.value_);
 }
 
 
 Energy Energy::operator-(Energy other)
 {
   Energy ret = *this;
-  ret.e.setValue(e.value() - other.e.value());
+  ret.value_.setValue(value_.value() - other.value_.value());
   return ret;
 }
 
@@ -120,17 +119,17 @@ Energy Energy::from_nsdf(std::string record)
   boost::trim(uncert);
   Energy ret;
 
-  ret.e = UncertainDouble::from_nsdf(val, uncert);
+  ret.value_ = UncertainDouble::from_nsdf(val, uncert);
 
 //  tmp.remove("+Y"); // fix modified energy values (illegaly used in ensdf...)
 //  double precision = get_precision(tmp.remove("+Y").toStdString());
 //  double uncert = clocale.toDouble(kdestr, &convok) * precision;
 
 //  if (hasoffset)
-//  DBG << "Energy record " << record << " parsed to " << ret.e.to_string(false, true)
+//  DBG << "Energy record " << record << " parsed to " << ret.value_.to_string(false, true)
 //      << " offset to " << offset;
 //  if (make_tentative)
-//  DBG << "Energy record " << record << " parsed to " << ret.e.to_string(false, true)
+//  DBG << "Energy record " << record << " parsed to " << ret.value_.to_string(false, true)
 //      << " make tentative!";
 
   return ret;

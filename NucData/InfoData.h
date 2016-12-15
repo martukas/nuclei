@@ -3,7 +3,6 @@
 
 #include <string>
 
-
 enum class DataQuality { kKnown = 0, kUnknown = 1, kTentative = 2, kTheoretical = 3, kAbout = 4 } ;
 
 DataQuality quality_of(const std::string&);

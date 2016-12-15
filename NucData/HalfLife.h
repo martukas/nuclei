@@ -26,11 +26,9 @@ private:
     UncertainDouble time_;
     std::string     units_;
 
-
     static const std::map<std::string, double> known_units_;
     static std::map<std::string, double> init_units();
-
     static std::string preferred_units(double from);
 };
 
-#endif // HALFLIFE_H
+#endif

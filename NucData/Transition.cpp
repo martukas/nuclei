@@ -8,12 +8,12 @@
 Transition::Transition(Energy energy, double intensity,
                        const std::string &multipol, UncertainDouble delta,
                        Energy from, Energy to)
-  : energy_(energy),
-    intensity_(intensity),
-    m_mpol(multipol),
-    m_delta(delta),
-    from_(from),
-    to_(to)
+  : energy_(energy)
+  , intensity_(intensity)
+  , multipolarity_(multipol)
+  , delta_(delta)
+  , from_(from)
+  , to_(to)
 {}
 
 Energy Transition::energy() const
@@ -28,14 +28,14 @@ double Transition::intensity() const
 
 std::string Transition::multipolarity() const
 {
-  //  if (m_mpol.empty())
+  //  if (multipolarity_.empty())
   //    return "<i>unknown</i>";
-  return m_mpol;
+  return multipolarity_;
 }
 
 UncertainDouble Transition::delta() const
 {
-  return m_delta;
+  return delta_;
 }
 
 std::string Transition::intensity_string() const

@@ -1,9 +1,7 @@
-#ifndef Level_H
-#define Level_H
+#ifndef LEVEL_H
+#define LEVEL_H
 
-#include <stdint.h>
 #include <limits>
-#include <memory>
 #include <set>
 #include "HalfLife.h"
 #include "Energy.h"
