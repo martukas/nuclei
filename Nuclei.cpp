@@ -80,9 +80,6 @@ Nuclei::~Nuclei()
   }
   s.setValue("decaySelection", selectionIndices);
 
-//  if (m_decay)
-//    s.setValue("selectedCascade", QVariant::fromValue(m_decay->currentSelection()));
-
   delete preferencesDialogUi;
   delete ui;
 }
@@ -140,10 +137,6 @@ void Nuclei::initialize()
     ui->decayTreeView->setCurrentIndex(mi);
     loadSelectedDecay(mi);
   }
-
-//  if (m_decay)
-//    m_decay->setCurrentSelection(s.value("selectedCascade", QVariant::fromValue(Decay::CascadeIdentifier())).value<Decay::CascadeIdentifier>());
-
 }
 
 void Nuclei::loadSelectedDecay(const QModelIndex &index)
@@ -158,8 +151,6 @@ void Nuclei::loadSelectedDecay(const QModelIndex &index)
 
   if (!decay.valid())
     return;
-
-//  DBG << "<Nuclei> decay " << decay->name().toStdString() << " type " << (int)decay->type();
 
   loadDecay(decay);
 }
@@ -178,10 +169,6 @@ void Nuclei::loadSearchResultCascade(const QModelIndex &index)
     return;
 
   loadDecay(decay);
-
-//  Decay::CascadeIdentifier ci = searchResultSelectionModel->cascade(searchProxyModel->mapToSource(index));
-//  if (m_decay)
-//    m_decay->setCurrentSelection(ci);
 }
 
 void Nuclei::svgExport()
@@ -268,11 +255,6 @@ void Nuclei::zoomOut()
 void Nuclei::showPreferences()
 {
   preferencesDialog->exec();
-
-//  if (m_decay) {
-//    Decay::CascadeIdentifier ci = m_decay->currentSelection();
-//    m_decay->setCurrentSelection(ci);
-//  }
 }
 
 void Nuclei::closeEvent(QCloseEvent *event)

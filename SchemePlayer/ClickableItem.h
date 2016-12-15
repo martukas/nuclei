@@ -41,7 +41,7 @@ struct SchemeVisualSettings
 
   // style
   QFont stdFont, stdBoldFont, nucFont, nucIndexFont, parentHlFont, feedIntensityFont, gammaFont;
-  QPen levelPen, stableLevelPen, feedArrowPen, intenseFeedArrowPen, gammaPen, intenseGammaPen;
+  QPen levelPen, stableLevelPen, feedArrowPen, gammaPen;
 
   double outerGammaMargin; // margin between level texts (spin, energy) and gammas
   double outerLevelTextMargin; // level lines extend beyond the beginning/end of the level texts by this value

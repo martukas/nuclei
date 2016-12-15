@@ -28,9 +28,11 @@ SchemePlayer::SchemePlayer(DecayScheme scheme, QObject *parent)
   // decide if parent nuclide should be printed on the left side (beta-),
   // on the right side (EC, beta+, alpha) or not at all (isomeric)
   if (scheme_.type() == DecayScheme::IsomericTransition)
-    vis.parentpos = NoParent;
+    visual_settings_.parentpos = NoParent;
   else if (scheme_.type() == DecayScheme::BetaMinus)
-    vis.parentpos = LeftParent;
+    visual_settings_.parentpos = LeftParent;
+  else
+    visual_settings_.parentpos = RightParent;
 
 //  DBG << "Creating scheme player for:\n" << scheme_.to_string();
 }
@@ -48,42 +50,49 @@ QGraphicsScene * SchemePlayer::levelPlot()
   auto transitions = scheme_.daughterNuclide().transitions();
   for (auto &level : scheme_.daughterNuclide().levels())
   {
-    // create level
-    LevelItem *levrend = new LevelItem(level.second, vis, scene_);
-    connect(this, SIGNAL(enabledShadow(bool)), levrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
-    connect(levrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
-    levels_[levrend->energy_] = levrend;
-    // create gammas
+    addLevel(level.second, visual_settings_);
     for (auto gamma_nrg : level.second.depopulatingTransitions())
-    {
-      Transition gamma = transitions.at(gamma_nrg);
-      TransitionItem *transrend = new TransitionItem(gamma, vis, scene_);
-//      ActiveGraphicsItemGroup *item = gamma->createGammaGraphicsItem(gammaFont, gammaPen, intenseGammaPen);
-      connect(this, SIGNAL(enabledShadow(bool)), transrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
-      connect(transrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
-      transitions_.append(transrend);
-    }
+      addTransition(transitions.at(gamma_nrg), visual_settings_);
   }
 
-  // create daughter nuclide label
-  daughter_ = NuclideItem(scheme_.daughterNuclide(), ClickableItem::DaughterNuclideType, vis, scene_);
+  daughter_ = NuclideItem(scheme_.daughterNuclide(), ClickableItem::DaughterNuclideType, visual_settings_, scene_);
 
-  // create parent nuclide label and level(s)
-  if (vis.parentpos != NoParent) {
-    SchemeVisualSettings vis_ovrd = vis;
-    vis_ovrd.parentpos = NoParent;
-//    parent_ = NuclideItem(scheme_.parentNuclide(), ClickableItem::ParentNuclideType, vis, scene_);
-    parent_ = NuclideItem(scheme_.parentNuclide(), ClickableItem::ParentNuclideType, vis_ovrd, scene_);
+  if (visual_settings_.parentpos != NoParent)
+  {
+    SchemeVisualSettings parent_visual_settings = visual_settings_;
+    parent_visual_settings.parentpos = NoParent;
+
+    parent_ = NuclideItem(scheme_.parentNuclide(), ClickableItem::ParentNuclideType, parent_visual_settings, scene_);
     for (auto &level : scheme_.parentNuclide().levels())
-    {
-      LevelItem *levrend = new LevelItem(level.second, vis_ovrd, scene_);
-//      LevelItem *levrend = new LevelItem(level.second, vis, scene_);
-      parent_levels_[levrend->energy_] = levrend;
-    }
+      addParentLevel(level.second, parent_visual_settings);
   }
 
   alignGraphicsItems();
   return scene_;
+}
+
+void SchemePlayer::addLevel(Level level, SchemeVisualSettings vis)
+{
+  LevelItem *levrend = new LevelItem(level, vis, scene_);
+  connect(this, SIGNAL(enabledShadow(bool)), levrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
+  connect(levrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
+  levels_[level.energy()] = levrend;
+}
+
+void SchemePlayer::addParentLevel(Level level, SchemeVisualSettings vis)
+{
+  LevelItem *levrend = new LevelItem(level, vis, scene_);
+  connect(this, SIGNAL(enabledShadow(bool)), levrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
+  connect(levrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
+  parent_levels_[level.energy()] = levrend;
+}
+
+void SchemePlayer::addTransition(Transition transition, SchemeVisualSettings vis)
+{
+  TransitionItem *transrend = new TransitionItem(transition, vis, scene_);
+  connect(this, SIGNAL(enabledShadow(bool)), transrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
+  connect(transrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
+  transitions_.append(transrend);
 }
 
 void SchemePlayer::alignGraphicsItems()
@@ -91,11 +100,9 @@ void SchemePlayer::alignGraphicsItems()
   if (scheme_.type() == DecayScheme::Undefined)
     return;
 
-  //  DBG << "<SchemePlayer> levelsize " << levels.size();
-
-  QFontMetrics stdFontMetrics(vis.stdFont);
-  QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
-  QFontMetrics parentHlFontMetrics(vis.parentHlFont);
+  QFontMetrics stdFontMetrics(visual_settings_.stdFont);
+  QFontMetrics stdBoldFontMetrics(visual_settings_.stdBoldFont);
+  QFontMetrics parentHlFontMetrics(visual_settings_.parentHlFont);
   //  QFontMetrics feedIntensityFontMetrics(feedIntensityFont);
 
   // determine size information
@@ -128,7 +135,7 @@ void SchemePlayer::alignGraphicsItems()
     for (auto i : levels_)
     {
       double minheight = 0.5*(i.second->graphicsItem()->boundingRect().height() + prev_level->graphicsItem()->boundingRect().height());
-      double extraheight = vis.maxExtraLevelDistance * (i.first - prev_energy) / maxEnergyGap;
+      double extraheight = visual_settings_.maxExtraLevelDistance * (i.first - prev_energy) / maxEnergyGap;
 
       i.second->graYPos = std::floor(prev_level->graYPos - minheight - extraheight) + 0.5 * prev_level->graline->pen().widthF();
       prev_energy = i.first;
@@ -138,12 +145,14 @@ void SchemePlayer::alignGraphicsItems()
 
   // determine space needed for gammas
   double gammaspace = std::numeric_limits<double>::quiet_NaN();
+  double max_intensity = 0;
   for (auto &gamma : transitions_)
   {
     if (boost::math::isnan(gammaspace))
       gammaspace = gamma->widthFromOrigin();
     else
       gammaspace += gamma->minimalXDistance();
+    max_intensity = std::max(max_intensity, gamma->transition_.intensity());
   }
   if (!boost::math::isfinite(gammaspace))
     gammaspace = 0.0;
@@ -161,60 +170,62 @@ void SchemePlayer::alignGraphicsItems()
     else
       currentgammapos -= gamma->minimalXDistance();
 
-    if (levels_.count(gamma->from_) && levels_.count(gamma->to_))
+    if (levels_.count(gamma->transition_.from()) && levels_.count(gamma->transition_.to()))
     {
-      double arrowDestY = levels_.at(gamma->to_)->graYPos - levels_.at(gamma->from_)->graYPos;
-      gamma->updateArrow(arrowDestY);
+      double arrowDestY = levels_.at(gamma->transition_.to())->graYPos
+          - levels_.at(gamma->transition_.from())->graYPos;
+      gamma->updateArrow(arrowDestY, max_intensity);
     }
 
-    if (levels_.count(gamma->from_))
+    if (levels_.count(gamma->transition_.from()))
       gamma->graphicsItem()->setPos(std::floor(currentgammapos) + 0.5 * gamma->pen().widthF(),
-                                    levels_.at(gamma->from_)->graYPos + 0.5 * levels_.at(gamma->from_)->graline->pen().widthF());
+                                    levels_.at(gamma->transition_.from())->graYPos + 0.5
+                                    * levels_.at(gamma->transition_.from())->graline->pen().widthF());
   }
 
   // determine line length for parent levels
-  double pNucLineLength = vis.parentNuclideLevelLineLength;
-  if (vis.parentpos != NoParent)
+  double pNucLineLength = visual_settings_.parentNuclideLevelLineLength;
+  if (visual_settings_.parentpos != NoParent)
   {
-    pNucLineLength = qMax(vis.parentNuclideLevelLineLength, parent_.graphicsItem()->boundingRect().width() + 20.0);
+    pNucLineLength = qMax(visual_settings_.parentNuclideLevelLineLength, parent_.graphicsItem()->boundingRect().width() + 20.0);
     for (auto level : parent_levels_)
     {
       pNucLineLength = qMax(pNucLineLength,
                             level.second->graetext->boundingRect().width() +
                             level.second->graspintext->boundingRect().width() +
-                            vis.parentNuclideMinSpinEnergyDistance +
-                            2.0 * vis.outerLevelTextMargin);
+                            visual_settings_.parentNuclideMinSpinEnergyDistance +
+                            2.0 * visual_settings_.outerLevelTextMargin);
     }
   }
   pNucLineLength = std::ceil(pNucLineLength);
 
   // determine line length for feeding arrows
-  double arrowLineLength = vis.feedingArrowLineLength;
-  if (vis.parentpos != NoParent)
+  double arrowLineLength = visual_settings_.feedingArrowLineLength;
+  if (visual_settings_.parentpos != NoParent)
     for (auto level : levels_)
       if (level.second->grafeedintens)
         arrowLineLength = qMax(arrowLineLength,
                                level.second->grafeedintens->boundingRect().width() +
-                               vis.parentNuclideLevelLineExtraLength +
-                               2.0 * vis.feedingArrowTextMargin);
+                               visual_settings_.parentNuclideLevelLineExtraLength +
+                               2.0 * visual_settings_.feedingArrowTextMargin);
 
   // calculate length of level lines
-  double leftlinelength = vis.outerLevelTextMargin + maxSpinLabelWidth + vis.outerGammaMargin + 0.5*gammaspace;
-  double rightlinelength = vis.outerLevelTextMargin + maxEnergyLabelWidth + vis.outerGammaMargin + 0.5*gammaspace;
+  double leftlinelength = visual_settings_.outerLevelTextMargin + maxSpinLabelWidth + visual_settings_.outerGammaMargin + 0.5*gammaspace;
+  double rightlinelength = visual_settings_.outerLevelTextMargin + maxEnergyLabelWidth + visual_settings_.outerGammaMargin + 0.5*gammaspace;
 
   // calculate start and end points of parent level lines
-  double arrowleft = std::floor((vis.parentpos == RightParent) ? rightlinelength : -leftlinelength - arrowLineLength - vis.parentNuclideLevelLineExtraLength) - 0.5*vis.feedArrowPen.widthF();
-  double arrowright = std::ceil((vis.parentpos == RightParent) ? rightlinelength + arrowLineLength + vis.parentNuclideLevelLineExtraLength : -leftlinelength) + 0.5*vis.feedArrowPen.widthF();
-  double activeleft = std::floor((vis.parentpos == RightParent) ? arrowleft + arrowLineLength - pNucLineLength : arrowleft);
-  double activeright = std::ceil((vis.parentpos == RightParent) ? arrowright : arrowright - arrowLineLength + pNucLineLength);
-  double normalleft = std::floor((vis.parentpos == RightParent) ? activeleft : activeleft + vis.parentNuclideLevelLineExtraLength);
-  double normalright = std::ceil((vis.parentpos == RightParent) ? activeright - vis.parentNuclideLevelLineExtraLength : activeright);
+  double arrowleft = std::floor((visual_settings_.parentpos == RightParent) ? rightlinelength : -leftlinelength - arrowLineLength - visual_settings_.parentNuclideLevelLineExtraLength) - 0.5*visual_settings_.feedArrowPen.widthF();
+  double arrowright = std::ceil((visual_settings_.parentpos == RightParent) ? rightlinelength + arrowLineLength + visual_settings_.parentNuclideLevelLineExtraLength : -leftlinelength) + 0.5*visual_settings_.feedArrowPen.widthF();
+  double activeleft = std::floor((visual_settings_.parentpos == RightParent) ? arrowleft + arrowLineLength - pNucLineLength : arrowleft);
+  double activeright = std::ceil((visual_settings_.parentpos == RightParent) ? arrowright : arrowright - arrowLineLength + pNucLineLength);
+  double normalleft = std::floor((visual_settings_.parentpos == RightParent) ? activeleft : activeleft + visual_settings_.parentNuclideLevelLineExtraLength);
+  double normalright = std::ceil((visual_settings_.parentpos == RightParent) ? activeright - visual_settings_.parentNuclideLevelLineExtraLength : activeright);
 
   // set level positions and sizes
   double arrowVEnd = std::numeric_limits<double>::quiet_NaN();
   for (auto level : levels_)
   {
-    double newVEnd = level.second->align(leftlinelength, rightlinelength, arrowleft, arrowright, vis);
+    double newVEnd = level.second->align(leftlinelength, rightlinelength, arrowleft, arrowright, visual_settings_);
     if (boost::math::isnan(arrowVEnd) && !boost::math::isnan(newVEnd))
       arrowVEnd = newVEnd;
   }
@@ -224,13 +235,13 @@ void SchemePlayer::alignGraphicsItems()
                                    0.3*daughter_.graphicsItem()->boundingRect().height());
 
   // set position of parent nuclide
-  if (vis.parentpos != NoParent)
+  if (visual_settings_.parentpos != NoParent)
   {
     double parentY = std::numeric_limits<double>::quiet_NaN();
     if (!levels_.empty())
       parentY = levels_.rbegin()->second->graphicsItem()->y() -
           levels_.rbegin()->second->graphicsItem()->boundingRect().height() -
-          parent_.graphicsItem()->boundingRect().height() - vis.parentNuclideToEnergyLevelsDistance;
+          parent_.graphicsItem()->boundingRect().height() - visual_settings_.parentNuclideToEnergyLevelsDistance;
 
     double parentcenter = (normalleft + normalright) / 2.0;
 
@@ -238,7 +249,7 @@ void SchemePlayer::alignGraphicsItems()
 
     // set position of parent levels
     double topMostLevel = 0.0;
-    double y = qRound(parentY - 0.3*parent_.graphicsItem()->boundingRect().height()) + 0.5*vis.stableLevelPen.widthF();
+    double y = qRound(parentY - 0.3*parent_.graphicsItem()->boundingRect().height()) + 0.5*visual_settings_.stableLevelPen.widthF();
     for (auto level : parent_levels_)
     {
       bool feeding = false;
@@ -248,8 +259,8 @@ void SchemePlayer::alignGraphicsItems()
       double right = feeding ? activeright : normalright;
 
       level.second->graline->setLine(left, y, right, y);
-      level.second->graetext->setPos((parent_levels_.size() == 1 ? activeright : normalright) - vis.outerLevelTextMargin - level.second->graetext->boundingRect().width(), y - level.second->graetext->boundingRect().height());
-      level.second->graspintext->setPos((parent_levels_.size() == 1 ? activeleft : normalleft) + vis.outerLevelTextMargin, y - level.second->graetext->boundingRect().height());
+      level.second->graetext->setPos((parent_levels_.size() == 1 ? activeright : normalright) - visual_settings_.outerLevelTextMargin - level.second->graetext->boundingRect().width(), y - level.second->graetext->boundingRect().height());
+      level.second->graspintext->setPos((parent_levels_.size() == 1 ? activeleft : normalleft) + visual_settings_.outerLevelTextMargin, y - level.second->graetext->boundingRect().height());
 
       topMostLevel = y;
 
@@ -257,8 +268,8 @@ void SchemePlayer::alignGraphicsItems()
       y -= qMax(level.second->graetext->boundingRect().height(), level.second->graspintext->boundingRect().height()) + 10.0;
     }
 
-    double arrowVStart = topMostLevel - 0.5*vis.stableLevelPen.widthF();
-    double arrowX = (vis.parentpos == RightParent) ? activeright : activeleft;
+    double arrowVStart = topMostLevel - 0.5*visual_settings_.stableLevelPen.widthF();
+    double arrowX = (visual_settings_.parentpos == RightParent) ? activeright : activeleft;
     if (boost::math::isfinite(arrowVStart) && boost::math::isfinite(arrowVEnd))
       parent_.pNucVerticalArrow->setLine(arrowX, arrowVStart, arrowX, arrowVEnd);
 
@@ -292,82 +303,7 @@ void SchemePlayer::clickedGamma(TransitionItem *g)
   if (!g)
     return;
 
-  //  // deselect if active level is clicked again
-  //  if (g == firstSelectedGamma) {
-  //    firstSelectedGamma->graphicsItem()->setHighlighted(false);
-  //    firstSelectedGamma = secondSelectedGamma;
-  //    secondSelectedGamma = 0;
-  //  }
-  //  else if (g == secondSelectedGamma) {
-  //    secondSelectedGamma->graphicsItem()->setHighlighted(false);
-  //    secondSelectedGamma = 0;
-  //  }
-  //  else {
-  //    // deselect inappropriate level(s)
-  //    bool firstok = false;
-  //    if (firstSelectedGamma)
-  //      firstok = g->populatedLevel() == firstSelectedGamma->depopulatedLevel() ||
-  //          g->depopulatedLevel() == firstSelectedGamma->populatedLevel();
-  //    bool secondok = false;
-  //    if (secondSelectedGamma)
-  //      secondok = g->populatedLevel() == secondSelectedGamma->depopulatedLevel() ||
-  //          g->depopulatedLevel() == secondSelectedGamma->populatedLevel();
-
-  //    if (firstok && secondok) {
-  //      firstSelectedGamma->graphicsItem()->setHighlighted(false);
-  //      firstSelectedGamma = secondSelectedGamma;
-  //      secondSelectedGamma = 0;
-  //    }
-  //    else if (firstok) {
-  //      if (secondSelectedGamma) {
-  //        secondSelectedGamma->graphicsItem()->setHighlighted(false);
-  //        secondSelectedGamma = 0;
-  //      }
-  //    }
-  //    else if (secondok) {
-  //      Q_ASSERT(firstSelectedGamma);
-  //      firstSelectedGamma->graphicsItem()->setHighlighted(false);
-  //      firstSelectedGamma = secondSelectedGamma;
-  //      secondSelectedGamma = 0;
-  //    }
-  //    else {
-  //      if (firstSelectedGamma) {
-  //        firstSelectedGamma->graphicsItem()->setHighlighted(false);
-  //        firstSelectedGamma = 0;
-  //      }
-  //      if (secondSelectedGamma) {
-  //        secondSelectedGamma->graphicsItem()->setHighlighted(false);
-  //        secondSelectedGamma = 0;
-  //      }
-  //    }
-
-  //    // case: no gamma previously selected
-  //    if (!firstSelectedGamma && !secondSelectedGamma) {
-  //      firstSelectedGamma = g;
-  //      firstSelectedGamma->graphicsItem()->setHighlighted(true);
-  //      if (selectedEnergyLevel) {
-  //        if (g->populatedLevel() != selectedEnergyLevel && g->depopulatedLevel() != selectedEnergyLevel) {
-  //          selectedEnergyLevel->graphicsItem()->setHighlighted(false);
-  //          selectedEnergyLevel = 0;
-  //        }
-  //      }
-  //    }
-  //    // case: one gamma previously selected, common level exists
-  //    else {
-  //      secondSelectedGamma = g;
-  //      secondSelectedGamma->graphicsItem()->setHighlighted(true);
-  //      // select intermediate level
-  //      EnergyLevel *intermediate = firstSelectedGamma->populatedLevel();
-  //      if (firstSelectedGamma->depopulatedLevel() == secondSelectedGamma->populatedLevel())
-  //        intermediate = firstSelectedGamma->depopulatedLevel();
-  //      // activate intermediate level
-  //      if (selectedEnergyLevel)
-  //        if (selectedEnergyLevel != intermediate)
-  //          selectedEnergyLevel->graphicsItem()->setHighlighted(false);
-  //      selectedEnergyLevel = intermediate;
-  //      selectedEnergyLevel->graphicsItem()->setHighlighted(true);
-  //    }
-  //  }
+  DBG << "Clicked transition " << g->transition_.energy().to_string();
 
   triggerDataUpdate();
 }
@@ -377,42 +313,7 @@ void SchemePlayer::clickedEnergyLevel(LevelItem *e)
   if (!e)
     return;
 
-  //  // deselect if clicked again
-  //  if (e == selectedEnergyLevel) {
-  //    selectedEnergyLevel->graphicsItem()->setHighlighted(false);
-  //    selectedEnergyLevel = 0;
-  //  }
-  //  // select otherwise
-  //  else {
-  //    // deselect old level
-  //    if (selectedEnergyLevel)
-  //      selectedEnergyLevel->graphicsItem()->setHighlighted(false);
-  //    selectedEnergyLevel = e;
-  //    e->graphicsItem()->setHighlighted(true);
-  //    // deselect gamma which is not connected to the level anymore
-  //    if (firstSelectedGamma) {
-  //      if (firstSelectedGamma->depopulatedLevel() != e && firstSelectedGamma->populatedLevel() != e) {
-  //        firstSelectedGamma->graphicsItem()->setHighlighted(false);
-  //        firstSelectedGamma = 0;
-  //      }
-  //    }
-  //    if (secondSelectedGamma) {
-  //      if (secondSelectedGamma->depopulatedLevel() != e && secondSelectedGamma->populatedLevel() != e) {
-  //        secondSelectedGamma->graphicsItem()->setHighlighted(false);
-  //        secondSelectedGamma = 0;
-  //      }
-  //    }
-  //    if (secondSelectedGamma && !firstSelectedGamma) {
-  //      firstSelectedGamma = secondSelectedGamma;
-  //      secondSelectedGamma = 0;
-  //    }
-  //  }
-  //  // prevent two gammas being active after the intermediate level was changed
-  //  if (firstSelectedGamma && secondSelectedGamma) {
-  //    firstSelectedGamma->graphicsItem()->setHighlighted(false);
-  //    firstSelectedGamma = secondSelectedGamma;
-  //    secondSelectedGamma = 0;
-  //  }
+  DBG << "Clicked level " << e->energy_.to_string();
 
   triggerDataUpdate();
 }
@@ -424,5 +325,5 @@ void SchemePlayer::triggerDataUpdate()
 
 void SchemePlayer::setStyle(const QFont &fontfamily, unsigned int sizePx)
 {
-  vis.setStyle(fontfamily, sizePx);
+  visual_settings_.setStyle(fontfamily, sizePx);
 }
