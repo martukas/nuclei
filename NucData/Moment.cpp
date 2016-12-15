@@ -1,36 +1,7 @@
-/***************************************************************************
-  *   Copyright (C) 2004 by Olivier Stezowski                               *
-  *   stezow(AT)ipnl.in2p3.fr                                                  *
-  *                                                                         *
-  *   This program is free software; you can redistribute it and/or modify  *
-  *   it under the terms of the GNU General Public License as published by  *
-  *   the Free Software Foundation; either version 2 of the License, or     *
-  *   (at your option) any later version.                                   *
-  *                                                                         *
-  *   This program is distributed in the hope that it will be useful,       *
-  *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
-  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
-  *   GNU General Public License for more details.                          *
-  *                                                                         *
-  *   You should have received a copy of the GNU General Public License     *
-  *   along with this program; if not, write to the                         *
-  *   Free Software Foundation, Inc.,                                       *
-  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
-  ***************************************************************************/
-
 #include "Moment.h"
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include "qpx_util.h"
-
-Moment::Moment()
-{
-}
-
-
-Moment::~Moment()
-{
-}
 
 bool Moment::valid() const
 {
@@ -81,24 +52,4 @@ const std::string Moment::to_string() const
 const std::string Moment::to_markup() const
 {
   return moment_.to_markup();
-}
-
-
-//const std::string Moment::to_qualified_string(const std::string unknown) const
-//{
-//  std::string ret = to_string();
-//  if (!references_.empty()) {
-//    ret += " Ref[ ";
-//    for (auto &q : references_)
-//      ret += q + " ";
-//    ret += "]";
-//  }
-//  return ret;
-//}
-
-
-std::ostream & operator << (std::ostream &out, const Moment &p)
-{
-  out << p.to_string();
-  return out;
 }

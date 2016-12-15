@@ -51,10 +51,8 @@ private:
     std::string symbol;
     std::string name;
   };
-
   static const std::map<uint16_t, NuclideNomenclature> names;
   static std::map<uint16_t, NuclideNomenclature> initNames();
-
 };
 
 
