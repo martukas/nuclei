@@ -27,9 +27,9 @@ SchemePlayer::SchemePlayer(DecayScheme scheme, QObject *parent)
 {
   // decide if parent nuclide should be printed on the left side (beta-),
   // on the right side (EC, beta+, alpha) or not at all (isomeric)
-  if (scheme_.type() == DecayScheme::IsomericTransition)
+  if (scheme_.mode().has(DecayMode::IsomericTransition))
     visual_settings_.parentpos = NoParent;
-  else if (scheme_.type() == DecayScheme::BetaMinus)
+  else if (scheme_.mode().has(DecayMode::BetaMinus))
     visual_settings_.parentpos = LeftParent;
   else
     visual_settings_.parentpos = RightParent;
@@ -44,7 +44,7 @@ QGraphicsScene * SchemePlayer::levelPlot()
 
   scene_ = new QGraphicsScene(this);
 
-  if (scheme_.type() == DecayScheme::Undefined)
+  if (scheme_.mode().types_.empty())
     return scene_;
 
   auto transitions = scheme_.daughterNuclide().transitions();
@@ -97,7 +97,7 @@ void SchemePlayer::addTransition(Transition transition, SchemeVisualSettings vis
 
 void SchemePlayer::alignGraphicsItems()
 {
-  if (scheme_.type() == DecayScheme::Undefined)
+  if (scheme_.mode().types_.empty())
     return;
 
   QFontMetrics stdFontMetrics(visual_settings_.stdFont);
