@@ -14,16 +14,18 @@
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 
+#include "ensdf_types.h"
+
 
 ParentRecord ParentRecord::from_ensdf(const std::string &record)
 {
   ParentRecord prec;
   if (record.size() < 50)
     return prec;
-  prec.nuclide = NuclideId::from_ensdf(record.substr(0,5));
-  prec.energy = Energy::from_nsdf(record.substr(9, 12));
-  prec.hl = HalfLife::from_ensdf(record.substr(39, 16));
-  prec.spin = SpinParity::from_ensdf(record.substr(21, 18));
+  prec.nuclide = as_nucid(record.substr(0,5));
+  prec.energy = as_energy(record.substr(9, 12));
+  prec.hl = as_halflife(record.substr(39, 16));
+  prec.spin = as_spin_parity(record.substr(21, 18));
   return prec;
 }
 
@@ -46,7 +48,7 @@ BasicDecayData BasicDecayData::from_ensdf(const std::string &header, BlockIndice
   if (!boost::regex_match(header, what, decay_expr) || (what.size() < 2))
     return decaydata;
 
-  decaydata.daughter = NuclideId::from_ensdf(what[1]);
+  decaydata.daughter = as_nucid(what[1]);
   decaydata.decayType = parseDecayType(what[2]);
   decaydata.block = block;
   decaydata.dsid = boost::trim_copy(header.substr(9,30)); // saved for comparison with xref records
@@ -233,7 +235,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
     {
 
       // determine energy
-      Energy e = Energy::from_nsdf(line.substr(9, 12));
+      Energy e = as_energy(line.substr(9, 12));
 
       // determine intensity
       std::string instr = line.substr(21,8);
@@ -257,7 +259,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
         for (size_t i = currentadoptblock.first; i < currentadoptblock.last; ++i) {
           std::string ln = contents.at(i);
           if (ln.substr(0,9) ==  (dNucid + "  G ")) {
-            Energy gk = Energy::from_nsdf(ln.substr(9, 12));
+            Energy gk = as_energy(ln.substr(9, 12));
             if (gk.isValid())
               e2g[gk] = ln;
           }
@@ -290,7 +292,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
     // process new level
     else if (line.substr(0,9) == (dNucid + "  L ")) {
 
-      currentLevel = Level::from_ensdf(line);
+      currentLevel = as_level(line);
 
       // get additional data from adopted leves record
       //   find closest entry
@@ -312,9 +314,9 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
         std::string levelfirstline(contents.at(currentadoptblock.first));
 //                DBG << levelfirstline << " === " << currentLevel->to_string();
         if (!currentLevel.halfLife().isValid()) {
-          currentLevel.set_halflife(HalfLife::from_ensdf(levelfirstline.substr(39, 16)));
+          currentLevel.set_halflife(as_halflife(levelfirstline.substr(39, 16)));
           if (!currentLevel.spin().valid())
-            currentLevel.set_spin(SpinParity::from_ensdf(levelfirstline.substr(21, 18)));
+            currentLevel.set_spin(as_spin_parity(levelfirstline.substr(21, 18)));
 //          DBG << "newhl" << currentLevel->halfLife().to_string();
         }
         // parse continuation records
@@ -322,8 +324,8 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
         momentsRequestList.push_back("MOME2");
         momentsRequestList.push_back("MOMM1");
         std::vector<std::string> moms = extractContinuationRecords(currentadoptblock, momentsRequestList);
-        currentLevel.set_q(Moment::from_ensdf(moms.at(0)));
-        currentLevel.set_mu(Moment::from_ensdf(moms.at(1)));
+        currentLevel.set_q(as_moment(moms.at(0)));
+        currentLevel.set_mu(as_moment(moms.at(1)));
 //                DBG << levelfirstline << " === " << currentLevel->to_string();
       }
 
@@ -331,13 +333,13 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
     }
     // process decay information
     else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  E "))) {
-      UncertainDouble ti = UncertainDouble::from_nsdf(line.substr(64, 10), line.substr(74, 2));
+      UncertainDouble ti = as_uncertain(line.substr(64, 10), line.substr(74, 2));
       if (ti.uncertaintyType() != UncertainDouble::UndefinedType) {
         ti.setSign(UncertainDouble::SignMagnitudeDefined);
       }
       else {
-        UncertainDouble ib = UncertainDouble::from_nsdf(line.substr(21, 8), line.substr(29, 2));
-        UncertainDouble ie = UncertainDouble::from_nsdf(line.substr(31, 8), line.substr(39, 2));
+        UncertainDouble ib = as_uncertain(line.substr(21, 8), line.substr(29, 2));
+        UncertainDouble ie = as_uncertain(line.substr(31, 8), line.substr(39, 2));
         ti = ib;
         if (ib.uncertaintyType() != UncertainDouble::UndefinedType && ie.uncertaintyType() != UncertainDouble::UndefinedType)
           ti += ie;
@@ -353,7 +355,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       }
     }
     else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  B "))) {
-      UncertainDouble ib = UncertainDouble::from_nsdf(line.substr(21, 8), line.substr(29, 2));
+      UncertainDouble ib = as_uncertain(line.substr(21, 8), line.substr(29, 2));
       if (ib.hasFiniteValue()) {
         ib.setSign(UncertainDouble::SignMagnitudeDefined);
         ib *= normalizeDecIntensToPercentParentDecay;
@@ -362,7 +364,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       }
     }
     else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  A "))) {
-      UncertainDouble ia = UncertainDouble::from_nsdf(line.substr(21, 8), line.substr(29, 2));
+      UncertainDouble ia = as_uncertain(line.substr(21, 8), line.substr(29, 2));
       if (ia.hasFiniteValue()) {
         ia.setSign(UncertainDouble::SignMagnitudeDefined);
         ia *= normalizeDecIntensToPercentParentDecay;
@@ -418,15 +420,14 @@ double ENSDFParser::norm(std::string rec, double def_value)
   return def_value;
 }
 
-
-
 UncertainDouble ENSDFParser::parseEnsdfMixing(const std::string &mstr, const std::string &multipolarity)
 {
   if (mstr.size() != 14)
     return UncertainDouble();
 
   // special case for pure multipolarities
-  if (boost::trim_copy(mstr).empty()) {
+  if (boost::trim_copy(mstr).empty())
+  {
     std::string tmp(multipolarity);
     boost::replace_all(tmp, "(", "");
     boost::replace_all(tmp, ")", "");
@@ -436,10 +437,7 @@ UncertainDouble ENSDFParser::parseEnsdfMixing(const std::string &mstr, const std
       return UncertainDouble();
   }
 
-  // mixed case
-  //  return parseUncertainty(mstr.left(8).trimmed(), mstr.right(6).trimmed().replace(' ', ""));
-  return UncertainDouble::from_nsdf(mstr.substr(0,8), mstr.substr(8,6));
-
+  return as_uncertain(mstr.substr(0,8), mstr.substr(8,6));
 }
 
 /**
@@ -477,13 +475,13 @@ void ENSDFParser::insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adop
   // if this point is reached the level will be added in any case
 
   // read energy from level record
-  Energy e = Energy::from_nsdf(contents.at(newblock.first).substr(9, 12));
+  Energy e = as_energy(contents.at(newblock.first).substr(9, 12));
 
   // for the A(E1) case the energy must be modified
   boost::regex er(dssym + "\\(([.\\d]+)\\)");
   boost::smatch what;
   if (boost::regex_match(xref, what, er) && (what.size() > 1)) {
-    Energy matchedE = Energy::from_nsdf(what[1]);
+    Energy matchedE = as_energy(what[1]);
     DBG << "ENERGY FROM REGEXP " << xref << " --> " << matchedE.to_string() << " valid " << matchedE.isValid();
 
     //std::cerr << "Current xref: " << xref.toStdString() << " current dssymb: " << dssym << std::endl;
@@ -597,7 +595,7 @@ void ENSDFParser::parseBlocks()
     // adopted levels
     boost::smatch what;
     if (boost::regex_match(header, what, adopted_levels_expr) && (what.size() > 1)) {
-      m_adoptedlevels[NuclideId::from_ensdf(what[1])] = block;
+      m_adoptedlevels[as_nucid(what[1])] = block;
 //            DBG << "Adopted levels   " << NuclideId::from_ensdf(what[1]).verboseName()
 //                << " block=" << block.first << "-" << block.second;
 //            for (size_t i=block.first; i < block.second; ++i)

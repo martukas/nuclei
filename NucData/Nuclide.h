@@ -1,8 +1,7 @@
 #ifndef NUCLIDE_H
 #define NUCLIDE_H
 
-#include <vector>
-#include "NuclideId.h"
+#include "nid.h"
 #include "Level.h"
 #include "Transition.h"
 

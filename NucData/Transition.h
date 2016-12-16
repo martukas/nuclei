@@ -1,7 +1,6 @@
 #ifndef TRANSITION_H
 #define TRANSITION_H
 
-#include <stdint.h>
 #include "Energy.h"
 
 class Transition

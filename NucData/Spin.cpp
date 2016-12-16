@@ -1,13 +1,12 @@
-#include <iostream>
-#include <sstream>
+#include "Spin.h"
 #include <boost/algorithm/string.hpp>
 
-#include "Spin.h"
 #include "custom_logger.h"
 
-Spin::Spin(uint16_t num, uint16_t denom)
+Spin::Spin(uint16_t num, uint16_t denom, DataQuality q)
 {
   set(num, denom);
+  quality_ = q;
 }
 
 Spin::Spin(const Spin &spin)
@@ -82,31 +81,6 @@ bool Spin::operator>= (const Spin &s) const
 bool Spin::operator> (const Spin &s) const
 {
   return to_float() > s.to_float();
-}
-
-Spin Spin::from_string(const std::string& s)
-{
-  Spin ret;
-  std::string st = strip_qualifiers(s);
-  std::istringstream input; input.clear();
-  if ( boost::contains(st, "/") )
-  {
-    // not an integer
-    boost::replace_all(st, "/", " ");
-    input.str(st);
-    input >> ret.numerator_ >> ret.denominator_;
-  }
-  else
-  {
-    input.str(st);
-    input >> ret.numerator_;
-    ret.denominator_ = 1;
-  }
-  if ( input.fail() )
-    ret.quality_ = DataQuality::kUnknown;
-  else
-    ret.quality_ = quality_of(s);
-  return ret;
 }
 
 void Spin::set(uint16_t num, uint16_t denom)

@@ -1,62 +1,34 @@
 #include "HalfLife.h"
 
-#include <limits>
-#include <cmath>
-#include <boost/math/special_functions/fpclassify.hpp>
 #include "qpx_util.h"
-#include "custom_logger.h"
+//#include "custom_logger.h"
 
 HalfLife::HalfLife()
-  : HalfLife(std::numeric_limits<double>::quiet_NaN())
+  : HalfLife(std::numeric_limits<double>::quiet_NaN(), "")
+{}
+
+HalfLife::HalfLife(double val, std::string units)
+  : HalfLife( UncertainDouble(val, order_of(val), UncertainDouble::SignMagnitudeDefined), units)
+{}
+
+HalfLife::HalfLife(UncertainDouble time, std::string units)
+  : time_(time)
 {
+  if (known_units_.count(units))
+    units_ = units;
 }
 
-HalfLife::HalfLife(double seconds)
-  : time_(seconds, order_of(seconds), UncertainDouble::SignMagnitudeDefined) //sigfig hack
-//  , units_("s")
+HalfLife HalfLife::preferred_units() const
 {
-}
-
-HalfLife HalfLife::from_ensdf(std::string record)
-{
-  std::string value_str;
-  std::string units_str;
-  std::string uncert_str;
-
-  std::vector<std::string> timeparts;
-  std::string rec_copy = trim_all(record);
-  boost::split(timeparts, rec_copy, boost::is_any_of(" \r\t\n\0"));
-  if (timeparts.size() >= 1)
-    value_str = timeparts[0];
-  if (timeparts.size() >= 2)
-    units_str = timeparts[1];
-  if (timeparts.size() >= 3)
-    uncert_str = timeparts[2];
-
-  UncertainDouble awesome = UncertainDouble::from_nsdf(value_str, uncert_str);
+  if (!known_units_.count(units_))
+    return *this;
+  UncertainDouble time = time_;
   double conversion = 1.0;
-  if (known_units_.count(units_str))
-    conversion = known_units_.at(units_str);
-  UncertainDouble final = awesome;
-  final *= conversion;
-  std::string preferred = preferred_units(final.value());
-
-//  INFO << "       " << awesome.to_string(false, true) << " x " << conversion
-//      << " = " << final.to_string(false, true) <<  " preferred as " << preferred;
-
-  final *= (1/known_units_.at(preferred));
-
-  if (boost::contains(boost::to_upper_copy(record), "STABLE"))
-    final.setValue(std::numeric_limits<double>::infinity(), UncertainDouble::SignMagnitudeDefined);
-  else if (boost::contains(record, "EV"))
-    final.setValue(std::numeric_limits<double>::quiet_NaN(), UncertainDouble::SignMagnitudeDefined);
-
-  HalfLife ret;
-  ret.time_ = final;
-  ret.units_ = preferred;
-
-//  INFO << "Haflife  " << record << "     --> " << ret.to_string();
-  return ret;
+  conversion = known_units_.at(units_);
+  time *= conversion;
+  std::string preferred = preferred_units(time.value());
+  time *= (1/known_units_.at(preferred));
+  return HalfLife(time, preferred);
 }
 
 bool HalfLife::isValid() const

@@ -1,7 +1,7 @@
 #include "Nuclide.h"
-#include <boost/algorithm/string.hpp>
-#include "custom_logger.h"
 #include "qpx_util.h"
+
+#include "custom_logger.h"
 
 Nuclide::Nuclide()
 {
@@ -87,15 +87,15 @@ void Nuclide::finalize()
 {
   for (auto t : transitions_)
   {
-    if (!levels_.count(t.second.populatedLevel()) ||
-        !levels_.count(t.second.depopulatedLevel()))
+    if (!levels_.count(t.second.from()) ||
+        !levels_.count(t.second.to()))
     {
       WARN << "Transition cannot be linked to levels: " << t.second.to_string()
           << " for " << id_.verboseName();
       continue;
     }
-    levels_[t.second.depopulatedLevel()].addDepopulatingTransition(t.second.energy());
-    levels_[t.second.populatedLevel()].addPopulatingTransition(t.second.energy());
+    levels_[t.second.from()].addDepopulatingTransition(t.second.energy());
+    levels_[t.second.to()].addPopulatingTransition(t.second.energy());
   }
 }
 

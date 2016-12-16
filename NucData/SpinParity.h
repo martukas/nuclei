@@ -9,8 +9,15 @@ class SpinParity
 {
 public:
   SpinParity() {}
+  void set_parity(Parity p)
+  {
+    parity_ = p;
+  }
 
-  static SpinParity from_ensdf(std::string data);
+  void add_spin(Spin s)
+  {
+    spins_.push_back(s);
+  }
 
   bool valid() const;
 
