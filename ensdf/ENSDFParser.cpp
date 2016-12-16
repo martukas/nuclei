@@ -1,85 +1,11 @@
+#include "ensdf_types.h"
 #include "ENSDFParser.h"
-#include <cmath>
-#include <iostream>
 
-#include "DecayScheme.h"
-#include "Nuclide.h"
-#include "Level.h"
-#include "Transition.h"
 #include "custom_logger.h"
 #include "qpx_util.h"
 
-#include <list>
-#include <utility>
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
-
-#include "ensdf_types.h"
-
-
-ParentRecord ParentRecord::from_ensdf(const std::string &record)
-{
-  ParentRecord prec;
-  if (record.size() < 50)
-    return prec;
-  prec.nuclide = as_nucid(record.substr(0,5));
-  prec.energy = as_energy(record.substr(9, 12));
-  prec.hl = as_halflife(record.substr(39, 16));
-  prec.spin = as_spin_parity(record.substr(21, 18));
-  return prec;
-}
-
-std::string ParentRecord::to_string() const
-{
-  std::string ret;
-  ret = nuclide.verboseName()
-      + " " + energy.to_string()
-      + " " + spin.to_string()
-      + " " + hl.to_string();
-  return ret;
-}
-
-BasicDecayData BasicDecayData::from_ensdf(const std::string &header, BlockIndices block)
-{
-  BasicDecayData decaydata;
-
-  boost::regex decay_expr("^([\\sA-Z0-9]{5,5})\\s{4,4}[0-9]{1,3}[A-Z]{1,2}\\s+((?:B-|B\\+|EC|IT|A)\\sDECAY).*$");
-  boost::smatch what;
-  if (!boost::regex_match(header, what, decay_expr) || (what.size() < 2))
-    return decaydata;
-
-  decaydata.daughter = as_nucid(what[1]);
-  decaydata.decayType = parseDecayType(what[2]);
-  decaydata.block = block;
-  decaydata.dsid = boost::trim_copy(header.substr(9,30)); // saved for comparison with xref records
-  return decaydata;
-}
-
-DecayScheme::Type BasicDecayData::parseDecayType(const std::string &tstring)
-{
-  if (tstring == "EC DECAY")
-    return DecayScheme::ElectronCapture;
-  if (tstring == "B+ DECAY")
-    return DecayScheme::BetaPlus;
-  if (tstring == "B- DECAY")
-    return DecayScheme::BetaMinus;
-  if (tstring == "IT DECAY")
-    return DecayScheme::IsomericTransition;
-  if (tstring == "A DECAY")
-    return DecayScheme::Alpha;
-  return DecayScheme::Undefined;
-}
-
-std::string BasicDecayData::to_string() const
-{
-  std::string ret;
-  ret = daughter.verboseName() + " "
-      + DecayScheme::DecayTypeAsText(decayType)
-      + " block=" + std::to_string(block.first) + "-" + std::to_string(block.second)
-      + " dsid=\"" + dsid + "\"";
-  return ret;
-}
-
 
 std::list<uint16_t> ENSDFParser::aList;
 
@@ -407,7 +333,8 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
 
   parent_nuclide.finalize();
   daughter_nuclide.finalize();
-  return DecayScheme(decayName, parent_nuclide, daughter_nuclide, decaydata.decayType);
+  //HACK types
+  return DecayScheme(decayName, parent_nuclide, daughter_nuclide, decaydata.mode);
 }
 
 double ENSDFParser::norm(std::string rec, double def_value)
@@ -566,50 +493,93 @@ Energy ENSDFParser::findNearest(const std::map<Energy, T> &map, const Energy &va
   return low->first;
 }
 
+IdentificationRecord ENSDFParser::parse_header(size_t idx)
+{
+  if (idx >= contents.size())
+    return IdentificationRecord();
+  IdentificationRecord header = IdentificationRecord::parse(contents.at(idx));
+  if (header.continued)
+    header.merge_continued(parse_header(idx+1));
+
+  return header;
+}
+
 void ENSDFParser::parseBlocks()
 {
   // create list of block boundaries
   // end index points behind last line of block!
-  std::list<BlockIndices> bb;
+  std::list<BlockIndices> blocks;
   size_t from = 0;
   boost::regex emptyline("^\\s*$");
-  for (size_t i=0; i < contents.size(); ++i) {
-    if (boost::regex_match(contents.at(i), emptyline)) {
+  for (size_t i=0; i < contents.size(); ++i)
+  {
+    if (boost::regex_match(contents.at(i), emptyline))
+    {
       if (i-from > 1)
-        bb.push_back(BlockIndices(from, i));
+        blocks.push_back(BlockIndices(from, i));
       from = i + 1;
     }
   }
   if (from < contents.size())
-    bb.push_back(BlockIndices(from, contents.size()-1));
-
-  // prepare regexps
-  boost::regex adopted_levels_expr("^([\\sA-Z0-9]{5,5})    ADOPTED LEVELS.*$");
-  boost::regex decay_expr("^([\\sA-Z0-9]{5,5})\\s{4,4}[0-9]{1,3}[A-Z]{1,2}\\s+((?:B-|B\\+|EC|IT|A)\\sDECAY).*$");
+    blocks.push_back(BlockIndices(from, contents.size()-1));
 
   // recognize blocks
-  for (BlockIndices &block : bb) {
-    std::string header = contents.at(block.first);
-//        DBG << "examining block [" << block.first << "-" << block.second << "] " << header;
+  for (BlockIndices &block_idx : blocks)
+  {
+    std::string header = contents.at(block_idx.first);
 
-    // adopted levels
+
+    IdentificationRecord idrec = parse_header(block_idx.first);
+
+//    if (idrec.numlines > 1)
+//          DBG
+//              << "Header "
+//              << "[" << std::setw(5) << block_idx.first << " - " << std::setw(5) << block_idx.second << "] "
+//              << header
+//              << "  "
+//              << idrec.debug()
+//                 ;
+
+
     boost::smatch what;
-    if (boost::regex_match(header, what, adopted_levels_expr) && (what.size() > 1)) {
-      m_adoptedlevels[as_nucid(what[1])] = block;
-//            DBG << "Adopted levels   " << NuclideId::from_ensdf(what[1]).verboseName()
-//                << " block=" << block.first << "-" << block.second;
-//            for (size_t i=block.first; i < block.second; ++i)
-//              DBG << "             AL  "<< contents.at(i);
+    boost::regex decay_expr("^([\\sA-Z0-9]{5,5})\\s{4,4}[0-9]{1,3}[A-Z]{1,2}\\s+((?:B-|B\\+|EC|IT|A)\\sDECAY).*$");
+
+    bool test1 = (boost::regex_match(header, what, decay_expr) && (what.size() > 1));
+    bool test2 = test(idrec.type & RecordType::Decay);
+//    if (test1 && !test2)
+//      DBG << "Failed new test " << header;
+//    if (!test1 && test2)
+//      DBG << "Failed old test " << header;
+//    if (test1 && test2)
+//      DBG << "Both good       " << header;
+
+    if (test1 && !test2)
+    {
+      auto d1 = BasicDecayData::from_ensdf(header, block_idx).to_string();
+      auto d2 = BasicDecayData::from_id(idrec, block_idx).to_string();
+      if (d1 != d2)
+      {
+        DBG << "Mismatch       " << header;
+        DBG << "   " << d1 << "     FROM    " << idrec.debug();
+        DBG << "   " << d2 << "     FROM    " << idrec.debug();
+      }
     }
 
+
+    // adopted levels
+    if (test(idrec.type & RecordType::AdoptedLevels))
+      m_adoptedlevels[idrec.nuc_id] = block_idx;
     // decays
-    else if (boost::regex_match(header, what, decay_expr) && (what.size() > 1)) {
-      BasicDecayData decaydata = BasicDecayData::from_ensdf(header, block);
+    else if (test1)
+    {
+
+
+      BasicDecayData decaydata = BasicDecayData::from_ensdf(header, block_idx);
 
 //            DBG << "Basic decay data " << decaydata.to_string();
 
       boost::regex filter("^[\\s0-9A-Z]{5,5}\\s\\sP[\\s0-9].*$");
-      for (size_t i=block.first; i < block.second; ++i) {
+      for (size_t i=block_idx.first; i < block_idx.second; ++i) {
         if (boost::regex_match(contents.at(i), filter)) {
           decaydata.parents.push_back(ParentRecord::from_ensdf(contents.at(i)));
 //                    DBG << "  Parent         " << decaydata.parents.back().to_string();
@@ -638,7 +608,7 @@ void ENSDFParser::parseBlocks()
       std::string decayname  = prec.nuclide.symbolicName();
       if (prec.energy > 0.0)
         decayname += "m";
-      decayname += " → " + DecayScheme::DecayTypeAsText(decaydata.decayType);
+      decayname += " → " + decaydata.mode.to_string(); //HACK Types
       if (!hlstrings.empty())
         decayname += ", " + join(hlstrings, " + ");
 

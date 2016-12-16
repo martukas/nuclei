@@ -27,6 +27,7 @@ public:
   void set_N(uint16_t n);
   void set_Z(uint16_t z);
 
+  friend bool operator!=(const NuclideId &left, const NuclideId &right);
   friend bool operator==(const NuclideId &left, const NuclideId &right);
   friend bool operator<(const NuclideId &left, const NuclideId &right);
   friend bool operator>(const NuclideId &left, const NuclideId &right);

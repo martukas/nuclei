@@ -4,31 +4,45 @@
 #include "Nuclide.h"
 #include "Transition.h"
 #include "SpinParity.h"
+#include <list>
+
+struct DecayMode
+{
+  enum DecayType {
+      Undefined,
+      ElectronCapture,
+      BetaPlus,
+      BetaMinus,
+      IsomericTransition,
+      Alpha,
+      Neutron,
+      Proton
+  };
+
+
+  std::string to_string() const;
+
+  std::list<DecayType> types_; //change to set
+
+  bool has(DecayType t) const;
+
+  static std::string type_to_string(DecayType type);
+};
 
 class DecayScheme
 {
 public:
-    enum Type {
-        Undefined,
-        ElectronCapture,
-        BetaPlus,
-        BetaMinus,
-        IsomericTransition,
-        Alpha
-    };
 
     DecayScheme() {}
 
     DecayScheme(const std::string &name,
                     const Nuclide& parentNuclide,
                     const Nuclide& daughterNuclide,
-                    Type DecayType);
-
-    static std::string DecayTypeAsText(Type type);
+                    DecayMode DecayType);
 
     bool valid() const;
     std::string name() const;
-    Type type() const;
+    DecayMode mode() const;
 
     Nuclide parentNuclide() const;
     Nuclide daughterNuclide() const;
@@ -39,7 +53,7 @@ public:
 //    Transition getTransition(Energy) const;
 
 private:
-    Type decay_type_ {Undefined};
+    DecayMode decay_mode_;
     std::string name_;
     Nuclide parent_, daughter_;
 };

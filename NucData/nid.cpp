@@ -99,6 +99,11 @@ int16_t NuclideId::zOfSymbol(std::string name)
   return -1;
 }
 
+bool operator!=(const NuclideId &left, const NuclideId &right)
+{
+  return !(left == right);
+}
+
 bool operator==(const NuclideId &left, const NuclideId &right)
 {
   return ((left.N_==right.N_) && (left.Z_ == right.Z_));

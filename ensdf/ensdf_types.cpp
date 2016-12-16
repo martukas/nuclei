@@ -390,3 +390,25 @@ HalfLife as_halflife(const std::string& record)
 
   return HalfLife(time, units_str).preferred_units();
 }
+
+DecayMode as_mode(const std::string& record)
+{
+  DecayMode ret;
+  std::string type = boost::to_lower_copy(record);
+  if (boost::contains(type, "ec"))
+    ret.types_.push_back(DecayMode::DecayType::ElectronCapture);
+  if (boost::contains(type, "b+"))
+    ret.types_.push_back(DecayMode::DecayType::BetaPlus);
+  if (boost::contains(type, "b-"))
+    ret.types_.push_back(DecayMode::DecayType::BetaMinus);
+  if (boost::contains(type, "it"))
+    ret.types_.push_back(DecayMode::DecayType::IsomericTransition);
+  if (boost::contains(type, "a"))
+    ret.types_.push_back(DecayMode::DecayType::Alpha);
+  if (boost::contains(type, "n"))
+    ret.types_.push_back(DecayMode::DecayType::Neutron);
+  if (boost::contains(type, "p"))
+    ret.types_.push_back(DecayMode::DecayType::Proton);
+  return ret;
+}
+
