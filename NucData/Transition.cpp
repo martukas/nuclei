@@ -1,9 +1,6 @@
-#include <cmath>
-#include <boost/math/special_functions/fpclassify.hpp>
 #include "Transition.h"
-#include "Level.h"
+#include <boost/math/special_functions/fpclassify.hpp>
 #include "qpx_util.h"
-#include "custom_logger.h"
 
 Transition::Transition(Energy energy, double intensity,
                        const std::string &multipol, UncertainDouble delta,
@@ -28,8 +25,6 @@ double Transition::intensity() const
 
 std::string Transition::multipolarity() const
 {
-  //  if (multipolarity_.empty())
-  //    return "<i>unknown</i>";
   return multipolarity_;
 }
 
@@ -41,7 +36,7 @@ UncertainDouble Transition::delta() const
 std::string Transition::intensity_string() const
 {
   std::string intensstr;
-  if (!boost::math::isnan(intensity_))
+  if (boost::math::isfinite(intensity_))
     intensstr = to_str_precision(intensity_, 3) + " %";
   return intensstr;
 }
@@ -53,7 +48,7 @@ std::string Transition::to_string() const
      << std::setw(15) << from_.to_string()
      << " --> "
      << std::setw(15) << to_.to_string()
-     << std::setw(7)  << intensity() << "%"
+     << std::setw(7)  << intensity_string()
      << std::setw(12) << multipolarity_;
   if (delta_.hasFiniteValue())
     ss << "  delta="  << delta_.to_string(false);

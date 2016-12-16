@@ -1,8 +1,7 @@
 #ifndef PARITY_H
 #define PARITY_H
 
-#include <InfoData.h>
-#include <iostream>
+#include "DataQuality.h"
 
 class Parity : public QualifiedData
 {
@@ -11,6 +10,11 @@ public:
 
 public:
   Parity() {}
+  Parity(const EnumParity& p, const DataQuality& q)
+  {
+    quality_ = q;
+    parity_ = p;
+  }
 
   Parity(const Parity &other)
     : QualifiedData(other)
@@ -19,7 +23,6 @@ public:
 
   friend bool operator==(const Parity &left, const Parity &right);
 
-  virtual void from_string(const std::string s);
   const std::string to_string() const;
   const std::string to_qualified_string(const std::string unknown = "?") const;
 

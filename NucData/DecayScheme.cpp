@@ -1,8 +1,4 @@
 #include "DecayScheme.h"
-#include <cmath>
-#include <boost/math/special_functions/fpclassify.hpp>
-#include <algorithm>
-#include "custom_logger.h"
 
 DecayScheme::DecayScheme(const std::string &name,
                const Nuclide &parentNuclide,

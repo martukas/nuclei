@@ -1,16 +1,14 @@
 #ifndef SPIN_H
 #define SPIN_H
 
-#include "InfoData.h"
-#include <iostream>
+#include "DataQuality.h"
 
 class Spin : public QualifiedData
 {
 public:
   Spin() {}
-  Spin(uint16_t num, uint16_t denom);
   Spin(const Spin &spin);
-  static Spin from_string(const std::string& s); //from_ensdf?
+  Spin(uint16_t num, uint16_t denom, DataQuality q);
 
   void set(uint16_t num, uint16_t denom = 1);
   uint16_t numerator()   const  { return numerator_; }
