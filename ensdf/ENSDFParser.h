@@ -1,38 +1,7 @@
-#ifndef ENSDFPARSER_H
-#define ENSDFPARSER_H
-#include "DecayScheme.h"
-#include "Energy.h"
-#include "Nuclide.h"
-#include <utility>
-#include <memory>
-#include <list>
+#ifndef ENSDF_PARSER_H
+#define ENSDF_PARSER_H
 
-class HalfLife;
-
-typedef std::pair<size_t, size_t> BlockIndices; // [startidx, size]
-
-struct ParentRecord {
-  NuclideId nuclide;
-  Energy energy;
-  HalfLife hl;
-  SpinParity spin;
-
-  static ParentRecord from_ensdf(const std::string &precstr);
-  std::string to_string() const;
-};
-
-struct BasicDecayData {
-  std::vector<ParentRecord> parents;
-  NuclideId daughter;
-  DecayScheme::Type decayType;
-  BlockIndices block;
-  std::string dsid;
-
-  static BasicDecayData from_ensdf(const std::string &header, BlockIndices block);
-  std::string to_string() const;
-private:
-  static DecayScheme::Type parseDecayType(const std::string &tstring);
-};
+#include "ensdf_records.h"
 
 class ENSDFParser
 {
@@ -57,7 +26,7 @@ private:
     size_t last;
   };
 
-  static std::list<uint16_t> aList;
+  static std::list<uint16_t> aList;  //singleton
 
   static UncertainDouble parseEnsdfMixing(const std::string &s, const std::string &multipolarity);
 
@@ -66,6 +35,8 @@ private:
   std::vector<std::string> extractContinuationRecords(const StringSubList &adoptedblock, const std::list<std::string> &requestedRecords, char typeOfContinuedRecord = 'L') const;
 
   void parseBlocks();
+  IdentificationRecord parse_header(size_t idx);
+
 
   const uint16_t a;
 
@@ -77,4 +48,4 @@ private:
   static double norm(std::string rec, double def_value);
 };
 
-#endif // ENSDF_H
+#endif
