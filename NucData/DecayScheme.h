@@ -1,7 +1,6 @@
 #ifndef DecayScheme_H
 #define DecayScheme_H
 
-#include <stdint.h>
 #include "Nuclide.h"
 #include "Transition.h"
 #include "SpinParity.h"

@@ -3,7 +3,6 @@
 
 #include <map>
 #include <string>
-#include <cinttypes>
 
 class QGraphicsItem;
 class QGraphicsItemGroup;
@@ -16,7 +15,8 @@ public:
 
   static NuclideId fromAZ(uint16_t a, uint16_t z);
   static NuclideId fromZN(uint16_t z, uint16_t n);
-  static NuclideId from_ensdf(std::string nucid);
+
+  static int16_t zOfSymbol(std::string name);
 
   inline bool valid() const { return 0 != A(); }
 
@@ -42,7 +42,6 @@ private:
 
   static std::string symbolOf(uint16_t Z);
   static std::string nameOf(uint16_t Z);
-  static int16_t zOfSymbol(std::string name);
 
   struct NuclideNomenclature
   {

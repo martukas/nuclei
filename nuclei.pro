@@ -46,10 +46,12 @@ unix {
 
 SOURCES += $$files($$PWD/*.cpp) \
            $$files($$PWD/NucData/*.cpp) \
+           $$files($$PWD/ensdf/*.cpp) \
            $$files($$PWD/SchemePlayer/*.cpp)
 
 HEADERS  += $$files($$PWD/*.h) \
             $$files($$PWD/NucData/*.h) \
+            $$files($$PWD/ensdf/*.h) \
             $$files($$PWD/SchemePlayer/*.h)
             libakk/akk_global.h
 
@@ -57,6 +59,7 @@ INSTALLS = target
 
 INCLUDEPATH += $$PWD \
                $$PWD/NucData \
+               $$PWD/ensdf \
                $$PWD/SchemePlayer
 
 FORMS += $$files($$PWD/*.ui)

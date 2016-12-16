@@ -6,10 +6,9 @@
 class Energy
 {
 public:
-    Energy();
+    Energy() {}
+    explicit Energy(const UncertainDouble &v) { value_ = v; }
     explicit Energy(double energy, UncertainDouble::Sign s);
-
-    static Energy from_nsdf(std::string record);
 
     bool isValid() const;
 

@@ -1,17 +1,17 @@
 #ifndef HALFLIFE_H
 #define HALFLIFE_H
 
-#include <string>
-#include <map>
 #include "UncertainDouble.h"
+#include <map>
 
 class HalfLife
 {
 public:
     HalfLife();
-    HalfLife(double seconds);
+    HalfLife(double val, std::string units = "");
+    HalfLife(UncertainDouble time, std::string units = "");
 
-    static HalfLife from_ensdf(std::string record);
+    HalfLife preferred_units() const;
 
     bool isValid() const;
     double seconds() const;

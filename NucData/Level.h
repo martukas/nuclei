@@ -18,8 +18,6 @@ public:
         HalfLife halfLife = HalfLife(std::numeric_limits<double>::infinity()),
         uint16_t isomerNum = 0);
 
-  static Level from_ensdf(std::string record);
-
   Energy energy() const;
   SpinParity spin() const;
   HalfLife halfLife() const;

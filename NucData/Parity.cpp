@@ -1,15 +1,4 @@
 #include "Parity.h"
-#include <string>
-#include <boost/algorithm/string.hpp>
-
-void Parity::from_string(const std::string s)
-{
-  quality_ = quality_of(s);
-  if ( boost::contains(s, "-") )
-    parity_ = EnumParity::kMinus;
-  else
-    parity_ = EnumParity::kPlus;
-}
 
 const std::string Parity::to_string() const
 {

@@ -30,10 +30,11 @@ public:
     UncertainDouble(double d, uint16_t sigf, Sign s);
     UncertainDouble(double d, uint16_t sigf, Sign s, double symmetricSigma);
 
-    static UncertainDouble from_nsdf(std::string val, std::string uncert);
-    static bool is_uncert(std::string str);
-
     UncertainDouble & operator=(const UncertainDouble & other);
+    UncertainDouble & operator*=(double other);
+    UncertainDouble & operator+=(const UncertainDouble &other);
+    UncertainDouble operator+(const UncertainDouble &other) const;
+    operator double() const;
 
     double value() const;
     double lowerUncertainty() const;
@@ -54,11 +55,6 @@ public:
 
     std::string to_string(bool prefix_magn, bool with_uncert = true) const;
     std::string to_markup() const; // outputs formatted text
-
-    UncertainDouble & operator*=(double other);
-    UncertainDouble & operator+=(const UncertainDouble &other);
-    UncertainDouble operator+(const UncertainDouble &other) const;
-    operator double() const;
 
 private:
     double value_;

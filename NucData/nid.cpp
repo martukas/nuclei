@@ -1,7 +1,7 @@
-#include "NuclideId.h"
-#include <boost/algorithm/string.hpp>
-#include "custom_logger.h"
+#include "nid.h"
 #include "qpx_util.h"
+
+#include "custom_logger.h"
 
 void NuclideId::set_A(uint16_t a)
 {
@@ -88,41 +88,14 @@ std::string NuclideId::to_ensdf() const
   return nucid;
 }
 
-NuclideId NuclideId::from_ensdf(std::string id)
-{
-  if (id.size() != 5)
-    return NuclideId();
-
-  std::string A = id.substr(0,3);
-  std::string Z = id.substr(3,2);
-  boost::trim(A);
-
-  if (!is_number(A))
-    return NuclideId();
-
-  return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), NuclideId::zOfSymbol(Z));
-}
-
 int16_t NuclideId::zOfSymbol(std::string name)
 {
-  boost::to_upper(name);
-  boost::trim(name);
-
   for (auto &nom : names) {
     if ((boost::to_upper_copy(nom.second.symbol) == name)
         || (boost::to_upper_copy(nom.second.name) == name)) {
       return nom.first;
     }
   }
-
-  if (is_number(name)) {
-    name = "1" + name;
-    int val = boost::lexical_cast<uint16_t>(name);
-    if (names.count(val))
-      return val;
-  }
-
-  DBG << "<Nuclide> not found " << name;
   return -1;
 }
 
@@ -267,11 +240,11 @@ std::map<uint16_t, NuclideId::NuclideNomenclature> NuclideId::initNames()
   result[109] = NuclideNomenclature("Mt", "Meitnerium");
   result[110] = NuclideNomenclature("Ds", "Darmstadtium");
   result[111] = NuclideNomenclature("Rg", "Roentgenium");
-  result[112] = NuclideNomenclature("Cn",  "Copernicium");
+  result[112] = NuclideNomenclature("Cn", "Copernicium");
   result[113] = NuclideNomenclature("Nh", "Nihonium");
-  result[114] = NuclideNomenclature("Fl",  "Flerovium");
+  result[114] = NuclideNomenclature("Fl", "Flerovium");
   result[115] = NuclideNomenclature("Mc", "Moscovium");
-  result[116] = NuclideNomenclature("Lv",  "Livermorium");
+  result[116] = NuclideNomenclature("Lv", "Livermorium");
   result[117] = NuclideNomenclature("Ts", "Tennessine");
   result[118] = NuclideNomenclature("Og", "Oganesson");
   return result;
