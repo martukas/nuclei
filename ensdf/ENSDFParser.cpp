@@ -109,7 +109,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
 
   double normalizeDecIntensToPercentParentDecay = 1.0;
   double normalizeGammaIntensToPercentParentDecay = 1.0;
-  std::string dNucid = daughterNuclide.to_ensdf();
+  std::string dNucid = nid_to_ensdf(daughterNuclide);
 
   //  DBG << "parsing " << dNucid.toStdString();
 
@@ -161,7 +161,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
     {
 
       // determine energy
-      Energy e = as_energy(line.substr(9, 12));
+      Energy e = parse_energy(line.substr(9, 12));
 
       // determine intensity
       std::string instr = line.substr(21,8);
@@ -185,7 +185,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
         for (size_t i = currentadoptblock.first; i < currentadoptblock.last; ++i) {
           std::string ln = contents.at(i);
           if (ln.substr(0,9) ==  (dNucid + "  G ")) {
-            Energy gk = as_energy(ln.substr(9, 12));
+            Energy gk = parse_energy(ln.substr(9, 12));
             if (gk.isValid())
               e2g[gk] = ln;
           }
@@ -218,7 +218,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
     // process new level
     else if (line.substr(0,9) == (dNucid + "  L ")) {
 
-      currentLevel = as_level(line);
+      currentLevel = parse_level(line);
 
       // get additional data from adopted leves record
       //   find closest entry
@@ -240,9 +240,9 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
         std::string levelfirstline(contents.at(currentadoptblock.first));
 //                DBG << levelfirstline << " === " << currentLevel->to_string();
         if (!currentLevel.halfLife().isValid()) {
-          currentLevel.set_halflife(as_halflife(levelfirstline.substr(39, 16)));
+          currentLevel.set_halflife(parse_halflife(levelfirstline.substr(39, 16)));
           if (!currentLevel.spin().valid())
-            currentLevel.set_spin(as_spin_parity(levelfirstline.substr(21, 18)));
+            currentLevel.set_spin(parse_spin_parity(levelfirstline.substr(21, 18)));
 //          DBG << "newhl" << currentLevel->halfLife().to_string();
         }
         // parse continuation records
@@ -250,8 +250,8 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
         momentsRequestList.push_back("MOME2");
         momentsRequestList.push_back("MOMM1");
         std::vector<std::string> moms = extractContinuationRecords(currentadoptblock, momentsRequestList);
-        currentLevel.set_q(as_moment(moms.at(0)));
-        currentLevel.set_mu(as_moment(moms.at(1)));
+        currentLevel.set_q(parse_moment(moms.at(0)));
+        currentLevel.set_mu(parse_moment(moms.at(1)));
 //                DBG << levelfirstline << " === " << currentLevel->to_string();
       }
 
@@ -259,13 +259,13 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
     }
     // process decay information
     else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  E "))) {
-      UncertainDouble ti = as_uncertain(line.substr(64, 10), line.substr(74, 2));
+      UncertainDouble ti = parse_val_uncert(line.substr(64, 10), line.substr(74, 2));
       if (ti.uncertaintyType() != UncertainDouble::UndefinedType) {
         ti.setSign(UncertainDouble::SignMagnitudeDefined);
       }
       else {
-        UncertainDouble ib = as_uncertain(line.substr(21, 8), line.substr(29, 2));
-        UncertainDouble ie = as_uncertain(line.substr(31, 8), line.substr(39, 2));
+        UncertainDouble ib = parse_val_uncert(line.substr(21, 8), line.substr(29, 2));
+        UncertainDouble ie = parse_val_uncert(line.substr(31, 8), line.substr(39, 2));
         ti = ib;
         if (ib.uncertaintyType() != UncertainDouble::UndefinedType && ie.uncertaintyType() != UncertainDouble::UndefinedType)
           ti += ie;
@@ -281,7 +281,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       }
     }
     else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  B "))) {
-      UncertainDouble ib = as_uncertain(line.substr(21, 8), line.substr(29, 2));
+      UncertainDouble ib = parse_val_uncert(line.substr(21, 8), line.substr(29, 2));
       if (ib.hasFiniteValue()) {
         ib.setSign(UncertainDouble::SignMagnitudeDefined);
         ib *= normalizeDecIntensToPercentParentDecay;
@@ -290,7 +290,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       }
     }
     else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  A "))) {
-      UncertainDouble ia = as_uncertain(line.substr(21, 8), line.substr(29, 2));
+      UncertainDouble ia = parse_val_uncert(line.substr(21, 8), line.substr(29, 2));
       if (ia.hasFiniteValue()) {
         ia.setSign(UncertainDouble::SignMagnitudeDefined);
         ia *= normalizeDecIntensToPercentParentDecay;
@@ -364,7 +364,7 @@ UncertainDouble ENSDFParser::parseEnsdfMixing(const std::string &mstr, const std
       return UncertainDouble();
   }
 
-  return as_uncertain(mstr.substr(0,8), mstr.substr(8,6));
+  return parse_val_uncert(mstr.substr(0,8), mstr.substr(8,6));
 }
 
 /**
@@ -402,13 +402,13 @@ void ENSDFParser::insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adop
   // if this point is reached the level will be added in any case
 
   // read energy from level record
-  Energy e = as_energy(contents.at(newblock.first).substr(9, 12));
+  Energy e = parse_energy(contents.at(newblock.first).substr(9, 12));
 
   // for the A(E1) case the energy must be modified
   boost::regex er(dssym + "\\(([.\\d]+)\\)");
   boost::smatch what;
   if (boost::regex_match(xref, what, er) && (what.size() > 1)) {
-    Energy matchedE = as_energy(what[1]);
+    Energy matchedE = parse_energy(what[1]);
     DBG << "ENERGY FROM REGEXP " << xref << " --> " << matchedE.to_string() << " valid " << matchedE.isValid();
 
     //std::cerr << "Current xref: " << xref.toStdString() << " current dssymb: " << dssym << std::endl;
@@ -512,71 +512,56 @@ void ENSDFParser::parseBlocks()
   size_t from = 0;
   boost::regex emptyline("^\\s*$");
   for (size_t i=0; i < contents.size(); ++i)
-  {
     if (boost::regex_match(contents.at(i), emptyline))
     {
       if (i-from > 1)
         blocks.push_back(BlockIndices(from, i));
       from = i + 1;
     }
-  }
   if (from < contents.size())
     blocks.push_back(BlockIndices(from, contents.size()-1));
 
-  // recognize blocks
   for (BlockIndices &block_idx : blocks)
   {
-    std::string header = contents.at(block_idx.first);
+    IdentificationRecord header = parse_header(block_idx.first);
 
-
-    IdentificationRecord idrec = parse_header(block_idx.first);
-
-//    if (idrec.numlines > 1)
-//          DBG
-//              << "Header "
-//              << "[" << std::setw(5) << block_idx.first << " - " << std::setw(5) << block_idx.second << "] "
-//              << header
-//              << "  "
-//              << idrec.debug()
-//                 ;
-
-
-    boost::smatch what;
-    boost::regex decay_expr("^([\\sA-Z0-9]{5,5})\\s{4,4}[0-9]{1,3}[A-Z]{1,2}\\s+((?:B-|B\\+|EC|IT|A)\\sDECAY).*$");
-
-    bool test1 = (boost::regex_match(header, what, decay_expr) && (what.size() > 1));
-    bool test2 = test(idrec.type & RecordType::Decay);
-//    if (test1 && !test2)
-//      DBG << "Failed new test " << header;
-//    if (!test1 && test2)
-//      DBG << "Failed old test " << header;
-//    if (test1 && test2)
-//      DBG << "Both good       " << header;
-
-    if (test1 && !test2)
+    if (test(header.type & RecordType::Comments))
     {
-      auto d1 = BasicDecayData::from_ensdf(header, block_idx).to_string();
-      auto d2 = BasicDecayData::from_id(idrec, block_idx).to_string();
-      if (d1 != d2)
-      {
-        DBG << "Mismatch       " << header;
-        DBG << "   " << d1 << "     FROM    " << idrec.debug();
-        DBG << "   " << d2 << "     FROM    " << idrec.debug();
-      }
+
     }
-
-
-    // adopted levels
-    if (test(idrec.type & RecordType::AdoptedLevels))
-      m_adoptedlevels[idrec.nuc_id] = block_idx;
-    // decays
-    else if (test1)
+    else if (test(header.type & RecordType::References))
     {
 
+    }
+    else if (test(header.type & RecordType::CoulombExcitation))
+    {
 
-      BasicDecayData decaydata = BasicDecayData::from_ensdf(header, block_idx);
+    }
+    else if (test(header.type & RecordType::MuonicAtom))
+    {
 
-//            DBG << "Basic decay data " << decaydata.to_string();
+    }
+    else if (test(header.type & RecordType::HiXng))
+    {
+
+    }
+    else if (test(header.type & RecordType::AdoptedLevels))
+      m_adoptedlevels[parse_nid(header.nuc_id)] = block_idx;
+    else if (test(header.type & RecordType::Decay))
+    {
+      BasicDecayData decaydata = BasicDecayData::from_id(header, block_idx);
+      if (!decaydata.mode.valid())
+      {
+//        DBG
+//            << "Header "
+//            << "[" << std::setw(5) << block_idx.first << " - " << std::setw(5) << block_idx.second << "] "
+//            << contents.at(block_idx.first)
+//            << "  "
+//            << header.debug()
+//               ;
+
+        continue;
+      }
 
       boost::regex filter("^[\\s0-9A-Z]{5,5}\\s\\sP[\\s0-9].*$");
       for (size_t i=block_idx.first; i < block_idx.second; ++i) {
@@ -588,7 +573,8 @@ void ENSDFParser::parseBlocks()
 //                  DBG << "             DEC " << contents.at(i);
       }
 
-      if (decaydata.parents.empty()) {
+      if (decaydata.parents.empty())
+      {
         DBG <<   " BROKEN RECORD FOR " << decaydata.to_string();
         // broken records. skipping
         continue;
@@ -619,6 +605,18 @@ void ENSDFParser::parseBlocks()
     }
     else
     {
+//      if (header.extended_dsid.at(0) == '(')
+              DBG
+      //            << "Header "
+      //            << "[" << std::setw(5) << block_idx.first << " - " << std::setw(5) << block_idx.second << "] "
+      //            << contents.at(block_idx.first)
+      //            << "  "
+                  << header.debug()
+                     ;
+
+
+              auto rxd = ReactionData::from_id(header, block_idx);
+
       //      DBG << "Unprocessed block begin " << block.first;
       //      for (size_t i=block.first; i < block.second; ++i)
       //        DBG << contents.at(i);
@@ -626,5 +624,6 @@ void ENSDFParser::parseBlocks()
     }
 
   }
+
 }
 

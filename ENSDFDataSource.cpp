@@ -193,8 +193,13 @@ void ENSDFDataSource::createENSDFCache()
   pd.setMaximum(aList.size());
   pd.setWindowModality(Qt::WindowModal);
   pd.setCancelButton(0);
+
+  std::set<std::string> unknown_decays;
+
   for (auto &a : aList) {
     ENSDFParser *mc = new ENSDFParser(a, ensdf_dir.toStdString());
+
+    unknown_decays.insert(mc->unknown_decays.begin(), mc->unknown_decays.end());
 
     for (auto &daughter : mc->daughterNuclides()) {
       ENSDFTreeItem *d = new ENSDFTreeItem(AbstractTreeItem::DaughterType, QList<QVariant>() << QString::fromStdString(daughter.symbolicName()).toUpper(), daughter, false, root);
@@ -211,6 +216,11 @@ void ENSDFDataSource::createENSDFCache()
   pd.setValue(aList.size());
 
   out << (*root);
+
+  DBG << "Unknown decays:";
+  for (auto d : unknown_decays)
+    DBG << "   " << d;
+
 }
 
 

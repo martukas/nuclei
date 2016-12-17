@@ -16,7 +16,7 @@ bool is_uncertainty_id(const std::string& str)
           str == "SY");
 }
 
-UncertainDouble as_uncertain(std::string val, std::string uncert)
+UncertainDouble parse_val_uncert(std::string val, std::string uncert)
 {
   boost::trim(val);
   boost::trim(uncert);
@@ -179,7 +179,7 @@ std::string strip_qualifiers(const std::string& original)
 }
 
 
-Moment as_moment(const std::string& record)
+Moment parse_moment(const std::string& record)
 {
   std::string value_str;
   std::string uncert_str;
@@ -202,7 +202,7 @@ Moment as_moment(const std::string& record)
     uncert_str = momentparts[0];
   }
 
-  Moment ret(as_uncertain(value_str, uncert_str));
+  Moment ret(parse_val_uncert(value_str, uncert_str));
 
   if (!references_str.empty())
   {
@@ -217,7 +217,7 @@ Moment as_moment(const std::string& record)
 }
 
 
-Energy as_energy(const std::string& record)
+Energy parse_energy(const std::string& record)
 {
   if (record.empty())
     return Energy();
@@ -244,7 +244,7 @@ Energy as_energy(const std::string& record)
   boost::trim(val);
   boost::trim(uncert);
 
-  Energy ret(as_uncertain(val, uncert));
+  Energy ret(parse_val_uncert(val, uncert));
 
 //  tmp.remove("+Y"); // fix modified energy values (illegaly used in ensdf...)
 //  double precision = get_precision(tmp.remove("+Y").toStdString());
@@ -260,14 +260,14 @@ Energy as_energy(const std::string& record)
   return ret;
 }
 
-Level as_level(const std::string& record)
+Level parse_level(const std::string& record)
 {
   if (record.size() != 80)
     return Level();
 
-  Energy            e = as_energy(record.substr(9,12));
-  SpinParity     spin = as_spin_parity(record.substr(21, 18));
-  HalfLife   halflife = as_halflife(record.substr(39, 16));
+  Energy            e = parse_energy(record.substr(9,12));
+  SpinParity     spin = parse_spin_parity(record.substr(21, 18));
+  HalfLife   halflife = parse_halflife(record.substr(39, 16));
 
   // determine isomer number
   uint16_t isomeric_ = 0;
@@ -285,10 +285,12 @@ Level as_level(const std::string& record)
 }
 
 
-NuclideId as_nucid(const std::string& id)
+NuclideId parse_nid(std::string id)
 {
-  if (id.size() != 5)
-    return NuclideId();
+  if (id.size() > 5)
+    boost::trim(id);
+  while (id.size() < 5)
+    id = " " + id;
 
   std::string A = id.substr(0,3);
   std::string Z = id.substr(3,2);
@@ -307,10 +309,13 @@ NuclideId as_nucid(const std::string& id)
     z = boost::lexical_cast<uint16_t>(Z);
   }
 
+  if (z < 0)
+    z = 0;
+
   return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), z);
 }
 
-Spin as_spin(const std::string& s)
+Spin parse_spin(const std::string& s)
 {
   uint16_t numerator {0};
   uint16_t denominator {1};
@@ -335,7 +340,7 @@ Spin as_spin(const std::string& s)
     return Spin(numerator, denominator, quality_of(s));
 }
 
-Parity as_parity(const std::string& s)
+Parity parse_parity(const std::string& s)
 {
   auto quality = quality_of(s);
   if ( boost::contains(s, "-") )
@@ -345,19 +350,19 @@ Parity as_parity(const std::string& s)
 }
 
 
-SpinParity as_spin_parity(std::string data)
+SpinParity parse_spin_parity(std::string data)
 {
   SpinParity ret;
 
   //what if tentative only parity or spin only?
   boost::trim_copy(data);
-  ret.set_parity(as_parity(data));
+  ret.set_parity(parse_parity(data));
   boost::replace_all(data, "(", "");
   boost::replace_all(data, ")", "");
   std::vector<std::string> spin_strs;
   boost::split(spin_strs, data, boost::is_any_of(","));
   for (auto &token : spin_strs) {
-    Spin spin = as_spin(token);
+    Spin spin = parse_spin(token);
     spin.set_quality(quality_of(data));
     ret.add_spin(spin);
   }
@@ -366,7 +371,7 @@ SpinParity as_spin_parity(std::string data)
   return ret;
 }
 
-HalfLife as_halflife(const std::string& record)
+HalfLife parse_halflife(const std::string& record)
 {
   std::string value_str;
   std::string units_str;
@@ -382,7 +387,7 @@ HalfLife as_halflife(const std::string& record)
   if (timeparts.size() >= 3)
     uncert_str = timeparts[2];
 
-  UncertainDouble time = as_uncertain(value_str, uncert_str);
+  UncertainDouble time = parse_val_uncert(value_str, uncert_str);
   if (boost::contains(boost::to_upper_copy(record), "STABLE"))
     time.setValue(std::numeric_limits<double>::infinity(), UncertainDouble::SignMagnitudeDefined);
   else if (boost::contains(record, "EV"))
@@ -391,24 +396,124 @@ HalfLife as_halflife(const std::string& record)
   return HalfLife(time, units_str).preferred_units();
 }
 
-DecayMode as_mode(const std::string& record)
+DecayMode parse_decay_mode(std::string record)
 {
   DecayMode ret;
-  std::string type = boost::to_lower_copy(record);
-  if (boost::contains(type, "ec"))
-    ret.types_.push_back(DecayMode::DecayType::ElectronCapture);
-  if (boost::contains(type, "b+"))
-    ret.types_.push_back(DecayMode::DecayType::BetaPlus);
-  if (boost::contains(type, "b-"))
-    ret.types_.push_back(DecayMode::DecayType::BetaMinus);
-  if (boost::contains(type, "it"))
-    ret.types_.push_back(DecayMode::DecayType::IsomericTransition);
-  if (boost::contains(type, "a"))
-    ret.types_.push_back(DecayMode::DecayType::Alpha);
-  if (boost::contains(type, "n"))
-    ret.types_.push_back(DecayMode::DecayType::Neutron);
-  if (boost::contains(type, "p"))
-    ret.types_.push_back(DecayMode::DecayType::Proton);
+  std::string type = boost::to_upper_copy(record);
+  if (boost::contains(type, "SF"))
+  {
+    ret.set_spontaneous_fission(true);
+    boost::replace_all(type, "SF", "");
+  }
+  if (boost::contains(type, "2EC"))
+  {
+    ret.set_electron_capture(2);
+    boost::replace_all(type, "2EC", "");
+  }
+  if (boost::contains(type, "EC"))
+  {
+    ret.set_electron_capture(1);
+    boost::replace_all(type, "EC", "");
+  }
+  if (boost::contains(type, "2B+"))
+  {
+    ret.set_beta_plus(2);
+    boost::replace_all(type, "2B+", "");
+  }
+  if (boost::contains(type, "B+"))
+  {
+    ret.set_beta_plus(1);
+    boost::replace_all(type, "B+", "");
+  }
+  if (boost::contains(type, "2B-"))
+  {
+    ret.set_beta_minus(2);
+    boost::replace_all(type, "2B-", "");
+  }
+  if (boost::contains(type, "B-"))
+  {
+    ret.set_beta_minus(1);
+    boost::replace_all(type, "B-", "");
+  }
+  if (boost::contains(type, "IT"))
+  {
+    ret.set_isomeric(true);
+    boost::replace_all(type, "IT", "");
+  }
+  if (boost::contains(type, "A"))
+  {
+    ret.set_alpha(true);
+    boost::replace_all(type, "A", "");
+  }
+  if (boost::contains(type, "N"))
+  {
+    boost::replace_all(type, "N", "");
+    boost::trim(type);
+    if (!type.empty())
+      ret.set_neutrons(boost::lexical_cast<uint16_t>(type));
+    else
+      ret.set_neutrons(1);
+  }
+  if (boost::contains(type, "P"))
+  {
+    boost::replace_all(type, "P", "");
+    boost::trim(type);
+    if (!type.empty())
+      ret.set_protons(boost::lexical_cast<uint16_t>(type));
+    else
+      ret.set_protons(1);
+  }
   return ret;
 }
+
+std::string mode_to_ensdf(DecayMode mode)
+{
+  std::string ret;
+  if (mode.spontaneous_fission())
+    ret += "SF";
+  if (mode.isomeric())
+    ret += "IT";
+  if (mode.beta_minus())
+  {
+    ret += (mode.beta_minus() > 1) ? boost::lexical_cast<std::string>(mode.beta_minus()) : "";
+    ret += "B-";
+  }
+  if (mode.beta_plus())
+  {
+    ret += (mode.beta_plus() > 1) ? boost::lexical_cast<std::string>(mode.beta_plus()) : "";
+    ret += "B+";
+  }
+  if (mode.electron_capture())
+  {
+    ret += (mode.electron_capture() > 1) ? boost::lexical_cast<std::string>(mode.electron_capture()) : "";
+    ret += "EC";
+  }
+  if (mode.protons())
+  {
+    ret += (mode.protons() > 1) ? boost::lexical_cast<std::string>(mode.protons()) : "";
+    ret += "P";
+  }
+  if (mode.neutrons())
+  {
+    ret += (mode.neutrons() > 1) ? boost::lexical_cast<std::string>(mode.neutrons()) : "";
+    ret += "N";
+  }
+  if (mode.alpha())
+  {
+    ret += "A";
+  }
+  return ret;
+}
+
+std::string nid_to_ensdf(NuclideId id)
+{
+  std::string nucid = std::to_string(id.A());
+  while (nucid.size() < 3)
+    nucid = " " + nucid;
+  nucid += boost::to_upper_copy(NuclideId::symbolOf(id.Z()));
+  while (nucid.size() < 5)
+    nucid += " ";
+  return nucid;
+}
+
 
