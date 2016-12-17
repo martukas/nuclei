@@ -17,6 +17,8 @@ public:
   static NuclideId fromZN(uint16_t z, uint16_t n);
 
   static int16_t zOfSymbol(std::string name);
+  static std::string nameOf(uint16_t Z);
+  static std::string symbolOf(uint16_t Z);
 
   inline bool valid() const { return 0 != A(); }
 
@@ -35,14 +37,10 @@ public:
   std::string element() const;
   std::string symbolicName() const;
   std::string verboseName() const;
-  std::string to_ensdf() const;
 
 private:
   int16_t Z_;   // number of protons
   int16_t N_;   // number of neutrons
-
-  static std::string symbolOf(uint16_t Z);
-  static std::string nameOf(uint16_t Z);
 
   struct NuclideNomenclature
   {

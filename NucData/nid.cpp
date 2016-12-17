@@ -77,17 +77,6 @@ std::string NuclideId::nameOf(uint16_t Z)
     return "";
 }
 
-std::string NuclideId::to_ensdf() const
-{
-  std::string nucid = std::to_string(A());
-  while (nucid.size() < 3)
-    nucid = " " + nucid;
-  nucid += boost::to_upper_copy(NuclideId::symbolOf(Z_));
-  while (nucid.size() < 5)
-    nucid += " ";
-  return nucid;
-}
-
 int16_t NuclideId::zOfSymbol(std::string name)
 {
   for (auto &nom : names) {
@@ -246,11 +235,11 @@ std::map<uint16_t, NuclideId::NuclideNomenclature> NuclideId::initNames()
   result[110] = NuclideNomenclature("Ds", "Darmstadtium");
   result[111] = NuclideNomenclature("Rg", "Roentgenium");
   result[112] = NuclideNomenclature("Cn", "Copernicium");
-  result[113] = NuclideNomenclature("Nh", "Nihonium");
-  result[114] = NuclideNomenclature("Fl", "Flerovium");
-  result[115] = NuclideNomenclature("Mc", "Moscovium");
-  result[116] = NuclideNomenclature("Lv", "Livermorium");
-  result[117] = NuclideNomenclature("Ts", "Tennessine");
-  result[118] = NuclideNomenclature("Og", "Oganesson");
+  result[113] = NuclideNomenclature("13", "Nihonium");    //Nh
+  result[114] = NuclideNomenclature("14", "Flerovium");   //Fl
+  result[115] = NuclideNomenclature("15", "Moscovium");   //Mc
+  result[116] = NuclideNomenclature("16", "Livermorium"); //Lv
+  result[117] = NuclideNomenclature("17", "Tennessine");  //Ts
+  result[118] = NuclideNomenclature("18", "Oganesson");   //Og
   return result;
 }

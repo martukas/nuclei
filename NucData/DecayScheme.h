@@ -1,33 +1,9 @@
-#ifndef DecayScheme_H
-#define DecayScheme_H
+#ifndef DECAY_SCHEME_H
+#define DECAY_SCHEME_H
 
 #include "Nuclide.h"
-#include "Transition.h"
 #include "SpinParity.h"
-#include <list>
-
-struct DecayMode
-{
-  enum DecayType {
-      Undefined,
-      ElectronCapture,
-      BetaPlus,
-      BetaMinus,
-      IsomericTransition,
-      Alpha,
-      Neutron,
-      Proton
-  };
-
-
-  std::string to_string() const;
-
-  std::list<DecayType> types_; //change to set
-
-  bool has(DecayType t) const;
-
-  static std::string type_to_string(DecayType type);
-};
+#include "DecayMode.h"
 
 class DecayScheme
 {

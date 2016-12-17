@@ -14,6 +14,7 @@ public:
   const std::list<NuclideId> daughterNuclides() const;
   const std::list< std::pair<std::string, NuclideId> > decays(const NuclideId &daughterNuclide) const;
 
+  std::set<std::string> unknown_decays;
 
   DecayScheme decay(const NuclideId &daughterNuclide, const std::string &decayName) const;
 private:
