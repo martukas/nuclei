@@ -15,7 +15,9 @@ enum class RecordType : uint64_t
   Decay             = 1 << 5,
   References        = 1 << 6,
   Comments          = 1 << 7,
-  Tentative         = 1 << 8
+  MuonicAtom        = 1 << 8,
+  HiXng             = 1 << 9,
+  Tentative         = 1 << 10
 };
 
 
@@ -41,7 +43,7 @@ inline bool test(RecordType a)
 
 struct IdentificationRecord
 {
-  NuclideId nuc_id;
+  std::string nuc_id;
   std::string dsid;
   std::string extended_dsid;
 
@@ -73,23 +75,52 @@ struct ParentRecord
 
 struct BasicDecayData
 {
-  std::vector<ParentRecord> parents;
+  static BasicDecayData from_id(const IdentificationRecord &record, BlockIndices block);
+  std::string to_string() const;
+
+  //general
   NuclideId daughter;
   BlockIndices block;
   std::string dsid;
 
-  DecayMode mode;
-
-  HalfLife hl;
+  //header data
   NuclideId parent;
+  DecayMode mode;
+  HalfLife hl;
 
-  static BasicDecayData from_id(const IdentificationRecord &record, BlockIndices block);
-
-  static BasicDecayData from_ensdf(const std::string &header, BlockIndices block);
-  std::string to_string() const;
+  //extra shit
+  std::vector<ParentRecord> parents;
 
 private:
-  static DecayMode::DecayType parseDecayType(const std::string &tstring);
+  static DecayMode parseDecayType(const std::string &tstring);
+};
+
+struct ReactionData
+{
+  struct ReactionBits
+  {
+    std::string in;
+    std::string out;
+  };
+
+  struct Reaction
+  {
+    NuclideId target;
+    std::list<ReactionBits> variants;
+  };
+
+  //general
+  NuclideId daughter;
+  BlockIndices block;
+  std::string dsid;
+
+  //header data
+  std::list<Reaction> reactions;
+  std::string energy;
+  std::string qualifier;
+
+  static ReactionData from_id(const IdentificationRecord &record, BlockIndices block);
+  std::string to_string() const;
 };
 
 
