@@ -10,7 +10,8 @@ bool DecayMode::valid() const
           neutrons() ||
           beta_minus() ||
           beta_plus() ||
-          electron_capture());
+          electron_capture() ||
+          inelastic_scattering());
 }
 
 bool DecayMode::alpha() const
@@ -26,6 +27,11 @@ bool DecayMode::isomeric() const
 bool DecayMode::spontaneous_fission() const
 {
   return spontaneous_fission_;
+}
+
+bool DecayMode::inelastic_scattering() const
+{
+  return inelastic_scattering_;
 }
 
 uint16_t DecayMode::protons() const
@@ -68,6 +74,11 @@ void DecayMode::set_spontaneous_fission(bool sf)
   spontaneous_fission_ = sf;
 }
 
+void DecayMode::set_inelastic_scattering(bool is)
+{
+  inelastic_scattering_ = is;
+}
+
 void DecayMode::set_protons(uint16_t p)
 {
   protons_ = p;
@@ -104,6 +115,11 @@ std::string DecayMode::to_string() const
   {
     ret += ret.empty() ? "" : ", ";
     ret += "Spontaneous Fission";
+  }
+  if (inelastic_scattering_)
+  {
+    ret += ret.empty() ? "" : ", ";
+    ret += "Inelastic Scattering";
   }
   if (isomeric_)
   {

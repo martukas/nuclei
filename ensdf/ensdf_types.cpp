@@ -301,22 +301,29 @@ NuclideId parse_nid(std::string id)
   }
 
   boost::trim(id);
-  if (id.size() == 5)
+  boost::regex dig_expr("^\\s*\\d+\\s*$");
+  boost::regex w_expr("^\\s*\\d+\\s*$");
+  if ((boost::regex_match(id, dig_expr)))
   {
-    std::string A = id.substr(0,3);
-    std::string Z_str = id.substr(3,2);
-    uint16_t Z = 0;
-    if (!boost::trim_copy(Z_str).empty())
-      Z = boost::lexical_cast<uint16_t>("1" + id.substr(3,2));
-    return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), Z);
+    if (id.size() == 5)
+    {
+      std::string A = id.substr(0,3);
+      std::string Z_str = id.substr(3,2);
+      uint16_t Z = 0;
+      if (!boost::trim_copy(Z_str).empty())
+        Z = boost::lexical_cast<uint16_t>("1" + id.substr(3,2));
+      return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), Z);
+    }
+    else
+      return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(id), 0, true);
   }
+  else if ((boost::regex_match(id, w_expr)))
+  {
+    int16_t Z = NuclideId::zOfSymbol(id);
+    return NuclideId::fromAZ(Z, Z, true);
+  }
+  return NuclideId();
 
-  if (id.empty())
-    return NuclideId();
-
-  uint16_t A = boost::lexical_cast<uint16_t>(id);
-
-  return NuclideId::fromAZ(A, 0, true);
 }
 
 Spin parse_spin(const std::string& s)
@@ -404,6 +411,11 @@ DecayMode parse_decay_mode(std::string record)
 {
   DecayMode ret;
   std::string type = boost::to_upper_copy(record);
+  if (boost::contains(type, "INELASTIC SCATTERING"))
+  {
+    ret.set_inelastic_scattering(true);
+    boost::replace_all(type, "INELASTIC SCATTERING", "");
+  }
   if (boost::contains(type, "SF"))
   {
     ret.set_spontaneous_fission(true);

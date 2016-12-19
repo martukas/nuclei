@@ -563,11 +563,33 @@ void ENSDFParser::parseBlocks()
 
   for (BlockIndices &block_idx : blocks)
   {
-    IdentificationRecord header = parse_header(block_idx.first);
+    IdentificationRecord header;
+
+    try
+    {
+      header = parse_header(block_idx.first);
+    }
+    catch (boost::bad_lexical_cast& e)
+    {
+      DBG << "Bad header " << e.what();
+      DBG << "   " << contents.at(block_idx.first);
+    }
+
 
     if (test(header.type & RecordType::Comments))
     {
-      CommentsRecord comments = CommentsRecord::from_id(header, block_idx);
+      CommentsRecord comments;
+      try
+      {
+        comments = CommentsRecord::from_id(header, block_idx);
+      }
+      catch (boost::bad_lexical_cast& e)
+      {
+        DBG << "Bad comment " << e.what();
+        DBG << "   " << header.debug();
+      }
+
+
 //      DBG << comments.nuclide.verboseName() << " << " << header.debug();
     }
     else if (test(header.type & RecordType::References))
@@ -582,6 +604,25 @@ void ENSDFParser::parseBlocks()
     {
 
     }
+    else if (test(header.type & RecordType::Reaction))
+    {
+      ReactionData rx;
+      try {
+        //      DBG << header.debug();
+        rx = ReactionData::from_id(header, block_idx);
+        //      DBG << header.debug() << " ---> " << rx.to_string();
+        unknown_decays.insert(rx.qualifier);
+      }
+      catch (boost::bad_lexical_cast& e)
+      {
+        DBG << "Bad reaction " << e.what();
+        DBG << "   " << header.debug();
+      }
+
+//      if (!rx.energy.empty())
+//        DBG << "   " << header.debug() << "  -->  " << rx.to_string();
+
+    }
     else if (test(header.type & RecordType::HiXng))
     {
 //      DBG << header.debug();
@@ -589,9 +630,23 @@ void ENSDFParser::parseBlocks()
     }
     else if (test(header.type & RecordType::AdoptedLevels))
       m_adoptedlevels[header.nuc_id] = block_idx;
-    else if (test(header.type & RecordType::Decay))
+    else if (test(header.type & RecordType::Decay) ||
+             (test(header.type & RecordType::InelasticScattering)))
     {
-      BasicDecayData decaydata = BasicDecayData::from_id(header, block_idx);
+      BasicDecayData decaydata;
+      try
+      {
+        decaydata = BasicDecayData::from_id(header, block_idx);
+      }
+      catch (boost::bad_lexical_cast& e)
+      {
+        DBG << "Bad decay " << e.what();
+        DBG << "   " << header.debug();
+      }
+
+      if (test(header.type & RecordType::InelasticScattering))
+        DBG << "Scatteing -> " << decaydata.to_string();
+
       if (!decaydata.mode.valid())
       {
 //        DBG
@@ -655,9 +710,9 @@ void ENSDFParser::parseBlocks()
       //            << "  "
 //                  << header.debug()
 //                     ;
+        DBG << "Unknown header -- " << header.debug();
 
-
-              auto rxd = ReactionData::from_id(header, block_idx);
+//              auto rxd = ReactionData::from_id(header, block_idx);
 
       //      DBG << "Unprocessed block begin " << block.first;
       //      for (size_t i=block.first; i < block.second; ++i)
