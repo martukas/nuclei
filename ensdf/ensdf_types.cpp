@@ -287,32 +287,36 @@ Level parse_level(const std::string& record)
 
 NuclideId parse_nid(std::string id)
 {
-  if (id.size() > 5)
-    boost::trim(id);
-  while (id.size() < 5)
-    id = " " + id;
-
-  std::string A = id.substr(0,3);
-  std::string Z = id.substr(3,2);
-  boost::trim(A);
-
-  if (!is_number(A))
-    return NuclideId();
-
-  boost::to_upper(Z);
-  boost::trim(Z);
-
-  int16_t z = NuclideId::zOfSymbol(Z);
-  if ((z < 0) && (is_number(Z)))
+  boost::regex nid_expr("^(?:\\s)*([0-9]+)([A-Z]+)(?:\\s)*$");
+  boost::smatch what;
+  if (boost::regex_match(id, what, nid_expr) && (what.size() == 3))
   {
-    Z = "1" + Z;
-    z = boost::lexical_cast<uint16_t>(Z);
+    std::string A = what[1];
+    int16_t Z = NuclideId::zOfSymbol(what[2]);
+
+//    DBG << "Parsed big nucID " << id << " -> "
+//        << NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), Z).verboseName();
+
+    return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), Z);
   }
 
-  if (z < 0)
-    z = 0;
+  boost::trim(id);
+  if (id.size() == 5)
+  {
+    std::string A = id.substr(0,3);
+    std::string Z_str = id.substr(3,2);
+    uint16_t Z = 0;
+    if (!boost::trim_copy(Z_str).empty())
+      Z = boost::lexical_cast<uint16_t>("1" + id.substr(3,2));
+    return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), Z);
+  }
 
-  return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), z);
+  if (id.empty())
+    return NuclideId();
+
+  uint16_t A = boost::lexical_cast<uint16_t>(id);
+
+  return NuclideId::fromAZ(A, 0, true);
 }
 
 Spin parse_spin(const std::string& s)
@@ -505,15 +509,27 @@ std::string mode_to_ensdf(DecayMode mode)
   return ret;
 }
 
-std::string nid_to_ensdf(NuclideId id)
+std::string nid_to_ensdf(NuclideId id, bool alt)
 {
   std::string nucid = std::to_string(id.A());
   while (nucid.size() < 3)
     nucid = " " + nucid;
-  nucid += boost::to_upper_copy(NuclideId::symbolOf(id.Z()));
+  if (id.composition_known())
+    if ((id.Z() > 109) && alt)
+      nucid += boost::lexical_cast<std::string>(id.Z() - 100);
+    else
+      nucid += boost::to_upper_copy(NuclideId::symbolOf(id.Z()));
   while (nucid.size() < 5)
     nucid += " ";
   return nucid;
+}
+
+bool check_nid_parse(const std::string& s, const NuclideId& n)
+{
+  std::string s1 = boost::trim_copy(nid_to_ensdf(n, false));
+  std::string s2 = boost::trim_copy(nid_to_ensdf(n, true));
+  std::string ss = boost::trim_copy(s);
+  return (ss == s1) || (ss == s2);
 }
 
 

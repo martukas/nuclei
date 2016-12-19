@@ -109,7 +109,8 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
 
   double normalizeDecIntensToPercentParentDecay = 1.0;
   double normalizeGammaIntensToPercentParentDecay = 1.0;
-  std::string dNucid = nid_to_ensdf(daughterNuclide);
+  std::string dNucid1 = nid_to_ensdf(daughterNuclide, true);
+  std::string dNucid2 = nid_to_ensdf(daughterNuclide, false);
 
   //  DBG << "parsing " << dNucid.toStdString();
 
@@ -119,15 +120,16 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
   std::map<Energy, StringSubList> adoptblocks;
   std::map<std::string, char> xrefs; // maps DSID to DSSYM (single letter)
   int laststart = -1;
-  for (size_t i=alpos.first; i < alpos.second; i++) {
+  for (size_t i=alpos.first; i < alpos.second; i++)
+  {
     const std::string line = contents.at(i);
     // extract cross reference records as long as first level was found (cross reference must be before 1st level)
     if (laststart == -1) {
-      if (line.substr(0,8) == (dNucid + "  X"))
+      if (line.substr(0,8) == (dNucid1 + "  X"))
         xrefs[boost::trim_copy(line.substr(9, 30))] = line[8];
     }
     // find level records
-    if (line.substr(0,9) == (dNucid + "  L ")) {
+    if (line.substr(0,9) == (dNucid1 + "  L ")) {
       if (laststart > 0) {
         size_t i1 = laststart;
         size_t i2 = i;
@@ -138,11 +140,41 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       laststart = i;
     }
   }
-  if (laststart > 0) {
+  if (laststart > 0)
+  {
     StringSubList sl(laststart, alpos.second);
     if ((sl.first < sl.last) && (sl.last < contents.size()) && xrefs.count(decaydata.dsid))
       insertAdoptedLevelsBlock(&adoptblocks, sl, xrefs.at(decaydata.dsid));
   }
+
+  laststart = -1;
+  for (size_t i=alpos.first; i < alpos.second; i++)
+  {
+    const std::string line = contents.at(i);
+    // extract cross reference records as long as first level was found (cross reference must be before 1st level)
+    if (laststart == -1) {
+      if (line.substr(0,8) == (dNucid2 + "  X"))
+        xrefs[boost::trim_copy(line.substr(9, 30))] = line[8];
+    }
+    // find level records
+    if (line.substr(0,9) == (dNucid2 + "  L ")) {
+      if (laststart > 0) {
+        size_t i1 = laststart;
+        size_t i2 = i;
+        StringSubList sl(i1, i2);
+        if ((sl.first < sl.last) && (sl.last < contents.size()) && xrefs.count(decaydata.dsid))
+          insertAdoptedLevelsBlock(&adoptblocks, sl, xrefs.at(decaydata.dsid));
+      }
+      laststart = i;
+    }
+  }
+  if (laststart > 0)
+  {
+    StringSubList sl(laststart, alpos.second);
+    if ((sl.first < sl.last) && (sl.last < contents.size()) && xrefs.count(decaydata.dsid))
+      insertAdoptedLevelsBlock(&adoptblocks, sl, xrefs.at(decaydata.dsid));
+  }
+
 
   // adopted levels block of current level in decay data set
   StringSubList currentadoptblock;
@@ -157,7 +189,9 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
     //    DBG << "c line " << line.toStdString();
 
     // process new gamma
-    if ((line.size() >= 8) && (line.substr(0,9) == (dNucid + "  G ")))
+    if ((line.size() >= 8) &&
+        ((line.substr(0,9) == (dNucid1 + "  G ")) ||
+         (line.substr(0,9) == (dNucid2 + "  G "))))
     {
 
       // determine energy
@@ -184,7 +218,8 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
         std::map<Energy, std::string> e2g;
         for (size_t i = currentadoptblock.first; i < currentadoptblock.last; ++i) {
           std::string ln = contents.at(i);
-          if (ln.substr(0,9) ==  (dNucid + "  G ")) {
+          if ((ln.substr(0,9) ==  (dNucid1 + "  G ")) || (ln.substr(0,9) ==  (dNucid2 + "  G ")))
+          {
             Energy gk = parse_energy(ln.substr(9, 12));
             if (gk.isValid())
               e2g[gk] = ln;
@@ -216,7 +251,9 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       }
     }
     // process new level
-    else if (line.substr(0,9) == (dNucid + "  L ")) {
+    else if ((line.substr(0,9) == (dNucid1 + "  L ")) ||
+             (line.substr(0,9) == (dNucid2 + "  L ")))
+    {
 
       currentLevel = parse_level(line);
 
@@ -258,7 +295,8 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       daughter_nuclide.addLevel(currentLevel);
     }
     // process decay information
-    else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  E "))) {
+    else if (!daughter_nuclide.empty() &&
+             ((line.substr(0,9) == (dNucid1 + "  E ")) || (line.substr(0,9) == (dNucid2 + "  E ")))) {
       UncertainDouble ti = parse_val_uncert(line.substr(64, 10), line.substr(74, 2));
       if (ti.uncertaintyType() != UncertainDouble::UndefinedType) {
         ti.setSign(UncertainDouble::SignMagnitudeDefined);
@@ -280,7 +318,8 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
         daughter_nuclide.addLevel(currentLevel);
       }
     }
-    else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  B "))) {
+    else if (!daughter_nuclide.empty() &&
+             ((line.substr(0,9) == (dNucid1 + "  B ")) || (line.substr(0,9) == (dNucid2 + "  B ")))) {
       UncertainDouble ib = parse_val_uncert(line.substr(21, 8), line.substr(29, 2));
       if (ib.hasFiniteValue()) {
         ib.setSign(UncertainDouble::SignMagnitudeDefined);
@@ -289,7 +328,8 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
         daughter_nuclide.addLevel(currentLevel);
       }
     }
-    else if (!daughter_nuclide.empty() && (line.substr(0,9) == (dNucid + "  A "))) {
+    else if (!daughter_nuclide.empty() &&
+             ((line.substr(0,9) == (dNucid1 + "  A ")) || (line.substr(0,9) == (dNucid2 + "  A ")))) {
       UncertainDouble ia = parse_val_uncert(line.substr(21, 8), line.substr(29, 2));
       if (ia.hasFiniteValue()) {
         ia.setSign(UncertainDouble::SignMagnitudeDefined);
@@ -299,14 +339,14 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       }
     }
     // process normalization records
-    else if (line.substr(0,9) == (dNucid + "  N ")) {
+    else if ((line.substr(0,9) == (dNucid1 + "  N ")) || (line.substr(0,9) == (dNucid2 + "  N "))) {
       double br = norm(line.substr(31, 8), 1.0);
       double nb = norm(line.substr(41, 8), 1.0);
       normalizeDecIntensToPercentParentDecay = nb * br;
       double nr = norm(line.substr(9, 10), 1.0);
       normalizeGammaIntensToPercentParentDecay = nr * br;
     }
-    else if (line.substr(0,9) == (dNucid + " PN ")) {
+    else if ((line.substr(0,9) == (dNucid1 + " PN ")) || (line.substr(0,9) == (dNucid2 + " PN "))) {
       normalizeDecIntensToPercentParentDecay = norm(line.substr(41, 8), normalizeDecIntensToPercentParentDecay);
       normalizeGammaIntensToPercentParentDecay = norm(line.substr(9, 10), normalizeGammaIntensToPercentParentDecay);
     }
@@ -527,7 +567,8 @@ void ENSDFParser::parseBlocks()
 
     if (test(header.type & RecordType::Comments))
     {
-
+      CommentsRecord comments = CommentsRecord::from_id(header, block_idx);
+//      DBG << comments.nuclide.verboseName() << " << " << header.debug();
     }
     else if (test(header.type & RecordType::References))
     {
@@ -543,10 +584,11 @@ void ENSDFParser::parseBlocks()
     }
     else if (test(header.type & RecordType::HiXng))
     {
+//      DBG << header.debug();
 
     }
     else if (test(header.type & RecordType::AdoptedLevels))
-      m_adoptedlevels[parse_nid(header.nuc_id)] = block_idx;
+      m_adoptedlevels[header.nuc_id] = block_idx;
     else if (test(header.type & RecordType::Decay))
     {
       BasicDecayData decaydata = BasicDecayData::from_id(header, block_idx);
@@ -606,13 +648,13 @@ void ENSDFParser::parseBlocks()
     else
     {
 //      if (header.extended_dsid.at(0) == '(')
-              DBG
+//              DBG
       //            << "Header "
       //            << "[" << std::setw(5) << block_idx.first << " - " << std::setw(5) << block_idx.second << "] "
       //            << contents.at(block_idx.first)
       //            << "  "
-                  << header.debug()
-                     ;
+//                  << header.debug()
+//                     ;
 
 
               auto rxd = ReactionData::from_id(header, block_idx);

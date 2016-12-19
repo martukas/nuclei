@@ -29,6 +29,8 @@ Nuclei::Nuclei(QWidget *parent) :
   decayProxyModel(0),
   searchProxyModel(0)
 {
+  CustomLogger::initLogger(nullptr, "");
+
   ui->setupUi(this);
   setWindowTitle(QCoreApplication::applicationName() + QString(" ") + QCoreApplication::applicationVersion());
 
