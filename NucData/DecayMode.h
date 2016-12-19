@@ -14,6 +14,7 @@ public:
   void set_alpha(bool);
   void set_isomeric(bool);
   void set_spontaneous_fission(bool);
+  void set_inelastic_scattering(bool);
   void set_protons(uint16_t);
   void set_neutrons(uint16_t);
   void set_beta_plus(uint16_t);
@@ -23,6 +24,7 @@ public:
   bool alpha() const;
   bool isomeric() const;
   bool spontaneous_fission() const;
+  bool inelastic_scattering() const;
   uint16_t protons() const;
   uint16_t neutrons() const;
   uint16_t beta_plus() const;
@@ -40,7 +42,7 @@ private:
   bool isomeric_ {false};
   bool alpha_ {false};
   bool spontaneous_fission_{false};
-
+  bool inelastic_scattering_{false};
 };
 
 #endif

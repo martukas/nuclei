@@ -8,16 +8,18 @@ typedef std::pair<size_t, size_t> BlockIndices; // [startidx, size]
 
 enum class RecordType : uint64_t
 {
-  Invalid           = 0,
-  AdoptedLevels     = 1 << 1,
-  Gammas            = 1 << 3,
-  CoulombExcitation = 1 << 4,
-  Decay             = 1 << 5,
-  References        = 1 << 6,
-  Comments          = 1 << 7,
-  MuonicAtom        = 1 << 8,
-  HiXng             = 1 << 9,
-  Tentative         = 1 << 10
+  Invalid             = 0,
+  AdoptedLevels       = 1 << 1,
+  Gammas              = 1 << 3,
+  CoulombExcitation   = 1 << 4,
+  Decay               = 1 << 5,
+  References          = 1 << 6,
+  Comments            = 1 << 7,
+  MuonicAtom          = 1 << 8,
+  InelasticScattering = 1 << 9,
+  HiXng               = 1 << 10,
+  Tentative           = 1 << 11,
+  Reaction            = 1 << 12
 };
 
 
@@ -110,16 +112,22 @@ private:
 
 struct ReactionData
 {
-  struct ReactionBits
+  struct Reactants
   {
     std::string in;
     std::string out;
+
+    std::string to_string() const;
+    void parse_reactants(std::string s);
   };
 
   struct Reaction
   {
     NuclideId target;
-    std::list<ReactionBits> variants;
+    std::list<Reactants> variants;
+
+    std::string to_string() const;
+    void parse_reaction(std::string s);
   };
 
   //general
@@ -132,6 +140,8 @@ struct ReactionData
   std::string energy;
   std::string qualifier;
 
+  static bool match(std::string record);
+  bool find_remove(std::__cxx11::string &extras, std::string wanted, std::string trim_what);
   static ReactionData from_id(const IdentificationRecord &record, BlockIndices block);
   std::string to_string() const;
 };
