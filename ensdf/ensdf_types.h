@@ -16,7 +16,7 @@ Spin parse_spin(const std::string& s);
 Parity parse_parity(const std::string& s);
 SpinParity parse_spin_parity(std::string data);
 
-NuclideId parse_nid(std::string nucid);
+
 Moment parse_moment(const std::string& s);
 Energy parse_energy(const std::string& record);
 HalfLife parse_halflife(const std::string& record);
@@ -25,6 +25,9 @@ Level  parse_level(const std::string& record);
 DecayMode parse_decay_mode(std::string record);
 
 std::string mode_to_ensdf(DecayMode);
-std::string nid_to_ensdf(NuclideId);
+
+NuclideId parse_nid(std::string nucid);
+std::string nid_to_ensdf(NuclideId, bool alt);
+bool check_nid_parse(const std::string&, const NuclideId&);
 
 #endif
