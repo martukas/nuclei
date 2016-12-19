@@ -43,14 +43,18 @@ inline bool test(RecordType a)
 
 struct IdentificationRecord
 {
-  std::string nuc_id;
+  NuclideId nuc_id;
   std::string dsid;
   std::string extended_dsid;
+  std::string dsref;
+  std::string pub;
+  uint16_t year;
+  uint16_t month;
 
   RecordType type {RecordType::Invalid};
 
   bool continued {false};
-  uint16_t numlines{0};
+  uint16_t numlines{1}; //deprecate
 
   static IdentificationRecord parse(const std::string& line);
   void merge_continued(IdentificationRecord other);
@@ -60,6 +64,15 @@ struct IdentificationRecord
 
   static RecordType is_type(std::string s);
   static std::string type_to_str(RecordType t);
+};
+
+struct CommentsRecord
+{
+  static CommentsRecord from_id(const IdentificationRecord &record, BlockIndices block);
+
+  //general
+  NuclideId nuclide;
+  BlockIndices block;
 };
 
 struct ParentRecord

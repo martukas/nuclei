@@ -22,21 +22,23 @@ void NuclideId::set_Z(uint16_t z)
 }
 
 
-NuclideId NuclideId::fromAZ(uint16_t a, uint16_t z)
+NuclideId NuclideId::fromAZ(uint16_t a, uint16_t z, bool mass_only)
 {
   if (a < z)
     return NuclideId();
   NuclideId ret;
   ret.Z_ = z;
   ret.N_ = a - z;
+  ret.mass_only_ = mass_only;
   return ret;
 }
 
-NuclideId NuclideId::fromZN(uint16_t z, uint16_t n)
+NuclideId NuclideId::fromZN(uint16_t z, uint16_t n, bool mass_only)
 {
   NuclideId ret;
   ret.Z_ = z;
   ret.N_ = n;
+  ret.mass_only_ = mass_only;
   return ret;
 }
 
@@ -44,6 +46,8 @@ std::string NuclideId::symbolicName() const
 {
   if (!valid())
     return "";
+  if (mass_only_)
+    return std::to_string(A());
   return symbolOf(Z_) + "-" + std::to_string(A());
 }
 
@@ -51,6 +55,8 @@ std::string NuclideId::verboseName() const
 {
   if (!valid())
     return "";
+  if (mass_only_)
+    return std::to_string(A());
   return nameOf(Z_) + "-" + std::to_string(A());
 }
 
@@ -235,11 +241,11 @@ std::map<uint16_t, NuclideId::NuclideNomenclature> NuclideId::initNames()
   result[110] = NuclideNomenclature("Ds", "Darmstadtium");
   result[111] = NuclideNomenclature("Rg", "Roentgenium");
   result[112] = NuclideNomenclature("Cn", "Copernicium");
-  result[113] = NuclideNomenclature("13", "Nihonium");    //Nh
-  result[114] = NuclideNomenclature("14", "Flerovium");   //Fl
-  result[115] = NuclideNomenclature("15", "Moscovium");   //Mc
-  result[116] = NuclideNomenclature("16", "Livermorium"); //Lv
-  result[117] = NuclideNomenclature("17", "Tennessine");  //Ts
-  result[118] = NuclideNomenclature("18", "Oganesson");   //Og
+  result[113] = NuclideNomenclature("Nh", "Nihonium");    //Nh
+  result[114] = NuclideNomenclature("Fl", "Flerovium");   //Fl
+  result[115] = NuclideNomenclature("Mc", "Moscovium");   //Mc
+  result[116] = NuclideNomenclature("Lv", "Livermorium"); //Lv
+  result[117] = NuclideNomenclature("Ts", "Tennessine");  //Ts
+  result[118] = NuclideNomenclature("Og", "Oganesson");   //Og
   return result;
 }

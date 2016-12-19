@@ -4,17 +4,13 @@
 #include <map>
 #include <string>
 
-class QGraphicsItem;
-class QGraphicsItemGroup;
-class EnergyLevel;
-
 class NuclideId
 {
 public:
   NuclideId() : Z_(0), N_(0)  {}
 
-  static NuclideId fromAZ(uint16_t a, uint16_t z);
-  static NuclideId fromZN(uint16_t z, uint16_t n);
+  static NuclideId fromAZ(uint16_t a, uint16_t z, bool mass_only = false);
+  static NuclideId fromZN(uint16_t z, uint16_t n, bool mass_only = false);
 
   static int16_t zOfSymbol(std::string name);
   static std::string nameOf(uint16_t Z);
@@ -25,6 +21,7 @@ public:
   inline uint16_t A() const { return N_ + Z_; }
   inline uint16_t N() const { return N_; }
   inline uint16_t Z() const { return Z_; }
+  inline bool composition_known() const { return !mass_only_; }
   void set_A(uint16_t a);
   void set_N(uint16_t n);
   void set_Z(uint16_t z);
@@ -41,6 +38,7 @@ public:
 private:
   int16_t Z_;   // number of protons
   int16_t N_;   // number of neutrons
+  bool mass_only_ {false};
 
   struct NuclideNomenclature
   {
