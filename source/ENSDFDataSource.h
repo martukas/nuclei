@@ -9,8 +9,8 @@
 #include <QDir>
 
 #include "ENSDFTreeItem.h"
+#include "ensdf_parser.h"
 
-class ENSDFParser;
 
 class ENSDFDataSource : public QObject
 {
@@ -22,7 +22,7 @@ public:
 
     virtual ENSDFTreeItem * rootItem() const;
 
-    virtual DecayScheme decay(const ENSDFTreeItem *item) const;
+    virtual DecayScheme decay(const ENSDFTreeItem *item);
 
 public slots:
     void deleteDatabaseAndCache();
@@ -33,7 +33,6 @@ private:
 
     QString cachePath;
     QString defaultPath;
-    QDir dest;
 
     static const quint32 magicNumber;
     static const quint32 cacheVersion;
@@ -43,6 +42,8 @@ private:
 
     ENSDFTreeItem *root;
 
-    mutable ENSDFParser *mccache;
+    ENSDFParser parser;
+    DaughterParser dparser;
+
     mutable QMutex m;
 };
