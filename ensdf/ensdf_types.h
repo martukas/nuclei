@@ -1,5 +1,4 @@
-#ifndef ENSDF_TYPES_H
-#define ENSDF_TYPES_H
+#pragma once
 
 #include "UncertainDouble.h"
 #include "Level.h"
@@ -29,5 +28,3 @@ std::string mode_to_ensdf(DecayMode);
 NuclideId parse_nid(std::string nucid);
 std::string nid_to_ensdf(NuclideId, bool alt);
 bool check_nid_parse(const std::string&, const NuclideId&);
-
-#endif

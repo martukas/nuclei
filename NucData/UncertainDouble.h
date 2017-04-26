@@ -1,5 +1,4 @@
-#ifndef UNCERTAINDOUBLE_H
-#define UNCERTAINDOUBLE_H
+#pragma once
 
 #include <string>
 
@@ -65,5 +64,3 @@ private:
   UncertaintyType type_;
   uint16_t sigfigs_;
 };
-
-#endif

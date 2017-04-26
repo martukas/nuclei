@@ -1,5 +1,4 @@
-#ifndef LEVEL_RENDERED_H
-#define LEVEL_RENDERED_H
+#pragma once
 
 #include "ClickableItem.h"
 #include "Level.h"
@@ -35,5 +34,3 @@ public:
 
   Energy energy_;
 };
-
-#endif

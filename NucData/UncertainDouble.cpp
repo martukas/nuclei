@@ -5,7 +5,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 #include "qpx_util.h"
-#include "custom_logger.h"
+//#include "custom_logger.h"
 
 UncertainDouble::UncertainDouble()
   : value_(std::numeric_limits<double>::quiet_NaN())

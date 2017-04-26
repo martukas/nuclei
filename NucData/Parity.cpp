@@ -1,5 +1,16 @@
 #include "Parity.h"
 
+Parity::Parity(const Parity &other)
+  : QualifiedData(other)
+  , parity_(other.parity_)
+{}
+
+Parity::Parity(const EnumParity& p, const DataQuality& q)
+{
+  parity_ = p;
+  quality_ = q;
+}
+
 const std::string Parity::to_string() const
 {
   if ( quality_ == DataQuality::kUnknown )

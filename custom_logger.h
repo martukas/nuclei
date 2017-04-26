@@ -1,23 +1,4 @@
-/*******************************************************************************
- *
- * This software was developed at the National Institute of Standards and
- * Technology (NIST) by employees of the Federal Government in the course
- * of their official duties. Pursuant to title 17 Section 105 of the
- * United States Code, this software is not subject to copyright protection
- * and is in the public domain. NIST assumes no responsibility whatsoever for
- * its use by other parties, and makes no guarantees, expressed or implied,
- * about its quality, reliability, or any other characteristic.
- *
- * Author(s):
- *      Martin Shetty (NIST)
- *
- * Description:
- *      Utility based on boost log for output to file, console and gui.
- *
- ******************************************************************************/
-
-#ifndef CUSTOM_LOGGER_H_
-#define CUSTOM_LOGGER_H_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -72,5 +53,3 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(g_severity, "Severity", CustomLogger::SeverityLevel)
 #define WARN BOOST_LOG_SEV(g_custom_logger::get(), CustomLogger::kWarning)
 #define ERR BOOST_LOG_SEV(g_custom_logger::get(), CustomLogger::kError)
 #define CRIT BOOST_LOG_SEV(g_custom_logger::get(), CustomLogger::kCritical)
-
-#endif // CUSTOM_LOGGER_H

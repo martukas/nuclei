@@ -1,7 +1,30 @@
 #include "nid.h"
 #include "qpx_util.h"
 
-#include "custom_logger.h"
+bool NuclideId::valid() const
+{
+  return 0 != A();
+}
+
+uint16_t NuclideId::A() const
+{
+  return N_ + Z_;
+}
+
+uint16_t NuclideId::N() const
+{
+  return N_;
+}
+
+uint16_t NuclideId::Z() const
+{
+  return Z_;
+}
+
+bool NuclideId::composition_known() const
+{
+  return !mass_only_;
+}
 
 void NuclideId::set_A(uint16_t a)
 {

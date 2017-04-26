@@ -1,14 +1,4 @@
-/****************************************************************************
-**
-** Copyright (c) 2007 Trolltech ASA <info@trolltech.com>
-**
-** Use, modification and distribution is allowed without limitation,
-** warranty, liability or support of any kind.
-**
-****************************************************************************/
-
-#ifndef LINEEDIT_H
-#define LINEEDIT_H
+#pragma once
 
 #include <QLineEdit>
 
@@ -30,6 +20,3 @@ private slots:
 private:
     QToolButton *clearButton;
 };
-
-#endif // LIENEDIT_H
-

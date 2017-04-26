@@ -1,5 +1,4 @@
-#ifndef ENSDFDATASOURCE_H
-#define ENSDFDATASOURCE_H
+#pragma once
 
 #include <QStringList>
 #include <QSharedPointer>
@@ -7,25 +6,13 @@
 #include <QMetaType>
 #include <QVariant>
 #include <QMutex>
+#include <QDir>
 
-#include "AbstractDataSource.h"
+#include "ENSDFTreeItem.h"
 
 class ENSDFParser;
 
-class ENSDFTreeItem : public AbstractTreeItem
-{
-public:
-    explicit ENSDFTreeItem(ItemType type = UnknownType, AbstractTreeItem *parent = 0);
-    explicit ENSDFTreeItem(ItemType type, const QList<QVariant> &data, NuclideId id, bool isdecay, AbstractTreeItem *parent = 0);
-    virtual ~ENSDFTreeItem();
-
-    friend QDataStream & operator<<(QDataStream &out, const ENSDFTreeItem &treeitem);
-    friend QDataStream & operator>>(QDataStream &in, ENSDFTreeItem &treeitem);
-};
-
-Q_DECLARE_METATYPE(ENSDFTreeItem)
-
-class ENSDFDataSource : public AbstractDataSource
+class ENSDFDataSource : public QObject
 {
     Q_OBJECT
 
@@ -33,18 +20,20 @@ public:
     explicit ENSDFDataSource(QObject *parent = 0);
     virtual ~ENSDFDataSource();
 
-    virtual AbstractTreeItem * rootItem() const;
+    virtual ENSDFTreeItem * rootItem() const;
 
-    virtual DecayScheme decay(const AbstractTreeItem *item) const;
+    virtual DecayScheme decay(const ENSDFTreeItem *item) const;
 
 public slots:
     void deleteDatabaseAndCache();
     void deleteCache();
 
 private:
-    QList<uint16_t> getAvailableDataFileNumbers() const;
+    QList<uint16_t> getAvailableDataFileNumbers();
 
     QString cachePath;
+    QString defaultPath;
+    QDir dest;
 
     static const quint32 magicNumber;
     static const quint32 cacheVersion;
@@ -57,5 +46,3 @@ private:
     mutable ENSDFParser *mccache;
     mutable QMutex m;
 };
-
-#endif // ENSDFDATASOURCE_H

@@ -1,5 +1,4 @@
-#ifndef SPIN_H
-#define SPIN_H
+#pragma once
 
 #include "DataQuality.h"
 
@@ -11,8 +10,8 @@ public:
   Spin(uint16_t num, uint16_t denom, DataQuality q);
 
   void set(uint16_t num, uint16_t denom = 1);
-  uint16_t numerator()   const  { return numerator_; }
-  uint16_t denominator() const  { return denominator_; }
+  uint16_t numerator() const;
+  uint16_t denominator() const;
 
   const std::string to_string() const;
   const std::string to_qualified_string(const std::string unknown = "?") const;
@@ -32,10 +31,8 @@ public:
   bool operator> (const Spin &s) const;
 
 protected:
-  uint16_t numerator_ {0};
+  uint16_t numerator_   {0};
   uint16_t denominator_ {1}; // should be 1 or 2 for a spin
 
   float to_float() const;
 };
-
-#endif

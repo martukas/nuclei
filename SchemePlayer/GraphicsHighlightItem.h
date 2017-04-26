@@ -1,5 +1,4 @@
-#ifndef GRAPHICSHIGHLIGHTITEM_H
-#define GRAPHICSHIGHLIGHTITEM_H
+#pragma once
 
 #include <QObject>
 #include <QGraphicsRectItem>
@@ -17,5 +16,3 @@ signals:
 public slots:
     
 };
-
-#endif // GRAPHICSHIGHLIGHTITEM_H

@@ -1,5 +1,4 @@
-#ifndef LEVEL_H
-#define LEVEL_H
+#pragma once
 
 #include <limits>
 #include <set>
@@ -11,9 +10,7 @@
 class Level
 {
 public:
-
   Level() {}
-
   Level(Energy energy, SpinParity spin,
         HalfLife halfLife = HalfLife(std::numeric_limits<double>::infinity()),
         uint16_t isomerNum = 0);
@@ -58,5 +55,3 @@ private:
   std::set<Energy> populating_transitions_;
   std::set<Energy> depopulating_transitions_;
 };
-
-#endif

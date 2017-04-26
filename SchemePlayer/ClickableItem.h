@@ -1,5 +1,4 @@
-#ifndef CLICKABLEITEM_H
-#define CLICKABLEITEM_H
+#pragma once
 
 #include "Energy.h"
 #include <QFont>
@@ -60,5 +59,3 @@ struct SchemeVisualSettings
 
   ParentPosition parentpos;
 };
-
-#endif // CLICKABLEITEM_H
