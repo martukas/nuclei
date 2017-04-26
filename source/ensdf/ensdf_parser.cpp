@@ -1,5 +1,5 @@
+#include "ensdf_parser.h"
 #include "ensdf_types.h"
-#include "ENSDFParser.h"
 
 #include "custom_logger.h"
 #include "qpx_util.h"
@@ -7,10 +7,71 @@
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 
-std::list<uint16_t> ENSDFParser::aList;
 
-ENSDFParser::ENSDFParser(uint16_t A, std::string directory)
-  : a(A)
+ENSDFParser::ENSDFParser()
+{}
+
+ENSDFParser::ENSDFParser(std::string directory)
+{
+  if (directory.empty())
+    return;
+
+  boost::system::error_code c;
+  boost::filesystem::path path(directory);
+  bool is_dir = boost::filesystem::is_directory(path, c);
+
+  if (!is_dir)
+    return;
+
+  directory_ = directory;
+
+  boost::filesystem::directory_iterator end_iter;
+
+  for( boost::filesystem::directory_iterator dir_iter(path);
+       dir_iter != end_iter ; ++dir_iter)
+    if (boost::filesystem::is_regular_file(dir_iter->status()) &&
+        (dir_iter->path().string().size() > 3))
+    {
+      std::string filename = dir_iter->path().string();
+      std::string a_num = filename.substr(filename.size()-3, 3);
+      if (is_number(a_num))
+        masses_.insert(boost::lexical_cast<uint16_t>(a_num));
+    }
+}
+
+bool ENSDFParser::good() const
+{
+  return !masses_.empty();
+}
+
+std::list<uint16_t> ENSDFParser::masses() const
+{
+  return std::list<uint16_t>(masses_.begin(), masses_.end());
+}
+
+std::string ENSDFParser::directory() const
+{
+  return directory_;
+}
+
+DaughterParser ENSDFParser::get_dp(uint16_t a)
+{
+  if (!masses_.count(a))
+    return DaughterParser();
+  else if (!cache_.count(a))
+    cache_[a] = DaughterParser(a, directory_);
+  return cache_[a];
+}
+
+
+
+
+DaughterParser::DaughterParser()
+{
+
+}
+
+DaughterParser::DaughterParser(uint16_t A, std::string directory)
 {
   std::string num = std::to_string(A);
   if (num.size() < 3)
@@ -27,72 +88,41 @@ ENSDFParser::ENSDFParser(uint16_t A, std::string directory)
   str.assign((std::istreambuf_iterator<char>(t)),
              std::istreambuf_iterator<char>());
 
-  boost::split(contents, str, boost::is_any_of("\n"));
+  boost::split(raw_contents_, str, boost::is_any_of("\n"));
 
   parseBlocks();
+  mass_num_ = A;
 }
 
-const std::list<uint16_t> &ENSDFParser::aValues(std::string directory) // static
+uint16_t DaughterParser::mass_num() const
 {
-  if (!aList.empty())
-    return aList;
-
-  if (directory.empty())
-    return aList;
-
-  boost::system::error_code c;
-  boost::filesystem::path path(directory);
-  bool is_dir = boost::filesystem::is_directory(path, c);
-
-  if (!is_dir)
-    return aList;
-
-  boost::filesystem::directory_iterator end_iter;
-
-  std::set<uint16_t> aSet;
-  for( boost::filesystem::directory_iterator dir_iter(path) ; dir_iter != end_iter ; ++dir_iter)
-    if (boost::filesystem::is_regular_file(dir_iter->status()) && (dir_iter->path().string().size() > 3))
-    {
-      std::string filename = dir_iter->path().string();
-      std::string a_num = filename.substr(filename.size()-3, 3);
-      if (is_number(a_num))
-        aSet.insert(boost::lexical_cast<uint16_t>(a_num));
-    }
-
-  aList = std::list<uint16_t>(aSet.begin(), aSet.end());
-
-  return aList;
+  return mass_num_;
 }
 
-uint16_t ENSDFParser::aValue() const
+std::list<NuclideId> DaughterParser::daughters() const
 {
-  return a;
-}
-
-const std::list<NuclideId> ENSDFParser::daughterNuclides() const
-{
-  //  Q_ASSERT(m_decays.size() == m_decays.keys().toSet().size()); // check for duplicates
+  //  Q_ASSERT(decays_.size() == decays_.keys().toSet().size()); // check for duplicates
   std::list<NuclideId> ret;
-  for (auto &n : m_decays)
+  for (auto &n : decays_)
     ret.push_back(n.first);
   return ret;
 }
 
-const std::list< std::pair<std::string, NuclideId> > ENSDFParser::decays(const NuclideId &daughterNuclide) const
+std::list<std::pair<std::string, NuclideId> > DaughterParser::decays(NuclideId daughter) const
 {
-  //  Q_ASSERT(m_decays.value(daughterNuclide).size() == m_decays.value(daughterNuclide).keys().toSet().size()); // check for duplicates
+  //  Q_ASSERT(decays_.value(daughterNuclide).size() == decays_.value(daughterNuclide).keys().toSet().size()); // check for duplicates
   std::list< std::pair<std::string, NuclideId> > result;
-  for (auto &i : m_decays.at(daughterNuclide))
+  for (auto &i : decays_.at(daughter))
     result.push_back(std::pair<std::string, NuclideId>(i.first, i.second.parents.at(0).nuclide));
   return result;
 }
 
-DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
-                                  const std::string &decayName) const
+DecayScheme DaughterParser::get_decay(NuclideId daughter,
+                                  std::string decay_name) const
 {
-  if (!m_adoptedlevels.count(daughterNuclide) ||
-      !m_decays.count(daughterNuclide) ||
-      !m_decays.at(daughterNuclide).count(decayName))
+  if (!adopted_levels_.count(daughter) ||
+      !decays_.count(daughter) ||
+      !decays_.at(daughter).count(decay_name))
     return DecayScheme();
 
   //  QSettings s;
@@ -102,27 +132,27 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
   double adoptedLevelMaxDifference = 40.0;
   double gammaMaxDifference = 5.0;
 
-  BlockIndices alpos = m_adoptedlevels.at(daughterNuclide);
-  BasicDecayData decaydata = m_decays.at(daughterNuclide).at(decayName);
+  BlockIndices alpos = adopted_levels_.at(daughter);
+  BasicDecayData decaydata = decays_.at(daughter).at(decay_name);
 
   Nuclide daughter_nuclide(decaydata.daughter);
 
   double normalizeDecIntensToPercentParentDecay = 1.0;
   double normalizeGammaIntensToPercentParentDecay = 1.0;
-  std::string dNucid1 = nid_to_ensdf(daughterNuclide, true);
-  std::string dNucid2 = nid_to_ensdf(daughterNuclide, false);
+  std::string dNucid1 = nid_to_ensdf(daughter, true);
+  std::string dNucid2 = nid_to_ensdf(daughter, false);
 
   //  DBG << "parsing " << dNucid.toStdString();
 
   // process all adopted level sub-blocks
   Level currentLevel;
   // create index map for adopted levels
-  std::map<Energy, StringSubList> adoptblocks;
+  std::map<Energy, BlockIndices> adoptblocks;
   std::map<std::string, char> xrefs; // maps DSID to DSSYM (single letter)
   int laststart = -1;
-  for (size_t i=alpos.first; i < alpos.second; i++)
+  for (size_t i=alpos.first; i < alpos.last; i++)
   {
-    const std::string line = contents.at(i);
+    const std::string line = raw_contents_.at(i);
     // extract cross reference records as long as first level was found (cross reference must be before 1st level)
     if (laststart == -1) {
       if (line.substr(0,8) == (dNucid1 + "  X"))
@@ -133,8 +163,10 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       if (laststart > 0) {
         size_t i1 = laststart;
         size_t i2 = i;
-        StringSubList sl(i1, i2);
-        if ((sl.first < sl.last) && (sl.last < contents.size()) && xrefs.count(decaydata.dsid))
+        BlockIndices sl(i1, i2);
+        if ((sl.first < sl.last) &&
+            (sl.last <= raw_contents_.size()) &&
+            xrefs.count(decaydata.dsid))
           insertAdoptedLevelsBlock(&adoptblocks, sl, xrefs.at(decaydata.dsid));
       }
       laststart = i;
@@ -142,15 +174,17 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
   }
   if (laststart > 0)
   {
-    StringSubList sl(laststart, alpos.second);
-    if ((sl.first < sl.last) && (sl.last < contents.size()) && xrefs.count(decaydata.dsid))
+    BlockIndices sl(laststart, alpos.last);
+    if ((sl.first < sl.last) &&
+        (sl.last <= raw_contents_.size()) &&
+        xrefs.count(decaydata.dsid))
       insertAdoptedLevelsBlock(&adoptblocks, sl, xrefs.at(decaydata.dsid));
   }
 
   laststart = -1;
-  for (size_t i=alpos.first; i < alpos.second; i++)
+  for (size_t i=alpos.first; i < alpos.last; i++)
   {
-    const std::string line = contents.at(i);
+    const std::string line = raw_contents_.at(i);
     // extract cross reference records as long as first level was found (cross reference must be before 1st level)
     if (laststart == -1) {
       if (line.substr(0,8) == (dNucid2 + "  X"))
@@ -161,8 +195,10 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       if (laststart > 0) {
         size_t i1 = laststart;
         size_t i2 = i;
-        StringSubList sl(i1, i2);
-        if ((sl.first < sl.last) && (sl.last < contents.size()) && xrefs.count(decaydata.dsid))
+        BlockIndices sl(i1, i2);
+        if ((sl.first < sl.last) &&
+            (sl.last <= raw_contents_.size()) &&
+            xrefs.count(decaydata.dsid))
           insertAdoptedLevelsBlock(&adoptblocks, sl, xrefs.at(decaydata.dsid));
       }
       laststart = i;
@@ -170,21 +206,24 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
   }
   if (laststart > 0)
   {
-    StringSubList sl(laststart, alpos.second);
-    if ((sl.first < sl.last) && (sl.last < contents.size()) && xrefs.count(decaydata.dsid))
+    BlockIndices sl(laststart, alpos.last);
+    if ((sl.first < sl.last) &&
+        (sl.last <= raw_contents_.size()) &&
+        xrefs.count(decaydata.dsid))
       insertAdoptedLevelsBlock(&adoptblocks, sl, xrefs.at(decaydata.dsid));
   }
 
 
   // adopted levels block of current level in decay data set
-  StringSubList currentadoptblock;
+  BlockIndices currentadoptblock;
 
   // process decay block
 
   //  DBG << "parsing size " << decaylines.size();
 
-  for (size_t k=decaydata.block.first; k < decaydata.block.second; k++) {
-    const std::string line = contents.at(k);
+  for (size_t k=decaydata.block.first; k < decaydata.block.last; k++)
+  {
+    const std::string line = raw_contents_.at(k);
 
     //    DBG << "c line " << line.toStdString();
 
@@ -216,8 +255,9 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       if ((delta.sign() != UncertainDouble::SignMagnitudeDefined) || mpol.empty()) {
         // create gamma map
         std::map<Energy, std::string> e2g;
-        for (size_t i = currentadoptblock.first; i < currentadoptblock.last; ++i) {
-          std::string ln = contents.at(i);
+        for (size_t i = currentadoptblock.first; i < currentadoptblock.last; ++i)
+        {
+          std::string ln = raw_contents_.at(i);
           if ((ln.substr(0,9) ==  (dNucid1 + "  G ")) || (ln.substr(0,9) ==  (dNucid2 + "  G ")))
           {
             Energy gk = parse_energy(ln.substr(9, 12));
@@ -270,11 +310,11 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
       else
         currentadoptblock.clear();
 
-      // if an appropriate entry was found, read its contents
+      // if an appropriate entry was found, read its raw_contents_
       // set half life if necessary
-      if (currentadoptblock.first != currentadoptblock.last) {
-
-        std::string levelfirstline(contents.at(currentadoptblock.first));
+      if (currentadoptblock.first != currentadoptblock.last)
+      {
+        std::string levelfirstline(raw_contents_.at(currentadoptblock.first));
 //                DBG << levelfirstline << " === " << currentLevel->to_string();
         if (!currentLevel.halfLife().isValid()) {
           currentLevel.set_halflife(parse_halflife(levelfirstline.substr(39, 16)));
@@ -374,10 +414,10 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
   parent_nuclide.finalize();
   daughter_nuclide.finalize();
   //HACK types
-  return DecayScheme(decayName, parent_nuclide, daughter_nuclide, decaydata.mode);
+  return DecayScheme(decay_name, parent_nuclide, daughter_nuclide, decaydata.mode);
 }
 
-double ENSDFParser::norm(std::string rec, double def_value)
+double DaughterParser::norm(std::string rec, double def_value)
 {
   boost::replace_all(rec, "(", "");
   boost::replace_all(rec, ")", "");
@@ -387,7 +427,7 @@ double ENSDFParser::norm(std::string rec, double def_value)
   return def_value;
 }
 
-UncertainDouble ENSDFParser::parseEnsdfMixing(const std::string &mstr, const std::string &multipolarity)
+UncertainDouble DaughterParser::parseEnsdfMixing(const std::string &mstr, const std::string &multipolarity)
 {
   if (mstr.size() != 14)
     return UncertainDouble();
@@ -408,14 +448,14 @@ UncertainDouble ENSDFParser::parseEnsdfMixing(const std::string &mstr, const std
 }
 
 /**
- * @brief ENSDFParser::insertAdoptedLevelsBlock
+ * @brief DaughterParser::insertAdoptedLevelsBlock
  * @param adoptblocks map of adopted levels (target)
  * @param newblock block to add
  * @param dssym Symbol of the current decay. Used to filter levels and adjust energies according to XREF records
  */
-void ENSDFParser::insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adoptblocks, const StringSubList &newblock, char dssym) const
+void DaughterParser::insertAdoptedLevelsBlock(std::map<Energy, BlockIndices> *adoptblocks, const BlockIndices &newblock, char dssym) const
 {
-  if (!adoptblocks || (newblock.last < newblock.first))
+  if (!adoptblocks || (newblock.last <= newblock.first))
     return;
 
   // get xref record
@@ -442,7 +482,7 @@ void ENSDFParser::insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adop
   // if this point is reached the level will be added in any case
 
   // read energy from level record
-  Energy e = parse_energy(contents.at(newblock.first).substr(9, 12));
+  Energy e = parse_energy(raw_contents_.at(newblock.first).substr(9, 12));
 
   // for the A(E1) case the energy must be modified
   boost::regex er(dssym + "\\(([.\\d]+)\\)");
@@ -462,24 +502,25 @@ void ENSDFParser::insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adop
 }
 
 /**
- * @brief ENSDFParser::extractContinuationRecords
+ * @brief DaughterParser::extractContinuationRecords
  * @param adoptedblock block to search continuation records in
  * @param requestedRecords list of requested records
  * @param typeOfContinuedRecord type of record (default: L(evel))
  * @return list of found records (same size as requestedRecords, empty strings if no record was found)
  */
-std::vector<std::string> ENSDFParser::extractContinuationRecords(const StringSubList &adoptedblock,
+std::vector<std::string> DaughterParser::extractContinuationRecords(const BlockIndices &adoptedblock,
                                                                  const std::list<std::string> &requestedRecords,
                                                                  char typeOfContinuedRecord) const
 {
   // fetch records
   boost::regex crecre("^[A-Z0-9\\s]{5,5}[A-RT-Z0-9] " + std::string(1,typeOfContinuedRecord) + " (.*)$");
   std::vector<std::string> crecs;
-  for (size_t i = adoptedblock.first; i < adoptedblock.last; ++i) {
+  for (size_t i = adoptedblock.first; i < adoptedblock.last; ++i)
+  {
     boost::smatch what;
-    if (boost::regex_search(contents.at(i), what, crecre) && (what.size() > 1))
+    if (boost::regex_search(raw_contents_.at(i), what, crecre) && (what.size() > 1))
        {
-      crecs.push_back(contents.at(i));
+      crecs.push_back(raw_contents_.at(i));
     }
   }
   std::vector<std::string> crecs2;
@@ -511,7 +552,7 @@ std::vector<std::string> ENSDFParser::extractContinuationRecords(const StringSub
 }
 
 template <typename T>
-Energy ENSDFParser::findNearest(const std::map<Energy, T> &map, const Energy &val, Energy *foundVal) const
+Energy DaughterParser::findNearest(const std::map<Energy, T> &map, const Energy &val, Energy *foundVal) const
 {
   if (map.empty())
     return Energy();
@@ -533,33 +574,33 @@ Energy ENSDFParser::findNearest(const std::map<Energy, T> &map, const Energy &va
   return low->first;
 }
 
-IdentificationRecord ENSDFParser::parse_header(size_t idx)
+IdentificationRecord DaughterParser::parse_header(size_t idx)
 {
-  if (idx >= contents.size())
+  if (idx >= raw_contents_.size())
     return IdentificationRecord();
-  IdentificationRecord header = IdentificationRecord::parse(contents.at(idx));
+  IdentificationRecord header = IdentificationRecord::parse(raw_contents_.at(idx));
   if (header.continued)
     header.merge_continued(parse_header(idx+1));
 
   return header;
 }
 
-void ENSDFParser::parseBlocks()
+void DaughterParser::parseBlocks()
 {
   // create list of block boundaries
   // end index points behind last line of block!
   std::list<BlockIndices> blocks;
   size_t from = 0;
   boost::regex emptyline("^\\s*$");
-  for (size_t i=0; i < contents.size(); ++i)
-    if (boost::regex_match(contents.at(i), emptyline))
+  for (size_t i=0; i < raw_contents_.size(); ++i)
+    if (boost::regex_match(raw_contents_.at(i), emptyline))
     {
       if (i-from > 1)
         blocks.push_back(BlockIndices(from, i));
       from = i + 1;
     }
-  if (from < contents.size())
-    blocks.push_back(BlockIndices(from, contents.size()-1));
+  if (from < raw_contents_.size())
+    blocks.push_back(BlockIndices(from, raw_contents_.size()-1));
 
   for (BlockIndices &block_idx : blocks)
   {
@@ -572,7 +613,7 @@ void ENSDFParser::parseBlocks()
     catch (boost::bad_lexical_cast& e)
     {
       DBG << "Bad header " << e.what();
-      DBG << "   " << contents.at(block_idx.first);
+      DBG << "   " << raw_contents_.at(block_idx.first);
     }
 
 
@@ -629,7 +670,7 @@ void ENSDFParser::parseBlocks()
 
     }
     else if (test(header.type & RecordType::AdoptedLevels))
-      m_adoptedlevels[header.nuc_id] = block_idx;
+      adopted_levels_[header.nuc_id] = block_idx;
     else if (test(header.type & RecordType::Decay) ||
              (test(header.type & RecordType::InelasticScattering)))
     {
@@ -652,7 +693,7 @@ void ENSDFParser::parseBlocks()
 //        DBG
 //            << "Header "
 //            << "[" << std::setw(5) << block_idx.first << " - " << std::setw(5) << block_idx.second << "] "
-//            << contents.at(block_idx.first)
+//            << raw_contents_.at(block_idx.first)
 //            << "  "
 //            << header.debug()
 //               ;
@@ -661,13 +702,15 @@ void ENSDFParser::parseBlocks()
       }
 
       boost::regex filter("^[\\s0-9A-Z]{5,5}\\s\\sP[\\s0-9].*$");
-      for (size_t i=block_idx.first; i < block_idx.second; ++i) {
-        if (boost::regex_match(contents.at(i), filter)) {
-          decaydata.parents.push_back(ParentRecord::from_ensdf(contents.at(i)));
+      for (size_t i=block_idx.first; i < block_idx.last; ++i)
+      {
+        if (boost::regex_match(raw_contents_.at(i), filter))
+        {
+          decaydata.parents.push_back(ParentRecord::from_ensdf(raw_contents_.at(i)));
 //                    DBG << "  Parent         " << decaydata.parents.back().to_string();
         }
 //                else
-//                  DBG << "             DEC " << contents.at(i);
+//                  DBG << "             DEC " << raw_contents_.at(i);
       }
 
       if (decaydata.parents.empty())
@@ -679,7 +722,7 @@ void ENSDFParser::parseBlocks()
 
       // create decay string
       //   get reference to daughter map to work with (create and insert if necessary)
-      std::map<std::string, BasicDecayData> &decmap = m_decays[decaydata.daughter];
+      std::map<std::string, BasicDecayData> &decmap = decays_[decaydata.daughter];
 
       std::vector<std::string> hlstrings;
       for (const ParentRecord &prec : decaydata.parents) {
@@ -706,7 +749,7 @@ void ENSDFParser::parseBlocks()
 //              DBG
       //            << "Header "
       //            << "[" << std::setw(5) << block_idx.first << " - " << std::setw(5) << block_idx.second << "] "
-      //            << contents.at(block_idx.first)
+      //            << raw_contents_.at(block_idx.first)
       //            << "  "
 //                  << header.debug()
 //                     ;
@@ -716,7 +759,7 @@ void ENSDFParser::parseBlocks()
 
       //      DBG << "Unprocessed block begin " << block.first;
       //      for (size_t i=block.first; i < block.second; ++i)
-      //        DBG << contents.at(i);
+      //        DBG << raw_contents_.at(i);
       //      DBG << "Unprocessed block end " << block.second;
     }
 

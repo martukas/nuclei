@@ -3,7 +3,16 @@
 #include "DecayScheme.h"
 #include <list>
 
-typedef std::pair<size_t, size_t> BlockIndices; // [startidx, size]
+struct BlockIndices
+{
+  BlockIndices() {}
+  BlockIndices(size_t first, size_t last)
+    : first(first), last(last) {}
+  void clear() { first = last = 0; }
+  size_t first {0};
+  size_t last {0};
+};
+
 
 enum class RecordType : uint64_t
 {
@@ -69,7 +78,8 @@ struct IdentificationRecord
 
 struct CommentsRecord
 {
-  static CommentsRecord from_id(const IdentificationRecord &record, BlockIndices block);
+  static CommentsRecord from_id(const IdentificationRecord &record,
+                                BlockIndices block);
 
   //general
   NuclideId nuclide;
@@ -89,7 +99,8 @@ struct ParentRecord
 
 struct BasicDecayData
 {
-  static BasicDecayData from_id(const IdentificationRecord &record, BlockIndices block);
+  static BasicDecayData from_id(const IdentificationRecord &record,
+                                BlockIndices block);
   std::string to_string() const;
 
   //general
@@ -141,6 +152,7 @@ struct ReactionData
 
   static bool match(std::string record);
   bool find_remove(std::__cxx11::string &extras, std::string wanted, std::string trim_what);
-  static ReactionData from_id(const IdentificationRecord &record, BlockIndices block);
+  static ReactionData from_id(const IdentificationRecord &record,
+                              BlockIndices block);
   std::string to_string() const;
 };
