@@ -1,5 +1,4 @@
-#ifndef ENSDF_RECORDS_H
-#define ENSDF_RECORDS_H
+#pragma once
 
 #include "DecayScheme.h"
 #include <list>
@@ -145,6 +144,3 @@ struct ReactionData
   static ReactionData from_id(const IdentificationRecord &record, BlockIndices block);
   std::string to_string() const;
 };
-
-
-#endif
