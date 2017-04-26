@@ -128,7 +128,8 @@ std::string IdentificationRecord::debug() const
 }
 
 
-CommentsRecord CommentsRecord::from_id(const IdentificationRecord &record, BlockIndices block)
+CommentsRecord CommentsRecord::from_id(const IdentificationRecord &record,
+                                       BlockIndices block)
 {
   if ((record.type & RecordType::Comments) == RecordType::Invalid)
   {
@@ -166,7 +167,8 @@ std::string ParentRecord::to_string() const
   return ret;
 }
 
-BasicDecayData BasicDecayData::from_id(const IdentificationRecord &record, BlockIndices block)
+BasicDecayData BasicDecayData::from_id(const IdentificationRecord &record,
+                                       BlockIndices block)
 {
   if (((record.type & RecordType::Decay) == RecordType::Invalid) &&
       ((record.type & RecordType::InelasticScattering) == RecordType::Invalid))
@@ -206,7 +208,7 @@ BasicDecayData BasicDecayData::from_id(const IdentificationRecord &record, Block
   boost::smatch what;
   if (boost::regex_match(parents, what, parents_expr) && (what.size() > 1))
   {
-    for (int i=1; i < what.size(); ++i)
+    for (size_t i=1; i < what.size(); ++i)
     {
       std::string parent_str = what[1];
 //      DBG << "Parent string " << parent_str;
@@ -294,7 +296,8 @@ std::string BasicDecayData::to_string() const
   return ret;
 }
 
-ReactionData ReactionData::from_id(const IdentificationRecord &record, BlockIndices block)
+ReactionData ReactionData::from_id(const IdentificationRecord &record,
+                                   BlockIndices block)
 {
   ReactionData ret;
   ret.dsid = record.dsid;
@@ -328,7 +331,7 @@ ReactionData ReactionData::from_id(const IdentificationRecord &record, BlockIndi
   boost::regex xtions_exp(split_xxtions);
   boost::smatch what2;
   boost::regex_match(xtions, what2, xtions_exp);
-  for (int i=1; i < what2.size(); ++i)
+  for (size_t i=1; i < what2.size(); ++i)
   {
     std::string parse_xtions = "^(" + nuclide + ")\\s*(" + in_out + ")(?:\\s*,\\s*(" + in_out + "))*$";
     boost::regex xtion_exp(parse_xtions);
@@ -337,7 +340,7 @@ ReactionData ReactionData::from_id(const IdentificationRecord &record, BlockIndi
 //    DBG << "  xoion \"" << what2[i] << "\"";
     std::string layout = what2[i];
     std::string layout2;
-    for (auto z =0; z < layout.size(); ++z)
+    for (size_t z =0; z < layout.size(); ++z)
       layout2 += "\"" + std::string(1,layout.at(z)) + "\" ";
 
 //    DBG << "        " << layout2;
@@ -353,7 +356,7 @@ ReactionData ReactionData::from_id(const IdentificationRecord &record, BlockIndi
       if (!reaction.target.composition_known() && reaction.target.Z())
         reaction.target.set_A(ret.daughter.A());
 
-      for (int j=2; j < what3.size(); ++j)
+      for (size_t j=2; j < what3.size(); ++j)
       {
 //        DBG << "   ants " << what3[j];
 
