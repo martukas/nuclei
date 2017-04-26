@@ -1,5 +1,4 @@
-#ifndef DECAY_SCHEME_H
-#define DECAY_SCHEME_H
+#pragma once
 
 #include "Nuclide.h"
 #include "SpinParity.h"
@@ -8,30 +7,23 @@
 class DecayScheme
 {
 public:
+  DecayScheme() {}
+  DecayScheme(const std::string &name,
+              const Nuclide& parentNuclide,
+              const Nuclide& daughterNuclide,
+              DecayMode DecayType);
 
-    DecayScheme() {}
+  bool valid() const;
+  std::string name() const;
+  DecayMode mode() const;
 
-    DecayScheme(const std::string &name,
-                    const Nuclide& parentNuclide,
-                    const Nuclide& daughterNuclide,
-                    DecayMode DecayType);
+  Nuclide parentNuclide() const;
+  Nuclide daughterNuclide() const;
 
-    bool valid() const;
-    std::string name() const;
-    DecayMode mode() const;
-
-    Nuclide parentNuclide() const;
-    Nuclide daughterNuclide() const;
-
-    std::string to_string() const;
-
-//    Level getLevel(Energy) const;
-//    Transition getTransition(Energy) const;
+  std::string to_string() const;
 
 private:
-    DecayMode decay_mode_;
-    std::string name_;
-    Nuclide parent_, daughter_;
+  DecayMode decay_mode_;
+  std::string name_;
+  Nuclide parent_, daughter_;
 };
-
-#endif

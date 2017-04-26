@@ -221,7 +221,7 @@ DecayScheme ENSDFParser::decay(const NuclideId &daughterNuclide,
           if ((ln.substr(0,9) ==  (dNucid1 + "  G ")) || (ln.substr(0,9) ==  (dNucid2 + "  G ")))
           {
             Energy gk = parse_energy(ln.substr(9, 12));
-            if (gk.isValid())
+            if (gk.valid())
               e2g[gk] = ln;
           }
         }
@@ -449,11 +449,11 @@ void ENSDFParser::insertAdoptedLevelsBlock(std::map<Energy, StringSubList> *adop
   boost::smatch what;
   if (boost::regex_match(xref, what, er) && (what.size() > 1)) {
     Energy matchedE = parse_energy(what[1]);
-    DBG << "ENERGY FROM REGEXP " << xref << " --> " << matchedE.to_string() << " valid " << matchedE.isValid();
+    DBG << "ENERGY FROM REGEXP " << xref << " --> " << matchedE.to_string() << " valid " << matchedE.valid();
 
     //std::cerr << "Current xref: " << xref.toStdString() << " current dssymb: " << dssym << std::endl;
     //std::cerr << "Energy translation, old: " << e << " new: " << matchedE << std::endl;
-    if (matchedE.isValid())
+    if (matchedE.valid())
       e = matchedE;
   }
 

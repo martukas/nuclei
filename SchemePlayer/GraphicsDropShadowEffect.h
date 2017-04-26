@@ -1,5 +1,4 @@
-#ifndef GRAPHICSDROPSHADOWEFFECT_H
-#define GRAPHICSDROPSHADOWEFFECT_H
+#pragma once
 
 #include <QGraphicsDropShadowEffect>
 
@@ -21,5 +20,3 @@ private:
     qreal m_opacity;
     QColor m_color;
 };
-
-#endif // GRAPHICSDROPSHADOWEFFECT_H

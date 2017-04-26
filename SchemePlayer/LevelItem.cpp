@@ -17,7 +17,7 @@ LevelItem::LevelItem()
 LevelItem::LevelItem(Level level, SchemeVisualSettings vis, QGraphicsScene *scene)
   : LevelItem()
 {
-  if (!level.energy().isValid())
+  if (!level.energy().valid())
     return;
 
   energy_ = level.energy();

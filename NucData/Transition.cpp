@@ -18,6 +18,16 @@ Energy Transition::energy() const
   return energy_;
 }
 
+Energy Transition::from() const
+{
+  return from_;
+}
+
+Energy Transition::to() const
+{
+  return to_;
+}
+
 double Transition::intensity() const
 {
   return intensity_;

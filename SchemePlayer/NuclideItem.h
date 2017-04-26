@@ -1,5 +1,4 @@
-#ifndef NUCLIDE_RENDERED_H
-#define NUCLIDE_RENDERED_H
+#pragma once
 
 #include <QString>
 #include <QMap>
@@ -26,5 +25,3 @@ public:
   NuclideId id_;
 
 };
-
-#endif // NUCLIDE_H

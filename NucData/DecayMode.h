@@ -1,5 +1,4 @@
-#ifndef DECAY_MODE_H
-#define DECAY_MODE_H
+#pragma once
 
 #include <set>
 #include <string>
@@ -44,5 +43,3 @@ private:
   bool spontaneous_fission_{false};
   bool inelastic_scattering_{false};
 };
-
-#endif

@@ -1,5 +1,15 @@
 #include "SpinParity.h"
 
+void SpinParity::set_parity(Parity p)
+{
+  parity_ = p;
+}
+
+void SpinParity::add_spin(Spin s)
+{
+  spins_.push_back(s);
+}
+
 bool SpinParity::valid() const
 {
   return ( (parity_.quality() != DataQuality::kUnknown) && (spins_.size() == 1) );

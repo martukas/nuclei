@@ -1,25 +1,20 @@
-#ifndef PARITY_H
-#define PARITY_H
+#pragma once
 
 #include "DataQuality.h"
 
 class Parity : public QualifiedData
 {
 public:
-  enum class EnumParity { kMinus = -1, kPlus = 1 } ;
+  enum class EnumParity
+  {
+    kMinus = -1,
+    kPlus = 1
+  };
 
 public:
   Parity() {}
-  Parity(const EnumParity& p, const DataQuality& q)
-  {
-    quality_ = q;
-    parity_ = p;
-  }
-
-  Parity(const Parity &other)
-    : QualifiedData(other)
-    , parity_(other.parity_)
-  {}
+  Parity(const Parity &other);
+  Parity(const EnumParity& p, const DataQuality& q);
 
   friend bool operator==(const Parity &left, const Parity &right);
 
@@ -29,5 +24,3 @@ public:
 private:
   EnumParity  parity_ {EnumParity::kPlus};
 };
-
-#endif

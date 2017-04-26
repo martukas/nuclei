@@ -1,7 +1,11 @@
 #include "Spin.h"
-#include <boost/algorithm/string.hpp>
-
 #include "custom_logger.h"
+
+Spin::Spin(const Spin &spin)
+  : QualifiedData(spin)
+  , numerator_ (spin.numerator_)
+  , denominator_ (spin.denominator_)
+{}
 
 Spin::Spin(uint16_t num, uint16_t denom, DataQuality q)
 {
@@ -9,11 +13,15 @@ Spin::Spin(uint16_t num, uint16_t denom, DataQuality q)
   quality_ = q;
 }
 
-Spin::Spin(const Spin &spin)
-  : numerator_ (spin.numerator_)
-  , denominator_ (spin.denominator_)
-{}
+uint16_t Spin::numerator() const
+{
+  return numerator_;
+}
 
+uint16_t Spin::denominator() const
+{
+  return denominator_;
+}
 
 Spin& Spin::operator++()
 {

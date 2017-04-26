@@ -34,7 +34,7 @@ TransitionItem::TransitionItem(Transition transition,
                                QGraphicsScene *scene)
   : TransitionItem()
 {
-  if (!transition.energy().isValid())
+  if (!transition.energy().valid())
     return;
 
   transition_ = transition;

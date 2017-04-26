@@ -1,5 +1,4 @@
-#ifndef ENSDF_PARSER_H
-#define ENSDF_PARSER_H
+#pragma once
 
 #include "ensdf_records.h"
 
@@ -48,5 +47,3 @@ private:
 
   static double norm(std::string rec, double def_value);
 };
-
-#endif

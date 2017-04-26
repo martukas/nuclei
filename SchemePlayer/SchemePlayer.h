@@ -1,5 +1,4 @@
-#ifndef SCHEME_PLAYER_H
-#define SCHEME_PLAYER_H
+#pragma once
 
 #include <QObject>
 #include <QMap>
@@ -61,7 +60,4 @@ private:
     void addLevel(Level level, SchemeVisualSettings vis);
     void addParentLevel(Level level, SchemeVisualSettings vis);
     void addTransition(Transition transition, SchemeVisualSettings vis);
-
 };
-
-#endif // DECAY_H

@@ -1,5 +1,4 @@
 #include "DataQuality.h"
-#include <boost/algorithm/string.hpp>
 
 std::string add_qualifiers(const std::string& original,
                            const DataQuality& quality,
@@ -16,6 +15,22 @@ std::string add_qualifiers(const std::string& original,
     return "~" + original;
 
   return original;
+}
+
+QualifiedData::QualifiedData(const QualifiedData &other)
+  : quality_(other.quality_)
+{
+
+}
+
+void QualifiedData::set_quality(const DataQuality& q)
+{
+  quality_ = q;
+}
+
+DataQuality QualifiedData::quality() const
+{
+  return quality_;
 }
 
 std::string QualifiedData::add_qualifiers(const std::string& original,
