@@ -1,5 +1,7 @@
 # C++ objects and libs
 
+build
+
 *.slo
 *.lo
 *.o
@@ -25,10 +27,6 @@ ui_*.h
 Makefile*
 *build-*
 
-debug/*
-release/*
-Application\ Data/*
-ui/*
 nuclei
 *.app
 
