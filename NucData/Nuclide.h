@@ -1,5 +1,4 @@
-#ifndef NUCLIDE_H
-#define NUCLIDE_H
+#pragma once
 
 #include "nid.h"
 #include "Level.h"
@@ -39,5 +38,3 @@ private:
   std::map<Energy, Level> levels_;
   std::map<Energy, Transition> transitions_;
 };
-
-#endif

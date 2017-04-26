@@ -1,7 +1,6 @@
 #include "HalfLife.h"
 
 #include "qpx_util.h"
-//#include "custom_logger.h"
 
 HalfLife::HalfLife()
   : HalfLife(std::numeric_limits<double>::quiet_NaN(), "")
@@ -33,7 +32,7 @@ HalfLife HalfLife::preferred_units() const
 
 bool HalfLife::isValid() const
 {
-//  INFO << "HL " << to_string() << " valid=" << !boost::math::isnan(time_.value());
+  //  INFO << "HL " << to_string() << " valid=" << !boost::math::isnan(time_.value());
   return !boost::math::isnan(time_.value());
 }
 
@@ -44,13 +43,13 @@ double HalfLife::seconds() const
   if (known_units_.count(units_))
     factor = known_units_.at(units_);
   tmp *= factor;
-//  INFO << "HL " << to_string() << " s=" << tmp.value();
+  //  INFO << "HL " << to_string() << " s=" << tmp.value();
   return tmp.value();
 }
 
 bool HalfLife::isStable() const
 {
-//  INFO << "HL " << to_string() << " stable=" << boost::math::isinf(time_.value());
+  //  INFO << "HL " << to_string() << " stable=" << boost::math::isinf(time_.value());
   return boost::math::isinf(time_.value());
 }
 
@@ -91,19 +90,19 @@ std::string HalfLife::preferred_units(double secs)
 
 bool HalfLife::operator >(const HalfLife &right) const
 {
-//  INFO << "HLC " << to_string() << ">" << right.to_string() << " " << (seconds() > right.seconds());
+  //  INFO << "HLC " << to_string() << ">" << right.to_string() << " " << (seconds() > right.seconds());
   return seconds() > right.seconds();
 }
 
 bool HalfLife::operator >=(const HalfLife &right) const
 {
-//  INFO << "HLC " << to_string() << ">=" << right.to_string() << " " << (seconds() >= right.seconds());
+  //  INFO << "HLC " << to_string() << ">=" << right.to_string() << " " << (seconds() >= right.seconds());
   return seconds() >= right.seconds();
 }
 
 bool HalfLife::operator <(const HalfLife &right) const
 {
-//  INFO << "HLC " << to_string() << "<" << right.to_string() << " " << (seconds() < right.seconds());
+  //  INFO << "HLC " << to_string() << "<" << right.to_string() << " " << (seconds() < right.seconds());
   return seconds() < right.seconds();
 }
 
@@ -125,7 +124,8 @@ std::map<std::string, double> HalfLife::init_units()
   result["as"] = 1.E-18;
   result["us"] = result["µs"];
   std::map<std::string, double> res2;
-  for (auto r : result) {
+  for (auto r : result)
+  {
     res2.insert(r);
     res2[boost::to_upper_copy(r.first)] = r.second;
   }

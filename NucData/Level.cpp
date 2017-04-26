@@ -1,8 +1,6 @@
 #include "Level.h"
 #include "qpx_util.h"
 
-//#include "custom_logger.h"
-
 Level::Level(Energy energy, SpinParity spin, HalfLife halfLife, uint16_t isomerNum)
   : Level()
 {
@@ -86,13 +84,13 @@ void Level::set_spin(const SpinParity& s)
 
 void Level::addPopulatingTransition(const Energy& e)
 {
-  if (e.isValid())
+  if (e.valid())
     populating_transitions_.insert(e);
 }
 
 void Level::addDepopulatingTransition(const Energy& e)
 {
-  if (e.isValid())
+  if (e.valid())
     depopulating_transitions_.insert(e);
 }
 

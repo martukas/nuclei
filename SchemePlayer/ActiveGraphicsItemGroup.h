@@ -1,5 +1,4 @@
-#ifndef ACTIVEGRAPHICSITEMGROUP_H
-#define ACTIVEGRAPHICSITEMGROUP_H
+#pragma once
 
 #include <QGraphicsItemGroup>
 #include <QColor>
@@ -56,5 +55,3 @@ private:
     static const bool animateShadow;
     static const bool animate;
 };
-
-#endif // ACTIVEGRAPHICSITEMGROUP_H

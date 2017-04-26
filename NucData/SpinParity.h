@@ -1,5 +1,4 @@
-#ifndef SPINPARITY_H
-#define SPINPARITY_H
+#pragma once
 
 #include "Parity.h"
 #include "Spin.h"
@@ -9,23 +8,13 @@ class SpinParity
 {
 public:
   SpinParity() {}
-  void set_parity(Parity p)
-  {
-    parity_ = p;
-  }
-
-  void add_spin(Spin s)
-  {
-    spins_.push_back(s);
-  }
+  void set_parity(Parity p);
+  void add_spin(Spin s);
 
   bool valid() const;
-
   std::string to_string() const;
 
 private:
   Parity parity_;
   std::vector<Spin> spins_;
 };
-
-#endif

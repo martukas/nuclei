@@ -1,9 +1,9 @@
 #include "DecayScheme.h"
 
 DecayScheme::DecayScheme(const std::string &name,
-               const Nuclide &parentNuclide,
-               const Nuclide &daughterNuclide,
-               DecayMode DecaySchemeType)
+                         const Nuclide &parentNuclide,
+                         const Nuclide &daughterNuclide,
+                         DecayMode DecaySchemeType)
   : decay_mode_(DecaySchemeType)
   , name_(name)
   , parent_(parentNuclide)

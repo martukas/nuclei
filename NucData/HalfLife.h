@@ -1,5 +1,4 @@
-#ifndef HALFLIFE_H
-#define HALFLIFE_H
+#pragma once
 
 #include "UncertainDouble.h"
 #include <map>
@@ -7,28 +6,26 @@
 class HalfLife
 {
 public:
-    HalfLife();
-    HalfLife(double val, std::string units = "");
-    HalfLife(UncertainDouble time, std::string units = "");
+  HalfLife();
+  HalfLife(double val, std::string units = "");
+  HalfLife(UncertainDouble time, std::string units = "");
 
-    HalfLife preferred_units() const;
+  HalfLife preferred_units() const;
 
-    bool isValid() const;
-    double seconds() const;
-    bool isStable() const;
-    std::string to_string(bool with_uncert = true) const;
+  bool isValid() const;
+  double seconds() const;
+  bool isStable() const;
+  std::string to_string(bool with_uncert = true) const;
 
-    bool operator>(const HalfLife &right) const;
-    bool operator>=(const HalfLife &right) const;
-    bool operator<(const HalfLife &right) const;
+  bool operator>(const HalfLife &right) const;
+  bool operator>=(const HalfLife &right) const;
+  bool operator<(const HalfLife &right) const;
 
 private:
-    UncertainDouble time_;
-    std::string     units_;
+  UncertainDouble time_;
+  std::string     units_;
 
-    static const std::map<std::string, double> known_units_;
-    static std::map<std::string, double> init_units();
-    static std::string preferred_units(double from);
+  static const std::map<std::string, double> known_units_;
+  static std::map<std::string, double> init_units();
+  static std::string preferred_units(double from);
 };
-
-#endif

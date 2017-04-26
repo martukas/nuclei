@@ -1,6 +1,5 @@
 #include "Nuclide.h"
 #include "qpx_util.h"
-
 #include "custom_logger.h"
 
 Nuclide::Nuclide()
@@ -68,13 +67,13 @@ std::string Nuclide::halfLifeAsText() const
 
 void Nuclide::addLevel(const Level& level)
 {
-  if (level.energy().isValid())
+  if (level.energy().valid())
     levels_[level.energy()] = level;
 }
 
 void Nuclide::addTransition(const Transition& transition)
 {
-  if (!transition.energy().isValid())
+  if (!transition.energy().valid())
   {
     WARN << "Could not add invalid transition " << transition.to_string()
         << " to " << id_.verboseName();

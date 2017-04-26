@@ -1,5 +1,4 @@
-#ifndef DECAYCASCADEFILTERPROXYMODEL_H
-#define DECAYCASCADEFILTERPROXYMODEL_H
+#pragma once
 
 #include <QSortFilterProxyModel>
 
@@ -18,5 +17,3 @@ protected:
     virtual bool filterAcceptsThisRow(int source_row, const QModelIndex &source_parent) const;
 
 };
-
-#endif // DECAYCASCADEFILTERPROXYMODEL_H

@@ -1,5 +1,4 @@
-#ifndef TransitionItem_H
-#define TransitionItem_H
+#pragma once
 
 #include <stdint.h>
 #include <QFont>
@@ -58,5 +57,3 @@ private:
   static QPolygonF initArrowHead(double width);
   static QPolygonF initArrowBase(double width);
 };
-
-#endif // TransitionItem_H

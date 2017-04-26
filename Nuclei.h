@@ -1,5 +1,4 @@
-#ifndef NUCLEI_H
-#define NUCLEI_H
+#pragma once
 
 #include <QMainWindow>
 #include "DecayScheme.h"
@@ -54,5 +53,3 @@ private:
     DecayCascadeFilterProxyModel *decayProxyModel, *searchProxyModel;
     QSharedPointer<SchemePlayer> m_decay;
 };
-
-#endif // NUCLEI_H
