@@ -151,7 +151,7 @@ struct ReactionData
   std::string qualifier;
 
   static bool match(std::string record);
-  bool find_remove(std::__cxx11::string &extras, std::string wanted, std::string trim_what);
+  bool find_remove(std::string &extras, std::string wanted, std::string trim_what);
   static ReactionData from_id(const IdentificationRecord &record,
                               BlockIndices block);
   std::string to_string() const;
