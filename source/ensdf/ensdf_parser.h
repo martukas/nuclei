@@ -28,7 +28,8 @@ private:
   template <typename T> Energy findNearest(const std::map<Energy, T> &map,
                                            const Energy &val, Energy *foundVal = 0) const;
   void insertAdoptedLevelsBlock(std::map<Energy, BlockIndices> *adoptblocks,
-                                const BlockIndices &newblock, char dssym) const;
+                                const BlockIndices &newblock,
+                                const std::string& dssym) const;
   std::vector<std::string> extractContinuationRecords(const BlockIndices &adoptedblock,
                                                       const std::list<std::string> &requestedRecords,
                                                       char typeOfContinuedRecord = 'L') const;

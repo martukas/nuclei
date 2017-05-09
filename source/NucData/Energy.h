@@ -22,7 +22,8 @@ public:
   friend bool operator==(const Energy &left, const Energy &right);
   operator double() const;
 
-  Energy operator-(Energy other);
+  Energy operator-(const Energy& other) const;
+  Energy operator+(const Energy& other) const;
 
 private:
   UncertainDouble value_;
