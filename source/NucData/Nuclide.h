@@ -14,12 +14,18 @@ public:
 
   bool empty() const;
 
-  void addLevels(const std::map<Energy, Level> &levels);
-  void addTransitions(const std::map<Energy, Transition> &tr);
-
   void addLevel(const Level& level);
   void addTransition(const Transition& transition);
   void finalize();
+
+  void addNewTransition(const Energy& energy,
+                        const Energy& to,
+                        double intensity);
+
+  void removeTransition(const Transition& t);
+
+  void cullLevels();
+  bool hasTransitions(const Energy& level) const;
 
   std::map<Energy, Level> levels() const;
   std::map<Energy, Transition> transitions() const;
@@ -37,4 +43,6 @@ private:
   std::vector <HalfLife> halflives_;
   std::map<Energy, Level> levels_;
   std::map<Energy, Transition> transitions_;
+
+  void registerTransition(const Transition& t);
 };

@@ -21,16 +21,6 @@ bool Nuclide::empty() const
   return (!id_.valid() || levels_.empty() /*|| halflives_.empty()*/);
 }
 
-void Nuclide::addLevels(const std::map<Energy, Level> &levels)
-{
-  levels_.insert(levels.begin(), levels.end());
-}
-
-void Nuclide::addTransitions(const std::map<Energy, Transition> &tr)
-{
-  transitions_.insert(tr.begin(), tr.end());
-}
-
 std::map<Energy, Level> Nuclide::levels() const
 {
   return levels_;
@@ -73,31 +63,66 @@ void Nuclide::addLevel(const Level& level)
 
 void Nuclide::addTransition(const Transition& transition)
 {
-  if (!transition.energy().valid())
-  {
+  if (transition.energy().valid())
+    transitions_[transition.energy()] = transition;
+  else
     WARN << "Could not add invalid transition " << transition.to_string()
         << " to " << id_.verboseName();
-    return;
+}
+
+void Nuclide::addNewTransition(const Energy& energy,
+                               const Energy& to,
+                               double intensity)
+{
+  if (levels_.count(to))
+  {
+    Energy from = to + energy;
+    Transition transition(energy, intensity,
+                          std::string(), UncertainDouble(),
+                          from, to);
+    transitions_[transition.energy()] = transition;
+    if (levels_.count(from))
+      levels_[from] = Level(from, SpinParity());
+    registerTransition(transition);
   }
-  transitions_[transition.energy()] = transition;
+}
+
+void Nuclide::removeTransition(const Transition& t)
+{
+  if (transitions_.count(t.energy()))
+    transitions_.erase(t.energy());
 }
 
 void Nuclide::finalize()
 {
   for (auto t : transitions_)
-  {
-    if (!levels_.count(t.second.from()) ||
-        !levels_.count(t.second.to()))
-    {
+    if (levels_.count(t.second.from()) && levels_.count(t.second.to()))
+      registerTransition(t.second);
+    else
       WARN << "Transition cannot be linked to levels: " << t.second.to_string()
           << " for " << id_.verboseName();
-      continue;
-    }
-    levels_[t.second.from()].addDepopulatingTransition(t.second.energy());
-    levels_[t.second.to()].addPopulatingTransition(t.second.energy());
-  }
 }
 
+void Nuclide::cullLevels()
+{
+  for (auto l : levels_)
+    if (!hasTransitions(l.first))
+      levels_.erase(l.first);
+}
+
+bool Nuclide::hasTransitions(const Energy& level) const
+{
+  for (auto t : transitions_)
+    if ((level == t.second.from()) || (level == t.second.to()))
+      return true;
+  return false;
+}
+
+void Nuclide::registerTransition(const Transition& t)
+{
+  levels_[t.from()].addDepopulatingTransition(t.energy());
+  levels_[t.to()].addPopulatingTransition(t.energy());
+}
 
 std::string Nuclide::to_string() const
 {

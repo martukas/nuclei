@@ -70,13 +70,17 @@ bool operator==(const Energy &left, const Energy &right)
   return (left.value_ == right.value_);
 }
 
-Energy Energy::operator-(Energy other)
+Energy Energy::operator-(const Energy& other) const
 {
   Energy ret = *this;
   ret.value_.setValue(value_.value() - other.value_.value());
   return ret;
 }
 
-
-
+Energy Energy::operator+(const Energy& other) const
+{
+  Energy ret = *this;
+  ret.value_ = value_ + other.value_;
+  return ret;
+}
 
