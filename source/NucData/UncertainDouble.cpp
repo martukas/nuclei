@@ -188,7 +188,6 @@ std::string UncertainDouble::to_string(bool prefix_magn, bool with_uncert) const
       orderOfUncert = std::max(order_of(lower_sigma_), order_of(upper_sigma_));
 
     bool insiginficant = (orderOfValue - orderOfUncert) > 6;
-    bool as_percent = (orderOfValue - orderOfUncert) > 6; //not implemented
     int targetOrder = orderOfValue;
     if (orderOfUncert > orderOfValue)
       targetOrder = orderOfUncert;
@@ -321,10 +320,30 @@ UncertainDouble &UncertainDouble::operator +=(const UncertainDouble &other)
   return *this;
 }
 
+UncertainDouble &UncertainDouble::operator -=(const UncertainDouble &other)
+{
+  uint16_t sd1 = sigdec();
+  uint16_t sd2 = other.sigdec();
+  setValue(value() - other.value());
+  setSigFigs(std::min(sd1, sd2) + order_of(value_) + 1);
+  if (uncertaintyType() == other.uncertaintyType())
+    setUncertainty(lowerUncertainty() + other.lowerUncertainty(), upperUncertainty() + other.upperUncertainty(), uncertaintyType());
+  else
+    setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UndefinedType);
+  return *this;
+}
+
 UncertainDouble UncertainDouble::operator +(const UncertainDouble &other) const
 {
   UncertainDouble result(*this);
   result += other;
+  return result;
+}
+
+UncertainDouble UncertainDouble::operator -(const UncertainDouble &other) const
+{
+  UncertainDouble result(*this);
+  result -= other;
   return result;
 }
 

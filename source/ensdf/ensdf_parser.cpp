@@ -144,11 +144,9 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
 
   //  DBG << "parsing " << dNucid.toStdString();
 
-  // process all adopted level sub-blocks
-  Level currentLevel;
   // create index map for adopted levels
   std::map<Energy, BlockIndices> adoptblocks;
-  std::map<std::string, char> xrefs; // maps DSID to DSSYM (single letter)
+  std::map<std::string, std::string> xrefs; // maps DSID to DSSYM (single letter)
   int laststart = -1;
   for (size_t i=alpos.first; i < alpos.last; i++)
   {
@@ -214,13 +212,10 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   }
 
 
+  // process all adopted level sub-blocks
+  Level currentLevel;
   // adopted levels block of current level in decay data set
   BlockIndices currentadoptblock;
-
-  // process decay block
-
-  //  DBG << "parsing size " << decaylines.size();
-
   for (size_t k=decaydata.block.first; k < decaydata.block.last; k++)
   {
     const std::string line = raw_contents_.at(k);
@@ -304,7 +299,8 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
         currentadoptblock.clear();
         currentadoptblock = adoptblocks.at(findNearest(adoptblocks, currentLevel.energy(), &foundE));
         //        Q_ASSERT(currentadoptblock.last >= currentadoptblock.first);
-        if (abs((currentLevel.energy() - foundE).operator double()) > (adoptedLevelMaxDifference/1000.0*currentLevel.energy()))
+        if (std::abs((currentLevel.energy() - foundE).operator double()) >
+            (adoptedLevelMaxDifference/1000.0*currentLevel.energy()))
           currentadoptblock.clear();
       }
       else
@@ -453,7 +449,9 @@ UncertainDouble DaughterParser::parseEnsdfMixing(const std::string &mstr, const 
  * @param newblock block to add
  * @param dssym Symbol of the current decay. Used to filter levels and adjust energies according to XREF records
  */
-void DaughterParser::insertAdoptedLevelsBlock(std::map<Energy, BlockIndices> *adoptblocks, const BlockIndices &newblock, char dssym) const
+void DaughterParser::insertAdoptedLevelsBlock(std::map<Energy, BlockIndices> *adoptblocks,
+                                              const BlockIndices &newblock,
+                                              const std::string& dssym) const
 {
   if (!adoptblocks || (newblock.last <= newblock.first))
     return;
@@ -469,14 +467,14 @@ void DaughterParser::insertAdoptedLevelsBlock(std::map<Energy, BlockIndices> *ad
   // -(AB) case (do not add level if dssym is contained in the parentheses)
   if ((xref.substr(0,2) == "-(")
       && (xref[xref.size()-1] == ')')
-      && boost::contains(xref, std::string(1,dssym)))
+      && boost::contains(xref, dssym))
     return;
 
   // exit if xref is neither "+" (level valid for all datasets) nor -(...) not containing dssymb
   // nor contains dssym
   if (xref != "+"
       && (xref.substr(0,2) != "-(")
-      && !boost::contains(xref,std::string(1,dssym)))
+      && !boost::contains(xref, dssym))
     return;
 
   // if this point is reached the level will be added in any case
@@ -485,12 +483,14 @@ void DaughterParser::insertAdoptedLevelsBlock(std::map<Energy, BlockIndices> *ad
   Energy e = parse_energy(raw_contents_.at(newblock.first).substr(9, 12));
 
   // for the A(E1) case the energy must be modified
-  boost::regex er(dssym + "\\(([.\\d]+)\\)");
   boost::smatch what;
-  if (boost::regex_match(xref, what, er) && (what.size() > 1)) {
+  if (boost::regex_match(xref, what, boost::regex(dssym + "\\(([.\\d]+)\\)")) &&
+      (what.size() > 1))
+  {
     Energy matchedE = parse_energy(what[1]);
-    DBG << "ENERGY FROM REGEXP " << xref << " --> " << matchedE.to_string() << " valid " << matchedE.valid();
-
+    DBG << "ENERGY FROM REGEXP " << xref << " --> "
+        << matchedE.to_string() << " valid "
+        << matchedE.valid();
     //std::cerr << "Current xref: " << xref.toStdString() << " current dssymb: " << dssym << std::endl;
     //std::cerr << "Energy translation, old: " << e << " new: " << matchedE << std::endl;
     if (matchedE.valid())
@@ -552,7 +552,9 @@ std::vector<std::string> DaughterParser::extractContinuationRecords(const BlockI
 }
 
 template <typename T>
-Energy DaughterParser::findNearest(const std::map<Energy, T> &map, const Energy &val, Energy *foundVal) const
+Energy DaughterParser::findNearest(const std::map<Energy, T> &map,
+                                   const Energy &val,
+                                   Energy *foundVal) const
 {
   if (map.empty())
     return Energy();
@@ -564,7 +566,7 @@ Energy DaughterParser::findNearest(const std::map<Energy, T> &map, const Energy 
   else if (low != map.begin()) {
     prev = low;
     --prev;
-    if (abs(val - prev->first) < abs(low->first - val))
+    if (std::abs(val - prev->first) < std::abs(low->first - val))
       low = prev;
   }
 
