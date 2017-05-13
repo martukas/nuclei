@@ -2,6 +2,7 @@
 
 #include "DecayScheme.h"
 #include <list>
+#include <cmath>
 
 struct BlockIndices
 {
@@ -13,6 +14,67 @@ struct BlockIndices
   size_t last {0};
 };
 
+template <typename T>
+Energy findNearest(const std::map<Energy, T> &map,
+                   const Energy &val)
+{
+  if (map.empty())
+    return Energy();
+  typename std::map<Energy, T>::const_iterator low, prev;
+  low = map.lower_bound(val);
+  if (low == map.end())
+    low--;
+  else if (low != map.begin()) {
+    prev = low;
+    --prev;
+    if (std::abs(val - prev->first) < std::abs(low->first - val))
+      low = prev;
+  }
+  return low->first;
+}
+
+bool match_record_type(const std::string& line,
+                       const std::string& pattern);
+
+std::vector<std::string> extractContinuationRecords(const BlockIndices &adoptedblock,
+                                                    const std::list<std::string> &requestedRecords,
+                                                    const std::vector<std::string>& data,
+                                                    std::string typeOfContinuedRecord = "L");
+
+std::map<Energy, std::string> get_gamma_lines(const std::vector<std::string>& data,
+                                              BlockIndices bounds, NuclideId nucid);
+
+bool is_gamma_line(const std::string& line,
+                   std::string nucid,
+                   std::string nucid2 = "");
+
+bool is_level_line(const std::string& line,
+                   std::string nucid,
+                   std::string nucid2 = "");
+
+bool is_intensity_line(const std::string& line,
+                       std::string nucid,
+                       std::string nucid2 = "");
+
+bool is_norm_line(const std::string& line,
+                  std::string nucid,
+                  std::string nucid2 = "");
+
+bool is_p_norm_line(const std::string& line,
+                    std::string nucid,
+                    std::string nucid2 = "");
+
+bool is_feed_a_line(const std::string& line,
+                    std::string nucid,
+                    std::string nucid2 = "");
+
+bool is_feed_b_line(const std::string& line,
+                    std::string nucid,
+                    std::string nucid2 = "");
+
+bool is_feed_line(const std::string& line,
+                  std::string nucid,
+                  std::string nucid2 = "");
 
 enum class RecordType : uint64_t
 {
@@ -50,9 +112,19 @@ inline bool test(RecordType a)
   return a != RecordType::Invalid;
 }
 
-
-struct IdentificationRecord
+struct IdRecord
 {
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line, "^[\\s0-9A-Za-z]{6}\\s{3}.*$");
+  }
+
+  static IdRecord parse(size_t& idx,
+                        const std::vector<std::string>& data);
+
+  std::string debug() const;
+  void reflect_parse() const;
+
   NuclideId nuc_id;
   std::string dsid;
   std::string extended_dsid;
@@ -60,34 +132,149 @@ struct IdentificationRecord
   std::string pub;
   uint16_t year;
   uint16_t month;
-
   RecordType type {RecordType::Invalid};
-
-  bool continued {false};
-  uint16_t numlines{1}; //deprecate
-
-  static IdentificationRecord parse(const std::string& line);
-  void merge_continued(IdentificationRecord other);
-
-
-  std::string debug() const;
 
   static RecordType is_type(std::string s);
   static std::string type_to_str(RecordType t);
 };
 
+struct HistoryRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Z]{5}[\\s02-9A-Za-z]\\sH.*$");
+  }
+
+  static HistoryRecord parse(size_t& idx,
+                             const std::vector<std::string>& data);
+
+  NuclideId nuc_id;
+  std::map<std::string, std::string> kvps;
+};
+
+struct QValueRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Z]{5}\\s{2}Q\\s.*$");
+  }
+};
+
+struct XRefRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Z]{5}\\s{2}X.*$");
+  }
+};
+
+struct NormalizationRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Za-z]{5}\\s{2}N.*$");
+  }
+};
+
+struct ProdNormalizationRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Za-z]{6}PN.*$");
+  }
+};
+
+struct LevelRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Za-z$@]{6}\\sL\\s.*$");
+  }
+};
+
+struct AlphaRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Z]{6}\\sA\\s.*$");
+  }
+};
+
+struct BetaRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Z]{6}\\sB\\s.*$");
+  }
+};
+
+struct GammaRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Z]{5}.\\sG\\s.*$");
+  }
+};
+
+struct ParticleRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Z]{6}\\s[\\sD][NPA].*$");
+  }
+};
+
+struct ECRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Z]{6}\\sE\\s.*$");
+  }
+};
+
+struct ReferenceRecord
+{
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9]{3}\\s{4}R\\s.*$");
+  }
+};
+
 struct CommentsRecord
 {
-  static CommentsRecord from_id(const IdentificationRecord &record,
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Za-z]{5}.[cdtCDT].*$");
+  }
+
+  static CommentsRecord from_id(const IdRecord &record,
                                 BlockIndices block);
 
-  //general
   NuclideId nuclide;
   BlockIndices block;
 };
 
 struct ParentRecord
 {
+  static bool is(const std::string& line)
+  {
+    return match_record_type(line,
+                             "^[\\s0-9A-Z]{5}\\s{2}P.*$");
+  }
+
   NuclideId nuclide;
   Energy energy;
   HalfLife hl;
@@ -99,7 +286,7 @@ struct ParentRecord
 
 struct BasicDecayData
 {
-  static BasicDecayData from_id(const IdentificationRecord &record,
+  static BasicDecayData from_id(const IdRecord &record,
                                 BlockIndices block);
   std::string to_string() const;
 
@@ -152,7 +339,7 @@ struct ReactionData
 
   static bool match(std::string record);
   bool find_remove(std::string &extras, std::string wanted, std::string trim_what);
-  static ReactionData from_id(const IdentificationRecord &record,
+  static ReactionData from_id(const IdRecord &record,
                               BlockIndices block);
   std::string to_string() const;
 };

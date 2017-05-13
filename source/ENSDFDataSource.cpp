@@ -242,8 +242,8 @@ void ENSDFDataSource::createENSDFCache()
 
   out << (*root);
 
-  DBG << "Unknown decays:";
-  for (auto d : unknown_decays)
-    DBG << "   " << d;
+//  DBG << "Unknown decays:";
+//  for (auto d : unknown_decays)
+//    DBG << "   " << d;
 
 }

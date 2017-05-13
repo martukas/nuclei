@@ -26,5 +26,6 @@ DecayMode parse_decay_mode(std::string record);
 std::string mode_to_ensdf(DecayMode);
 
 NuclideId parse_nid(std::string nucid);
+NuclideId parse_check_nid(std::string nucid);
 std::string nid_to_ensdf(NuclideId, bool alt);
 bool check_nid_parse(const std::string&, const NuclideId&);
