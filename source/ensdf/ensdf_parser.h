@@ -4,6 +4,23 @@
 
 class DaughterParser
 {
+  struct LevelIndex
+  {
+    void find(BlockIndices alpos,
+              std::string dNucid1,
+              std::string dsid,
+              const std::vector<std::string>& data);
+
+    void insertAdoptedLevelsBlock(const BlockIndices &newblock,
+                                  const std::string& dsid,
+                                  const std::vector<std::string>& data);
+
+    std::map<Energy, BlockIndices> adoptblocks;
+    // maps DSID to DSSYM (single letter)
+    std::map<std::string, std::string> xrefs;
+
+  };
+
 public:
   DaughterParser();
   DaughterParser(uint16_t A, std::string directory);
@@ -25,18 +42,12 @@ private:
 
   static UncertainDouble parseEnsdfMixing(const std::string &s,
                                           const std::string &multipolarity);
-  template <typename T> Energy findNearest(const std::map<Energy, T> &map,
-                                           const Energy &val, Energy *foundVal = 0) const;
-  void insertAdoptedLevelsBlock(std::map<Energy, BlockIndices> *adoptblocks,
-                                const BlockIndices &newblock,
-                                const std::string& dssym) const;
-  std::vector<std::string> extractContinuationRecords(const BlockIndices &adoptedblock,
-                                                      const std::list<std::string> &requestedRecords,
-                                                      char typeOfContinuedRecord = 'L') const;
 
   static double norm(std::string rec, double def_value);
   void parseBlocks();
-  IdentificationRecord parse_header(size_t idx);
+  std::list<BlockIndices> find_blocks() const;
+
+  void interpret_record(const std::string& line);
 };
 
 
