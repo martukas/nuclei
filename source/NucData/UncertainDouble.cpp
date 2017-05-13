@@ -125,16 +125,17 @@ void UncertainDouble::setSigFigs(uint16_t sig)
 
 bool UncertainDouble::hasFiniteValue() const
 {
-  if (    sign() != UncertainDouble::MagnitudeDefined &&
-          sign() != UncertainDouble::SignMagnitudeDefined )
+  if (sign() != UncertainDouble::MagnitudeDefined &&
+      sign() != UncertainDouble::SignMagnitudeDefined)
     return false;
   
-  if (    uncertaintyType() == UncertainDouble::SymmetricUncertainty ||
-          uncertaintyType() == UncertainDouble::AsymmetricUncertainty ||
-          uncertaintyType() == UncertainDouble::Approximately ||
-          uncertaintyType() == UncertainDouble::Calculated ||
-          uncertaintyType() == UncertainDouble::Systematics )
+  if (uncertaintyType() == UncertainDouble::SymmetricUncertainty ||
+      uncertaintyType() == UncertainDouble::AsymmetricUncertainty ||
+      uncertaintyType() == UncertainDouble::Approximately ||
+      uncertaintyType() == UncertainDouble::Calculated ||
+      uncertaintyType() == UncertainDouble::Systematics)
     return true;
+
   return false;
 }
 

@@ -98,9 +98,9 @@ void Nuclide::finalize()
   for (auto t : transitions_)
     if (levels_.count(t.second.from()) && levels_.count(t.second.to()))
       registerTransition(t.second);
-    else
-      WARN << "Transition cannot be linked to levels: " << t.second.to_string()
-          << " for " << id_.verboseName();
+//    else
+//      WARN << "Transition cannot be linked to levels: " << t.second.to_string()
+//          << " for " << id_.verboseName();
 }
 
 void Nuclide::cullLevels()

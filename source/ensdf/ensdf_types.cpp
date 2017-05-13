@@ -284,6 +284,13 @@ Level parse_level(const std::string& record)
   return ret;
 }
 
+NuclideId parse_check_nid(std::string nucid)
+{
+  auto ret = parse_nid(nucid);
+  if (!check_nid_parse(nucid, ret))
+    ERR << "Could not parse daughter NucID  \"" << nucid << "\"";
+  return ret;
+}
 
 NuclideId parse_nid(std::string id)
 {
@@ -527,10 +534,12 @@ std::string nid_to_ensdf(NuclideId id, bool alt)
   while (nucid.size() < 3)
     nucid = " " + nucid;
   if (id.composition_known())
+  {
     if ((id.Z() > 109) && alt)
       nucid += boost::lexical_cast<std::string>(id.Z() - 100);
     else
       nucid += boost::to_upper_copy(NuclideId::symbolOf(id.Z()));
+  }
   while (nucid.size() < 5)
     nucid += " ";
   return nucid;

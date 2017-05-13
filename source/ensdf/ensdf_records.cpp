@@ -6,24 +6,163 @@
 
 #include <boost/regex.hpp>
 
-IdentificationRecord IdentificationRecord::parse(const std::string& line)
+bool match_record_type(const std::string& line,
+                       const std::string& pattern)
 {
-  if (line.size() != 80)
+  boost::regex filter(pattern);
+  return (line.size() == 80) &&
+      boost::regex_match(line, filter);
+}
+
+/**
+ * @brief DaughterParser::extractContinuationRecords
+ * @param adoptedblock block to search continuation records in
+ * @param requestedRecords list of requested records
+ * @param typeOfContinuedRecord type of record (default: L(evel))
+ * @return list of found records (same size as requestedRecords, empty strings if no record was found)
+ */
+std::vector<std::string> extractContinuationRecords(const BlockIndices &adoptedblock,
+                                                    const std::list<std::string> &requestedRecords,
+                                                    const std::vector<std::string> &data,
+                                                    std::string typeOfContinuedRecord)
+{
+  // fetch records
+  boost::regex crecre("^[A-Z0-9\\s]{5,5}[A-RT-Z0-9] "
+                      + typeOfContinuedRecord + " (.*)$");
+  std::vector<std::string> crecs;
+  for (size_t i = adoptedblock.first; i < adoptedblock.last; ++i)
   {
-    ERR << "Bad ID Record length " << line.size();
-    return IdentificationRecord();
+    boost::smatch what;
+    if (boost::regex_search(data.at(i), what, crecre) &&
+        (what.size() > 1))
+      crecs.push_back(data.at(i));
   }
+  std::vector<std::string> crecs2;
+  // remove record id from beginning of string
+  for (size_t i=0; i<crecs.size(); i++)
+  {
+    crecs[i].erase(0, 9);
+    crecs2.push_back(crecs.at(i));
+  }
+  // join lines and then split records
+  std::string tmp = join(crecs2, "$");
+  boost::split(crecs2, tmp, boost::is_any_of("$"));
+  for (size_t i=0; i<crecs2.size(); i++)
+    crecs2[i] = boost::trim_copy(crecs2[i]);
+  // search and parse requested fields
+  std::vector<std::string> result;
+  for ( auto &req : requestedRecords)
+  {
+    std::string rstr;
+    for (size_t i=0; i<crecs2.size(); i++)
+    {
+      if ((crecs2.at(i).size() >= req.size()) &&
+          (crecs2.at(i).substr(0, req.size()) == req))
+      {
+        rstr = boost::trim_copy(crecs2.at(i).substr(5, crecs2.at(i).size() - 5));
+        break;
+      }
+    }
+    if (!rstr.empty() && (rstr[0] == '='))
+      rstr = rstr.substr(1, rstr.size()-1);
+    result.push_back(rstr);
+  }
+  return result;
+}
 
-  IdentificationRecord ret;
-  std::string nid = line.substr(0, 5);
+bool is_gamma_line(const std::string& line,
+                   std::string nucid, std::string nucid2)
+{
+  return ((line.size() > 8) &&
+          (line.substr(0,9) == (nucid + "  G "))) ||
+      (!nucid2.empty() && is_gamma_line(line, nucid2));
+}
 
-  ret.nuc_id = parse_nid(nid);
-  if (!check_nid_parse(nid, ret.nuc_id))
-    ERR << "<IdentificationRecord> Could not parse daughter NucID   \""
-//        << nid_to_ensdf(ret.nuc_id) << "\"  !=  \""
-        << nid << "\"";
+bool is_level_line(const std::string& line,
+                   std::string nucid, std::string nucid2)
+{
+  return ((line.size() > 8) &&
+          (line.substr(0,9) == (nucid + "  L ")))||
+      (!nucid2.empty() && is_level_line(line, nucid2));
+}
 
-  ret.dsid = line.substr(9, 30);
+bool is_intensity_line(const std::string& line,
+                       std::string nucid,
+                       std::string nucid2)
+{
+  return ((line.size() > 8) &&
+          (line.substr(0,9) == (nucid + "  E ")))||
+      (!nucid2.empty() && is_intensity_line(line, nucid2));
+}
+
+bool is_norm_line(const std::string& line,
+                  std::string nucid, std::string nucid2)
+{
+  return ((line.size() > 8) &&
+          (line.substr(0,9) == (nucid + "  N ")))||
+      (!nucid2.empty() && is_norm_line(line, nucid2));
+}
+
+bool is_p_norm_line(const std::string& line,
+                    std::string nucid, std::string nucid2)
+{
+  return ((line.size() > 8) &&
+          (line.substr(0,9) == (nucid + " PN ")))||
+      (!nucid2.empty() && is_p_norm_line(line, nucid2));
+}
+
+bool is_feed_a_line(const std::string& line,
+                    std::string nucid, std::string nucid2)
+{
+  return ((line.size() > 8) &&
+          (line.substr(0,9) == (nucid + "  A ")))||
+      (!nucid2.empty() && is_feed_a_line(line, nucid2));
+}
+
+bool is_feed_b_line(const std::string& line,
+                    std::string nucid, std::string nucid2)
+{
+  return ((line.size() > 8) &&
+          (line.substr(0,9) == (nucid + "  B ")))||
+      (!nucid2.empty() && is_feed_b_line(line, nucid2));
+}
+
+bool is_feed_line(const std::string& line,
+                  std::string nucid, std::string nucid2)
+{
+  return is_feed_a_line(line, nucid, nucid2) ||
+      is_feed_b_line(line, nucid, nucid2);
+}
+
+std::map<Energy, std::string> get_gamma_lines(const std::vector<std::string>& data,
+                                              BlockIndices bounds,
+                                              NuclideId nucid)
+{
+  std::map<Energy, std::string> e2g;
+  std::string dNucid1 = nid_to_ensdf(nucid, true);
+  std::string dNucid2 = nid_to_ensdf(nucid, false);
+  for (size_t i = bounds.first; i < bounds.last; ++i)
+    if (is_gamma_line(data[i], dNucid1, dNucid2))
+    {
+      Energy gk = parse_energy(data[i].substr(9, 12));
+      if (gk.valid())
+        e2g[gk] = data[i];
+    }
+  return e2g;
+}
+
+IdRecord IdRecord::parse(size_t& idx,
+                         const std::vector<std::string>& data)
+{
+  if ((idx >= data.size()) || !is(data[idx]))
+    return IdRecord();
+
+  auto line = data[idx];
+
+  IdRecord ret;
+
+  ret.nuc_id = parse_check_nid(line.substr(0, 5));
+  ret.extended_dsid = ret.dsid = line.substr(9, 30);
   ret.dsref = line.substr(39, 15);
   ret.pub = line.substr(65, 8);
   std::string year_str = line.substr(74, 4);
@@ -33,20 +172,69 @@ IdentificationRecord IdentificationRecord::parse(const std::string& line)
   if (!boost::trim_copy(month_str).empty())
     ret.month = boost::lexical_cast<uint16_t>(month_str);
 
-  ret.extended_dsid = ret.dsid;
-  ret.continued = (ret.dsid.at(ret.dsid.size()-1) == ',');
+  if (ret.dsid.size() && ret.dsid.at(ret.dsid.size()-1) == ',')
+    ret.extended_dsid += parse(++idx, data).extended_dsid;
+
   ret.type = is_type(ret.extended_dsid);
   return ret;
 }
 
-void IdentificationRecord::merge_continued(IdentificationRecord other)
+HistoryRecord HistoryRecord::parse(size_t& idx,
+                                   const std::vector<std::string>& data)
 {
-  extended_dsid += other.extended_dsid;
-  numlines += other.numlines;
-  type = is_type(extended_dsid);
+  if ((idx >= data.size()) || !is(data[idx]))
+    return HistoryRecord();
+  auto line = data[idx];
+  HistoryRecord ret;
+
+  ret.nuc_id = parse_check_nid(line.substr(0, 5));
+
+  boost::regex filter("^[\\s0-9A-Z]{5}[02-9A-Za-z]\\sH.*$");
+  std::string hdata = line.substr(9, 71);
+  while ((idx+1 < data.size()) &&
+         boost::regex_match(data[idx+1], filter))
+    hdata += data[++idx].substr(9,71);
+
+  std::vector<std::string> tokens;
+  boost::split(tokens, hdata, boost::is_any_of("$"));
+  for (auto t : tokens)
+  {
+    boost::trim(t);
+    std::vector<std::string> tokens2;
+    boost::split(tokens2, t, boost::is_any_of("="));
+    if (tokens2.size() > 1)
+      ret.kvps[boost::trim_copy(tokens2[0])] =
+          boost::trim_copy(tokens2[1]);
+  }
+  return ret;
 }
 
-RecordType IdentificationRecord::is_type(std::string s)
+void IdRecord::reflect_parse() const
+{
+  if (test(type & RecordType::Comments))
+  {  }
+  else if (test(type & RecordType::References))
+  {  }
+  else if (test(type & RecordType::CoulombExcitation))
+  {  }
+  else if (test(type & RecordType::MuonicAtom))
+  {  }
+  else if (test(type & RecordType::Reaction))
+  {  }
+  else if (test(type & RecordType::HiXng))
+  {  }
+  else if (test(type & RecordType::AdoptedLevels))
+  {  }
+  else if (test(type & RecordType::Decay) ||
+           (test(type & RecordType::InelasticScattering)))
+  {  }
+  else
+  {
+      DBG << "Unknown header -- " << debug();
+  }
+}
+
+RecordType IdRecord::is_type(std::string s)
 {
   std::string str = boost::to_upper_copy(s);
   if (boost::contains(str, "COMMENTS"))
@@ -77,7 +265,7 @@ RecordType IdentificationRecord::is_type(std::string s)
   return ret;
 }
 
-std::string IdentificationRecord::type_to_str(RecordType t)
+std::string IdRecord::type_to_str(RecordType t)
 {
   if (test(t & RecordType::Comments))
     return "COMMENTS";
@@ -110,7 +298,7 @@ std::string IdentificationRecord::type_to_str(RecordType t)
   return ret;
 }
 
-std::string IdentificationRecord::debug() const
+std::string IdRecord::debug() const
 {
   std::stringstream ss;
   ss << type_to_str(type);
@@ -127,8 +315,7 @@ std::string IdentificationRecord::debug() const
   return ss.str();
 }
 
-
-CommentsRecord CommentsRecord::from_id(const IdentificationRecord &record,
+CommentsRecord CommentsRecord::from_id(const IdRecord &record,
                                        BlockIndices block)
 {
   if ((record.type & RecordType::Comments) == RecordType::Invalid)
@@ -167,7 +354,7 @@ std::string ParentRecord::to_string() const
   return ret;
 }
 
-BasicDecayData BasicDecayData::from_id(const IdentificationRecord &record,
+BasicDecayData BasicDecayData::from_id(const IdRecord &record,
                                        BlockIndices block)
 {
   if (((record.type & RecordType::Decay) == RecordType::Invalid) &&
@@ -233,13 +420,13 @@ BasicDecayData BasicDecayData::from_id(const IdentificationRecord &record,
 
     }
   }
-  else
-    DBG << "Failed parents " << parents;
+//  else
+//    DBG << "Failed parents " << parents;
 
   ret.mode = parse_decay_mode(tokens.at(1));
   if (mode_to_ensdf(ret.mode) != tokens.at(1))
   {
-    ERR << "Could not parse decay mode in \"" << record.extended_dsid << "\"";
+//    ERR << "Could not parse decay mode in \"" << record.extended_dsid << "\"";
     return BasicDecayData();
   }
 
@@ -264,7 +451,7 @@ BasicDecayData BasicDecayData::from_id(const IdentificationRecord &record,
 //  decaydata.daughter = parse_nid(what[1]);
 //  decaydata.mode = parseDecayType(what[2]);
 //  decaydata.block = block;
-//  decaydata.dsid = boost::trim_copy(header.substr(9,30)); // saved for comparison with xref records
+//  decaydata.dsid = boost::trim_copy(substr(9,30)); // saved for comparison with xref records
 //  return decaydata;
 //}
 
@@ -296,7 +483,7 @@ std::string BasicDecayData::to_string() const
   return ret;
 }
 
-ReactionData ReactionData::from_id(const IdentificationRecord &record,
+ReactionData ReactionData::from_id(const IdRecord &record,
                                    BlockIndices block)
 {
   ReactionData ret;
