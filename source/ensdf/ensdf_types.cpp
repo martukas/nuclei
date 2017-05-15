@@ -16,6 +16,15 @@ bool is_uncertainty_id(const std::string& str)
           str == "SY");
 }
 
+UncertainDouble parse_norm_value(std::string val, std::string uncert)
+{
+  auto ret = parse_val_uncert(val, uncert);
+  if (ret.sign() & UncertainDouble::MagnitudeDefined)
+    ret.setSign(UncertainDouble::SignMagnitudeDefined);
+  return ret;
+}
+
+
 UncertainDouble parse_val_uncert(std::string val, std::string uncert)
 {
   boost::trim(val);
@@ -139,17 +148,44 @@ UncertainDouble parse_val_uncert(std::string val, std::string uncert)
 DataQuality quality_of(const std::string& s)
 {
   std::string st = s;
-  int16_t nb, nb_unkown, nb_theo_left, nb_theo_right, nb_tenta_left, nb_tenta_right, nb_about;
-  nb = nb_unkown = nb_theo_left = nb_theo_right = nb_tenta_left = nb_tenta_right = nb_about = 0;
+  int16_t nb, nb_unkown, nb_theo_left, nb_theo_right, nb_tenta_left,
+      nb_tenta_right, nb_about;
+  nb = nb_unkown = nb_theo_left = nb_theo_right = nb_tenta_left =
+      nb_tenta_right = nb_about = 0;
 
   // reads the string and counts the specfics characters
   size_t end = st.length();
   for(size_t i = 0 ; i < end; i++)
   {
-    if ( st[i] == '?' ) { nb_unkown++; nb++; }
-    if ( st[i] == '(' ) { nb_tenta_left++; nb++;}  ; if ( st[i] == ')' ) { nb_tenta_right++; nb++;}
-    if ( st[i] == '[' ) { nb_theo_left++; nb++; }  ; if ( st[i] == ']' ) { nb_theo_right++; nb++; }
-    if ( st[i] == '~' ) { nb_about++; nb++; }
+    if ( st[i] == '?' )
+    {
+      nb_unkown++;
+      nb++;
+    }
+    if ( st[i] == '(' )
+    {
+      nb_tenta_left++;
+      nb++;
+    }
+    if ( st[i] == ')' )
+    {
+      nb_tenta_right++;
+      nb++;
+    }
+    if ( st[i] == '[' )
+    {
+      nb_theo_left++; nb++;
+    }
+    if ( st[i] == ']' )
+    {
+      nb_theo_right++;
+      nb++;
+    }
+    if ( st[i] == '~' )
+    {
+      nb_about++;
+      nb++;
+    }
   }
   // set the informations
   if ( nb  > 2 ) return DataQuality::kUnknown;
@@ -160,8 +196,10 @@ DataQuality quality_of(const std::string& s)
     else return DataQuality::kUnknown;
   }
   else { // nb = 2
-    if ( nb_tenta_left == 1 && nb_tenta_right == 1 ) return DataQuality::kTentative;
-    if (  nb_theo_left == 1 &&  nb_theo_right == 1  ) return DataQuality::kTheoretical;
+    if ( nb_tenta_left == 1 && nb_tenta_right == 1 )
+      return DataQuality::kTentative;
+    if (  nb_theo_left == 1 &&  nb_theo_right == 1  )
+      return DataQuality::kTheoretical;
   }
   return DataQuality::kUnknown;
 }
@@ -217,22 +255,15 @@ Moment parse_moment(const std::string& record)
 }
 
 
-Energy parse_energy(const std::string& record)
+Energy parse_energy(std::string val, std::string uncert)
 {
-  if (record.empty())
+  if (val.empty())
     return Energy();
-
-  std::string val, uncert;
-  if (record.size() >= 12)
-    uncert = record.substr(10,2);
-  if (record.size() >= 10)
-    val = record.substr(0,10);
-  else
-    val = record;
 
   std::string offset;
   bool hasoffset = false;
-  for (size_t i=0; i < val.size(); ++i) {
+  for (size_t i=0; i < val.size(); ++i)
+  {
     if (std::isupper(val[i]) && hasoffset)
       offset += val.substr(i,1);
     else if (val[i] == '+')
@@ -265,7 +296,8 @@ Level parse_level(const std::string& record)
   if (record.size() != 80)
     return Level();
 
-  Energy            e = parse_energy(record.substr(9,12));
+  Energy            e = parse_energy(record.substr(9,10),
+                                     record.substr(19,2));
   SpinParity     spin = parse_spin_parity(record.substr(21, 18));
   HalfLife   halflife = parse_halflife(record.substr(39, 16));
 
@@ -407,9 +439,11 @@ HalfLife parse_halflife(const std::string& record)
 
   UncertainDouble time = parse_val_uncert(value_str, uncert_str);
   if (boost::contains(boost::to_upper_copy(record), "STABLE"))
-    time.setValue(std::numeric_limits<double>::infinity(), UncertainDouble::SignMagnitudeDefined);
+    time.setValue(std::numeric_limits<double>::infinity(),
+                  UncertainDouble::SignMagnitudeDefined);
   else if (boost::contains(record, "EV"))
-    time.setValue(std::numeric_limits<double>::quiet_NaN(), UncertainDouble::SignMagnitudeDefined);
+    time.setValue(std::numeric_limits<double>::quiet_NaN(),
+                  UncertainDouble::SignMagnitudeDefined);
 
   return HalfLife(time, units_str).preferred_units();
 }

@@ -1,6 +1,20 @@
 #include "ensdf_parser.h"
 #include "ensdf_types.h"
 
+#include "alpha_record.h"
+#include "beta_record.h"
+#include "comment_record.h"
+#include "ec_record.h"
+#include "gamma_record.h"
+#include "history_record.h"
+#include "level_record.h"
+#include "normalization_record.h"
+#include "particle_record.h"
+#include "prod_normalization_record.h"
+#include "qvalue_record.h"
+#include "reference_record.h"
+#include "xref_record.h"
+
 #include "custom_logger.h"
 #include "qpx_util.h"
 
@@ -182,14 +196,24 @@ void DaughterParser::LevelIndex::insertAdoptedLevelsBlock(const BlockIndices &ne
   // if this point is reached the level will be added in any case
 
   // read energy from level record
-  Energy e = parse_energy(data.at(newblock.first).substr(9, 12));
+  auto edata = data.at(newblock.first);
+  Energy e = parse_energy(edata.substr(9, 10), edata.substr(19, 2));
 
   // for the A(E1) case the energy must be modified
   boost::smatch what;
   if (boost::regex_match(xref, what, boost::regex(dsid + "\\(([.\\d]+)\\)")) &&
       (what.size() > 1))
   {
-    Energy matchedE = parse_energy(what[1]);
+    std::string edata(what[1]);
+    std::string val, uncert;
+    if (edata.size() > 10)
+    {
+      val = edata.substr(0,10);
+      uncert = edata.substr(10,2);
+    }
+    else
+      val = edata;
+    Energy matchedE = parse_energy(val, uncert);
     DBG << "ENERGY FROM REGEXP " << xref << " --> "
         << matchedE.to_string() << " valid "
         << matchedE.valid();
@@ -244,7 +268,8 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
     // process new gamma
     if (is_gamma_line(line, dNucid1, dNucid2))
     {
-      Energy energy = parse_energy(line.substr(9, 12));
+      Energy energy = parse_energy(line.substr(9, 10),
+                                   line.substr(19, 2));
       std::string multipolarity = boost::trim_copy(line.substr(31, 10));
       UncertainDouble delta = parseEnsdfMixing(line.substr(41, 14), multipolarity);
 
@@ -468,11 +493,56 @@ void DaughterParser::parseBlocks()
 
     while (idx < block_idx.last)
     {
-      if (HistoryRecord::is(raw_contents_[idx]))
-        HistoryRecord::parse(idx, raw_contents_);
-      else
-        interpret_record(raw_contents_[idx]);
-      ++idx;
+      try
+      {
+        if (HistoryRecord::is(raw_contents_[idx]))
+          HistoryRecord::parse(idx, raw_contents_);
+        else if (CommentsRecord::is(raw_contents_[idx]))
+          CommentsRecord::parse(idx, raw_contents_);
+        else if (QValueRecord::is(raw_contents_[idx]))
+          QValueRecord::parse(idx, raw_contents_);
+        else if (XRefRecord::is(raw_contents_[idx]))
+          XRefRecord::parse(idx, raw_contents_);
+        else if (ParentRecord::is(raw_contents_[idx]))
+          ParentRecord::parse(idx, raw_contents_);
+        else if (NormalizationRecord::is(raw_contents_[idx]))
+          NormalizationRecord::parse(idx, raw_contents_);
+        else if (ProdNormalizationRecord::is(raw_contents_[idx]))
+          ProdNormalizationRecord::parse(idx, raw_contents_);
+        else if (LevelRecord::is(raw_contents_[idx]))
+          LevelRecord::parse(idx, raw_contents_);
+        else if (BetaRecord::is(raw_contents_[idx]))
+          BetaRecord::parse(idx, raw_contents_);
+        else if (ECRecord::is(raw_contents_[idx]))
+          ECRecord::parse(idx, raw_contents_);
+        else if (AlphaRecord::is(raw_contents_[idx]))
+          AlphaRecord::parse(idx, raw_contents_);
+        else if (ParticleRecord::is(raw_contents_[idx]))
+          ParticleRecord::parse(idx, raw_contents_);
+        else if (GammaRecord::is(raw_contents_[idx]))
+          GammaRecord::parse(idx, raw_contents_);
+        else if (ReferenceRecord::is(raw_contents_[idx]))
+        {
+//          auto line = raw_contents_[idx];
+          auto r = ReferenceRecord::parse(idx, raw_contents_);
+//          if (!r.continuation.empty())
+//          DBG
+//              << line << "  --->  "
+//              << r.debug();
+        }
+        else
+        {
+
+          DBG << "Unidentified record " << raw_contents_[idx];
+        }
+        ++idx;
+      }
+      catch (...)
+      {
+        DBG << "EXCEPTION, COULD NOT PARSE RECORD: "
+            << raw_contents_[idx];
+        ++idx;
+      }
     }
 
 //    header.reflect_parse();
