@@ -47,3 +47,9 @@ std::string HistoryRecord::debug() const
   return ret;
 }
 
+bool HistoryRecord::valid() const
+{
+  return !kvps.empty();
+}
+
+

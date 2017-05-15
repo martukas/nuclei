@@ -3,7 +3,6 @@
 
 #include "alpha_record.h"
 #include "beta_record.h"
-#include "comment_record.h"
 #include "ec_record.h"
 #include "gamma_record.h"
 #include "history_record.h"
@@ -105,12 +104,6 @@ DaughterParser::DaughterParser(uint16_t A, std::string directory)
   boost::split(raw_contents_, str, boost::is_any_of("\n"));
 
   parseBlocks();
-  mass_num_ = A;
-}
-
-uint16_t DaughterParser::mass_num() const
-{
-  return mass_num_;
 }
 
 std::list<NuclideId> DaughterParser::daughters() const
@@ -489,13 +482,18 @@ void DaughterParser::parseBlocks()
   {
     auto idx = block_idx.first;
     auto header = IdRecord::parse(idx, raw_contents_);
-    idx++;
 
-    while (idx < block_idx.last)
+    header.reflect_parse();
+//    DBG << "IdRecord: " << header.extended_dsid;
+
+    while (false)
+//    while (idx < block_idx.last)
     {
       try
       {
-        if (HistoryRecord::is(raw_contents_[idx]))
+        if (IdRecord::is(raw_contents_[idx]))
+          IdRecord::parse(idx, raw_contents_);
+        else if (HistoryRecord::is(raw_contents_[idx]))
           HistoryRecord::parse(idx, raw_contents_);
         else if (CommentsRecord::is(raw_contents_[idx]))
           CommentsRecord::parse(idx, raw_contents_);
@@ -532,23 +530,43 @@ void DaughterParser::parseBlocks()
         }
         else
         {
-
           DBG << "Unidentified record " << raw_contents_[idx];
         }
         ++idx;
       }
       catch (...)
       {
-        DBG << "EXCEPTION, COULD NOT PARSE RECORD: "
+        DBG << "  !!!EXCEPTION, COULD NOT PARSE RECORD: "
             << raw_contents_[idx];
         ++idx;
       }
     }
 
-//    header.reflect_parse();
-//    DBG << "IdRecord: " << header.extended_dsid;
+    if (test(header.type & RecordType::Comments) &&
+        !header.nuc_id.composition_known())
+    {
+      for (size_t i = block_idx.first + 1; i < block_idx.last; ++i)
+      {
+        if (HistoryRecord::is(raw_contents_[i]))
+        {
+          if (mass_history_.valid())
+            DBG << "2nd history record for " << mass_history_.nuc_id.symbolicName();
+          mass_history_ = HistoryRecord::parse(i, raw_contents_);
+        }
+        else if (CommentsRecord::is(raw_contents_[i]))
+          mass_comments_.push_back(CommentsRecord::parse(i, raw_contents_));
+        else
+        {
+          DBG << "Unidentified record " << raw_contents_[i];
+        }
+      }
 
-    if (test(header.type & RecordType::AdoptedLevels))
+      DBG << "PARSED INFO FOR " << mass_history_.nuc_id.symbolicName()
+          << "\n " << mass_history_.debug();
+      for (auto c : mass_comments_)
+        DBG << c.debug();
+    }
+    else if (test(header.type & RecordType::AdoptedLevels))
       adopted_levels_[header.nuc_id] = block_idx;
     else if (test(header.type & RecordType::Decay) ||
              (test(header.type & RecordType::InelasticScattering)))

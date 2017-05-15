@@ -3,6 +3,9 @@
 #include "ensdf_records.h"
 #include "ensdf_basic_decay.h"
 
+#include "comment_record.h"
+#include "history_record.h"
+
 class DaughterParser
 {
   struct LevelIndex
@@ -26,8 +29,6 @@ public:
   DaughterParser();
   DaughterParser(uint16_t A, std::string directory);
 
-  uint16_t mass_num() const;
-
   std::list<NuclideId> daughters() const;
   std::list< std::pair<std::string, NuclideId> > decays(NuclideId daughter) const;
 
@@ -36,9 +37,12 @@ public:
   std::set<std::string> unknown_decays;
 
 private:
-  uint16_t mass_num_ {0};
   std::vector<std::string> raw_contents_;
-  std::map<NuclideId, BlockIndices> adopted_levels_; // daughter coordignates
+
+  HistoryRecord mass_history_;
+  std::list<CommentsRecord> mass_comments_;
+
+  std::map<NuclideId, BlockIndices> adopted_levels_; // daughter coordinates
   std::map<NuclideId, std::map<std::string, BasicDecayData > > decays_; // daughter coordinates: (decay name: basic data)
 
   static UncertainDouble parseEnsdfMixing(const std::string &s,

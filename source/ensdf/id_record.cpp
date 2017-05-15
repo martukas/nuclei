@@ -7,6 +7,11 @@
 
 #include "ensdf_reaction_data.h"
 
+bool IdRecord::is(const std::string& line)
+{
+  return match_record_type(line, "^[\\s0-9A-Za-z]{6}\\s{3}.*$");
+}
+
 IdRecord IdRecord::parse(size_t& idx,
                          const std::vector<std::string>& data)
 {
@@ -38,7 +43,10 @@ IdRecord IdRecord::parse(size_t& idx,
 void IdRecord::reflect_parse() const
 {
   if (test(type & RecordType::Comments))
-  {  }
+  {
+    DBG << boost::trim_copy(extended_dsid)
+        << " " << nuc_id.symbolicName();
+  }
   else if (test(type & RecordType::References))
   {  }
   else if (test(type & RecordType::CoulombExcitation))
@@ -56,7 +64,7 @@ void IdRecord::reflect_parse() const
   {  }
   else
   {
-      DBG << "Unknown header -- " << debug();
+      DBG << "Unknown header type -- " << debug();
   }
 }
 
@@ -69,7 +77,7 @@ RecordType IdRecord::is_type(std::string s)
     return RecordType::References;
   else if (boost::contains(str, "MUONIC ATOM"))
     return RecordType::MuonicAtom;
-  else if (boost::contains(str, "(HI,"))
+  else if (boost::contains(str, "(HI,XNG)"))
     return RecordType::HiXng;
 
   RecordType ret = RecordType::Invalid;
@@ -128,7 +136,7 @@ std::string IdRecord::debug() const
 {
   std::stringstream ss;
   ss << type_to_str(type);
-  ss << " " << nuc_id.verboseName();
+  ss << " " << nuc_id.symbolicName();
   ss << " \"" << boost::trim_copy(extended_dsid) << "\"";
   ss << " dsref=\"" << dsref << "\"";
   ss << " pub=\"" << pub << "\"  ";

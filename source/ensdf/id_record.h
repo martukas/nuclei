@@ -40,11 +40,7 @@ inline bool test(RecordType a)
 
 struct IdRecord
 {
-  static bool is(const std::string& line)
-  {
-    return match_record_type(line, "^[\\s0-9A-Za-z]{6}\\s{3}.*$");
-  }
-
+  static bool is(const std::string& line);
   static IdRecord parse(size_t& idx,
                         const std::vector<std::string>& data);
 
