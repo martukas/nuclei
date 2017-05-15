@@ -10,6 +10,7 @@ struct HistoryRecord
                              const std::vector<std::string>& data);
 
   std::string debug() const;
+  bool valid() const;
 
   NuclideId nuc_id;
   std::map<std::string, std::string> kvps;

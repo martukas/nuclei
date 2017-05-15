@@ -48,7 +48,7 @@ LevelRecord::parse(size_t& idx,
 
   ret.quality = boost::trim_copy(line.substr(79,1));
 
-  boost::regex filter("^[\\s0-9A-Za-z]{5}[02-9A-Za-z].L.*$");
+  boost::regex filter("^[\\s0-9A-Za-z]{5}[02-9A-Za-z@$].L.*$");
   while ((idx+1 < data.size()) &&
          (boost::regex_match(data[idx+1], filter) ||
           CommentsRecord::is(data[idx+1])))
