@@ -61,11 +61,11 @@ DecayScheme ENSDFDataSource::decay(const ENSDFTreeItem *item)
 
   if (!eitem->parent() || !eitem->isSelectable())
     return DecayScheme();
-  if (dparser.mass_num() == eitem->parent()->id().A())
-  {
-    DecayScheme dec(dparser.get_decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
-    return dec;
-  }
+//  if (dparser.mass_num() == eitem->parent()->id().A())
+//  {
+//    DecayScheme dec(dparser.get_decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
+//    return dec;
+//  }
 
   dparser = parser.get_dp(eitem->parent()->id().A());
   DecayScheme dec(dparser.get_decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));

@@ -85,48 +85,52 @@ UncertainDouble parse_val_uncert(std::string val, std::string uncert)
     }
   }
   // asymmetric case
-  else {
-    bool inv = false;
+  else
+  {
     std::string uposstr, unegstr;
-    boost::regex expr{"^\\+([0-9]+)\\-([0-9]+)$"};
-    boost::regex inv_expr{"^\\-([0-9]+)\\+([0-9]+)$"};
+    boost::algorithm::replace_all(uncert, " ", "");
+    boost::regex expr{"^\\+([^\\-]+)\\-(.*)$"};
+    boost::regex inv_expr{"^\\-([^\\+]+)\\+(.*)$"};
     boost::smatch what;
-    if (boost::regex_match(uncert, what, expr) && (what.size() == 3))
+    if (boost::regex_match(uncert, what, expr) &&
+        (what.size() == 3))
     {
       uposstr = what[1];
       unegstr = what[2];
     }
-    else if (boost::regex_match(uncert, what, inv_expr) && (what.size() == 3))
+    else if (boost::regex_match(uncert, what, inv_expr) &&
+             (what.size() == 3))
     {
       unegstr = what[1];
       uposstr = what[2];
-      inv = true;
     }
 
-    uint16_t upositive = 0;
-    uint16_t unegative = 0;
+    double upositive {0.0};
+    double unegative {0.0};
 
     boost::trim(uposstr);
     boost::trim(unegstr);
 
     if (!uposstr.empty() && is_number(uposstr))
       upositive = boost::lexical_cast<int16_t>(uposstr);
+    else if (uposstr == "|@")
+      upositive = std::numeric_limits<double>::infinity();
 
     if (!unegstr.empty() && is_number(unegstr))
       unegative = boost::lexical_cast<int16_t>(unegstr);
-
-    if (inv)
-      DBG << "Inverse asymmetric uncert " << uncert << " expr-> " << uposstr << "," << unegstr
-          << " parsed as " << upositive << "," << unegative;
+    else if (unegstr == "|@")
+      unegative = -1 * std::numeric_limits<double>::infinity();
 
     // work aournd bad entries with asymmetric uncertainty values of 0.
-    if (upositive == 0.0 || unegative == 0.0)
+    if (upositive == 0.0 && unegative == 0.0)
     {
       result.setUncertainty(std::numeric_limits<double>::quiet_NaN(),
                             std::numeric_limits<double>::quiet_NaN(),
                             UncertainDouble::Approximately);
-      WARN << "Found asymmetric error of 0 in '"
-           << uncert << "'. Auto-changing to 'approximately'";
+      WARN << "Found asymmetric error of -0+0 in '"
+           << uncert
+           << "' parsed as -" << unegstr << " +" << uposstr
+           << ". Auto-changing to 'approximately'";
     }
     else
       result.setAsymmetricUncertainty(val_order * unegative,
