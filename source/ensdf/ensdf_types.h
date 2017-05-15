@@ -7,6 +7,7 @@
 
 bool is_uncertainty_id(const std::string& str);
 UncertainDouble parse_val_uncert(std::string val, std::string uncert);
+UncertainDouble parse_norm_value(std::string val, std::string uncert);
 
 DataQuality quality_of(const std::string&);
 std::string strip_qualifiers(const std::string& original);
@@ -17,7 +18,7 @@ SpinParity parse_spin_parity(std::string data);
 
 
 Moment parse_moment(const std::string& s);
-Energy parse_energy(const std::string& record);
+Energy parse_energy(std::string val, std::string uncert);
 HalfLife parse_halflife(const std::string& record);
 Level  parse_level(const std::string& record);
 
