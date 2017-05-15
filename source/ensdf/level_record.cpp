@@ -51,11 +51,11 @@ LevelRecord::parse(size_t& idx,
   boost::regex filter("^[\\s0-9A-Za-z]{5}[02-9A-Za-z@$].L.*$");
   while ((idx+1 < data.size()) &&
          (boost::regex_match(data[idx+1], filter) ||
-          CommentsRecord::is(data[idx+1])))
+          CommentsRecord::match(data[idx+1])))
   {
     ++idx;
-    if (CommentsRecord::is(data[idx]))
-      ret.comments.push_back(CommentsRecord::parse(idx, data));
+    if (CommentsRecord::match(data[idx]))
+      ret.comments.push_back(CommentsRecord(idx, data));
     else
       ret.continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
   }

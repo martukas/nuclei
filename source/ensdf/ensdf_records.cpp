@@ -9,9 +9,21 @@
 bool match_record_type(const std::string& line,
                        const std::string& pattern)
 {
-  boost::regex filter(pattern);
-  return (line.size() == 80) &&
-      boost::regex_match(line, filter);
+  return (line.size() == 80) && boost::regex_match(line, boost::regex(pattern));
+}
+
+bool match_first(const std::string& line,
+                 const std::string& sub_pattern)
+{
+  return match_record_type(line, "^[\\s0-9A-Za-z]{5}\\s"
+                           + sub_pattern + ".*$");
+}
+
+bool match_cont(const std::string& line,
+                 const std::string& sub_pattern)
+{
+  return match_record_type(line, "^[\\s0-9A-Za-z]{5}[02-9A-Za-z@$#]"
+                           + sub_pattern + ".*$");
 }
 
 /**

@@ -5,54 +5,35 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 
-bool CommentsRecord::is(const std::string& line)
+bool CommentsRecord::match(const std::string& line, std::string rt)
 {
-  return match_record_type(line, "^[\\s0-9A-Z]{5}[^1][cdtCDT].*$");
+//  return match_record_type(line, "^[\\s0-9A-Z]{5}[^1][cdtCDT].*$");
+  return match_first(line, "[cdtCDT]" + rt);
 }
 
-
-CommentsRecord CommentsRecord::from_id(const IdRecord &record,
-                                       BlockIndices block)
+CommentsRecord::CommentsRecord(size_t& idx,
+                               const std::vector<std::string>& data)
 {
-  if ((record.type & RecordType::Comments) == RecordType::Invalid)
-  {
-    DBG << "Bad ID record type " << record.debug();
-    return CommentsRecord();
-  }
+  if ((idx >= data.size()) || !match(data[idx]))
+    return;
 
-  CommentsRecord ret;
-  ret.block = block;
-  ret.nuclide = record.nuc_id;
+  const auto& line = data[idx];
 
-  return ret;
-}
+  nuclide = parse_check_nid(line.substr(0, 5));
+  ctype = line.substr(6, 1);
+  rtype = line.substr(7, 2);
 
-CommentsRecord CommentsRecord::parse(size_t& idx,
-                                     const std::vector<std::string>& data)
-{
-  if ((idx >= data.size()) || !is(data[idx]))
-    return CommentsRecord();
-
-  auto line = data[idx];
-  CommentsRecord ret;
-
-  ret.nuclide = parse_check_nid(line.substr(0, 5));
-  ret.ctype = line.substr(6, 1);
-  ret.rtype = line.substr(7, 2);
-
-  bool trim = (ret.ctype != "T") && (ret.ctype != "t");
-  ret.translate = (ret.ctype != "t") &&
-                  (ret.ctype != "c") &&
-                  (ret.ctype != "d");
+  bool trim = (ctype != "T") && (ctype != "t");
+  translate = std::isupper(ctype[0]);
 
   std::string cdata = line.substr(9, 71);
   if (trim)
     boost::trim(cdata);
 
-  boost::regex filter("^[\\s0-9A-Z]{5}[^1 ]"
-                      + ret.ctype + ret.rtype + ".*$");
+//  boost::regex filter("^[\\s0-9A-Z]{5}[^1 ]"
+//                      + ctype + rtype + ".*$");
   while ((idx+1 < data.size()) &&
-         boost::regex_match(data[idx+1], filter))
+         match_cont(data[idx+1], ctype + rtype))
   {
     auto more_data = data[++idx].substr(9,71);
     if (trim)
@@ -63,9 +44,7 @@ CommentsRecord CommentsRecord::parse(size_t& idx,
 //  if (translate)
 //    cdata = translate_all(cdata);
 
-  ret.text = cdata;
-
-  return ret;
+  text = cdata;
 }
 
 std::string CommentsRecord::translate_all(const std::string &s)
