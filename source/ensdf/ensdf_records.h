@@ -33,6 +33,12 @@ Energy findNearest(const std::map<Energy, T> &map,
   return low->first;
 }
 
+bool match_first(const std::string& line,
+                 const std::string& sub_pattern);
+
+bool match_cont(const std::string& line,
+                 const std::string& sub_pattern);
+
 bool match_record_type(const std::string& line,
                        const std::string& pattern);
 

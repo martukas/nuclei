@@ -493,10 +493,10 @@ void DaughterParser::parseBlocks()
       {
         if (IdRecord::is(raw_contents_[idx]))
           IdRecord::parse(idx, raw_contents_);
-        else if (HistoryRecord::is(raw_contents_[idx]))
-          HistoryRecord::parse(idx, raw_contents_);
-        else if (CommentsRecord::is(raw_contents_[idx]))
-          CommentsRecord::parse(idx, raw_contents_);
+        else if (HistoryRecord::match(raw_contents_[idx]))
+          HistoryRecord(idx, raw_contents_);
+        else if (CommentsRecord::match(raw_contents_[idx]))
+          CommentsRecord(idx, raw_contents_);
         else if (QValueRecord::is(raw_contents_[idx]))
           QValueRecord::parse(idx, raw_contents_);
         else if (XRefRecord::is(raw_contents_[idx]))
@@ -547,24 +547,20 @@ void DaughterParser::parseBlocks()
     {
       for (size_t i = block_idx.first + 1; i < block_idx.last; ++i)
       {
-        if (HistoryRecord::is(raw_contents_[i]))
-        {
-          if (mass_history_.valid())
-            DBG << "2nd history record for " << mass_history_.nuc_id.symbolicName();
-          mass_history_ = HistoryRecord::parse(i, raw_contents_);
-        }
-        else if (CommentsRecord::is(raw_contents_[i]))
-          mass_comments_.push_back(CommentsRecord::parse(i, raw_contents_));
+        if (HistoryRecord::match(raw_contents_[i]))
+          mass_history_.push_back(HistoryRecord(i, raw_contents_));
+        else if (CommentsRecord::match(raw_contents_[i], " "))
+          mass_comments_.push_back(CommentsRecord(i, raw_contents_));
         else
         {
           DBG << "Unidentified record " << raw_contents_[i];
         }
       }
 
-      DBG << "PARSED INFO FOR " << mass_history_.nuc_id.symbolicName()
-          << "\n " << mass_history_.debug();
-      for (auto c : mass_comments_)
-        DBG << c.debug();
+//      DBG << "PARSED COMMENTS RECORD"; << mass_history_.nuclide.symbolicName()
+//          << "\n " << mass_history_.debug();
+//      for (auto c : mass_comments_)
+//        DBG << c.debug();
     }
     else if (test(header.type & RecordType::AdoptedLevels))
       adopted_levels_[header.nuc_id] = block_idx;
@@ -637,7 +633,7 @@ void DaughterParser::interpret_record(const std::string& line)
   {
 //          DBG << "P record: " << line;
   }
-  else if (HistoryRecord::is(line))
+  else if (HistoryRecord::match(line))
   {
 //          DBG << "History " << line;
   }
@@ -685,7 +681,7 @@ void DaughterParser::interpret_record(const std::string& line)
   {
 //          DBG << "D record: " << line;
   }
-  else if (CommentsRecord::is(line))
+  else if (CommentsRecord::match(line))
   {
 //          DBG << "C record: " << line;
   }

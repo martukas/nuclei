@@ -29,10 +29,10 @@ AlphaRecord::parse(size_t& idx,
   ret.comment_flag = boost::trim_copy(line.substr(76,1));
   ret.quality = boost::trim_copy(line.substr(79,1));
 
-  while ((idx+1 < data.size()) && CommentsRecord::is(data[idx+1]))
+  while ((idx+1 < data.size()) && CommentsRecord::match(data[idx+1]))
   {
     ++idx;
-    ret.comments.push_back(CommentsRecord::parse(idx, data));
+    ret.comments.push_back(CommentsRecord(++idx, data));
   }
 
   return ret;
