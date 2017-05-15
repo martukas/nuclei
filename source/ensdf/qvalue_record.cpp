@@ -38,9 +38,9 @@ QValueRecord QValueRecord::parse(size_t& idx,
          boost::regex_match(data[idx+1], filter))
   {
     ++idx;
-    if (CommentsRecord::is(data[idx]))
+    if (CommentsRecord::match(data[idx]))
     {
-      auto cr = CommentsRecord::parse(idx, data);
+      auto cr = CommentsRecord(idx, data);
       if (boost::contains(cr.text, "Current evaluation has used the following Q record"))
       {
         if (altcomment)

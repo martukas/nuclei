@@ -39,7 +39,7 @@ public:
 private:
   std::vector<std::string> raw_contents_;
 
-  HistoryRecord mass_history_;
+  std::list<HistoryRecord> mass_history_;
   std::list<CommentsRecord> mass_comments_;
 
   std::map<NuclideId, BlockIndices> adopted_levels_; // daughter coordinates
