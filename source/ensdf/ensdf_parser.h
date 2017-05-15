@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ensdf_records.h"
+#include "ensdf_basic_decay.h"
 
 class DaughterParser
 {
