@@ -14,13 +14,14 @@ struct CommentsRecord
   bool valid() const;
 
   NuclideId nuclide;
-  BlockIndices block;
   std::string rtype;
-  std::string ctype;
   std::string text;
-  bool translate {false};
+
+//  bool ignore {false};
+
+  std::string extract(const std::string& line);
 
   static std::string translate_all(const std::string& s);
-  static std::multimap<size_t, std::pair<std::string, std::string>> get_dictionary();
+  static std::list<std::pair<std::string, std::string>> get_dictionary();
 };
 

@@ -39,9 +39,6 @@ public:
 private:
   std::vector<std::string> raw_contents_;
 
-  std::list<HistoryRecord> mass_history_;
-  std::list<CommentsRecord> mass_comments_;
-
   std::map<NuclideId, BlockIndices> adopted_levels_; // daughter coordinates
   std::map<NuclideId, std::map<std::string, BasicDecayData > > decays_; // daughter coordinates: (decay name: basic data)
 
@@ -53,6 +50,14 @@ private:
   std::list<BlockIndices> find_blocks() const;
 
   void interpret_record(const std::string& line);
+
+
+  std::list<HistoryRecord> mass_history_;
+  std::list<CommentsRecord> mass_comments_;
+  void parse_comments_block(BlockIndices block_idx);
+
+  void parse_reference_block(BlockIndices block_idx);
+  std::map<std::string, std::string> references_;
 };
 
 

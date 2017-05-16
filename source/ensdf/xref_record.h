@@ -4,16 +4,14 @@
 
 struct XRefRecord
 {
-  static bool is(const std::string& line)
-  {
-    return match_record_type(line,
-                             "^[\\s0-9A-Z]{5}\\s{2}X.*$");
-  }
+  XRefRecord() {}
+  XRefRecord(size_t& idx,
+             const std::vector<std::string>& data);
 
-  static XRefRecord parse(size_t& idx,
-                          const std::vector<std::string>& data);
+  static bool match(const std::string& line);
 
   std::string debug() const;
+  bool valid() const;
 
   NuclideId nuclide;
   std::string dssym;

@@ -473,6 +473,49 @@ std::list<BlockIndices> DaughterParser::find_blocks() const
   return blocks;
 }
 
+void DaughterParser::parse_comments_block(BlockIndices block_idx)
+{
+  for (size_t i = block_idx.first + 1; i < block_idx.last; ++i)
+  {
+    if (HistoryRecord::match(raw_contents_[i]))
+      mass_history_.push_back(HistoryRecord(i, raw_contents_));
+    else if (CommentsRecord::match(raw_contents_[i], "\\s"))
+      mass_comments_.push_back(CommentsRecord(i, raw_contents_));
+    else
+    {
+      DBG << "Unidentified record " << raw_contents_[i];
+    }
+  }
+//      DBG << "PARSED COMMENTS RECORD";
+//      for (auto c : mass_history_)
+//        DBG << c.debug();
+//      for (auto c : mass_comments_)
+//        DBG << c.debug();
+}
+
+void DaughterParser::parse_reference_block(BlockIndices block_idx)
+{
+  for (size_t i = block_idx.first + 1; i < block_idx.last; ++i)
+  {
+    if (ReferenceRecord::match(raw_contents_[i]))
+    {
+      auto ref = ReferenceRecord(i, raw_contents_);
+      if (ref.valid())
+        references_[ref.keynum] = ref.reference;
+      else
+        DBG << "Invalid reference " << ref.debug()
+            << " from " << raw_contents_[i];
+    }
+    else
+    {
+      DBG << "Unidentified record " << raw_contents_[i];
+    }
+  }
+//  DBG << "PARSED REFERENCES RECORD";
+//  for (auto c : references_)
+//    DBG << "  " << c.first << " = " << c.second;
+}
+
 
 void DaughterParser::parseBlocks()
 {
@@ -481,9 +524,10 @@ void DaughterParser::parseBlocks()
   for (BlockIndices &block_idx : blocks)
   {
     auto idx = block_idx.first;
-    auto header = IdRecord::parse(idx, raw_contents_);
+    auto header = IdRecord(idx, raw_contents_);
 
-    header.reflect_parse();
+    if (!header.reflect_parse())
+      DBG << "Bad header  ==  " << raw_contents_[idx];
 //    DBG << "IdRecord: " << header.extended_dsid;
 
     while (false)
@@ -491,24 +535,24 @@ void DaughterParser::parseBlocks()
     {
       try
       {
-        if (IdRecord::is(raw_contents_[idx]))
-          IdRecord::parse(idx, raw_contents_);
+        if (IdRecord::match(raw_contents_[idx]))
+          IdRecord(idx, raw_contents_);
         else if (HistoryRecord::match(raw_contents_[idx]))
           HistoryRecord(idx, raw_contents_);
         else if (CommentsRecord::match(raw_contents_[idx]))
           CommentsRecord(idx, raw_contents_);
-        else if (QValueRecord::is(raw_contents_[idx]))
-          QValueRecord::parse(idx, raw_contents_);
-        else if (XRefRecord::is(raw_contents_[idx]))
-          XRefRecord::parse(idx, raw_contents_);
+        else if (QValueRecord::match(raw_contents_[idx]))
+          QValueRecord(idx, raw_contents_);
+        else if (XRefRecord::match(raw_contents_[idx]))
+          XRefRecord(idx, raw_contents_);
         else if (ParentRecord::is(raw_contents_[idx]))
           ParentRecord::parse(idx, raw_contents_);
         else if (NormalizationRecord::is(raw_contents_[idx]))
           NormalizationRecord::parse(idx, raw_contents_);
-        else if (ProdNormalizationRecord::is(raw_contents_[idx]))
-          ProdNormalizationRecord::parse(idx, raw_contents_);
-        else if (LevelRecord::is(raw_contents_[idx]))
-          LevelRecord::parse(idx, raw_contents_);
+        else if (ProdNormalizationRecord::match(raw_contents_[idx]))
+          ProdNormalizationRecord(idx, raw_contents_);
+        else if (LevelRecord::match(raw_contents_[idx]))
+          LevelRecord(idx, raw_contents_);
         else if (BetaRecord::is(raw_contents_[idx]))
           BetaRecord::parse(idx, raw_contents_);
         else if (ECRecord::is(raw_contents_[idx]))
@@ -517,12 +561,12 @@ void DaughterParser::parseBlocks()
           AlphaRecord::parse(idx, raw_contents_);
         else if (ParticleRecord::is(raw_contents_[idx]))
           ParticleRecord::parse(idx, raw_contents_);
-        else if (GammaRecord::is(raw_contents_[idx]))
-          GammaRecord::parse(idx, raw_contents_);
-        else if (ReferenceRecord::is(raw_contents_[idx]))
+        else if (GammaRecord::match(raw_contents_[idx]))
+          GammaRecord(idx, raw_contents_);
+        else if (ReferenceRecord::match(raw_contents_[idx]))
         {
 //          auto line = raw_contents_[idx];
-          auto r = ReferenceRecord::parse(idx, raw_contents_);
+          auto r = ReferenceRecord(idx, raw_contents_);
 //          if (!r.continuation.empty())
 //          DBG
 //              << line << "  --->  "
@@ -545,25 +589,18 @@ void DaughterParser::parseBlocks()
     if (test(header.type & RecordType::Comments) &&
         !header.nuc_id.composition_known())
     {
-      for (size_t i = block_idx.first + 1; i < block_idx.last; ++i)
-      {
-        if (HistoryRecord::match(raw_contents_[i]))
-          mass_history_.push_back(HistoryRecord(i, raw_contents_));
-        else if (CommentsRecord::match(raw_contents_[i], " "))
-          mass_comments_.push_back(CommentsRecord(i, raw_contents_));
-        else
-        {
-          DBG << "Unidentified record " << raw_contents_[i];
-        }
-      }
-
-//      DBG << "PARSED COMMENTS RECORD"; << mass_history_.nuclide.symbolicName()
-//          << "\n " << mass_history_.debug();
-//      for (auto c : mass_comments_)
-//        DBG << c.debug();
+      parse_comments_block(block_idx);
+    }
+    if (test(header.type & RecordType::References) &&
+        !header.nuc_id.composition_known())
+    {
+      parse_reference_block(block_idx);
     }
     else if (test(header.type & RecordType::AdoptedLevels))
+    {
       adopted_levels_[header.nuc_id] = block_idx;
+      LevelData(raw_contents_, block_idx);
+    }
     else if (test(header.type & RecordType::Decay) ||
              (test(header.type & RecordType::InelasticScattering)))
     {
@@ -625,7 +662,7 @@ void DaughterParser::parseBlocks()
 
 void DaughterParser::interpret_record(const std::string& line)
 {
-  if (IdRecord::is(line))
+  if (IdRecord::match(line))
   {
 //          DBG << "I record: " << line;
   }
@@ -637,11 +674,11 @@ void DaughterParser::interpret_record(const std::string& line)
   {
 //          DBG << "History " << line;
   }
-  else if (QValueRecord::is(line))
+  else if (QValueRecord::match(line))
   {
 //          DBG << "Q record: " << line;
   }
-  else if (XRefRecord::is(line))
+  else if (XRefRecord::match(line))
   {
 //    DBG << "X record: " << line;
   }
@@ -649,11 +686,11 @@ void DaughterParser::interpret_record(const std::string& line)
   {
 //          DBG << "N record: " << line;
   }
-  else if (ProdNormalizationRecord::is(line))
+  else if (ProdNormalizationRecord::match(line))
   {
 //          DBG << "PN record: " << line;
   }
-  else if (LevelRecord::is(line))
+  else if (LevelRecord::match(line))
   {
 //          DBG << "L record: " << line;
   }
@@ -665,11 +702,11 @@ void DaughterParser::interpret_record(const std::string& line)
   {
 //          DBG << "B record: " << line;
   }
-  else if (GammaRecord::is(line))
+  else if (GammaRecord::match(line))
   {
 //          DBG << "G record: " << line;
   }
-  else if (ReferenceRecord::is(line))
+  else if (ReferenceRecord::match(line))
   {
 //    DBG << "R record: " << line;
   }

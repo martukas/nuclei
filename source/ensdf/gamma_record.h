@@ -5,10 +5,14 @@
 
 struct GammaRecord
 {
-  static bool is(const std::string& line);
-  static GammaRecord parse(size_t& idx,
-                           const std::vector<std::string>& data);
+  GammaRecord() {}
+  GammaRecord(size_t& idx,
+              const std::vector<std::string>& data);
+
+  static bool match(const std::string& line);
+
   std::string debug() const;
+  bool valid() const;
 
   NuclideId  nuclide;
   Energy     energy;

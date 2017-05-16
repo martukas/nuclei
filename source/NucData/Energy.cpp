@@ -15,7 +15,12 @@ Energy::Energy(double energy, UncertainDouble::Sign s)
 
 bool Energy::valid() const
 {
-  return value_.hasFiniteValue();
+  return value_.defined();
+}
+
+UncertainDouble Energy::value() const
+{
+  return value_;
 }
 
 Energy::operator double() const

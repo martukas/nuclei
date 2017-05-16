@@ -2,14 +2,18 @@
 
 #include "ensdf_records.h"
 #include "comment_record.h"
+#include "gamma_record.h"
 
 struct LevelRecord
 {
-  static bool is(const std::string& line);
-  static LevelRecord parse(size_t& idx,
-                           const std::vector<std::string>& data);
+  LevelRecord() {}
+  LevelRecord(size_t& idx,
+              const std::vector<std::string>& data);
+
+  static bool match(const std::string& line);
 
   std::string debug() const;
+  bool valid() const;
 
   NuclideId  nuclide;
   Energy     energy;
@@ -22,5 +26,8 @@ struct LevelRecord
 
   std::string continuation;
 
+  std::string offset;
+
   std::list<CommentsRecord> comments;
+  std::list<GammaRecord> gammas;
 };

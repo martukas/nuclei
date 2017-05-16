@@ -5,31 +5,50 @@
 #include <boost/algorithm/string/trim_all.hpp>
 #include "custom_logger.h"
 
-bool LevelRecord::is(const std::string& line)
+bool LevelRecord::match(const std::string& line)
 {
-  return match_record_type(line,
-                           "^[\\s0-9A-Za-z]{5}\\s\\sL\\s.*$");
+  return match_first(line, "\\sL");
+//  return match_record_type(line,
+//                           "^[\\s0-9A-Za-z]{5}\\s\\sL\\s.*$");
 }
 
-LevelRecord
-LevelRecord::parse(size_t& idx,
-                   const std::vector<std::string>& data)
+LevelRecord::LevelRecord(size_t& idx,
+                         const std::vector<std::string>& data)
 {
-  if ((idx >= data.size()) || !is(data[idx]))
-    return LevelRecord();
-  auto line = data[idx];
+  if ((idx >= data.size()) || !match(data[idx]))
+    return;
+  const auto& line = data[idx];
 
-  LevelRecord ret;
+  nuclide = parse_nid(line.substr(0,5));
+  auto val = line.substr(9,10);
+  auto uncert = line.substr(19,2);
+  bool hasoffset = false;
+  for (size_t i=0; i < val.size(); ++i)
+  {
+    if (std::isupper(val[i]) && hasoffset)
+      offset += val.substr(i,1);
+    else if (val[i] == '+')
+      hasoffset = true;
+  }
+  if (hasoffset && offset.size())
+  {
+    offset = "+" + offset;
+    boost::replace_all(val, "+X", "  ");
+    boost::replace_all(val, "+Y", "  ");
+  }
+  else if (boost::trim_copy(val) == "X")
+    offset = "X";
+  else if (boost::trim_copy(val) == "Y")
+    offset = "Y";
 
-  ret.nuclide = parse_nid(line.substr(0,5));
-  ret.energy = parse_energy(line.substr(9,10), line.substr(19,2));
-  ret.spin_parity = parse_spin_parity(line.substr(21, 18));
-  ret.halflife = parse_halflife(line.substr(39, 16));
-  ret.L = boost::trim_copy(line.substr(55,9));
+  energy = parse_energy(val, uncert);
+  spin_parity = parse_spin_parity(line.substr(21, 18));
+  halflife = parse_halflife(line.substr(39, 16));
+  L = boost::trim_copy(line.substr(55,9));
 
   try
   {
-    ret.S = parse_norm_value(line.substr(64,10), line.substr(74,2));
+    S = parse_norm_value(line.substr(64,10), line.substr(74,2));
   }
   catch (...)
   {
@@ -37,38 +56,41 @@ LevelRecord::parse(size_t& idx,
     //      DBG << "<LevelRecord::parse> failed to parse Svalue=\'" << sstr << "\'";
   }
 
-  ret.comment_flag = boost::trim_copy(line.substr(76,1));
+  comment_flag = boost::trim_copy(line.substr(76,1));
   if (line[77] == 'M')
   {
     if (is_number(line.substr(78,1)))
-      ret.isomeric = boost::lexical_cast<uint16_t>(line.substr(78,1));
+      isomeric = boost::lexical_cast<uint16_t>(line.substr(78,1));
     else
-      ret.isomeric = 1;
+      isomeric = 1;
   }
 
-  ret.quality = boost::trim_copy(line.substr(79,1));
+  quality = boost::trim_copy(line.substr(79,1));
 
-  boost::regex filter("^[\\s0-9A-Za-z]{5}[02-9A-Za-z@$].L.*$");
+//  boost::regex filter("^[\\s0-9A-Za-z]{5}[02-9A-Za-z@$].L.*$");
   while ((idx+1 < data.size()) &&
-         (boost::regex_match(data[idx+1], filter) ||
-          CommentsRecord::match(data[idx+1])))
+         (match_cont(data[idx+1], "\\sL") ||
+          CommentsRecord::match(data[idx+1], "L") ||
+          GammaRecord::match(data[idx+1])))
   {
     ++idx;
     if (CommentsRecord::match(data[idx]))
-      ret.comments.push_back(CommentsRecord(idx, data));
+      comments.push_back(CommentsRecord(idx, data));
+    if (GammaRecord::match(data[idx]))
+      gammas.push_back(GammaRecord(idx, data));
     else
-      ret.continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
+      continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
   }
-
-  return ret;
 }
 
 std::string LevelRecord::debug() const
 {
   std::string ret;
-  ret = nuclide.symbolicName();
-  if (energy.valid())
+  ret = nuclide.symbolicName() + " LEVL ";
+  if (energy.value().defined())
     ret += " Energy=" + energy.to_string();
+  if (!offset.empty())
+    ret += "+" + offset + "(offset)";
   if (isomeric)
     ret += " M" + std::to_string(isomeric);
   if (spin_parity.valid())
@@ -84,8 +106,17 @@ std::string LevelRecord::debug() const
   if (!L.empty())
     ret += " L=" + L;
   if (!continuation.empty())
-    ret += "\n  Continuation:" + continuation;
+    ret += "\n      Continuation:" + continuation;
   for (auto c : comments)
-    ret += "\n  Comment: " + c.debug();
+    ret += "\n      Comment: " + c.debug();
+  for (auto c : gammas)
+    ret += "\n      Gamma: " + c.debug();
   return ret;
 }
+
+bool LevelRecord::valid() const
+{
+  return nuclide.valid() &&
+      (energy.value().defined() || !offset.empty());
+}
+

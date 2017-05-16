@@ -7,45 +7,42 @@
 
 #include "ensdf_reaction_data.h"
 
-bool IdRecord::is(const std::string& line)
+bool IdRecord::match(const std::string& line)
 {
-  return match_record_type(line, "^[\\s0-9A-Za-z]{6}\\s{3}.*$");
+  return match_first(line, "\\s{3}");
 }
 
-IdRecord IdRecord::parse(size_t& idx,
-                         const std::vector<std::string>& data)
+IdRecord::IdRecord(size_t& idx,
+                   const std::vector<std::string>& data)
 {
-  if ((idx >= data.size()) || !is(data[idx]))
-    return IdRecord();
+  if ((idx >= data.size()) || !match(data[idx]))
+    return;
 
-  auto line = data[idx];
+  const auto& line = data[idx];
 
-  IdRecord ret;
-
-  ret.nuc_id = parse_check_nid(line.substr(0, 5));
-  ret.extended_dsid = ret.dsid = line.substr(9, 30);
-  ret.dsref = line.substr(39, 15);
-  ret.pub = line.substr(65, 8);
+  nuc_id = parse_check_nid(line.substr(0, 5));
+  extended_dsid = dsid = line.substr(9, 30);
+  dsref = line.substr(39, 15);
+  pub = line.substr(65, 8);
   std::string year_str = line.substr(74, 4);
   if (!boost::trim_copy(year_str).empty())
-    ret.year = boost::lexical_cast<uint16_t>(year_str);
+    year = boost::lexical_cast<uint16_t>(year_str);
   std::string month_str = line.substr(78, 2);
   if (!boost::trim_copy(month_str).empty())
-    ret.month = boost::lexical_cast<uint16_t>(month_str);
+    month = boost::lexical_cast<uint16_t>(month_str);
 
-  if (ret.dsid.size() && ret.dsid.at(ret.dsid.size()-1) == ',')
-    ret.extended_dsid += parse(++idx, data).extended_dsid;
+  if (dsid.size() && dsid.at(dsid.size()-1) == ',')
+    extended_dsid += IdRecord(++idx, data).extended_dsid;
 
-  ret.type = is_type(ret.extended_dsid);
-  return ret;
+  type = is_type(extended_dsid);
 }
 
-void IdRecord::reflect_parse() const
+bool IdRecord::reflect_parse() const
 {
   if (test(type & RecordType::Comments))
   {
-    DBG << boost::trim_copy(extended_dsid)
-        << " " << nuc_id.symbolicName();
+//    DBG << boost::trim_copy(extended_dsid)
+//        << " " << nuc_id.symbolicName();
   }
   else if (test(type & RecordType::References))
   {  }
@@ -65,7 +62,9 @@ void IdRecord::reflect_parse() const
   else
   {
       DBG << "Unknown header type -- " << debug();
+      return false;
   }
+  return true;
 }
 
 RecordType IdRecord::is_type(std::string s)
@@ -147,4 +146,9 @@ std::string IdRecord::debug() const
 //  if (numlines)
 //    ss << " lines=" << numlines;
   return ss.str();
+}
+
+bool IdRecord::valid() const
+{
+  return nuc_id.valid();
 }
