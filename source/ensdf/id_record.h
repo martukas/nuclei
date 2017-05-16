@@ -50,7 +50,7 @@ struct IdRecord
   bool valid() const;
   bool reflect_parse() const;
 
-  NuclideId nuc_id;
+  NuclideId nuclide;
   std::string dsid;
   std::string extended_dsid;
   std::string dsref;

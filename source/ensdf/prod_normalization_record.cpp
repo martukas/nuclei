@@ -1,15 +1,11 @@
 #include "prod_normalization_record.h"
 #include "ensdf_types.h"
 #include "qpx_util.h"
-#include <boost/regex.hpp>
 
 bool ProdNormalizationRecord::match(const std::string& line)
 {
   return match_first(line, "PN");
-//  return match_record_type(line,
-//                           "^[\\s0-9A-Za-z]{5}[\\s02-9A-Za-z]PN.*$");
 }
-
 
 ProdNormalizationRecord::ProdNormalizationRecord(size_t& idx,
                                const std::vector<std::string>& data)
@@ -29,7 +25,6 @@ ProdNormalizationRecord::ProdNormalizationRecord(size_t& idx,
   if (is_number(dopt))
     display_option = std::stoi(dopt);
 
-//  boost::regex filter("^[\\s0-9A-Za-z]{5}[02-9A-Za-z]PN.*$");
   while ((idx+1 < data.size()) &&
          match_cont(data[idx+1], "PN"))
     caveat = boost::trim_copy(data[++idx].substr(9, 71));
@@ -38,7 +33,7 @@ ProdNormalizationRecord::ProdNormalizationRecord(size_t& idx,
 std::string ProdNormalizationRecord::debug() const
 {
   std::string ret;
-  ret = nuclide.symbolicName() + " PNRM ";
+  ret = nuclide.symbolicName() + " PNORM ";
   if (NRBR.hasFiniteValue())
     ret += " NRBR=" + NRBR.to_string(true);
   if (NTBR.hasFiniteValue())

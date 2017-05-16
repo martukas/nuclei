@@ -12,7 +12,7 @@ ReactionData ReactionData::from_id(const IdRecord &record,
   ReactionData ret;
   ret.dsid = record.dsid;
   ret.block = block;
-  ret.daughter = record.nuc_id;
+  ret.daughter = record.nuclide;
 
   std::string nuclide = "[\\w\\d]+";
   std::string reactant = "[\\s\\w\\d'\\+-]+";

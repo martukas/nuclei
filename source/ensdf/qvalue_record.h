@@ -16,7 +16,7 @@ struct QValueRecord
   std::string debug() const;
   bool valid() const;
 
-  NuclideId nuc_id;
+  NuclideId nuclide;
   UncertainDouble Q, SN, SP, QA;
   std::string ref;
 

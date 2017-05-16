@@ -1,59 +1,58 @@
 #include "particle_record.h"
 #include "ensdf_types.h"
-#include <boost/regex.hpp>
-#include "qpx_util.h"
+#include <boost/algorithm/string.hpp>
 
-bool ParticleRecord::is(const std::string& line)
+bool ParticleRecord::match(const std::string& line)
 {
-  return match_record_type(line,
-                           "^[\\s0-9A-Za-z]{5}\\s\\s[\\sD][NPA].*$");
+  return match_first(line, "\\s[\\sD][NPA]");
 }
 
-ParticleRecord
-ParticleRecord::parse(size_t& idx,
-                   const std::vector<std::string>& data)
+ParticleRecord::ParticleRecord(size_t& idx,
+                               const std::vector<std::string>& data)
 {
-  if ((idx >= data.size()) || !is(data[idx]))
-    return ParticleRecord();
-  auto line = data[idx];
+  if ((idx >= data.size()) || !match(data[idx]))
+    return;
+  const auto& line = data[idx];
 
-  ParticleRecord ret;
+  nuclide = parse_nid(line.substr(0,5));
+  delayed = (line[7] == 'D');
+  particle = line.substr(8,1);
 
-  ret.nuclide = parse_nid(line.substr(0,5));
-  ret.delayed = (line[7] == 'D');
-  ret.particle = line.substr(8,1);
-
-  ret.energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
-  ret.intensity = parse_norm_value(line.substr(21,8),
+  energy = Energy(parse_val_uncert(line.substr(9,10),
+                                   line.substr(19,2)));
+  intensity = parse_norm_value(line.substr(21,8),
                                    line.substr(29,2));
-  ret.energy_intermediate = boost::trim_copy(line.substr(31,8));
-  ret.transition_width = parse_norm_value(line.substr(39,10),
+  energy_intermediate = boost::trim_copy(line.substr(31,8));
+  transition_width = parse_norm_value(line.substr(39,10),
                                           line.substr(49,6));
-  ret.L = boost::trim_copy(line.substr(55,9));
+  L = boost::trim_copy(line.substr(55,9));
 
-  ret.comment_flag = boost::trim_copy(line.substr(76,1));
-  ret.coincidence = boost::trim_copy(line.substr(77,1));
-  ret.quality = boost::trim_copy(line.substr(79,1));
+  comment_flag = boost::trim_copy(line.substr(76,1));
+  coincidence = boost::trim_copy(line.substr(77,1));
+  quality = boost::trim_copy(line.substr(79,1));
 
-  boost::regex filter("^[\\s0-9A-Za-z]{5}[02-9A-Za-z].[\\sD][NPA].*$");
+  std::string signature = line.substr(7,2);
   while ((idx+1 < data.size()) &&
-         (boost::regex_match(data[idx+1], filter) ||
-          CommentsRecord::match(data[idx+1])))
+         (match_cont(data[idx+1], signature) ||
+          CommentsRecord::match(data[idx+1], signature)))
   {
     ++idx;
     if (CommentsRecord::match(data[idx]))
-      ret.comments.push_back(CommentsRecord(idx, data));
+      comments.push_back(CommentsRecord(idx, data));
     else
-      ret.continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
+      continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
   }
+}
 
-  return ret;
+bool ParticleRecord::valid() const
+{
+  return nuclide.valid();
 }
 
 std::string ParticleRecord::debug() const
 {
   std::string ret;
-  ret = nuclide.symbolicName();
+  ret = nuclide.symbolicName() + " PARTICLE ";
   if (delayed)
     ret += " Delayed-";
   ret += particle;
