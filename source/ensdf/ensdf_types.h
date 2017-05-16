@@ -16,9 +16,7 @@ Spin parse_spin(const std::string& s);
 Parity parse_parity(const std::string& s);
 SpinParity parse_spin_parity(std::string data);
 
-
 Moment parse_moment(const std::string& s);
-Energy parse_energy(std::string val, std::string uncert);
 HalfLife parse_halflife(const std::string& record);
 Level  parse_level(const std::string& record);
 

@@ -258,29 +258,13 @@ Moment parse_moment(const std::string& record)
   return ret;
 }
 
-//TRIVIAL FUNCTION -- DEPRECATE?!?!
-
-Energy parse_energy(std::string val, std::string uncert)
-{
-  if (val.empty())
-    return Energy();
-
-  boost::trim(val);
-  boost::trim(uncert);
-
-  Energy ret(parse_val_uncert(val, uncert));
-
-
-  return ret;
-}
-
 Level parse_level(const std::string& record)
 {
   if (record.size() != 80)
     return Level();
 
-  Energy            e = parse_energy(record.substr(9,10),
-                                     record.substr(19,2));
+  Energy            e = Energy(parse_val_uncert(record.substr(9,10),
+                                                record.substr(19,2)));
   SpinParity     spin = parse_spin_parity(record.substr(21, 18));
   HalfLife   halflife = parse_halflife(record.substr(39, 16));
 

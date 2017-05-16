@@ -20,7 +20,7 @@ BetaRecord::parse(size_t& idx,
   BetaRecord ret;
 
   ret.nuclide = parse_nid(line.substr(0,5));
-  ret.energy = parse_energy(line.substr(9,10), line.substr(19,2));
+  ret.energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
   ret.intensity = parse_norm_value(line.substr(21,8), line.substr(29,2));
   ret.LOGFT = parse_norm_value(line.substr(41,8), line.substr(49,6));
 

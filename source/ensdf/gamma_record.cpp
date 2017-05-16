@@ -18,7 +18,7 @@ GammaRecord::GammaRecord(size_t& idx,
   const auto& line = data[idx];
 
   nuclide = parse_nid(line.substr(0,5));
-  energy = parse_energy(line.substr(9,10), line.substr(19,2));
+  energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
   intensity_rel_photons = parse_norm_value(line.substr(21,8),
                                            line.substr(29,2));
   multipolarity = boost::trim_copy(line.substr(31,10));

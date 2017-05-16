@@ -190,7 +190,7 @@ void DaughterParser::LevelIndex::insertAdoptedLevelsBlock(const BlockIndices &ne
 
   // read energy from level record
   auto edata = data.at(newblock.first);
-  Energy e = parse_energy(edata.substr(9, 10), edata.substr(19, 2));
+  Energy e = Energy(parse_val_uncert(edata.substr(9, 10), edata.substr(19, 2)));
 
   // for the A(E1) case the energy must be modified
   boost::smatch what;
@@ -206,7 +206,7 @@ void DaughterParser::LevelIndex::insertAdoptedLevelsBlock(const BlockIndices &ne
     }
     else
       val = edata;
-    Energy matchedE = parse_energy(val, uncert);
+    Energy matchedE = Energy(parse_val_uncert(val, uncert));
     DBG << "ENERGY FROM REGEXP " << xref << " --> "
         << matchedE.to_string() << " valid "
         << matchedE.valid();
@@ -261,8 +261,8 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
     // process new gamma
     if (is_gamma_line(line, dNucid1, dNucid2))
     {
-      Energy energy = parse_energy(line.substr(9, 10),
-                                   line.substr(19, 2));
+      Energy energy = Energy(parse_val_uncert(line.substr(9, 10),
+                                              line.substr(19, 2)));
       std::string multipolarity = boost::trim_copy(line.substr(31, 10));
       UncertainDouble delta = parseEnsdfMixing(line.substr(41, 14), multipolarity);
 

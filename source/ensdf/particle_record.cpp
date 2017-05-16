@@ -23,7 +23,7 @@ ParticleRecord::parse(size_t& idx,
   ret.delayed = (line[7] == 'D');
   ret.particle = line.substr(8,1);
 
-  ret.energy = parse_energy(line.substr(9,10), line.substr(19,2));
+  ret.energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
   ret.intensity = parse_norm_value(line.substr(21,8),
                                    line.substr(29,2));
   ret.energy_intermediate = boost::trim_copy(line.substr(31,8));

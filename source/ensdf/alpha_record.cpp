@@ -20,7 +20,7 @@ AlphaRecord::parse(size_t& idx,
   AlphaRecord ret;
 
   ret.nuclide = parse_nid(line.substr(0,5));
-  ret.energy = parse_energy(line.substr(9,10), line.substr(19,2));
+  ret.energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
   ret.intensity_alpha = parse_norm_value(line.substr(21,8),
                                          line.substr(29,2));
   ret.hindrance_factor = parse_norm_value(line.substr(31,8),
