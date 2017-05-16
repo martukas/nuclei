@@ -40,12 +40,15 @@ inline bool test(RecordType a)
 
 struct IdRecord
 {
-  static bool is(const std::string& line);
-  static IdRecord parse(size_t& idx,
-                        const std::vector<std::string>& data);
+  IdRecord() {}
+  IdRecord(size_t& idx,
+           const std::vector<std::string>& data);
+
+  static bool match(const std::string& line);
 
   std::string debug() const;
-  void reflect_parse() const;
+  bool valid() const;
+  bool reflect_parse() const;
 
   NuclideId nuc_id;
   std::string dsid;

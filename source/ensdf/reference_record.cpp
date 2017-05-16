@@ -2,27 +2,28 @@
 #include "ensdf_types.h"
 #include "qpx_util.h"
 
-bool ReferenceRecord::is(const std::string& line)
+bool ReferenceRecord::match(const std::string& line)
 {
-  return match_record_type(line,
-                           "^[\\s0-9]{3}\\s{4}R\\s.*$");
+  return match_first(line, "\\sR");
+//  return match_record_type(line,
+//                           "^[\\s0-9]{3}\\s{4}R\\s.*$");
 }
 
-ReferenceRecord
-ReferenceRecord::parse(size_t& idx,
+ReferenceRecord::ReferenceRecord(size_t& idx,
                    const std::vector<std::string>& data)
 {
-  if ((idx >= data.size()) || !is(data[idx]))
-    return ReferenceRecord();
-  auto line = data[idx];
+  if ((idx >= data.size()) || !match(data[idx]))
+    return;
+  const auto& line = data[idx];
 
-  ReferenceRecord ret;
+  nuclide = parse_nid(line.substr(0,5));
+  keynum = boost::trim_copy(line.substr(9,8));
+  reference = boost::trim_copy(line.substr(17,63));
+}
 
-  ret.nuclide = parse_nid(line.substr(0,5));
-  ret.keynum = boost::trim_copy(line.substr(9,8));
-  ret.reference = boost::trim_copy(line.substr(17,63));
-
-  return ret;
+bool ReferenceRecord::valid() const
+{
+  return nuclide.valid() && !keynum.empty() && !reference.empty();
 }
 
 std::string ReferenceRecord::debug() const

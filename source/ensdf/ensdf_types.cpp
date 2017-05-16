@@ -258,39 +258,18 @@ Moment parse_moment(const std::string& record)
   return ret;
 }
 
+//TRIVIAL FUNCTION -- DEPRECATE?!?!
 
 Energy parse_energy(std::string val, std::string uncert)
 {
   if (val.empty())
     return Energy();
 
-  std::string offset;
-  bool hasoffset = false;
-  for (size_t i=0; i < val.size(); ++i)
-  {
-    if (std::isupper(val[i]) && hasoffset)
-      offset += val.substr(i,1);
-    else if (val[i] == '+')
-      hasoffset = true;
-  }
-  hasoffset = hasoffset && offset.size();
-
-  boost::replace_all(val, "+X", "");
   boost::trim(val);
   boost::trim(uncert);
 
   Energy ret(parse_val_uncert(val, uncert));
 
-//  tmp.remove("+Y"); // fix modified energy values (illegaly used in ensdf...)
-//  double precision = get_precision(tmp.remove("+Y").toStdString());
-//  double uncert = clocale.toDouble(kdestr, &convok) * precision;
-
-//  if (hasoffset)
-//  DBG << "Energy record " << record << " parsed to " << ret.value_.to_string(false, true)
-//      << " offset to " << offset;
-//  if (make_tentative)
-//  DBG << "Energy record " << record << " parsed to " << ret.value_.to_string(false, true)
-//      << " make tentative!";
 
   return ret;
 }

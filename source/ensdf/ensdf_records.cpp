@@ -22,7 +22,7 @@ bool match_first(const std::string& line,
 bool match_cont(const std::string& line,
                  const std::string& sub_pattern)
 {
-  return match_record_type(line, "^[\\s0-9A-Za-z]{5}[02-9A-Za-z@$#]"
+  return match_record_type(line, "^[\\s0-9A-Za-z]{5}[0-9A-Za-z@!\\+\\$#]"
                            + sub_pattern + ".*$");
 }
 

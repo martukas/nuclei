@@ -139,6 +139,12 @@ bool UncertainDouble::hasFiniteValue() const
   return false;
 }
 
+bool UncertainDouble::defined() const
+{
+  return (sign() != UndefinedSign) &&
+      (uncertaintyType() != UndefinedType);
+}
+
 std::string UncertainDouble::to_string(bool prefix_magn, bool with_uncert) const
 {
   std::string plusminus("\u00B1");

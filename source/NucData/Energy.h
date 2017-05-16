@@ -10,6 +10,7 @@ public:
   explicit Energy(double energy, UncertainDouble::Sign s);
 
   bool valid() const;
+  UncertainDouble value() const;
 
   std::string to_string() const;
 
