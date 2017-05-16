@@ -20,7 +20,7 @@ ECRecord::parse(size_t& idx,
   ECRecord ret;
 
   ret.nuclide = parse_nid(line.substr(0,5));
-  ret.energy = parse_energy(line.substr(9,10), line.substr(19,2));
+  ret.energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
   ret.intensity_beta_plus = parse_norm_value(line.substr(21,8),
                                              line.substr(29,2));
   ret.intensity_ec = parse_norm_value(line.substr(31,8),

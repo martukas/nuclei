@@ -41,7 +41,7 @@ LevelRecord::LevelRecord(size_t& idx,
   else if (boost::trim_copy(val) == "Y")
     offset = "Y";
 
-  energy = parse_energy(val, uncert);
+  energy = Energy(parse_val_uncert(val, uncert));
   spin_parity = parse_spin_parity(line.substr(21, 18));
   halflife = parse_halflife(line.substr(39, 16));
   L = boost::trim_copy(line.substr(55,9));

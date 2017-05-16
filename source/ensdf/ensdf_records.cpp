@@ -156,7 +156,8 @@ std::map<Energy, std::string> get_gamma_lines(const std::vector<std::string>& da
   for (size_t i = bounds.first; i < bounds.last; ++i)
     if (is_gamma_line(data[i], dNucid1, dNucid2))
     {
-      Energy gk = parse_energy(data[i].substr(9, 10), data[i].substr(19, 2));
+      Energy gk = Energy(parse_val_uncert(data[i].substr(9, 10),
+                                          data[i].substr(19, 2)));
       if (gk.valid())
         e2g[gk] = data[i];
     }
