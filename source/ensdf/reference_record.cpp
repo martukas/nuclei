@@ -1,12 +1,10 @@
 #include "reference_record.h"
 #include "ensdf_types.h"
-#include "qpx_util.h"
+#include <boost/algorithm/string.hpp>
 
 bool ReferenceRecord::match(const std::string& line)
 {
   return match_first(line, "\\sR");
-//  return match_record_type(line,
-//                           "^[\\s0-9]{3}\\s{4}R\\s.*$");
 }
 
 ReferenceRecord::ReferenceRecord(size_t& idx,
@@ -28,6 +26,6 @@ bool ReferenceRecord::valid() const
 
 std::string ReferenceRecord::debug() const
 {
-  return nuclide.symbolicName()
+  return nuclide.symbolicName() + " REFERENCE "
       + keynum + " = " + reference;
 }

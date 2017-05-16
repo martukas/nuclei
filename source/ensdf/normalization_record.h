@@ -4,17 +4,14 @@
 
 struct NormalizationRecord
 {
-  static bool is(const std::string& line)
-  {
-    return match_record_type(line,
-                             "^[\\s0-9A-Za-z]{5}\\s{2}N.*$");
-  }
+  NormalizationRecord() {}
+  NormalizationRecord(size_t& idx,
+                      const std::vector<std::string>& data);
 
-  static NormalizationRecord parse(size_t& idx,
-                                   const std::vector<std::string>& data);
+  static bool match(const std::string& line);
 
   std::string debug() const;
-
+  bool valid() const;
 
   NuclideId nuclide;
   UncertainDouble NR, NT, BR, NB, NP;

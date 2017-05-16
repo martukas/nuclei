@@ -1,52 +1,52 @@
 #include "beta_record.h"
 #include "ensdf_types.h"
-#include <boost/regex.hpp>
-#include "qpx_util.h"
+#include <boost/algorithm/string.hpp>
 
-bool BetaRecord::is(const std::string& line)
+bool BetaRecord::match(const std::string& line)
 {
-  return match_record_type(line,
-                           "^[\\s0-9A-Za-z]{5}\\s\\sB\\s.*$");
+  return match_first(line, "\\sB");
 }
 
-BetaRecord
-BetaRecord::parse(size_t& idx,
-                   const std::vector<std::string>& data)
+BetaRecord::BetaRecord(size_t& idx,
+                       const std::vector<std::string>& data)
 {
-  if ((idx >= data.size()) || !is(data[idx]))
-    return BetaRecord();
-  auto line = data[idx];
+  if ((idx >= data.size()) || !match(data[idx]))
+    return;
+  const auto& line = data[idx];
 
-  BetaRecord ret;
+  nuclide = parse_nid(line.substr(0,5));
+  energy = Energy(parse_val_uncert(line.substr(9,10),
+                                   line.substr(19,2)));
+  intensity = parse_norm_value(line.substr(21,8),
+                               line.substr(29,2));
+  LOGFT = parse_norm_value(line.substr(41,8),
+                           line.substr(49,6));
 
-  ret.nuclide = parse_nid(line.substr(0,5));
-  ret.energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
-  ret.intensity = parse_norm_value(line.substr(21,8), line.substr(29,2));
-  ret.LOGFT = parse_norm_value(line.substr(41,8), line.substr(49,6));
+  comment_flag = boost::trim_copy(line.substr(76,1));
+  uniquness = boost::trim_copy(line.substr(77,2));
+  quality = boost::trim_copy(line.substr(79,1));
 
-  ret.comment_flag = boost::trim_copy(line.substr(76,1));
-  ret.uniquness = boost::trim_copy(line.substr(77,2));
-  ret.quality = boost::trim_copy(line.substr(79,1));
-
-  boost::regex filter("^[\\s0-9A-Za-z]{5}[02-9A-Za-z].B.*$");
   while ((idx+1 < data.size()) &&
-         (boost::regex_match(data[idx+1], filter) ||
-          CommentsRecord::match(data[idx+1])))
+         (match_cont(data[idx+1], "B") ||
+          CommentsRecord::match(data[idx+1], "B")))
   {
     ++idx;
     if (CommentsRecord::match(data[idx]))
-      ret.comments.push_back(CommentsRecord(idx, data));
+      comments.push_back(CommentsRecord(idx, data));
     else
-      ret.continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
+      continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
   }
+}
 
-  return ret;
+bool BetaRecord::valid() const
+{
+  return nuclide.valid();
 }
 
 std::string BetaRecord::debug() const
 {
   std::string ret;
-  ret = nuclide.symbolicName();
+  ret = nuclide.symbolicName() + " BETA  ";
   if (energy.valid())
     ret += " Energy=" + energy.to_string();
   if (intensity.hasFiniteValue())

@@ -1,57 +1,56 @@
 #include "ec_record.h"
 #include "ensdf_types.h"
-#include <boost/regex.hpp>
-#include "qpx_util.h"
+#include <boost/algorithm/string.hpp>
 
-bool ECRecord::is(const std::string& line)
+bool ECRecord::match(const std::string& line)
 {
-  return match_record_type(line,
-                           "^[\\s0-9A-Za-z]{5}\\s\\sE\\s.*$");
+  return match_first(line, "\\sE");
 }
 
-ECRecord
-ECRecord::parse(size_t& idx,
+ECRecord::ECRecord(size_t& idx,
                    const std::vector<std::string>& data)
 {
-  if ((idx >= data.size()) || !is(data[idx]))
-    return ECRecord();
-  auto line = data[idx];
+  if ((idx >= data.size()) || !match(data[idx]))
+    return;
+  const auto& line = data[idx];
 
-  ECRecord ret;
+  nuclide = parse_nid(line.substr(0,5));
+  energy = Energy(parse_val_uncert(line.substr(9,10),
+                                   line.substr(19,2)));
+  intensity_beta_plus = parse_norm_value(line.substr(21,8),
+                                         line.substr(29,2));
+  intensity_ec = parse_norm_value(line.substr(31,8),
+                                  line.substr(39,2));
+  LOGFT = parse_norm_value(line.substr(41,8),
+                           line.substr(49,6));
+  intensity_total = parse_norm_value(line.substr(64,10),
+                                     line.substr(74,2));
 
-  ret.nuclide = parse_nid(line.substr(0,5));
-  ret.energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
-  ret.intensity_beta_plus = parse_norm_value(line.substr(21,8),
-                                             line.substr(29,2));
-  ret.intensity_ec = parse_norm_value(line.substr(31,8),
-                                      line.substr(39,2));
-  ret.LOGFT = parse_norm_value(line.substr(41,8), line.substr(49,6));
-  ret.intensity_total = parse_norm_value(line.substr(64,10),
-                                         line.substr(74,2));
+  comment_flag = boost::trim_copy(line.substr(76,1));
+  uniquness = boost::trim_copy(line.substr(77,2));
+  quality = boost::trim_copy(line.substr(79,1));
 
-  ret.comment_flag = boost::trim_copy(line.substr(76,1));
-  ret.uniquness = boost::trim_copy(line.substr(77,2));
-  ret.quality = boost::trim_copy(line.substr(79,1));
-
-  boost::regex filter("^[\\s0-9A-Za-z]{5}[02-9A-Za-z].E.*$");
   while ((idx+1 < data.size()) &&
-         (boost::regex_match(data[idx+1], filter) ||
-          CommentsRecord::match(data[idx+1])))
+         (match_cont(data[idx+1], "E") ||
+          CommentsRecord::match(data[idx+1], "E")))
   {
     ++idx;
     if (CommentsRecord::match(data[idx]))
-      ret.comments.push_back(CommentsRecord(idx, data));
+      comments.push_back(CommentsRecord(idx, data));
     else
-      ret.continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
+      continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
   }
+}
 
-  return ret;
+bool ECRecord::valid() const
+{
+  return nuclide.valid();
 }
 
 std::string ECRecord::debug() const
 {
   std::string ret;
-  ret = nuclide.symbolicName();
+  ret = nuclide.symbolicName() + " EC ";
   if (energy.valid())
     ret += " Energy=" + energy.to_string();
   if (intensity_beta_plus.hasFiniteValue())
