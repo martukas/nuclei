@@ -1,7 +1,6 @@
 #include "history_record.h"
 #include "ensdf_types.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
 
 bool HistoryRecord::match(const std::string& line)
 {
@@ -36,7 +35,7 @@ HistoryRecord::HistoryRecord(size_t& idx,
 
 std::string HistoryRecord::debug() const
 {
-  auto ret = nuclide.symbolicName() + " HIST ";
+  auto ret = nuclide.symbolicName() + " HIST  ";
   for (auto kvp : kvps)
     ret += "\n      " + kvp.first + "=" + kvp.second;
   return ret;

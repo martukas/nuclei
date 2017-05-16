@@ -5,10 +5,14 @@
 
 struct ParticleRecord
 {
-  static bool is(const std::string& line);
-  static ParticleRecord parse(size_t& idx,
-                        const std::vector<std::string>& data);
+  ParticleRecord() {}
+  ParticleRecord(size_t& idx,
+                 const std::vector<std::string>& data);
+
+  static bool match(const std::string& line);
+
   std::string debug() const;
+  bool valid() const;
 
   NuclideId  nuclide;
 

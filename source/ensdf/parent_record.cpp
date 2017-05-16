@@ -1,41 +1,35 @@
 #include "parent_record.h"
 #include "ensdf_types.h"
 
-ParentRecord ParentRecord::parse(size_t& idx,
-                                 const std::vector<std::string>& data)
+bool ParentRecord::match(const std::string& line)
 {
-  if ((idx >= data.size()) || !is(data[idx]))
-    return ParentRecord();
-  auto line = data[idx];
-
-  ParentRecord ret;
-
-  ret.nuclide = parse_nid(line.substr(0,5));
-  ret.energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
-  ret.spin = parse_spin_parity(line.substr(21, 18));
-  ret.hl = parse_halflife(line.substr(39, 16));
-  ret.QP = Energy(parse_val_uncert(line.substr(64,10), line.substr(74,2)));
-  ret.ionization = line.substr(76,4);
-
-  return ret;
+  return match_first(line, "\\sP");
 }
 
-ParentRecord ParentRecord::from_ensdf(const std::string &line)
+ParentRecord::ParentRecord(size_t& idx,
+                           const std::vector<std::string>& data)
 {
-  ParentRecord prec;
-  if (line.size() < 50)
-    return prec;
-  prec.nuclide = parse_nid(line.substr(0,5));
-  prec.energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
-  prec.spin = parse_spin_parity(line.substr(21, 18));
-  prec.hl = parse_halflife(line.substr(39, 16));
-  return prec;
+  if ((idx >= data.size()) || !match(data[idx]))
+    return;
+  const auto& line = data[idx];
+
+  nuclide = parse_nid(line.substr(0,5));
+  energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
+  spin = parse_spin_parity(line.substr(21, 18));
+  hl = parse_halflife(line.substr(39, 16));
+  QP = Energy(parse_val_uncert(line.substr(64,10), line.substr(74,2)));
+  ionization = line.substr(76,4);
+}
+
+bool ParentRecord::valid() const
+{
+  return nuclide.valid();
 }
 
 std::string ParentRecord::debug() const
 {
   std::string ret;
-  ret = nuclide.symbolicName()
+  ret = nuclide.symbolicName() + " PARENT "
       + " E=" + energy.to_string()
       + " SpinParity=" + spin.to_string()
       + " HL=" + hl.to_string()

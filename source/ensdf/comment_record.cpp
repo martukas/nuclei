@@ -1,13 +1,11 @@
 #include "comment_record.h"
 #include "ensdf_types.h"
 #include "custom_logger.h"
-#include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 
 bool CommentsRecord::match(const std::string& line, std::string rt)
 {
-//  return match_record_type(line, "^[\\s0-9A-Z]{5}[^1][cdtCDT].*$");
   return match_first(line, "[cdtCDT]" + rt);
 }
 
@@ -16,7 +14,6 @@ CommentsRecord::CommentsRecord(size_t& idx,
 {
   if ((idx >= data.size()) || !match(data[idx]))
     return;
-
   const auto& line = data[idx];
 
   nuclide = parse_check_nid(line.substr(0, 5));
@@ -84,7 +81,7 @@ std::string CommentsRecord::translate_all(const std::string &s)
 
 std::string CommentsRecord::debug() const
 {
-  auto ret = nuclide.symbolicName() + " COMM ";
+  auto ret = nuclide.symbolicName() + " COMMENT ";
   if (!rtype.empty())
     ret += "[" + rtype + "]";
   return ret + "=" + text;

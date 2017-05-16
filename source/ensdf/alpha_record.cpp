@@ -1,47 +1,44 @@
 #include "alpha_record.h"
 #include "ensdf_types.h"
-#include <boost/regex.hpp>
-#include "qpx_util.h"
+#include <boost/algorithm/string.hpp>
 
-bool AlphaRecord::is(const std::string& line)
+bool AlphaRecord::match(const std::string& line)
 {
-  return match_record_type(line,
-                           "^[\\s0-9A-Z]{6}\\sA\\s.*$");
+  return match_first(line, "\\sA");
 }
 
-AlphaRecord
-AlphaRecord::parse(size_t& idx,
-                   const std::vector<std::string>& data)
+AlphaRecord::AlphaRecord(size_t& idx,
+                         const std::vector<std::string>& data)
 {
-  if ((idx >= data.size()) || !is(data[idx]))
-    return AlphaRecord();
-  auto line = data[idx];
+  if ((idx >= data.size()) || !match(data[idx]))
+    return;
+  const auto& line = data[idx];
 
-  AlphaRecord ret;
+  nuclide = parse_nid(line.substr(0,5));
+  energy = Energy(parse_val_uncert(line.substr(9,10),
+                                   line.substr(19,2)));
+  intensity_alpha = parse_norm_value(line.substr(21,8),
+                                     line.substr(29,2));
+  hindrance_factor = parse_norm_value(line.substr(31,8),
+                                      line.substr(39,2));
 
-  ret.nuclide = parse_nid(line.substr(0,5));
-  ret.energy = Energy(parse_val_uncert(line.substr(9,10), line.substr(19,2)));
-  ret.intensity_alpha = parse_norm_value(line.substr(21,8),
-                                         line.substr(29,2));
-  ret.hindrance_factor = parse_norm_value(line.substr(31,8),
-                                          line.substr(39,2));
+  comment_flag = boost::trim_copy(line.substr(76,1));
+  quality = boost::trim_copy(line.substr(79,1));
 
-  ret.comment_flag = boost::trim_copy(line.substr(76,1));
-  ret.quality = boost::trim_copy(line.substr(79,1));
+  while ((idx+1 < data.size()) &&
+         CommentsRecord::match(data[idx+1], "A"))
+    comments.push_back(CommentsRecord(++idx, data));
+}
 
-  while ((idx+1 < data.size()) && CommentsRecord::match(data[idx+1]))
-  {
-    ++idx;
-    ret.comments.push_back(CommentsRecord(++idx, data));
-  }
-
-  return ret;
+bool AlphaRecord::valid() const
+{
+  return nuclide.valid();
 }
 
 std::string AlphaRecord::debug() const
 {
   std::string ret;
-  ret = nuclide.symbolicName();
+  ret = nuclide.symbolicName() + " ALPHA ";
   if (energy.valid())
     ret += " Energy=" + energy.to_string();
   if (intensity_alpha.hasFiniteValue())

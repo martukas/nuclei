@@ -12,8 +12,8 @@ XRefRecord::XRefRecord(size_t& idx,
 {
   if ((idx >= data.size()) || !match(data[idx]))
     return;
-
   const auto& line = data[idx];
+
   nuclide = parse_check_nid(line.substr(0, 5));
   dssym = line.substr(8, 1);
   dsid = boost::trim_copy(line.substr(9, 40));
@@ -21,8 +21,8 @@ XRefRecord::XRefRecord(size_t& idx,
 
 std::string XRefRecord::debug() const
 {
-  return nuclide.symbolicName() + " xref "
-      + " dssym=" + dssym + " dsid=" + dsid;
+  return nuclide.symbolicName() + " XREF "
+      + dssym + "->" + dsid;
 }
 
 bool XRefRecord::valid() const

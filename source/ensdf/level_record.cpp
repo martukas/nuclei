@@ -1,15 +1,12 @@
 #include "level_record.h"
 #include "ensdf_types.h"
 #include "qpx_util.h"
-#include <boost/regex.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
 #include "custom_logger.h"
 
 bool LevelRecord::match(const std::string& line)
 {
   return match_first(line, "\\sL");
-//  return match_record_type(line,
-//                           "^[\\s0-9A-Za-z]{5}\\s\\sL\\s.*$");
 }
 
 LevelRecord::LevelRecord(size_t& idx,
@@ -67,7 +64,6 @@ LevelRecord::LevelRecord(size_t& idx,
 
   quality = boost::trim_copy(line.substr(79,1));
 
-//  boost::regex filter("^[\\s0-9A-Za-z]{5}[02-9A-Za-z@$].L.*$");
   while ((idx+1 < data.size()) &&
          (match_cont(data[idx+1], "\\sL") ||
           CommentsRecord::match(data[idx+1], "L") ||
@@ -86,7 +82,7 @@ LevelRecord::LevelRecord(size_t& idx,
 std::string LevelRecord::debug() const
 {
   std::string ret;
-  ret = nuclide.symbolicName() + " LEVL ";
+  ret = nuclide.symbolicName() + " LEVEL ";
   if (energy.value().defined())
     ret += " Energy=" + energy.to_string();
   if (!offset.empty())

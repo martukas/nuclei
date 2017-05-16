@@ -3,14 +3,10 @@
 #include <sstream>
 #include "custom_logger.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
-
 
 bool QValueRecord::match(const std::string& line)
 {
   return match_first(line, "\\sQ");
-//  return match_record_type(line,
-//                           "^[\\s0-9A-Za-z]{5}\\s{2}Q\\s.*$");
 }
 
 QValueRecord::QValueRecord(size_t& idx,
@@ -21,7 +17,7 @@ QValueRecord::QValueRecord(size_t& idx,
     return;
   const auto& line = data[idx];
 
-  nuc_id = parse_check_nid(line.substr(0, 5));
+  nuclide = parse_check_nid(line.substr(0, 5));
 
   Q = parse_val_uncert(line.substr(8, 9), line.substr(19, 2));
   SN = parse_val_uncert(line.substr(21, 7), line.substr(29, 2));
@@ -34,7 +30,6 @@ QValueRecord::QValueRecord(size_t& idx,
       return;
 
   bool altcomment {false};
-//  boost::regex filter("^[\\s0-9A-Za-z]{5}.{2}Q.*$");
   while ((idx+1 < data.size()) &&
          (match_cont(data[idx+1], "\\sQ") ||
           CommentsRecord::match(data[idx+1], "Q")))
@@ -66,9 +61,14 @@ QValueRecord::QValueRecord(size_t& idx,
   }
 }
 
+bool QValueRecord::valid() const
+{
+  return nuclide.valid();
+}
+
 std::string QValueRecord::debug() const
 {
-  auto ret = nuc_id.symbolicName() + " QVAL "
+  auto ret = nuclide.symbolicName() + " QVALUE "
       + " Q=" + Q.to_string(true)
       + " SN=" + SN.to_string(true)
       + " SP=" + SP.to_string(true)
@@ -79,10 +79,5 @@ std::string QValueRecord::debug() const
   for (auto c : comments)
     ret += "\n      " + c.debug();
   return ret;
-}
-
-bool QValueRecord::valid() const
-{
-  return nuc_id.valid();
 }
 

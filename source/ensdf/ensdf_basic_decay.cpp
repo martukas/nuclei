@@ -22,7 +22,7 @@ BasicDecayData BasicDecayData::from_id(const IdRecord &record,
   BasicDecayData ret;
   ret.dsid = record.dsid; // saved for comparison with xref records
   ret.block = block;
-  ret.daughter = record.nuc_id;
+  ret.daughter = record.nuclide;
 
   auto dsid = record.extended_dsid;
   std::string parents; bool valid = false; bool space = false;

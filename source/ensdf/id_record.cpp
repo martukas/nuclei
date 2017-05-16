@@ -17,10 +17,9 @@ IdRecord::IdRecord(size_t& idx,
 {
   if ((idx >= data.size()) || !match(data[idx]))
     return;
-
   const auto& line = data[idx];
 
-  nuc_id = parse_check_nid(line.substr(0, 5));
+  nuclide = parse_check_nid(line.substr(0, 5));
   extended_dsid = dsid = line.substr(9, 30);
   dsref = line.substr(39, 15);
   pub = line.substr(65, 8);
@@ -42,7 +41,7 @@ bool IdRecord::reflect_parse() const
   if (test(type & RecordType::Comments))
   {
 //    DBG << boost::trim_copy(extended_dsid)
-//        << " " << nuc_id.symbolicName();
+//        << " " << nuclide.symbolicName();
   }
   else if (test(type & RecordType::References))
   {  }
@@ -134,8 +133,8 @@ std::string IdRecord::type_to_str(RecordType t)
 std::string IdRecord::debug() const
 {
   std::stringstream ss;
+  ss << " " << nuclide.symbolicName() << "  ID   ";
   ss << type_to_str(type);
-  ss << " " << nuc_id.symbolicName();
   ss << " \"" << boost::trim_copy(extended_dsid) << "\"";
   ss << " dsref=\"" << dsref << "\"";
   ss << " pub=\"" << pub << "\"  ";
@@ -150,5 +149,5 @@ std::string IdRecord::debug() const
 
 bool IdRecord::valid() const
 {
-  return nuc_id.valid();
+  return nuclide.valid();
 }

@@ -545,22 +545,22 @@ void DaughterParser::parseBlocks()
           QValueRecord(idx, raw_contents_);
         else if (XRefRecord::match(raw_contents_[idx]))
           XRefRecord(idx, raw_contents_);
-        else if (ParentRecord::is(raw_contents_[idx]))
-          ParentRecord::parse(idx, raw_contents_);
-        else if (NormalizationRecord::is(raw_contents_[idx]))
-          NormalizationRecord::parse(idx, raw_contents_);
+        else if (ParentRecord::match(raw_contents_[idx]))
+          ParentRecord(idx, raw_contents_);
+        else if (NormalizationRecord::match(raw_contents_[idx]))
+          NormalizationRecord(idx, raw_contents_);
         else if (ProdNormalizationRecord::match(raw_contents_[idx]))
           ProdNormalizationRecord(idx, raw_contents_);
         else if (LevelRecord::match(raw_contents_[idx]))
           LevelRecord(idx, raw_contents_);
-        else if (BetaRecord::is(raw_contents_[idx]))
-          BetaRecord::parse(idx, raw_contents_);
-        else if (ECRecord::is(raw_contents_[idx]))
-          ECRecord::parse(idx, raw_contents_);
-        else if (AlphaRecord::is(raw_contents_[idx]))
-          AlphaRecord::parse(idx, raw_contents_);
-        else if (ParticleRecord::is(raw_contents_[idx]))
-          ParticleRecord::parse(idx, raw_contents_);
+        else if (BetaRecord::match(raw_contents_[idx]))
+          BetaRecord(idx, raw_contents_);
+        else if (ECRecord::match(raw_contents_[idx]))
+          ECRecord(idx, raw_contents_);
+        else if (AlphaRecord::match(raw_contents_[idx]))
+          AlphaRecord(idx, raw_contents_);
+        else if (ParticleRecord::match(raw_contents_[idx]))
+          ParticleRecord(idx, raw_contents_);
         else if (GammaRecord::match(raw_contents_[idx]))
           GammaRecord(idx, raw_contents_);
         else if (ReferenceRecord::match(raw_contents_[idx]))
@@ -587,18 +587,18 @@ void DaughterParser::parseBlocks()
     }
 
     if (test(header.type & RecordType::Comments) &&
-        !header.nuc_id.composition_known())
+        !header.nuclide.composition_known())
     {
       parse_comments_block(block_idx);
     }
     if (test(header.type & RecordType::References) &&
-        !header.nuc_id.composition_known())
+        !header.nuclide.composition_known())
     {
       parse_reference_block(block_idx);
     }
     else if (test(header.type & RecordType::AdoptedLevels))
     {
-      adopted_levels_[header.nuc_id] = block_idx;
+      adopted_levels_[header.nuclide] = block_idx;
       LevelData(raw_contents_, block_idx);
     }
     else if (test(header.type & RecordType::Decay) ||
@@ -619,8 +619,8 @@ void DaughterParser::parseBlocks()
         continue;
 
       for (size_t i=block_idx.first; i < block_idx.last; ++i)
-        if (ParentRecord::is(raw_contents_.at(i)))
-          decaydata.parents.push_back(ParentRecord::from_ensdf(raw_contents_.at(i)));
+        if (ParentRecord::match(raw_contents_.at(i)))
+          decaydata.parents.push_back(ParentRecord(i, raw_contents_));
 
       if (decaydata.parents.empty())
       {
@@ -666,7 +666,7 @@ void DaughterParser::interpret_record(const std::string& line)
   {
 //          DBG << "I record: " << line;
   }
-  else if (ParentRecord::is(line))
+  else if (ParentRecord::match(line))
   {
 //          DBG << "P record: " << line;
   }
@@ -682,7 +682,7 @@ void DaughterParser::interpret_record(const std::string& line)
   {
 //    DBG << "X record: " << line;
   }
-  else if (NormalizationRecord::is(line))
+  else if (NormalizationRecord::match(line))
   {
 //          DBG << "N record: " << line;
   }
@@ -694,11 +694,11 @@ void DaughterParser::interpret_record(const std::string& line)
   {
 //          DBG << "L record: " << line;
   }
-  else if (AlphaRecord::is(line))
+  else if (AlphaRecord::match(line))
   {
 //          DBG << "A record: " << line;
   }
-  else if (BetaRecord::is(line))
+  else if (BetaRecord::match(line))
   {
 //          DBG << "B record: " << line;
   }
@@ -710,11 +710,11 @@ void DaughterParser::interpret_record(const std::string& line)
   {
 //    DBG << "R record: " << line;
   }
-  else if (ECRecord::is(line))
+  else if (ECRecord::match(line))
   {
 //          DBG << "E record: " << line;
   }
-  else if (ParticleRecord::is(line))
+  else if (ParticleRecord::match(line))
   {
 //          DBG << "D record: " << line;
   }
