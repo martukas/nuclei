@@ -4,16 +4,14 @@
 
 struct ProdNormalizationRecord
 {
-  static bool is(const std::string& line)
-  {
-    return match_record_type(line,
-                             "^[\\s0-9A-Za-z]{5}[\\s02-9A-Za-z]PN.*$");
-  }
+  ProdNormalizationRecord() {}
+  ProdNormalizationRecord(size_t& idx,
+                          const std::vector<std::string>& data);
 
-  static ProdNormalizationRecord parse(size_t& idx,
-                                       const std::vector<std::string>& data);
+  static bool match(const std::string& line);
 
   std::string debug() const;
+  bool valid() const;
 
   NuclideId nuclide;
   UncertainDouble NRBR, NTBR, NBBR, NP;

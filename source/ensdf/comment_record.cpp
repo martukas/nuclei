@@ -20,31 +20,45 @@ CommentsRecord::CommentsRecord(size_t& idx,
   const auto& line = data[idx];
 
   nuclide = parse_check_nid(line.substr(0, 5));
-  ctype = line.substr(6, 1);
   rtype = line.substr(7, 2);
+  if (boost::trim_copy(rtype).empty())
+    rtype.clear();
 
-  bool trim = (ctype != "T") && (ctype != "t");
-  translate = std::isupper(ctype[0]);
+  auto rrtype = rtype;
+  boost::replace_all(rrtype, " ", "\\s");
+
+//  ignore = (ctype == "Dd");
+
+  text = extract(line);
+  while ((idx+1 < data.size()) &&
+         match_cont(data[idx+1], "[cdtCDT]" + rrtype))
+    text += extract(data[++idx]);
+}
+
+std::string CommentsRecord::extract(const std::string& line)
+{
+  auto ctype = line.substr(6, 1);
+  bool trim = (ctype != "t") && (ctype != "T");
 
   std::string cdata = line.substr(9, 71);
   if (trim)
-    boost::trim(cdata);
-
-//  boost::regex filter("^[\\s0-9A-Z]{5}[^1 ]"
-//                      + ctype + rtype + ".*$");
-  while ((idx+1 < data.size()) &&
-         match_cont(data[idx+1], ctype + rtype))
+    cdata = ((line[5] == ' ') ? "" : " ")
+        + boost::trim_copy(cdata);
+  else
+    cdata += "\n";
+  if (((line[5] == '#') || (line[5] == '!')) &&
+      text.size() && (text[text.size()-1] != '\n'))
   {
-    auto more_data = data[++idx].substr(9,71);
-    if (trim)
-      more_data = " " + boost::trim_copy(more_data);
-    cdata += more_data;
+    cdata = "\n" + cdata;
   }
-
-//  if (translate)
-//    cdata = translate_all(cdata);
-
-  text = cdata;
+  if (line[5] == '+')
+  {
+    cdata = cdata.substr(1, cdata.size() - 1);
+    boost::trim_right(text);
+  }
+  if (std::isupper(ctype[0]))
+    return translate_all(cdata);
+  return cdata;
 }
 
 std::string CommentsRecord::translate_all(const std::string &s)
@@ -57,9 +71,9 @@ std::string CommentsRecord::translate_all(const std::string &s)
   for (std::string t : tokens)
   {
     for (auto r : dict)
-      if (t == r.second.first)
+      if (t == r.first)
       {
-        t = r.second.second;
+        t = r.second;
         break;
       }
     ret += t;
@@ -70,13 +84,18 @@ std::string CommentsRecord::translate_all(const std::string &s)
 
 std::string CommentsRecord::debug() const
 {
-  return nuclide.symbolicName() + " comment "
-      + "[" + ctype + ":" + rtype + "] = " + text;
+  auto ret = nuclide.symbolicName() + " COMM ";
+  if (!rtype.empty())
+    ret += "[" + rtype + "]";
+  return ret + "=" + text;
 }
 
+bool CommentsRecord::valid() const
+{
+  return nuclide.valid();
+}
 
-std::multimap<size_t, std::pair<std::string, std::string>>
-CommentsRecord::get_dictionary()
+std::list<std::pair<std::string, std::string>> CommentsRecord::get_dictionary()
 {
   std::map<std::string, std::string> map
   {
@@ -1098,9 +1117,13 @@ CommentsRecord::get_dictionary()
     {"|D","|D"}
   };
 
-  std::multimap<size_t, std::pair<std::string, std::string>> ret;
+  std::multimap<size_t, std::pair<std::string, std::string>> mmap;
   for (auto l : map)
-    ret.insert({l.first.size(), {l.first, l.second}});
+    mmap.insert({l.first.size(), {l.first, l.second}});
+
+  std::list<std::pair<std::string, std::string>> ret;
+  for (auto l = mmap.rbegin(); l != mmap.rend(); ++l)
+    ret.push_back(l->second);
 
   return ret;
 }

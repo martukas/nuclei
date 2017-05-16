@@ -6,12 +6,15 @@
 
 struct QValueRecord
 {
-  static bool is(const std::string& line);
-  static QValueRecord parse(size_t& idx,
-                            const std::vector<std::string>& data,
-                            bool recurse = true);
+  QValueRecord() {}
+  QValueRecord(size_t& idx,
+               const std::vector<std::string>& data,
+               bool recurse = true);
+
+  static bool match(const std::string& line);
 
   std::string debug() const;
+  bool valid() const;
 
   NuclideId nuc_id;
   UncertainDouble Q, SN, SP, QA;

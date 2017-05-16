@@ -4,11 +4,14 @@
 
 struct ReferenceRecord
 {
-  static bool is(const std::string& line);
-  static ReferenceRecord parse(size_t& idx,
-                               const std::vector<std::string>& data);
+  ReferenceRecord() {}
+  ReferenceRecord (size_t& idx,
+                   const std::vector<std::string>& data);
+
+  static bool match(const std::string& line);
 
   std::string debug() const;
+  bool valid() const;
 
   NuclideId  nuclide;
   std::string keynum, reference;

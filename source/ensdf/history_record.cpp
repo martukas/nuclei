@@ -13,7 +13,7 @@ HistoryRecord::HistoryRecord(size_t& idx,
 {
   if ((idx >= data.size()) || !match(data[idx]))
     return;
-  auto& line = data[idx];
+  const auto& line = data[idx];
 
   nuclide = parse_check_nid(line.substr(0, 5));
 
@@ -38,7 +38,7 @@ std::string HistoryRecord::debug() const
 {
   auto ret = nuclide.symbolicName() + " HIST ";
   for (auto kvp : kvps)
-    ret += "\n  " + kvp.first + "=" + kvp.second;
+    ret += "\n      " + kvp.first + "=" + kvp.second;
   return ret;
 }
 

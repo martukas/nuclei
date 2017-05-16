@@ -55,6 +55,7 @@ public:
   void setSigFigs(uint16_t sig);
 
   bool hasFiniteValue() const;
+  bool defined() const;
 
   std::string to_string(bool prefix_magn, bool with_uncert = true) const;
   std::string to_markup() const; // outputs formatted text
