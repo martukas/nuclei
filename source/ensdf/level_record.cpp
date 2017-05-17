@@ -4,6 +4,8 @@
 #include <boost/algorithm/string/trim_all.hpp>
 #include "custom_logger.h"
 
+#include <boost/regex.hpp>
+
 bool LevelRecord::match(const std::string& line)
 {
   return match_first(line, "\\sL");
@@ -19,29 +21,45 @@ LevelRecord::LevelRecord(size_t& idx,
   nuclide = parse_nid(line.substr(0,5));
   auto val = line.substr(9,10);
   auto uncert = line.substr(19,2);
-  bool hasoffset = false;
-  for (size_t i=0; i < val.size(); ++i)
+
+  std::string num("[\\+-]?[0-9]+\\.?[0-9]*");
+  boost::regex p1("^\\s*\\+?([A-Z]{1,2})\\+?\\s*$");
+  boost::regex p2("^\\s*" + num + "\\+?([A-Z]{1,2})\\s*$");
+  boost::regex p3("^\\s*([A-Z]{1,2})\\+?" + num + "\\s*$");
+
+  bool hasoffset = (boost::regex_match(val, p1) ||
+                    boost::regex_match(val, p2) ||
+                    boost::regex_match(val, p3));
+
+  if (hasoffset)
   {
-    if (std::isupper(val[i]) && hasoffset)
-      offset += val.substr(i,1);
-    else if (val[i] == '+')
-      hasoffset = true;
+    boost::smatch what;
+    if (boost::regex_search(val, what,
+                            boost::regex("^.*?([A-Z]{1,2}).*$"))
+        && (what.size() > 1))
+      offset = what[1];
+    boost::smatch what2;
+    if (boost::regex_search(val, what2,
+                            boost::regex("^[\\sA-Z]*(" + num + ")\\+?[\\sA-Z]*$"))
+        && (what2.size() > 1))
+      val = what2[1];
+    else
+      val = "0";
   }
-  if (hasoffset && offset.size())
-  {
-    offset = "+" + offset;
-    boost::replace_all(val, "+X", "  ");
-    boost::replace_all(val, "+Y", "  ");
-  }
-  else if (boost::trim_copy(val) == "X")
-    offset = "X";
-  else if (boost::trim_copy(val) == "Y")
-    offset = "Y";
 
   energy = Energy(parse_val_uncert(val, uncert));
   spin_parity = parse_spin_parity(line.substr(21, 18));
   halflife = parse_halflife(line.substr(39, 16));
   L = boost::trim_copy(line.substr(55,9));
+
+//  if (hasoffset)
+//  {
+//    DBG << nuclide.symbolicName()
+//        << ":" << idx << " has offset "
+//        << offset << " + " << energy.to_string()
+//        << " from " << line;
+//  }
+
 
   try
   {
