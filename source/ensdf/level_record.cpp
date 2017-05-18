@@ -59,24 +59,28 @@ LevelRecord::LevelRecord(size_t& idx,
   quality = boost::trim_copy(line.substr(79,1));
 
   while ((idx+1 < data.size()) &&
-         (match_cont(data[idx+1], "\\sL") ||
-          CommentsRecord::match(data[idx+1], "L") ||
-          GammaRecord::match(data[idx+1]) ||
-          ECRecord::match(data[idx+1]) ||
-          ParticleRecord::match(data[idx+1]) ||
-          BetaRecord::match(data[idx+1])))
+         (match_cont(data[idx+1], "\\sL")
+          || CommentsRecord::match(data[idx+1], "L")
+          || AlphaRecord::match(data[idx+1])
+          || BetaRecord::match(data[idx+1])
+          || GammaRecord::match(data[idx+1])
+          || ECRecord::match(data[idx+1])
+          || ParticleRecord::match(data[idx+1])
+         ))
   {
     ++idx;
     if (CommentsRecord::match(data[idx], "L"))
       comments.push_back(CommentsRecord(idx, data));
-    if (GammaRecord::match(data[idx]))
-      gammas.push_back(GammaRecord(idx, data));
-    if (ECRecord::match(data[idx]))
-      ECs.push_back(ECRecord(idx, data));
-    if (ParticleRecord::match(data[idx]))
-      particles.push_back(ParticleRecord(idx, data));
-    if (BetaRecord::match(data[idx]))
+    else if (AlphaRecord::match(data[idx]))
+      alphas.push_back(AlphaRecord(idx, data));
+    else if (BetaRecord::match(data[idx]))
       betas.push_back(BetaRecord(idx, data));
+    else if (GammaRecord::match(data[idx]))
+      gammas.push_back(GammaRecord(idx, data));
+    else if (ECRecord::match(data[idx]))
+      ECs.push_back(ECRecord(idx, data));
+    else if (ParticleRecord::match(data[idx]))
+      particles.push_back(ParticleRecord(idx, data));
     else
       continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
   }
@@ -144,14 +148,16 @@ std::string LevelRecord::debug() const
     ret += "\n      Continuation:" + continuation;
   for (auto c : comments)
     ret += "\n      Comment: " + c.debug();
+  for (auto c : alphas)
+    ret += "\n      Alpha: " + c.debug();
+  for (auto c : betas)
+    ret += "\n      Beta: " + c.debug();
   for (auto c : gammas)
     ret += "\n      Gamma: " + c.debug();
   for (auto c : ECs)
     ret += "\n      EC: " + c.debug();
   for (auto c : particles)
     ret += "\n      Particle: " + c.debug();
-  for (auto c : betas)
-    ret += "\n      Beta: " + c.debug();
   return ret;
 }
 
