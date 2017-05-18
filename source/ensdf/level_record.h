@@ -2,10 +2,12 @@
 
 #include "ensdf_records.h"
 #include "comment_record.h"
-#include "gamma_record.h"
+
+#include "alpha_record.h"
 #include "beta_record.h"
-#include "particle_record.h"
+#include "gamma_record.h"
 #include "ec_record.h"
+#include "particle_record.h"
 
 struct LevelRecord
 {
@@ -32,10 +34,12 @@ struct LevelRecord
   std::string offset;
 
   std::list<CommentsRecord> comments;
-  std::list<GammaRecord> gammas;
+
+  std::list<AlphaRecord> alphas;
   std::list<BetaRecord> betas;
-  std::list<ParticleRecord> particles;
+  std::list<GammaRecord> gammas;
   std::list<ECRecord> ECs;
+  std::list<ParticleRecord> particles;
 
 private:
   void parse_energy_offset(std::string val,
