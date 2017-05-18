@@ -33,11 +33,11 @@ ParticleRecord::ParticleRecord(size_t& idx,
 
   std::string signature = line.substr(7,2);
   while ((idx+1 < data.size()) &&
-         (match_cont(data[idx+1], signature) ||
+         (match_cont(data[idx+1], "\\s" + signature) ||
           CommentsRecord::match(data[idx+1], signature)))
   {
     ++idx;
-    if (CommentsRecord::match(data[idx]))
+    if (CommentsRecord::match(data[idx], signature))
       comments.push_back(CommentsRecord(idx, data));
     else
       continuation += "$" + boost::trim_copy(data[idx].substr(9,71));

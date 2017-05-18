@@ -20,6 +20,10 @@ NormalizationRecord::NormalizationRecord(size_t& idx,
   BR = parse_norm_value(line.substr(31,8), line.substr(39,2));
   NB = parse_norm_value(line.substr(41,8), line.substr(49,6));
   NP = parse_norm_value(line.substr(55,7), line.substr(62,2));
+
+  while ((idx+1 < data.size()) &&
+         CommentsRecord::match(data[idx+1], "N"))
+    comments.push_back(CommentsRecord(++idx, data));
 }
 
 bool NormalizationRecord::valid() const

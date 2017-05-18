@@ -31,11 +31,11 @@ QValueRecord::QValueRecord(size_t& idx,
 
   bool altcomment {false};
   while ((idx+1 < data.size()) &&
-         (match_cont(data[idx+1], "\\sQ") ||
+          (match_first(data[idx+1], "\\sQ") ||
           CommentsRecord::match(data[idx+1], "Q")))
   {
     ++idx;
-    if (CommentsRecord::match(data[idx]))
+    if (CommentsRecord::match(data[idx], "Q"))
     {
       auto cr = CommentsRecord(idx, data);
       if (boost::contains(cr.text, "Current evaluation has used the following Q record"))
@@ -74,10 +74,10 @@ std::string QValueRecord::debug() const
       + " SP=" + SP.to_string(true)
       + " QA=" + QA.to_string(true)
       + " ref=" + ref;
-  if (alternative)
-    ret += "\n      EvalQ=" + alternative->debug();
   for (auto c : comments)
     ret += "\n      " + c.debug();
+  if (alternative)
+    ret += "\n      EvalQ=" + alternative->debug();
   return ret;
 }
 

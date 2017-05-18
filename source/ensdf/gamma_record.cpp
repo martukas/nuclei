@@ -35,7 +35,7 @@ GammaRecord::GammaRecord(size_t& idx,
           CommentsRecord::match(data[idx+1], "G")))
   {
     ++idx;
-    if (CommentsRecord::match(data[idx]))
+    if (CommentsRecord::match(data[idx], "G"))
       comments.push_back(CommentsRecord(idx, data));
     else
       continuation += "$" + boost::trim_copy(data[idx].substr(9,71));

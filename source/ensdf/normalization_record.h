@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ensdf_records.h"
+#include "comment_record.h"
 
 struct NormalizationRecord
 {
@@ -15,5 +16,7 @@ struct NormalizationRecord
 
   NuclideId nuclide;
   UncertainDouble NR, NT, BR, NB, NP;
+
+  std::list<CommentsRecord> comments;
 };
 
