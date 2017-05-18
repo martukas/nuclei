@@ -303,6 +303,11 @@ NuclideId parse_nid(std::string id)
 //    DBG << "Parsed big nucID " << id << " -> "
 //        << NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), Z).verboseName();
 
+    if (!is_number(A))
+    {
+      DBG << "<NuclideId> Bad A value from " << id;
+      return NuclideId();
+    }
     return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), Z);
   }
 
@@ -317,11 +322,29 @@ NuclideId parse_nid(std::string id)
       std::string Z_str = id.substr(3,2);
       uint16_t Z = 0;
       if (!boost::trim_copy(Z_str).empty())
-        Z = boost::lexical_cast<uint16_t>("1" + id.substr(3,2));
+      {
+        std::string zstring = "1" + id.substr(3,2);
+        if (is_number(zstring))
+          Z = boost::lexical_cast<uint16_t>(zstring);
+        else
+          DBG << "<NuclideId> Bad zstring from " << id;
+      }
+      if (!is_number(A))
+      {
+        DBG << "<NuclideId> Bad A value (2) from " << id;
+        return NuclideId();
+      }
       return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), Z);
     }
     else
+    {
+      if (!is_number(id))
+      {
+        DBG << "<NuclideId> Bad id value from " << id;
+        return NuclideId();
+      }
       return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(id), 0, true);
+    }
   }
   else if ((boost::regex_match(id, w_expr)))
   {
@@ -473,7 +496,7 @@ DecayMode parse_decay_mode(std::string record)
   {
     boost::replace_all(type, "N", "");
     boost::trim(type);
-    if (!type.empty())
+    if (!type.empty() && is_number(type))
       ret.set_neutrons(boost::lexical_cast<uint16_t>(type));
     else
       ret.set_neutrons(1);
@@ -482,7 +505,7 @@ DecayMode parse_decay_mode(std::string record)
   {
     boost::replace_all(type, "P", "");
     boost::trim(type);
-    if (!type.empty())
+    if (!type.empty() && is_number(type))
       ret.set_protons(boost::lexical_cast<uint16_t>(type));
     else
       ret.set_protons(1);

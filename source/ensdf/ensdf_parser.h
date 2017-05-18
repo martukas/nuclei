@@ -40,7 +40,7 @@ private:
   std::vector<std::string> raw_contents_;
 
   std::map<NuclideId, BlockIndices> adopted_levels_; // daughter coordinates
-  std::map<NuclideId, std::map<std::string, BasicDecayData > > decays_; // daughter coordinates: (decay name: basic data)
+  std::map<NuclideId, std::map<std::string, DecayData > > decays_; // daughter coordinates: (decay name: basic data)
 
   static UncertainDouble parseEnsdfMixing(const std::string &s,
                                           const std::string &multipolarity);
@@ -48,8 +48,6 @@ private:
   static double norm(std::string rec, double def_value);
   void parseBlocks();
   std::list<BlockIndices> find_blocks() const;
-
-  void interpret_record(const std::string& line);
 
 
   std::list<HistoryRecord> mass_history_;

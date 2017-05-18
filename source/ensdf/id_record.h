@@ -15,7 +15,9 @@ enum class RecordType : uint64_t
   InelasticScattering = 1 << 9,
   HiXng               = 1 << 10,
   Tentative           = 1 << 11,
-  Reaction            = 1 << 12
+  Reaction            = 1 << 12,
+  NeutronResonances   = 1 << 13,
+  IsomericTransition  = 1 << 14
 };
 
 

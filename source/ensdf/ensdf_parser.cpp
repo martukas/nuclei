@@ -233,9 +233,9 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   double gammaMaxDifference = 5.0;
 
   BlockIndices alpos = adopted_levels_.at(daughter);
-  BasicDecayData decaydata = decays_.at(daughter).at(decay_name);
+  DecayData decaydata = decays_.at(daughter).at(decay_name);
 
-  Nuclide daughter_nuclide(decaydata.daughter);
+  Nuclide daughter_nuclide(decaydata.id.nuclide);
 
   double normalizeDecIntensToPercentParentDecay = 1.0;
   double normalizeGammaIntensToPercentParentDecay = 1.0;
@@ -245,8 +245,8 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   //  DBG << "parsing " << dNucid.toStdString();
 
   LevelIndex levels_index_;
-  levels_index_.find(alpos, dNucid1, decaydata.dsid, raw_contents_);
-  levels_index_.find(alpos, dNucid2, decaydata.dsid, raw_contents_);
+  levels_index_.find(alpos, dNucid1, decaydata.id.dsid, raw_contents_);
+  levels_index_.find(alpos, dNucid2, decaydata.id.dsid, raw_contents_);
 
   // process all adopted level sub-blocks
   Level currentLevel;
@@ -420,7 +420,8 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   parent_nuclide.finalize();
   daughter_nuclide.finalize();
   //HACK types
-  return DecayScheme(decay_name, parent_nuclide, daughter_nuclide, decaydata.mode);
+  return DecayScheme(decay_name, parent_nuclide,
+                     daughter_nuclide, decaydata.decay_info_.mode);
 }
 
 double DaughterParser::norm(std::string rec, double def_value)
@@ -530,62 +531,6 @@ void DaughterParser::parseBlocks()
       DBG << "Bad header  ==  " << raw_contents_[idx];
 //    DBG << "IdRecord: " << header.extended_dsid;
 
-    while (false)
-//    while (idx < block_idx.last)
-    {
-      try
-      {
-        if (IdRecord::match(raw_contents_[idx]))
-          IdRecord(idx, raw_contents_);
-        else if (HistoryRecord::match(raw_contents_[idx]))
-          HistoryRecord(idx, raw_contents_);
-        else if (CommentsRecord::match(raw_contents_[idx]))
-          CommentsRecord(idx, raw_contents_);
-        else if (QValueRecord::match(raw_contents_[idx]))
-          QValueRecord(idx, raw_contents_);
-        else if (XRefRecord::match(raw_contents_[idx]))
-          XRefRecord(idx, raw_contents_);
-        else if (ParentRecord::match(raw_contents_[idx]))
-          ParentRecord(idx, raw_contents_);
-        else if (NormalizationRecord::match(raw_contents_[idx]))
-          NormalizationRecord(idx, raw_contents_);
-        else if (ProdNormalizationRecord::match(raw_contents_[idx]))
-          ProdNormalizationRecord(idx, raw_contents_);
-        else if (LevelRecord::match(raw_contents_[idx]))
-          LevelRecord(idx, raw_contents_);
-        else if (BetaRecord::match(raw_contents_[idx]))
-          BetaRecord(idx, raw_contents_);
-        else if (ECRecord::match(raw_contents_[idx]))
-          ECRecord(idx, raw_contents_);
-        else if (AlphaRecord::match(raw_contents_[idx]))
-          AlphaRecord(idx, raw_contents_);
-        else if (ParticleRecord::match(raw_contents_[idx]))
-          ParticleRecord(idx, raw_contents_);
-        else if (GammaRecord::match(raw_contents_[idx]))
-          GammaRecord(idx, raw_contents_);
-        else if (ReferenceRecord::match(raw_contents_[idx]))
-        {
-//          auto line = raw_contents_[idx];
-          auto r = ReferenceRecord(idx, raw_contents_);
-//          if (!r.continuation.empty())
-//          DBG
-//              << line << "  --->  "
-//              << r.debug();
-        }
-        else
-        {
-          DBG << "Unidentified record " << raw_contents_[idx];
-        }
-        ++idx;
-      }
-      catch (...)
-      {
-        DBG << "  !!!EXCEPTION, COULD NOT PARSE RECORD: "
-            << raw_contents_[idx];
-        ++idx;
-      }
-    }
-
     if (test(header.type & RecordType::Comments) &&
         !header.nuclide.composition_known())
     {
@@ -599,41 +544,37 @@ void DaughterParser::parseBlocks()
     else if (test(header.type & RecordType::AdoptedLevels))
     {
       adopted_levels_[header.nuclide] = block_idx;
-      LevelData(raw_contents_, block_idx);
+      LevelData lev(raw_contents_, block_idx);
+//      DBG << "Got level " << lev.id.debug();
     }
     else if (test(header.type & RecordType::Decay) ||
              (test(header.type & RecordType::InelasticScattering)))
     {
-      BasicDecayData decaydata;
-      try
-      {
-        decaydata = BasicDecayData::from_id(header, block_idx);
-      }
-      catch (boost::bad_lexical_cast& e)
-      {
-        DBG << "Bad decay " << e.what();
-        DBG << "   " << header.debug();
-      }
+//      DBG << "Getting decay " << header.debug();
+      DecayData decaydata(raw_contents_, block_idx);
 
-      if (!decaydata.mode.valid())
+      if (!decaydata.decay_info_.mode.valid())
+      {
+        DBG << " BAD DECAY " << decaydata.to_string();
         continue;
+      }
 
       for (size_t i=block_idx.first; i < block_idx.last; ++i)
         if (ParentRecord::match(raw_contents_.at(i)))
           decaydata.parents.push_back(ParentRecord(i, raw_contents_));
 
-      if (decaydata.parents.empty())
-      {
-        DBG <<   " BROKEN RECORD FOR " << decaydata.to_string();
-        // broken records. skipping
-        continue;
-      }
+//      if (decaydata.parents.empty())
+//      {
+//        DBG <<   " BROKEN RECORD FOR " << decaydata.to_string();
+//        // broken records. skipping
+//        continue;
+//      }
 
       // create decay string
       // get reference to daughter map to work with
       // (create and insert if necessary)
-      std::map<std::string, BasicDecayData> &decmap =
-          decays_[decaydata.daughter];
+      std::map<std::string, DecayData> &decmap =
+          decays_[decaydata.id.nuclide];
 
       std::vector<std::string> hlstrings;
       for (const ParentRecord &prec : decaydata.parents)
@@ -647,7 +588,7 @@ void DaughterParser::parseBlocks()
       std::string decayname  = prec.nuclide.symbolicName();
       if (prec.energy > 0.0)
         decayname += "m";
-      decayname += " → " + decaydata.mode.to_string(); //HACK Types
+      decayname += " → " + decaydata.decay_info_.mode.to_string(); //HACK Types
       if (!hlstrings.empty())
         decayname += ", " + join(hlstrings, " + ");
 
@@ -655,76 +596,9 @@ void DaughterParser::parseBlocks()
       while (decmap.count(decayname))
         decayname += " (alt.)";
       decmap[decayname] = decaydata;
+
+//      DBG << "Got decay " << header.debug() << " as " << decayname;
     }
   }
 
 }
-
-void DaughterParser::interpret_record(const std::string& line)
-{
-  if (IdRecord::match(line))
-  {
-//          DBG << "I record: " << line;
-  }
-  else if (ParentRecord::match(line))
-  {
-//          DBG << "P record: " << line;
-  }
-  else if (HistoryRecord::match(line))
-  {
-//          DBG << "History " << line;
-  }
-  else if (QValueRecord::match(line))
-  {
-//          DBG << "Q record: " << line;
-  }
-  else if (XRefRecord::match(line))
-  {
-//    DBG << "X record: " << line;
-  }
-  else if (NormalizationRecord::match(line))
-  {
-//          DBG << "N record: " << line;
-  }
-  else if (ProdNormalizationRecord::match(line))
-  {
-//          DBG << "PN record: " << line;
-  }
-  else if (LevelRecord::match(line))
-  {
-//          DBG << "L record: " << line;
-  }
-  else if (AlphaRecord::match(line))
-  {
-//          DBG << "A record: " << line;
-  }
-  else if (BetaRecord::match(line))
-  {
-//          DBG << "B record: " << line;
-  }
-  else if (GammaRecord::match(line))
-  {
-//          DBG << "G record: " << line;
-  }
-  else if (ReferenceRecord::match(line))
-  {
-//    DBG << "R record: " << line;
-  }
-  else if (ECRecord::match(line))
-  {
-//          DBG << "E record: " << line;
-  }
-  else if (ParticleRecord::match(line))
-  {
-//          DBG << "D record: " << line;
-  }
-  else if (CommentsRecord::match(line))
-  {
-//          DBG << "C record: " << line;
-  }
-  else
-  {
-          DBG << "Unidentified record: " << line;
-  }
-}
-

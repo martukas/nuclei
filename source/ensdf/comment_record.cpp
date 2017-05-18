@@ -17,18 +17,18 @@ CommentsRecord::CommentsRecord(size_t& idx,
   const auto& line = data[idx];
 
   nuclide = parse_check_nid(line.substr(0, 5));
-  rtype = line.substr(7, 2);
+  rtype = line.substr(7, 1);
   if (boost::trim_copy(rtype).empty())
     rtype.clear();
 
-  auto rrtype = rtype;
-  boost::replace_all(rrtype, " ", "\\s");
+//  auto rrtype = rtype;
+//  boost::replace_all(rrtype, " ", "\\s");
 
 //  ignore = (ctype == "Dd");
 
   text = extract(line);
   while ((idx+1 < data.size()) &&
-         match_cont(data[idx+1], "[cdtCDT]" + rrtype))
+         match_cont(data[idx+1], "[cdtCDT]" + rtype))
     text += extract(data[++idx]);
 }
 
