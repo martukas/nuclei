@@ -138,10 +138,12 @@ void DecayData::read_prelims(const std::vector<std::string>& data,
                              BlockIndices& idx)
 {
   while ((idx.first < idx.last) &&
-         (ParentRecord::match(data[idx.first]) ||
-          CommentsRecord::match(data[idx.first]) || //all comments
-          NormalizationRecord::match(data[idx.first]) ||
-          ProdNormalizationRecord::match(data[idx.first])
+         (
+           ParentRecord::match(data[idx.first])
+           || QValueRecord::match(data[idx.first])
+           || CommentsRecord::match(data[idx.first])
+           || NormalizationRecord::match(data[idx.first])
+           || ProdNormalizationRecord::match(data[idx.first])
           )
          )
   {
@@ -153,7 +155,8 @@ void DecayData::read_prelims(const std::vector<std::string>& data,
         if (pn.valid())
         {
           if (pnorm.valid())
-            DBG << "<LevelData> More than one pnorm!!!";
+            DBG << "<DecayData> More than one pnorm " << pnorm.debug()
+                << " from " << idx.first << "=" << data[idx.first];
           pnorm = pn;
         }
         else
@@ -166,11 +169,21 @@ void DecayData::read_prelims(const std::vector<std::string>& data,
         if (n.valid())
         {
           if (norm.valid())
-            DBG << "<DecayData> More than one norm!!!";
+            DBG << "<DecayData> More than one norm " << norm.debug()
+                << " from " << idx.first << "=" << data[idx.first];
           norm = n;
         }
         else
           DBG << "<DecayData> Invalid Norm " << n.debug()
+              << " from " << idx.first << "=" << data[idx.first];
+      }
+      else if (QValueRecord::match(data[idx.first]))
+      {
+        auto qv = QValueRecord(idx.first, data);
+        if (qv.valid())
+          qvals.push_back(qv);
+        else
+          DBG << "<DecayData> Invalid Qval " << qv.debug()
               << " from " << idx.first << "=" << data[idx.first];
       }
       else if (CommentsRecord::match(data[idx.first]))
@@ -316,7 +329,9 @@ void LevelData::read_prelims(const std::vector<std::string>& data,
         if (pn.valid())
         {
           if (pnorm.valid())
-            DBG << "<LevelData> More than one pnorm!!!";
+            DBG << "<LevelData> More than one norm " << pnorm.debug()
+                << " from " << idx.first << "=" << data[idx.first];
+
           pnorm = pn;
         }
         else

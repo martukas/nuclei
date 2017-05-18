@@ -34,15 +34,16 @@ struct DecayData
   std::list<HistoryRecord> history;
 
   std::vector<ParentRecord> parents;
-  std::list<CommentsRecord> comments;
 
+  std::list<CommentsRecord> comments;
+  std::list<QValueRecord> qvals;
   NormalizationRecord norm;
   ProdNormalizationRecord pnorm;
 
-  std::list<LevelRecord> levels;
-
-  std::list<ParticleRecord> particles;
   std::list<GammaRecord> gammas;
+  std::list<ParticleRecord> particles;
+
+  std::list<LevelRecord> levels;
 
   void read_hist(const std::vector<std::string>& data,
                  BlockIndices& idx);
@@ -66,14 +67,15 @@ struct LevelData
 
   IdRecord id;
   std::list<HistoryRecord> history;
+
   std::list<CommentsRecord> comments;
   std::map<std::string, std::string> xrefs;
   std::list<QValueRecord> qvals;
-  std::list<LevelRecord> levels;
+  ProdNormalizationRecord pnorm;
 
   std::list<GammaRecord> gammas;
 
-  ProdNormalizationRecord pnorm;
+  std::list<LevelRecord> levels;
 
   void read_hist(const std::vector<std::string>& data,
                  BlockIndices& idx);
