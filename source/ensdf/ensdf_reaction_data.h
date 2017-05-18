@@ -1,42 +1,68 @@
 #pragma once
 
-#include "id_record.h"
-#include "parent_record.h"
-#include "DecayScheme.h"
+#include "nid.h"
+#include <list>
 
-struct ReactionData
+#include "DecayMode.h"
+#include "HalfLife.h"
+
+struct Reactants
 {
-  struct Reactants
-  {
-    std::string in;
-    std::string out;
+  Reactants() {}
+  Reactants(std::string s);
 
-    std::string to_string() const;
-    void parse_reactants(std::string s);
-  };
+  bool valid() const;
+  std::string to_string() const;
 
-  struct Reaction
-  {
-    NuclideId target;
-    std::list<Reactants> variants;
+  std::string in;
+  std::string out;
+};
 
-    std::string to_string() const;
-    void parse_reaction(std::string s);
-  };
+struct Reaction
+{
+  Reaction() {}
+  Reaction(std::string s, NuclideId daughter);
 
-  //general
-  NuclideId daughter;
-  BlockIndices block;
-  std::string dsid;
+  bool valid() const;
+  std::string to_string() const;
+
+  NuclideId target;
+  std::list<Reactants> variants;
+};
+
+struct ReactionInfo
+{
+  ReactionInfo() {}
+  ReactionInfo(std::string ext_dsid, NuclideId daughter);
+
+  static bool match(std::string record);
+
+  bool valid() const;
+  std::string to_string() const;
 
   //header data
   std::list<Reaction> reactions;
   std::string energy;
   std::string qualifier;
 
-  static bool match(std::string record);
-  bool find_remove(std::string &extras, std::string wanted, std::string trim_what);
-  static ReactionData from_id(const IdRecord &record,
-                              BlockIndices block);
+private:
+  bool find_remove(std::string &extras,
+                   std::string wanted,
+                   std::string trim_what);
+};
+
+struct DecayInfo
+{
+  DecayInfo() {}
+  DecayInfo(std::string dsid);
+
+  bool valid() const;
   std::string to_string() const;
+
+  NuclideId parent;
+  DecayMode mode;
+  HalfLife hl;
+
+private:
+  static DecayMode parse_type(const std::string &tstring);
 };

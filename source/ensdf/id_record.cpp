@@ -1,9 +1,9 @@
 #include "id_record.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 #include <sstream>
 #include "custom_logger.h"
 #include "ensdf_types.h"
+#include "qpx_util.h"
 
 #include "ensdf_reaction_data.h"
 
@@ -25,10 +25,20 @@ IdRecord::IdRecord(size_t& idx,
   pub = line.substr(65, 8);
   std::string year_str = line.substr(74, 4);
   if (!boost::trim_copy(year_str).empty())
-    year = boost::lexical_cast<uint16_t>(year_str);
+  {
+    if (is_number(boost::trim_copy(year_str)))
+      year = boost::lexical_cast<uint16_t>(boost::trim_copy(year_str));
+    else
+      DBG << "<IdRecord> Cannot intepret year " << line;
+  }
   std::string month_str = line.substr(78, 2);
   if (!boost::trim_copy(month_str).empty())
-    month = boost::lexical_cast<uint16_t>(month_str);
+  {
+    if (is_number(boost::trim_copy(month_str)))
+      month = boost::lexical_cast<uint16_t>(boost::trim_copy(month_str));
+    else
+      DBG << "<IdRecord> Cannot intepret month " << line;
+  }
 
   if (dsid.size() && dsid.at(dsid.size()-1) == ',')
     extended_dsid += IdRecord(++idx, data).extended_dsid;
@@ -46,6 +56,10 @@ bool IdRecord::reflect_parse() const
   else if (test(type & RecordType::References))
   {  }
   else if (test(type & RecordType::CoulombExcitation))
+  {  }
+  else if (test(type & RecordType::IsomericTransition))
+  {  }
+  else if (test(type & RecordType::NeutronResonances))
   {  }
   else if (test(type & RecordType::MuonicAtom))
   {  }
@@ -75,11 +89,11 @@ RecordType IdRecord::is_type(std::string s)
     return RecordType::References;
   else if (boost::contains(str, "MUONIC ATOM"))
     return RecordType::MuonicAtom;
-  else if (boost::contains(str, "(HI,XNG)"))
+  else if (boost::contains(str, "(HI,"))
     return RecordType::HiXng;
 
   RecordType ret = RecordType::Invalid;
-  if (ReactionData::match(s))
+  if (ReactionInfo::match(s))
     ret |= RecordType::Reaction;
   if (boost::contains(str, "INELASTIC SCATTERING"))
     ret |= RecordType::InelasticScattering;
@@ -89,6 +103,10 @@ RecordType IdRecord::is_type(std::string s)
     ret |= RecordType::AdoptedLevels;
   if (boost::contains(str, "TENTATIVE"))
     ret |= RecordType::Tentative;
+  if (boost::contains(str, "ISOMERIC TRANSITION"))
+    ret |= RecordType::IsomericTransition;
+  if (boost::contains(str, "NEUTRON RESONANCES"))
+    ret |= RecordType::NeutronResonances;
   if (boost::contains(str, "GAMMAS"))
     ret |= RecordType::Gammas;
   if (boost::contains(str, "DECAY"))
@@ -118,6 +136,10 @@ std::string IdRecord::type_to_str(RecordType t)
     ret += "COULOMB EXCITATION";
   if (test(t & RecordType::InelasticScattering))
     ret += "INELASTIC SCATTERING";
+  if (test(t & RecordType::IsomericTransition))
+    ret += "ISOMERIC TRANSITION";
+  if (test(t & RecordType::NeutronResonances))
+    ret += "NEUTRON RESONANCES";
   if (test(t & RecordType::Reaction))
     ret += "REACTION";
   if (test(t & RecordType::Decay))

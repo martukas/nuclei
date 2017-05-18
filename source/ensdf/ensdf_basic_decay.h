@@ -4,6 +4,8 @@
 #include "parent_record.h"
 #include "DecayScheme.h"
 
+#include "ensdf_reaction_data.h"
+
 #include "id_record.h"
 #include "history_record.h"
 #include "comment_record.h"
@@ -11,38 +13,56 @@
 #include "level_record.h"
 #include "gamma_record.h"
 #include "prod_normalization_record.h"
+#include "normalization_record.h"
 
-struct BasicDecayData
+struct DecayData
 {
-  static BasicDecayData from_id(const IdRecord &record,
-                                BlockIndices block);
+  DecayData() {}
+  DecayData(const std::vector<std::string>& data,
+                 BlockIndices idx);
+
+//  bool valid() const;
   std::string to_string() const;
 
-  //general
-  NuclideId daughter;
+  //deprecate
   BlockIndices block;
-  std::string dsid;
 
-  //header data
-  NuclideId parent;
-  DecayMode mode;
-  HalfLife hl;
+  IdRecord id;
+  DecayInfo decay_info_;
+  ReactionInfo reaction_info_;
 
-  //extra shit
+  std::list<HistoryRecord> history;
+
   std::vector<ParentRecord> parents;
+  std::list<CommentsRecord> comments;
 
-private:
-  static DecayMode parseDecayType(const std::string &tstring);
+  NormalizationRecord norm;
+  ProdNormalizationRecord pnorm;
+
+  std::list<LevelRecord> levels;
+
+  std::list<ParticleRecord> particles;
+  std::list<GammaRecord> gammas;
+
+  void read_hist(const std::vector<std::string>& data,
+                 BlockIndices& idx);
+
+  void read_prelims(const std::vector<std::string>& data,
+                    BlockIndices& idx);
+
+  void read_unplaced(const std::vector<std::string>& data,
+                     BlockIndices& idx);
+
 };
 
 struct LevelData
 {
   LevelData();
   LevelData(const std::vector<std::string>& data,
-            BlockIndices block_idx);
+            BlockIndices idx);
 
-  std::string debug() const;
   bool valid() const;
+  std::string debug() const;
 
   IdRecord id;
   std::list<HistoryRecord> history;
@@ -55,14 +75,17 @@ struct LevelData
 
   ProdNormalizationRecord pnorm;
 
-  void read_comments(const std::vector<std::string>& data,
-                     BlockIndices& idx);
+  void read_hist(const std::vector<std::string>& data,
+                 BlockIndices& idx);
 
   void read_prelims(const std::vector<std::string>& data,
                     BlockIndices& idx);
 
+  void read_comments(const std::vector<std::string>& data,
+                     BlockIndices& idx);
+
   void read_unplaced_gammas(const std::vector<std::string>& data,
                             BlockIndices& idx);
-  void read_hist(const std::vector<std::string>& data,
-                 BlockIndices& idx);
+
 };
+

@@ -27,11 +27,11 @@ BetaRecord::BetaRecord(size_t& idx,
   quality = boost::trim_copy(line.substr(79,1));
 
   while ((idx+1 < data.size()) &&
-         (match_cont(data[idx+1], "B") ||
+         (match_cont(data[idx+1], "\\sB") ||
           CommentsRecord::match(data[idx+1], "B")))
   {
     ++idx;
-    if (CommentsRecord::match(data[idx]))
+    if (CommentsRecord::match(data[idx], "B"))
       comments.push_back(CommentsRecord(idx, data));
     else
       continuation += "$" + boost::trim_copy(data[idx].substr(9,71));

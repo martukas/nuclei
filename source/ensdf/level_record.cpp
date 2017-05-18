@@ -6,6 +6,9 @@
 
 #include <boost/regex.hpp>
 
+#define RE_NUMBER "([\\+-]?[0-9]+\\.?[0-9]*E?[0-9]*)"
+#define RE_OFFSET "([A-Z]{1,2})"
+
 bool LevelRecord::match(const std::string& line)
 {
   return match_first(line, "\\sL");
@@ -19,35 +22,9 @@ LevelRecord::LevelRecord(size_t& idx,
   const auto& line = data[idx];
 
   nuclide = parse_nid(line.substr(0,5));
-  auto val = line.substr(9,10);
-  auto uncert = line.substr(19,2);
 
-  std::string num("[\\+-]?[0-9]+\\.?[0-9]*");
-  boost::regex p1("^\\s*\\+?([A-Z]{1,2})\\+?\\s*$");
-  boost::regex p2("^\\s*" + num + "\\+?([A-Z]{1,2})\\s*$");
-  boost::regex p3("^\\s*([A-Z]{1,2})\\+?" + num + "\\s*$");
+  parse_energy_offset(line.substr(9,10), line.substr(19,2));
 
-  bool hasoffset = (boost::regex_match(val, p1) ||
-                    boost::regex_match(val, p2) ||
-                    boost::regex_match(val, p3));
-
-  if (hasoffset)
-  {
-    boost::smatch what;
-    if (boost::regex_search(val, what,
-                            boost::regex("^.*?([A-Z]{1,2}).*$"))
-        && (what.size() > 1))
-      offset = what[1];
-    boost::smatch what2;
-    if (boost::regex_search(val, what2,
-                            boost::regex("^[\\sA-Z]*(" + num + ")\\+?[\\sA-Z]*$"))
-        && (what2.size() > 1))
-      val = what2[1];
-    else
-      val = "0";
-  }
-
-  energy = Energy(parse_val_uncert(val, uncert));
   spin_parity = parse_spin_parity(line.substr(21, 18));
   halflife = parse_halflife(line.substr(39, 16));
   L = boost::trim_copy(line.substr(55,9));
@@ -59,7 +36,6 @@ LevelRecord::LevelRecord(size_t& idx,
 //        << offset << " + " << energy.to_string()
 //        << " from " << line;
 //  }
-
 
   try
   {
@@ -85,17 +61,62 @@ LevelRecord::LevelRecord(size_t& idx,
   while ((idx+1 < data.size()) &&
          (match_cont(data[idx+1], "\\sL") ||
           CommentsRecord::match(data[idx+1], "L") ||
-          GammaRecord::match(data[idx+1])))
+          GammaRecord::match(data[idx+1]) ||
+          ECRecord::match(data[idx+1]) ||
+          ParticleRecord::match(data[idx+1]) ||
+          BetaRecord::match(data[idx+1])))
   {
     ++idx;
-    if (CommentsRecord::match(data[idx]))
+    if (CommentsRecord::match(data[idx], "L"))
       comments.push_back(CommentsRecord(idx, data));
     if (GammaRecord::match(data[idx]))
       gammas.push_back(GammaRecord(idx, data));
+    if (ECRecord::match(data[idx]))
+      ECs.push_back(ECRecord(idx, data));
+    if (ParticleRecord::match(data[idx]))
+      particles.push_back(ParticleRecord(idx, data));
+    if (BetaRecord::match(data[idx]))
+      betas.push_back(BetaRecord(idx, data));
     else
       continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
   }
 }
+
+void LevelRecord::parse_energy_offset(std::string val,
+                                      std::string uncert)
+{
+  boost::replace_all(val, " ", "");
+
+  boost::smatch what1, what2, what3;
+  if (boost::regex_match(val, boost::regex("^" RE_NUMBER "$")))
+  {
+
+  }
+  if ((boost::regex_search(val, what1,
+                           boost::regex("^" RE_OFFSET "\\+?$")))
+    && (what1.size() == 2))
+  {
+    offset = what1[1];
+    val = "0";
+  }
+  else if ((boost::regex_search(val, what2,
+                                boost::regex("^" RE_OFFSET "\\+" RE_NUMBER "$")))
+    && (what2.size() == 3))
+  {
+    offset = what2[1];
+    val = what2[2];
+  }
+  else if ((boost::regex_search(val, what3,
+                                boost::regex("^" RE_NUMBER "\\+" RE_OFFSET "$")))
+    && (what3.size() == 3))
+  {
+    val = what3[1];
+    offset = what3[2];
+  }
+
+  energy = Energy(parse_val_uncert(val, uncert));
+}
+
 
 std::string LevelRecord::debug() const
 {
@@ -125,6 +146,12 @@ std::string LevelRecord::debug() const
     ret += "\n      Comment: " + c.debug();
   for (auto c : gammas)
     ret += "\n      Gamma: " + c.debug();
+  for (auto c : ECs)
+    ret += "\n      EC: " + c.debug();
+  for (auto c : particles)
+    ret += "\n      Particle: " + c.debug();
+  for (auto c : betas)
+    ret += "\n      Beta: " + c.debug();
   return ret;
 }
 
