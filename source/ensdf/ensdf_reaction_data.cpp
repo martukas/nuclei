@@ -5,20 +5,24 @@
 
 #include "ensdf_types.h"
 
-#define RGX_REACTANT "[\\s\\w\\d'\\+-]+"
-#define RGX_INOUT "\\(" RGX_REACTANT "," RGX_REACTANT "\\)"
 #define RGX_NUCLIDE "[\\w\\d]+"
-#define RGX_MATCH_REACTION RGX_NUCLIDE "\\s*" RGX_INOUT "(?:\\s*,\\s*" RGX_INOUT ")*"
-#define RGX_PARSE_REACTION "^(" RGX_NUCLIDE ")\\s*(" RGX_INOUT ")(?:\\s*,\\s*(" RGX_INOUT "))*$"
-#define RGX_EXTRAS "^(" RGX_MATCH_REACTION "(?:\\s*,\\s*" RGX_MATCH_REACTION "\\s*)*)(.*)$"
-#define RGX_REACTIONS "^\\s*(" RGX_MATCH_REACTION ")(?:\\s*,\\s(" RGX_MATCH_REACTION "))*.*$"
+#define RGX_REACTANT "[\\w\\d\\s\\+'-]+"
+
+#define RGX_INOUT "\\(" RGX_REACTANT "," RGX_REACTANT "\\)"
+#define RGX_INOUT_PARSE "^\\((" RGX_REACTANT "),(" RGX_REACTANT ")\\)$"
+
+#define RGX_REACTION RGX_NUCLIDE "\\s*" RGX_INOUT "(?:," RGX_INOUT ")*"
+#define RGX_REACTION_PARSE "^(" RGX_NUCLIDE ")\\s*(" RGX_INOUT "(?:," RGX_INOUT ")*)$"
+
+#define RGX_EXTRAS "^(" RGX_REACTION "(?:\\s*,\\s*" RGX_REACTION "\\s*)*)(.*)$"
+#define RGX_REACTIONS "^(" RGX_REACTION ")(?:\\s*,\\s*(" RGX_REACTION "))*$"
 
 
 Reactants::Reactants(std::string s)
 {
-  boost::regex variant_exp("^" RGX_INOUT "$");
+  boost::trim(s);
   boost::smatch what;
-  if (boost::regex_match(s, what, variant_exp)
+  if (boost::regex_match(s, what, boost::regex(RGX_INOUT_PARSE))
       && (what.size() > 2))
   {
     in = what[1];
@@ -41,25 +45,32 @@ std::string Reactants::to_string() const
 
 Reaction::Reaction(std::string s, NuclideId daughter)
 {
+  std::string ios;
   boost::smatch what;
   if (boost::regex_match(s, what,
-                         boost::regex(RGX_PARSE_REACTION))
+                         boost::regex(RGX_REACTION_PARSE))
       && (what.size() > 2))
   {
-//      for (auto xx =0; xx < what3.size(); ++xx)
-//        DBG << "    " << xx << "=" << what3[xx];
-//      DBG << "   nucid=" << what3[1];
     target = parse_nid(what[1]);
     if (!target.composition_known() && target.Z())
       target.set_A(daughter.A());
 
-    for (size_t j=2; j < what.size(); ++j)
-    {
-//        DBG << "   ants " << what3[j];
-      Reactants reactants(what[j]);
-      if (reactants.valid())
-        variants.push_back(reactants);
-    }
+    ios = what[2];
+  }
+
+  boost::trim(ios);
+//  DBG << "target=" << target.symbolicName();
+//  DBG << "pairs=" << ios;
+
+  boost::sregex_token_iterator iter(ios.begin(), ios.end(),
+                                    boost::regex(RGX_INOUT), 0);
+  for( ; iter != boost::sregex_token_iterator(); ++iter )
+  {
+    Reactants reactants(*iter);
+    if (reactants.valid())
+      variants.push_back(reactants);
+//    DBG << "   ants " << *iter
+//        << " -> " << reactants.to_string();
   }
 }
 
@@ -104,10 +115,12 @@ ReactionInfo::ReactionInfo(std::string ext_dsid, NuclideId daughter)
   if (boost::regex_match(ext_dsid, what, boost::regex(RGX_EXTRAS))
       && (what.size() > 1))
   {
-//    DBG << " good";
     xtions = what[1];
     if (what.size() > 2)
       extras = what[2];
+    boost::trim(xtions);
+    boost::trim(extras);
+//    DBG << " good " << xtions << " AND " << extras;
   }
 
 //  DBG << " Xions " << xtions;
@@ -116,7 +129,14 @@ ReactionInfo::ReactionInfo(std::string ext_dsid, NuclideId daughter)
   boost::regex_match(xtions, what2, boost::regex(RGX_REACTIONS));
   for (size_t i=1; i < what2.size(); ++i)
   {
-    Reaction reaction(what2[i], daughter);
+    std::string xtion = what2[i];
+    boost::trim(xtion);
+    if (xtion.empty())
+      continue;
+    Reaction reaction(xtion, daughter);
+//    DBG << "Parsed reaction " << xtion << " as "
+//        << reaction.to_string()
+//        << " " << reaction.valid();
     if (reaction.valid())
       reactions.push_back(reaction);
   }
@@ -168,6 +188,11 @@ bool ReactionInfo::valid() const
 
 std::string ReactionInfo::to_string() const
 {
+  return name();
+}
+
+std::string ReactionInfo::name() const
+{
   std::string ret;
   bool first = true;
   for (auto r : reactions)
@@ -178,13 +203,12 @@ std::string ReactionInfo::to_string() const
       first = false;
     ret += r.to_string();
   }
-  ret += "  q=\"" + qualifier + "\"  ";
-//  if (!energy.empty())
-  ret += energy;
+  if (!qualifier.empty())
+    ret += " " + qualifier;
+  if (!energy.empty())
+    ret += " E=" + energy;
   return ret;
 }
-
-
 
 DecayInfo::DecayInfo(std::string dsid)
 {
@@ -283,4 +307,10 @@ std::string DecayInfo::to_string() const
     ret += "   hl=" + hl.to_string(true);
   return ret;
 }
+
+std::string DecayInfo::name() const
+{
+  return mode.to_string();
+}
+
 

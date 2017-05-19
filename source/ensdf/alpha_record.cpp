@@ -25,9 +25,17 @@ AlphaRecord::AlphaRecord(size_t& idx,
   comment_flag = boost::trim_copy(line.substr(76,1));
   quality = boost::trim_copy(line.substr(79,1));
 
-  while ((idx+1 < data.size()) &&
-         CommentsRecord::match(data[idx+1], "A"))
-    comments.push_back(CommentsRecord(++idx, data));
+  while ((idx+1 < data.size()) && (
+           CommentsRecord::match(data[idx+1], "A")
+           || match_cont(data[idx+1], "\\sA")
+           ))
+  {
+    ++idx;
+    if (CommentsRecord::match(data[idx], "A"))
+      comments.push_back(CommentsRecord(idx, data));
+    else
+      continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
+  }
 }
 
 bool AlphaRecord::valid() const

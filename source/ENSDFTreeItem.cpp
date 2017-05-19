@@ -9,8 +9,14 @@ ENSDFTreeItem::ENSDFTreeItem(ItemType type, ENSDFTreeItem *parent)
   setParent(parent);
 }
 
-ENSDFTreeItem::ENSDFTreeItem(ItemType type, NuclideId id, const QList<QVariant> &data, bool selectable, ENSDFTreeItem *parent)
-  : nid(id), itemData(data), parentItem(parent), m_isSelectable(selectable), m_type(type)
+ENSDFTreeItem::ENSDFTreeItem(ItemType type,
+                             NuclideId id,
+                             const QList<QVariant> &data,
+                             bool selectable,
+                             ENSDFTreeItem *parent)
+  : nid(id), itemData(data),
+    parentItem(parent), m_isSelectable(selectable),
+    m_type(type)
 {
   setParent(parent);
 }

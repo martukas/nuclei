@@ -37,7 +37,7 @@ DecayData::DecayData(const std::vector<std::string>& data,
         if (com.valid())
           comments.push_back(com);
         else
-          DBG << "<LevelData> Invalid all-level comment " << com.debug()
+          DBG << "<DecayData> Invalid all-level comment " << com.debug()
               << "\nfrom " << idx.first << " = " << data[idx.first];
         //      DBG << "Added comment from" << idx.first << "=" << data[idx.first] << com.debug();
       }
@@ -54,20 +54,20 @@ DecayData::DecayData(const std::vector<std::string>& data,
           auto val = data[i].substr(9,10);
           auto uncert = data[i].substr(19,2);
           auto vu = parse_val_uncert(val, uncert);
-          DBG << "<LevelData> Invalid Level at " << i << "=" << data[i];
+          DBG << "<DecayData> Invalid Level at " << i << "=" << data[i];
           DBG << "Val=" << val << " Unc=" << uncert << " VU=" << vu.to_string(true);
         }
         //      DBG << "Added level from" << idx.first << "=" << data[idx.first];
       }
       else
       {
-        DBG << "<LevelData> Unidentified record "
+        DBG << "<DecayData> Unidentified record "
             << idx.first << "=" << data[idx.first];
       }
     }
     catch (...)
     {
-      DBG << "<LevelData::LevelData> Shit hit the fan at "
+      DBG << "<DecayData::DecayData> Shit hit the fan at "
           << idx.first << "=" << data[idx.first];
     }
   }
@@ -78,23 +78,79 @@ DecayData::DecayData(const std::vector<std::string>& data,
       test(id.type & RecordType::References) ||
       test(id.type & RecordType::MuonicAtom))
   {
-    DBG << "Bad ID record type " << id.debug();
+    DBG << "<DecayData::DecayData> Bad ID record type " << id.debug();
     //HACK (Tentative should propagate to NucData)
     return;
   }
+
+//  DBG << "dsid=" << id.extended_dsid;
 
   if (test(id.type & RecordType::Decay))
     decay_info_ = DecayInfo(id.extended_dsid);
 
   if (ReactionInfo::match(id.extended_dsid))
+  {
     reaction_info_ = ReactionInfo(id.extended_dsid, id.nuclide);
+    if (!reaction_info_.valid())
+      DBG << "INVALID REACTION " << id.extended_dsid;
+//    DBG << "  ----> " << reaction_info_.to_string()
+//        << (reaction_info_.valid() ? " valid" : " INVALID") ;
+  }
 
 //  DBG << "Retrieved decay " << decay_info_.to_string()
 //      << " with h=" << history.size()
 //      << " & c=" << comments.size()
 //      << " & p=" << parents.size();
+}
 
-  parents.clear();
+std::string DecayData::name() const
+{
+  if (decay_info_.valid())
+  {
+    auto ret = parent_string() + " → " + decay_info_.name();
+    auto hl = halflife_string();
+    if (!hl.empty())
+      ret += hl;
+    return ret;
+  }
+  else if (reaction_info_.valid())
+    return reaction_info_.name();
+  return "INVALID";
+}
+
+std::string DecayData::parent_string() const
+{
+  if (!parents.empty())
+  {
+    const ParentRecord &prec(parents[0]);
+    std::string decayname  = prec.nuclide.symbolicName();
+    if (prec.energy > 0.0)
+      decayname += "m";
+    return decayname;
+  }
+  return "NOPARENTS";
+}
+
+std::string DecayData::halflife_string() const
+{
+  std::vector<std::string> hlstrings;
+  for (const ParentRecord &prec : parents)
+  {
+    // check "same parent/different half-life" scheme
+    if (prec.nuclide == parents.at(0).nuclide)
+      hlstrings.push_back(prec.hl.to_string(false));
+
+    //different parents??
+  }
+  if (!hlstrings.empty())
+    return join(hlstrings, " + ");
+  return "NOHL";
+}
+
+bool DecayData::valid() const
+{
+  return id.valid() &&
+      (decay_info_.valid() || reaction_info_.valid());
 }
 
 std::string DecayData::to_string() const
@@ -167,12 +223,7 @@ void DecayData::read_prelims(const std::vector<std::string>& data,
       {
         auto n = NormalizationRecord(idx.first, data);
         if (n.valid())
-        {
-          if (norm.valid())
-            DBG << "<DecayData> More than one norm " << norm.debug()
-                << " from " << idx.first << "=" << data[idx.first];
-          norm = n;
-        }
+          norm.push_back(n);
         else
           DBG << "<DecayData> Invalid Norm " << n.debug()
               << " from " << idx.first << "=" << data[idx.first];
@@ -220,6 +271,8 @@ void DecayData::read_unplaced(const std::vector<std::string>& data,
 {
   while ((idx.first < idx.last) &&
          (
+          AlphaRecord::match(data[idx.first]) ||
+          BetaRecord::match(data[idx.first]) ||
           GammaRecord::match(data[idx.first]) ||
           ParticleRecord::match(data[idx.first]) //|| //all comments
 //          BetaRecord::match(data[idx.first]) ||
@@ -229,13 +282,22 @@ void DecayData::read_unplaced(const std::vector<std::string>& data,
   {
     try
     {
-      if (ParticleRecord::match(data[idx.first]))
+      if (AlphaRecord::match(data[idx.first]))
       {
-        auto p = ParticleRecord(idx.first, data);
-        if (p.valid())
-          particles.push_back(p);
+        auto a = AlphaRecord(idx.first, data);
+        if (a.valid())
+          alphas.push_back(a);
         else
-          DBG << "<DecayData> Invalid particle " << p.debug()
+          DBG << "<DecayData> Invalid alpha " << a.debug()
+              << " from " << idx.first << "=" << data[idx.first];
+      }
+      else if (BetaRecord::match(data[idx.first]))
+      {
+        auto b = BetaRecord(idx.first, data);
+        if (b.valid())
+          betas.push_back(b);
+        else
+          DBG << "<DecayData> Invalid beta " << b.debug()
               << " from " << idx.first << "=" << data[idx.first];
       }
       else if (GammaRecord::match(data[idx.first]))
@@ -245,6 +307,15 @@ void DecayData::read_unplaced(const std::vector<std::string>& data,
           gammas.push_back(g);
         else
           DBG << "<DecayData> Invalid gamma " << g.debug()
+              << " from " << idx.first << "=" << data[idx.first];
+      }
+      else if (ParticleRecord::match(data[idx.first]))
+      {
+        auto p = ParticleRecord(idx.first, data);
+        if (p.valid())
+          particles.push_back(p);
+        else
+          DBG << "<DecayData> Invalid particle " << p.debug()
               << " from " << idx.first << "=" << data[idx.first];
       }
 
@@ -408,6 +479,7 @@ LevelData::LevelData(const std::vector<std::string>& data,
   if (idx.first >= data.size())
     return;
   id = IdRecord(idx.first, data);
+  block = idx;
   if (!id.valid())
   {
     DBG << "<LevelData> Bad ID " << data[idx.first];
@@ -518,3 +590,27 @@ std::string LevelData::debug() const
   return ret;
 }
 
+void NuclideData::add_decay(const DecayData& dec)
+{
+  auto base_name = dec.name();
+  if (!dec.valid())
+    base_name = "INVALID PARSE of " + dec.id.extended_dsid;
+
+  // insert into decay map
+  int count {0};
+  auto disambiguated = base_name;
+  while (decays.count(disambiguated))
+  {
+    count++;
+    if (count > 1)
+      disambiguated = base_name + " (alt."
+          + boost::lexical_cast<std::string>(count)
+          + ")";
+    else
+      disambiguated = base_name + " (alt.)";
+  }
+
+  if (!dec.valid())
+    DBG << "<NuclideData> Adding decay: " << disambiguated;
+  decays[disambiguated] = dec;
+}
