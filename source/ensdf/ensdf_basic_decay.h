@@ -15,55 +15,17 @@
 #include "prod_normalization_record.h"
 #include "normalization_record.h"
 
-struct DecayData
-{
-  DecayData() {}
-  DecayData(const std::vector<std::string>& data,
-                 BlockIndices idx);
-
-//  bool valid() const;
-  std::string to_string() const;
-
-  //deprecate
-  BlockIndices block;
-
-  IdRecord id;
-  DecayInfo decay_info_;
-  ReactionInfo reaction_info_;
-
-  std::list<HistoryRecord> history;
-
-  std::vector<ParentRecord> parents;
-
-  std::list<CommentsRecord> comments;
-  std::list<QValueRecord> qvals;
-  NormalizationRecord norm;
-  ProdNormalizationRecord pnorm;
-
-  std::list<GammaRecord> gammas;
-  std::list<ParticleRecord> particles;
-
-  std::list<LevelRecord> levels;
-
-  void read_hist(const std::vector<std::string>& data,
-                 BlockIndices& idx);
-
-  void read_prelims(const std::vector<std::string>& data,
-                    BlockIndices& idx);
-
-  void read_unplaced(const std::vector<std::string>& data,
-                     BlockIndices& idx);
-
-};
-
 struct LevelData
 {
-  LevelData();
+  LevelData() {}
   LevelData(const std::vector<std::string>& data,
             BlockIndices idx);
 
   bool valid() const;
   std::string debug() const;
+
+  //deprecate
+  BlockIndices block;
 
   IdRecord id;
   std::list<HistoryRecord> history;
@@ -88,6 +50,59 @@ struct LevelData
 
   void read_unplaced_gammas(const std::vector<std::string>& data,
                             BlockIndices& idx);
-
 };
 
+struct DecayData
+{
+  DecayData() {}
+  DecayData(const std::vector<std::string>& data,
+                 BlockIndices idx);
+
+  bool valid() const;
+  std::string to_string() const;
+  std::string name() const;
+
+  //private:
+  std::string parent_string() const;
+  std::string halflife_string() const;
+
+  //deprecate
+  BlockIndices block;
+
+  IdRecord id;
+  DecayInfo decay_info_;
+  ReactionInfo reaction_info_;
+
+  std::list<HistoryRecord> history;
+
+  std::vector<ParentRecord> parents;
+  std::vector<NormalizationRecord> norm;
+
+  std::list<CommentsRecord> comments;
+  std::list<QValueRecord> qvals;
+  ProdNormalizationRecord pnorm;
+
+  std::list<AlphaRecord> alphas;
+  std::list<BetaRecord> betas;
+  std::list<GammaRecord> gammas;
+  std::list<ParticleRecord> particles;
+
+  std::list<LevelRecord> levels;
+
+  void read_hist(const std::vector<std::string>& data,
+                 BlockIndices& idx);
+
+  void read_prelims(const std::vector<std::string>& data,
+                    BlockIndices& idx);
+
+  void read_unplaced(const std::vector<std::string>& data,
+                     BlockIndices& idx);
+};
+
+struct NuclideData
+{
+  LevelData adopted_levels;
+  std::map<std::string, DecayData> decays;
+
+  void add_decay(const DecayData& dec);
+};

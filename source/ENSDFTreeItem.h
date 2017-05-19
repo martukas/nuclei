@@ -20,7 +20,8 @@ public:
     CascadeType
   };
 
-  explicit ENSDFTreeItem(ItemType type = UnknownType, ENSDFTreeItem *parent = 0);
+  explicit ENSDFTreeItem(ItemType type = UnknownType,
+                         ENSDFTreeItem *parent = 0);
   explicit ENSDFTreeItem(ItemType type,
                          NuclideId id,
                          const QList<QVariant> &data,

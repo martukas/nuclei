@@ -6,6 +6,9 @@
 
 #include <boost/regex.hpp>
 
+#define RGX_NUCLIDE_ID "[\\s0-9A-Za-z]{5}"
+#define RGX_CONTINUATION_ID "[0-9A-Za-z!@#\\$%\\^&\\*-\\+\"]"
+
 bool match_record_type(const std::string& line,
                        const std::string& pattern)
 {
@@ -15,14 +18,16 @@ bool match_record_type(const std::string& line,
 bool match_first(const std::string& line,
                  const std::string& sub_pattern)
 {
-  return match_record_type(line, "^[\\s0-9A-Za-z]{5}\\s"
+  return match_record_type(line,
+                           "^" RGX_NUCLIDE_ID "\\s"
                            + sub_pattern + ".*$");
 }
 
 bool match_cont(const std::string& line,
                  const std::string& sub_pattern)
 {
-  return match_record_type(line, "^[\\s0-9A-Za-z]{5}[0-9A-Za-z@!\\&\\+\\*\\$#]"
+  return match_record_type(line,
+                           "^" RGX_NUCLIDE_ID RGX_CONTINUATION_ID
                            + sub_pattern + ".*$");
 }
 

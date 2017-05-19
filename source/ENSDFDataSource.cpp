@@ -211,13 +211,9 @@ void ENSDFDataSource::createENSDFCache()
   pd.setWindowModality(Qt::WindowModal);
   pd.setCancelButton(0);
 
-  std::set<std::string> unknown_decays;
-
   for (auto &a : aList)
   {
     auto mc = parser.get_dp(a);
-
-    unknown_decays.insert(mc.unknown_decays.begin(), mc.unknown_decays.end());
 
     for (auto &daughter : mc.daughters())
     {
@@ -228,9 +224,9 @@ void ENSDFDataSource::createENSDFCache()
                                            root);
       for (auto &decay : mc.decays(daughter))
       {
-        QString st = QString::fromStdString(decay.first);
+        QString st = QString::fromStdString(decay);
         new ENSDFTreeItem(ENSDFTreeItem::DecayType,
-                          decay.second,
+                          daughter,
                           QList<QVariant>() << st,
                           true, d);
       }
@@ -241,9 +237,4 @@ void ENSDFDataSource::createENSDFCache()
   pd.setValue(aList.size());
 
   out << (*root);
-
-//  DBG << "Unknown decays:";
-//  for (auto d : unknown_decays)
-//    DBG << "   " << d;
-
 }
