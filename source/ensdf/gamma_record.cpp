@@ -30,9 +30,10 @@ GammaRecord::GammaRecord(size_t& idx,
   coincidence = boost::trim_copy(line.substr(77,1));
   quality = boost::trim_copy(line.substr(79,1));
 
-  while ((idx+1 < data.size()) &&
-         (match_cont(data[idx+1], "\\sG") ||
-          CommentsRecord::match(data[idx+1], "G")))
+  while ((idx+1 < data.size()) && (
+           match_cont(data[idx+1], "\\sG")
+           || CommentsRecord::match(data[idx+1], "G")
+           ))
   {
     ++idx;
     if (CommentsRecord::match(data[idx], "G"))

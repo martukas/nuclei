@@ -39,6 +39,7 @@ struct ReactionInfo
 
   bool valid() const;
   std::string to_string() const;
+  std::string name() const;
 
   //header data
   std::list<Reaction> reactions;
@@ -58,6 +59,7 @@ struct DecayInfo
 
   bool valid() const;
   std::string to_string() const;
+  std::string name() const;
 
   NuclideId parent;
   DecayMode mode;

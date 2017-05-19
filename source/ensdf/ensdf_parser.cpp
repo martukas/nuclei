@@ -110,17 +110,17 @@ std::list<NuclideId> DaughterParser::daughters() const
 {
   //  Q_ASSERT(decays_.size() == decays_.keys().toSet().size()); // check for duplicates
   std::list<NuclideId> ret;
-  for (auto &n : decays_)
+  for (auto &n : nuclide_data_)
     ret.push_back(n.first);
   return ret;
 }
 
-std::list<std::pair<std::string, NuclideId> > DaughterParser::decays(NuclideId daughter) const
+std::list<std::string> DaughterParser::decays(NuclideId daughter) const
 {
   //  Q_ASSERT(decays_.value(daughterNuclide).size() == decays_.value(daughterNuclide).keys().toSet().size()); // check for duplicates
-  std::list< std::pair<std::string, NuclideId> > result;
-  for (auto &i : decays_.at(daughter))
-    result.push_back(std::pair<std::string, NuclideId>(i.first, i.second.parents.at(0).nuclide));
+  std::list<std::string> result;
+  for (auto &i : nuclide_data_.at(daughter).decays)
+    result.push_back(i.first);
   return result;
 }
 
@@ -222,18 +222,17 @@ void DaughterParser::LevelIndex::insertAdoptedLevelsBlock(const BlockIndices &ne
 
 
 DecayScheme DaughterParser::get_decay(NuclideId daughter,
-                                  std::string decay_name) const
+                                      std::string decay_name) const
 {
-  if (!adopted_levels_.count(daughter) ||
-      !decays_.count(daughter) ||
-      !decays_.at(daughter).count(decay_name))
+  if (!nuclide_data_.count(daughter) ||
+      !nuclide_data_.at(daughter).decays.count(decay_name))
     return DecayScheme();
 
   double adoptedLevelMaxDifference = 40.0;
   double gammaMaxDifference = 5.0;
 
-  BlockIndices alpos = adopted_levels_.at(daughter);
-  DecayData decaydata = decays_.at(daughter).at(decay_name);
+  BlockIndices alpos = nuclide_data_.at(daughter).adopted_levels.block;
+  DecayData decaydata = nuclide_data_.at(daughter).decays.at(decay_name);
 
   Nuclide daughter_nuclide(decaydata.id.nuclide);
 
@@ -324,21 +323,21 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
       if (currentadoptblock.first != currentadoptblock.last)
       {
         std::string levelfirstline(raw_contents_.at(currentadoptblock.first));
-//                DBG << levelfirstline << " === " << currentLevel->to_string();
+        //                DBG << levelfirstline << " === " << currentLevel->to_string();
         if (!currentLevel.halfLife().isValid())
         {
           currentLevel.set_halflife(parse_halflife(levelfirstline.substr(39, 16)));
           if (!currentLevel.spin().valid())
             currentLevel.set_spin(parse_spin_parity(levelfirstline.substr(21, 18)));
-//          DBG << "newhl" << currentLevel->halfLife().to_string();
+          //          DBG << "newhl" << currentLevel->halfLife().to_string();
         }
         // parse continuation records
         auto moms = extractContinuationRecords(currentadoptblock,
-                                               {"MOME2", "MOMM1"},
+        {"MOME2", "MOMM1"},
                                                raw_contents_);
         currentLevel.set_q(parse_moment(moms.at(0)));
         currentLevel.set_mu(parse_moment(moms.at(1)));
-//                DBG << levelfirstline << " === " << currentLevel->to_string();
+        //                DBG << levelfirstline << " === " << currentLevel->to_string();
       }
 
       daughter_nuclide.addLevel(currentLevel);
@@ -399,22 +398,26 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   }
 
   // create relevant parent levels and collect parent half-lifes
-  Nuclide parent_nuclide(decaydata.parents.at(0).nuclide);
-  for (ParentRecord p : decaydata.parents)
+  Nuclide parent_nuclide;
+  if (!decaydata.parents.empty())
   {
-    parent_nuclide.addHalfLife(p.hl);
+    parent_nuclide = Nuclide(decaydata.parents.at(0).nuclide);
+    for (ParentRecord p : decaydata.parents)
+    {
+      parent_nuclide.addHalfLife(p.hl);
 
-    Level plv(p.energy, p.spin, p.hl);
-    plv.setFeedingLevel(true);
-    parent_nuclide.addLevel(plv);
-  }
+      Level plv(p.energy, p.spin, p.hl);
+      plv.setFeedingLevel(true);
+      parent_nuclide.addLevel(plv);
+    }
 
-  if (!parent_nuclide.empty() &&
-      (parent_nuclide.levels().begin()->second.energy() > 0.0))
-  {
-    Level plv(Energy(0.0, UncertainDouble::SignMagnitudeDefined), SpinParity(), HalfLife());
-    plv.setFeedingLevel(false);
-    parent_nuclide.addLevel(plv);
+    if (!parent_nuclide.empty() &&
+        (parent_nuclide.levels().begin()->second.energy() > 0.0))
+    {
+      Level plv(Energy(0.0, UncertainDouble::SignMagnitudeDefined), SpinParity(), HalfLife());
+      plv.setFeedingLevel(false);
+      parent_nuclide.addLevel(plv);
+    }
   }
 
   parent_nuclide.finalize();
@@ -487,11 +490,11 @@ void DaughterParser::parse_comments_block(BlockIndices block_idx)
       DBG << "Unidentified record " << raw_contents_[i];
     }
   }
-//      DBG << "PARSED COMMENTS RECORD";
-//      for (auto c : mass_history_)
-//        DBG << c.debug();
-//      for (auto c : mass_comments_)
-//        DBG << c.debug();
+  //      DBG << "PARSED COMMENTS RECORD";
+  //      for (auto c : mass_history_)
+  //        DBG << c.debug();
+  //      for (auto c : mass_comments_)
+  //        DBG << c.debug();
 }
 
 void DaughterParser::parse_reference_block(BlockIndices block_idx)
@@ -512,9 +515,9 @@ void DaughterParser::parse_reference_block(BlockIndices block_idx)
       DBG << "Unidentified record " << raw_contents_[i];
     }
   }
-//  DBG << "PARSED REFERENCES RECORD";
-//  for (auto c : references_)
-//    DBG << "  " << c.first << " = " << c.second;
+  //  DBG << "PARSED REFERENCES RECORD";
+  //  for (auto c : references_)
+  //    DBG << "  " << c.first << " = " << c.second;
 }
 
 
@@ -529,75 +532,67 @@ void DaughterParser::parseBlocks()
 
     if (!header.reflect_parse())
       DBG << "Bad header  ==  " << raw_contents_[idx];
-//    DBG << "IdRecord: " << header.extended_dsid;
+    //    DBG << "IdRecord: " << header.extended_dsid;
 
     if (test(header.type & RecordType::Comments) &&
         !header.nuclide.composition_known())
     {
       parse_comments_block(block_idx);
     }
-    if (test(header.type & RecordType::References) &&
+    else if (test(header.type & RecordType::References) &&
         !header.nuclide.composition_known())
     {
       parse_reference_block(block_idx);
     }
     else if (test(header.type & RecordType::AdoptedLevels))
     {
-      adopted_levels_[header.nuclide] = block_idx;
+//      adopted_levels_[header.nuclide] = block_idx;
       LevelData lev(raw_contents_, block_idx);
-//      DBG << "Got level " << lev.id.debug();
+      if (nuclide_data_.count(lev.id.nuclide))
+        DBG << "Adopted levels for " << lev.id.nuclide.symbolicName()
+            << " already exists";
+      else
+        nuclide_data_[lev.id.nuclide].adopted_levels = lev;
+      //      DBG << "Got level " << lev.id.debug();
     }
-    else if (test(header.type & RecordType::Decay) ||
-             (test(header.type & RecordType::InelasticScattering)))
+    else if (header.type != RecordType::Invalid)
     {
-//      DBG << "Getting decay " << header.debug();
+      //      DBG << "Getting decay " << header.debug();
       DecayData decaydata(raw_contents_, block_idx);
 
-      if (!decaydata.decay_info_.mode.valid())
+      if (!nuclide_data_.count(decaydata.id.nuclide))
+        DBG << "No index for " << decaydata.id.nuclide.symbolicName()
+            << " exists";
+      else
+        nuclide_data_[decaydata.id.nuclide].add_decay(decaydata);
+
+      if (test(header.type & RecordType::Decay) ||
+          (test(header.type & RecordType::InelasticScattering)))
       {
-        DBG << " BAD DECAY " << decaydata.to_string();
-        continue;
+        if (!decaydata.decay_info_.mode.valid())
+        {
+          DBG << " BAD DECAY " << decaydata.to_string();
+          continue;
+        }
+
+        // get reference to daughter map to work with
+        // (create and insert if necessary)
+//        std::map<std::string, DecayData> &decmap =
+//            decays_[decaydata.id.nuclide];
+
+//        auto decayname = decaydata.name();
+
+//        // insert into decay map
+//        while (decmap.count(decayname))
+//          decayname += " (alt.)";
+//        decmap[decayname] = decaydata;
+
+        //      DBG << "Got decay " << header.debug() << " as " << decayname;
       }
-
-      for (size_t i=block_idx.first; i < block_idx.last; ++i)
-        if (ParentRecord::match(raw_contents_.at(i)))
-          decaydata.parents.push_back(ParentRecord(i, raw_contents_));
-
-//      if (decaydata.parents.empty())
-//      {
-//        DBG <<   " BROKEN RECORD FOR " << decaydata.to_string();
-//        // broken records. skipping
-//        continue;
-//      }
-
-      // create decay string
-      // get reference to daughter map to work with
-      // (create and insert if necessary)
-      std::map<std::string, DecayData> &decmap =
-          decays_[decaydata.id.nuclide];
-
-      std::vector<std::string> hlstrings;
-      for (const ParentRecord &prec : decaydata.parents)
-      {
-        // check "same parent/different half-life" scheme
-        if (prec.nuclide == decaydata.parents.at(0).nuclide)
-          hlstrings.push_back(prec.hl.to_string(false));
-      }
-
-      const ParentRecord &prec(decaydata.parents.at(0));
-      std::string decayname  = prec.nuclide.symbolicName();
-      if (prec.energy > 0.0)
-        decayname += "m";
-      decayname += " → " + decaydata.decay_info_.mode.to_string(); //HACK Types
-      if (!hlstrings.empty())
-        decayname += ", " + join(hlstrings, " + ");
-
-      // insert into decay map
-      while (decmap.count(decayname))
-        decayname += " (alt.)";
-      decmap[decayname] = decaydata;
-
-//      DBG << "Got decay " << header.debug() << " as " << decayname;
+    }
+    else
+    {
+      DBG << "ID type bad " << header.extended_dsid;
     }
   }
 

@@ -30,17 +30,19 @@ public:
   DaughterParser(uint16_t A, std::string directory);
 
   std::list<NuclideId> daughters() const;
-  std::list< std::pair<std::string, NuclideId> > decays(NuclideId daughter) const;
+  std::list<std::string> decays(NuclideId daughter) const;
 
   DecayScheme get_decay(NuclideId daughter, std::string decay_name) const;
 
-  std::set<std::string> unknown_decays;
-
 private:
   std::vector<std::string> raw_contents_;
+  std::list<HistoryRecord> mass_history_;
+  std::list<CommentsRecord> mass_comments_;
+  std::map<std::string, std::string> references_;
+  std::map<NuclideId, NuclideData> nuclide_data_;
 
-  std::map<NuclideId, BlockIndices> adopted_levels_; // daughter coordinates
-  std::map<NuclideId, std::map<std::string, DecayData > > decays_; // daughter coordinates: (decay name: basic data)
+//  std::map<NuclideId, BlockIndices> adopted_levels_; // daughter coordinates
+//  std::map<NuclideId, std::map<std::string, DecayData > > decays_; // daughter coordinates: (decay name: basic data)
 
   static UncertainDouble parseEnsdfMixing(const std::string &s,
                                           const std::string &multipolarity);
@@ -49,13 +51,8 @@ private:
   void parseBlocks();
   std::list<BlockIndices> find_blocks() const;
 
-
-  std::list<HistoryRecord> mass_history_;
-  std::list<CommentsRecord> mass_comments_;
   void parse_comments_block(BlockIndices block_idx);
-
   void parse_reference_block(BlockIndices block_idx);
-  std::map<std::string, std::string> references_;
 };
 
 
