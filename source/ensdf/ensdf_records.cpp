@@ -31,62 +31,6 @@ bool match_cont(const std::string& line,
                            + sub_pattern + ".*$");
 }
 
-/**
- * @brief DaughterParser::extractContinuationRecords
- * @param adoptedblock block to search continuation records in
- * @param requestedRecords list of requested records
- * @param typeOfContinuedRecord type of record (default: L(evel))
- * @return list of found records (same size as requestedRecords, empty strings if no record was found)
- */
-//std::vector<std::string> extractContinuationRecords(const BlockIndices &adoptedblock,
-//                                                    const std::list<std::string> &requestedRecords,
-//                                                    const std::vector<std::string> &data,
-//                                                    std::string typeOfContinuedRecord)
-//{
-//  // fetch records
-//  boost::regex crecre("^[A-Z0-9\\s]{5,5}[A-RT-Z0-9] "
-//                      + typeOfContinuedRecord + " (.*)$");
-//  std::vector<std::string> crecs;
-//  for (size_t i = adoptedblock.first; i < adoptedblock.last; ++i)
-//  {
-//    boost::smatch what;
-//    if (boost::regex_search(data.at(i), what, crecre) &&
-//        (what.size() > 1))
-//      crecs.push_back(data.at(i));
-//  }
-//  std::vector<std::string> crecs2;
-//  // remove record id from beginning of string
-//  for (size_t i=0; i<crecs.size(); i++)
-//  {
-//    crecs[i].erase(0, 9);
-//    crecs2.push_back(crecs.at(i));
-//  }
-//  // join lines and then split records
-//  std::string tmp = join(crecs2, "$");
-//  boost::split(crecs2, tmp, boost::is_any_of("$"));
-//  for (size_t i=0; i<crecs2.size(); i++)
-//    crecs2[i] = boost::trim_copy(crecs2[i]);
-//  // search and parse requested fields
-//  std::vector<std::string> result;
-//  for ( auto &req : requestedRecords)
-//  {
-//    std::string rstr;
-//    for (size_t i=0; i<crecs2.size(); i++)
-//    {
-//      if ((crecs2.at(i).size() >= req.size()) &&
-//          (crecs2.at(i).substr(0, req.size()) == req))
-//      {
-//        rstr = boost::trim_copy(crecs2.at(i).substr(5, crecs2.at(i).size() - 5));
-//        break;
-//      }
-//    }
-//    if (!rstr.empty() && (rstr[0] == '='))
-//      rstr = rstr.substr(1, rstr.size()-1);
-//    result.push_back(rstr);
-//  }
-//  return result;
-//}
-
 std::map<std::string, std::string>
 parse_continuation(const std::string& crecs)
 {
@@ -111,4 +55,26 @@ parse_continuation(const std::string& crecs)
   return ret;
 }
 
+bool xref_check(const std::string& xref,
+                const std::string& dssym)
+{
+  if (xref == "+")
+    return true;
+  if (boost::regex_match(xref, boost::regex("^[A-Z]+$"))
+      && boost::contains(xref, dssym))
+    return true;
+  if (boost::regex_match(xref, boost::regex("^-\\([A-Z]+\\)$"))
+      && !boost::contains(xref, dssym))
+    return true;
+
+  std::list<std::string> items;
+  boost::sregex_token_iterator iter(xref.begin(), xref.end(),
+                                    boost::regex("[A-Z]+\\([A-Z]+(?:,[A-Z]+)\\)"), 0);
+  for( ; iter != boost::sregex_token_iterator(); ++iter )
+  {
+    DBG << "  xref element = " << *iter;
+  }
+
+
+}
 
