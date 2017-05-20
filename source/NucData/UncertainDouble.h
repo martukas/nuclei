@@ -33,8 +33,10 @@ public:
 
   UncertainDouble & operator=(const UncertainDouble & other);
   UncertainDouble & operator*=(double other);
+  UncertainDouble & operator*=(const UncertainDouble &other);
   UncertainDouble & operator+=(const UncertainDouble &other);
   UncertainDouble & operator-=(const UncertainDouble &other);
+  UncertainDouble operator*(const UncertainDouble &other) const;
   UncertainDouble operator+(const UncertainDouble &other) const;
   UncertainDouble operator-(const UncertainDouble &other) const;
   operator double() const;

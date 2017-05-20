@@ -42,43 +42,10 @@ bool match_cont(const std::string& line,
 bool match_record_type(const std::string& line,
                        const std::string& pattern);
 
-std::vector<std::string> extractContinuationRecords(const BlockIndices &adoptedblock,
-                                                    const std::list<std::string> &requestedRecords,
-                                                    const std::vector<std::string>& data,
-                                                    std::string typeOfContinuedRecord = "L");
+std::map<std::string, std::string> parse_continuation(const std::string&crecs);
 
-std::map<Energy, std::string> get_gamma_lines(const std::vector<std::string>& data,
-                                              BlockIndices bounds, NuclideId nucid);
-
-bool is_gamma_line(const std::string& line,
-                   std::string nucid,
-                   std::string nucid2 = "");
-
-bool is_level_line(const std::string& line,
-                   std::string nucid,
-                   std::string nucid2 = "");
-
-bool is_intensity_line(const std::string& line,
-                       std::string nucid,
-                       std::string nucid2 = "");
-
-bool is_norm_line(const std::string& line,
-                  std::string nucid,
-                  std::string nucid2 = "");
-
-bool is_p_norm_line(const std::string& line,
-                    std::string nucid,
-                    std::string nucid2 = "");
-
-bool is_feed_a_line(const std::string& line,
-                    std::string nucid,
-                    std::string nucid2 = "");
-
-bool is_feed_b_line(const std::string& line,
-                    std::string nucid,
-                    std::string nucid2 = "");
-
-bool is_feed_line(const std::string& line,
-                  std::string nucid,
-                  std::string nucid2 = "");
+//std::vector<std::string> extractContinuationRecords(const BlockIndices &adoptedblock,
+//                                                    const std::list<std::string> &requestedRecords,
+//                                                    const std::vector<std::string>& data,
+//                                                    std::string typeOfContinuedRecord = "L");
 

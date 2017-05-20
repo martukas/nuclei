@@ -49,13 +49,9 @@ DecayData::DecayData(const std::vector<std::string>& data,
           levels.push_back(lev);
         else
         {
-          //        DBG << "<LevelData> Invalid Level " << lev.debug()
-          //            << " from " << i << "=" << data[i];
-          auto val = data[i].substr(9,10);
-          auto uncert = data[i].substr(19,2);
-          auto vu = parse_val_uncert(val, uncert);
-          DBG << "<DecayData> Invalid Level at " << i << "=" << data[i];
-          DBG << "Val=" << val << " Unc=" << uncert << " VU=" << vu.to_string(true);
+          DBG << "<DecayData>(" << id.nuclide.symbolicName() << ":" << name() << ")"
+              << " Invalid Level at " << i << "=" << data[i]
+              << "\n" << lev.debug();
         }
         //      DBG << "Added level from" << idx.first << "=" << data[idx.first];
       }
@@ -75,8 +71,7 @@ DecayData::DecayData(const std::vector<std::string>& data,
 
   if (!test(id.type) ||
       test(id.type & RecordType::Comments) ||
-      test(id.type & RecordType::References) ||
-      test(id.type & RecordType::MuonicAtom))
+      test(id.type & RecordType::References))
   {
     DBG << "<DecayData::DecayData> Bad ID record type " << id.debug();
     //HACK (Tentative should propagate to NucData)
@@ -91,8 +86,8 @@ DecayData::DecayData(const std::vector<std::string>& data,
   if (ReactionInfo::match(id.extended_dsid))
   {
     reaction_info_ = ReactionInfo(id.extended_dsid, id.nuclide);
-    if (!reaction_info_.valid())
-      DBG << "INVALID REACTION " << id.extended_dsid;
+//    if (!reaction_info_.valid())
+//      DBG << "INVALID REACTION " << id.extended_dsid;
 //    DBG << "  ----> " << reaction_info_.to_string()
 //        << (reaction_info_.valid() ? " valid" : " INVALID") ;
   }
@@ -103,6 +98,32 @@ DecayData::DecayData(const std::vector<std::string>& data,
 //      << " & p=" << parents.size();
 }
 
+std::list<LevelRecord> LevelData::find_nearest(const Energy &to)
+{
+  //do xrefs need to match?
+
+  Energy current;
+  std::list<LevelRecord> ret;
+  for (const auto& lev : levels)
+  {
+    if (!current.valid() ||
+        (std::abs(double(to - lev.energy)) <
+         std::abs(double(to - current))))
+    {
+      ret.clear();
+      ret.push_back(lev);
+      current = lev.energy;
+    }
+    else if (current.valid() &&
+             (lev.energy == current))
+    {
+      ret.push_back(lev);
+    }
+  }
+  return ret;
+}
+
+
 std::string DecayData::name() const
 {
   if (decay_info_.valid())
@@ -110,7 +131,7 @@ std::string DecayData::name() const
     auto ret = parent_string() + " → " + decay_info_.name();
     auto hl = halflife_string();
     if (!hl.empty())
-      ret += hl;
+      ret += " " + hl;
     return ret;
   }
   else if (reaction_info_.valid())
@@ -422,7 +443,7 @@ void LevelData::read_prelims(const std::vector<std::string>& data,
       {
         auto ref = XRefRecord(idx.first, data);
         if (ref.valid())
-          xrefs[ref.dssym] = ref.dsid;
+          xrefs[ref.dsid] = ref.dssym;
         else
           DBG << "<LevelData> Invalid Xref " << ref.debug()
               << " from " << idx.first << "=" << data[idx.first];
@@ -446,7 +467,7 @@ void LevelData::read_prelims(const std::vector<std::string>& data,
   }
 }
 
-void LevelData::read_unplaced_gammas(const std::vector<std::string>& data,
+void LevelData::read_unplaced(const std::vector<std::string>& data,
                                      BlockIndices& idx)
 {
   while ((idx.first < idx.last) &&
@@ -467,7 +488,7 @@ void LevelData::read_unplaced_gammas(const std::vector<std::string>& data,
     }
     catch (...)
     {
-      DBG << "<LevelData::read_unplaced_gammas> Shit hit the fan at "
+      DBG << "<LevelData::read_unplaced> Shit hit the fan at "
           << idx.first << "=" << data[idx.first];
     }
   }
@@ -490,7 +511,7 @@ LevelData::LevelData(const std::vector<std::string>& data,
   read_hist(data, idx);
   read_prelims(data, idx);
 
-  read_unplaced_gammas(data, idx);
+  read_unplaced(data, idx);
   read_comments(data, idx);
 
   for (; idx.first < idx.last; ++idx.first)
@@ -515,13 +536,9 @@ LevelData::LevelData(const std::vector<std::string>& data,
           levels.push_back(lev);
         else
         {
-          //        DBG << "<LevelData> Invalid Level " << lev.debug()
-          //            << " from " << i << "=" << data[i];
-          auto val = data[i].substr(9,10);
-          auto uncert = data[i].substr(19,2);
-          auto vu = parse_val_uncert(val, uncert);
-          DBG << "<LevelData> Invalid Level at " << i << "=" << data[i];
-          DBG << "Val=" << val << " Unc=" << uncert << " VU=" << vu.to_string(true);
+          DBG << "<LevelData>(" << id.nuclide.symbolicName() << ")"
+              << " Invalid Level at " << i << "=" << data[i]
+              << "\n" << lev.debug();
         }
         //      DBG << "Added level from" << idx.first << "=" << data[idx.first];
       }
@@ -590,7 +607,7 @@ std::string LevelData::debug() const
   return ret;
 }
 
-void NuclideData::add_decay(const DecayData& dec)
+std::string NuclideData::add_decay(const DecayData& dec)
 {
   auto base_name = dec.name();
   if (!dec.valid())
@@ -610,7 +627,9 @@ void NuclideData::add_decay(const DecayData& dec)
       disambiguated = base_name + " (alt.)";
   }
 
-  if (!dec.valid())
-    DBG << "<NuclideData> Adding decay: " << disambiguated;
+//  if (!dec.valid())
+//    DBG << "<NuclideData> Adding decay: " << disambiguated;
   decays[disambiguated] = dec;
+
+  return disambiguated;
 }

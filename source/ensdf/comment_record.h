@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ensdf_records.h"
-#include "id_record.h"
 
 struct CommentsRecord
 {

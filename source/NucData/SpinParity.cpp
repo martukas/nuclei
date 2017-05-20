@@ -24,3 +24,18 @@ std::string SpinParity::to_string() const
   }
   return add_qualifiers(ret, parity_.quality());
 }
+
+//bool operator<(const SpinParity &left, const SpinParity &right)
+//{
+//  return (left.parity_ < right.parity_);
+//}
+
+//bool operator>(const SpinParity &left, const SpinParity &right)
+//{
+
+//}
+
+//bool operator==(const SpinParity &left, const SpinParity &right)
+//{
+
+//}

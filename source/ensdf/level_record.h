@@ -29,9 +29,9 @@ struct LevelRecord
   UncertainDouble S; //spectroscopic strength
   std::string comment_flag, quality;
 
-  std::string continuation;
+  std::map<std::string, std::string> continuations_;
 
-  std::string offset;
+  std::list<std::string> offsets;
 
   std::list<CommentsRecord> comments;
 
@@ -40,6 +40,8 @@ struct LevelRecord
   std::list<GammaRecord> gammas;
   std::list<ECRecord> ECs;
   std::list<ParticleRecord> particles;
+
+  std::list<GammaRecord> find_nearest(const Energy& to) const;
 
 private:
   void parse_energy_offset(std::string val,

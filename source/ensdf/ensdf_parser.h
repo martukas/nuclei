@@ -10,11 +10,6 @@ class DaughterParser
 {
   struct LevelIndex
   {
-    void find(BlockIndices alpos,
-              std::string dNucid1,
-              std::string dsid,
-              const std::vector<std::string>& data);
-
     void insertAdoptedLevelsBlock(const BlockIndices &newblock,
                                   const std::string& dsid,
                                   const std::vector<std::string>& data);
@@ -26,7 +21,7 @@ class DaughterParser
   };
 
 public:
-  DaughterParser();
+  DaughterParser() {}
   DaughterParser(uint16_t A, std::string directory);
 
   std::list<NuclideId> daughters() const;
@@ -38,21 +33,29 @@ private:
   std::vector<std::string> raw_contents_;
   std::list<HistoryRecord> mass_history_;
   std::list<CommentsRecord> mass_comments_;
+
   std::map<std::string, std::string> references_;
   std::map<NuclideId, NuclideData> nuclide_data_;
 
-//  std::map<NuclideId, BlockIndices> adopted_levels_; // daughter coordinates
-//  std::map<NuclideId, std::map<std::string, DecayData > > decays_; // daughter coordinates: (decay name: basic data)
-
-  static UncertainDouble parseEnsdfMixing(const std::string &s,
-                                          const std::string &multipolarity);
-
-  static double norm(std::string rec, double def_value);
   void parseBlocks();
   std::list<BlockIndices> find_blocks() const;
 
-  void parse_comments_block(BlockIndices block_idx);
+  void parse_comments_block(BlockIndices block_idx,
+                            std::list<HistoryRecord>& hist,
+                            std::list<CommentsRecord>& comm);
   void parse_reference_block(BlockIndices block_idx);
+
+  void modify_delta_pol(const std::list<LevelRecord> &levels,
+                        Energy energy,
+                        std::string& multipolarity,
+                        UncertainDouble& delta,
+                        double maxdif) const;
+
+  void modify_level(const std::list<LevelRecord>& in,
+                    std::list<LevelRecord>& out,
+                    Level& currentLevel,
+                    double maxdif) const;
+
 };
 
 

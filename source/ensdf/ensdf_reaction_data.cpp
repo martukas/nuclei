@@ -58,6 +58,7 @@ Reaction::Reaction(std::string s, NuclideId daughter)
     ios = what[2];
   }
 
+  //Target sometimes only letter!!! wtf?
   boost::trim(ios);
 //  DBG << "target=" << target.symbolicName();
 //  DBG << "pairs=" << ios;

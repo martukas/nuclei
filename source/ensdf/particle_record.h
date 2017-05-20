@@ -25,6 +25,6 @@ struct ParticleRecord
   std::string energy_intermediate, L;
   std::string comment_flag, coincidence, quality;
 
-  std::string continuation;
+  std::map<std::string, std::string> continuations_;
   std::list<CommentsRecord> comments;
 };

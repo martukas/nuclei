@@ -22,6 +22,6 @@ struct ECRecord
   UncertainDouble intensity_total;
   std::string comment_flag, uniquness, quality;
 
-  std::string continuation;
+  std::map<std::string, std::string> continuations_;
   std::list<CommentsRecord> comments;
 };

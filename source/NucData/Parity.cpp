@@ -31,3 +31,13 @@ bool operator==(const Parity &left, const Parity &right)
 {
   return (left.parity_ == right.parity_);
 }
+
+bool operator<(const Parity &left, const Parity &right)
+{
+  return (left.parity_ < right.parity_);
+}
+
+bool operator>(const Parity &left, const Parity &right)
+{
+  return (left.parity_ > right.parity_);
+}
