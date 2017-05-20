@@ -577,4 +577,20 @@ bool check_nid_parse(const std::string& s, const NuclideId& n)
   return (ss == s1) || (ss == s2);
 }
 
+UncertainDouble eval_mixing_ratio(UncertainDouble vu,
+                                  const std::string& mpol)
+{
+  if (!vu.hasFiniteValue())
+  {
+    std::string tmp(mpol);
+    boost::replace_all(tmp, "(", "");
+    boost::replace_all(tmp, ")", "");
+    if (tmp.size() == 2)
+      return UncertainDouble(0.0, 1, UncertainDouble::SignMagnitudeDefined);
+    else
+      return UncertainDouble();
+  }
+  return vu;
+}
+
 

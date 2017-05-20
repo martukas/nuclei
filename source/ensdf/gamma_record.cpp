@@ -30,6 +30,7 @@ GammaRecord::GammaRecord(size_t& idx,
   coincidence = boost::trim_copy(line.substr(77,1));
   quality = boost::trim_copy(line.substr(79,1));
 
+  std::string continuation;
   while ((idx+1 < data.size()) && (
            match_cont(data[idx+1], "\\sG")
            || CommentsRecord::match(data[idx+1], "G")
@@ -41,6 +42,9 @@ GammaRecord::GammaRecord(size_t& idx,
     else
       continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
   }
+
+  if (!continuation.empty())
+    continuations_ = parse_continuation(continuation);
 }
 
 bool GammaRecord::valid() const
@@ -70,8 +74,8 @@ std::string GammaRecord::debug() const
     ret += " coincidence=" + coincidence;
   if (!quality.empty())
     ret += " quality=" + quality;
-  if (!continuation.empty())
-    ret += "\n        Continuation:" + continuation;
+  for (auto c : continuations_)
+    ret += "\n      Continuation: " + c.first + " = " + c.second;
   for (auto c : comments)
     ret += "\n        Comment: " + c.debug();
   return ret;

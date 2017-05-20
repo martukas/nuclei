@@ -6,7 +6,7 @@
 
 #include <boost/regex.hpp>
 
-#define RE_NUMBER "([\\+-]?[0-9]+\\.?[0-9]*E?[0-9]*)"
+#define RE_NUMBER "([\\+-]?[0-9]+\\.?[0-9]*(?:E?[\\+-]?[0-9]*))"
 #define RE_OFFSET "([A-Z]{1,2})"
 
 bool LevelRecord::match(const std::string& line)
@@ -26,16 +26,8 @@ LevelRecord::LevelRecord(size_t& idx,
   parse_energy_offset(line.substr(9,10), line.substr(19,2));
 
   spin_parity = parse_spin_parity(line.substr(21, 18));
-  halflife = parse_halflife(line.substr(39, 16));
+  halflife = parse_halflife(line.substr(39, 16)); //not always true!!!!
   L = boost::trim_copy(line.substr(55,9));
-
-//  if (hasoffset)
-//  {
-//    DBG << nuclide.symbolicName()
-//        << ":" << idx << " has offset "
-//        << offset << " + " << energy.to_string()
-//        << " from " << line;
-//  }
 
   try
   {
@@ -58,6 +50,7 @@ LevelRecord::LevelRecord(size_t& idx,
 
   quality = boost::trim_copy(line.substr(79,1));
 
+  std::string continuation;
   while ((idx+1 < data.size()) &&
          (match_cont(data[idx+1], "\\sL")
           || CommentsRecord::match(data[idx+1], "L")
@@ -84,6 +77,9 @@ LevelRecord::LevelRecord(size_t& idx,
     else
       continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
   }
+
+  if (!continuation.empty())
+    continuations_ = parse_continuation(continuation);
 }
 
 void LevelRecord::parse_energy_offset(std::string val,
@@ -96,26 +92,34 @@ void LevelRecord::parse_energy_offset(std::string val,
   {
 
   }
-  if ((boost::regex_search(val, what1,
+  else if ((boost::regex_search(val, what1,
                            boost::regex("^" RE_OFFSET "\\+?$")))
     && (what1.size() == 2))
   {
-    offset = what1[1];
+    offsets.push_back(what1[1]);
+    val = "0";
+  }
+  else if ((boost::regex_search(val, what1,
+                           boost::regex("^" RE_OFFSET "\\+" RE_OFFSET "$")))
+    && (what1.size() == 3))
+  {
+    offsets.push_back(what1[1]);
+    offsets.push_back(what1[2]);
     val = "0";
   }
   else if ((boost::regex_search(val, what2,
-                                boost::regex("^" RE_OFFSET "\\+" RE_NUMBER "$")))
+                                boost::regex("^" RE_OFFSET RE_NUMBER "$")))
     && (what2.size() == 3))
   {
-    offset = what2[1];
+    offsets.push_back(what2[1]);
     val = what2[2];
   }
   else if ((boost::regex_search(val, what3,
                                 boost::regex("^" RE_NUMBER "\\+" RE_OFFSET "$")))
     && (what3.size() == 3))
   {
+    offsets.push_back(what3[2]);
     val = what3[1];
-    offset = what3[2];
   }
 
   energy = Energy(parse_val_uncert(val, uncert));
@@ -128,8 +132,8 @@ std::string LevelRecord::debug() const
   ret = nuclide.symbolicName() + " LEVEL ";
   if (energy.value().defined())
     ret += " Energy=" + energy.to_string();
-  if (!offset.empty())
-    ret += "+" + offset + "(offset)";
+  for (auto o : offsets)
+    ret += "+" + o;
   if (isomeric)
     ret += " M" + std::to_string(isomeric);
   if (spin_parity.valid())
@@ -144,8 +148,8 @@ std::string LevelRecord::debug() const
     ret += " quality=" + quality;
   if (!L.empty())
     ret += " L=" + L;
-  if (!continuation.empty())
-    ret += "\n      Continuation:" + continuation;
+  for (auto c : continuations_)
+    ret += "\n      Continuation: " + c.first + " = " + c.second;
   for (auto c : comments)
     ret += "\n      Comment: " + c.debug();
   for (auto c : alphas)
@@ -164,6 +168,28 @@ std::string LevelRecord::debug() const
 bool LevelRecord::valid() const
 {
   return nuclide.valid() &&
-      (energy.value().defined() || !offset.empty());
+      (energy.valid() || !offsets.empty());
 }
 
+std::list<GammaRecord> LevelRecord::find_nearest(const Energy &to) const
+{
+  Energy current;
+  std::list<GammaRecord> ret;
+  for (const auto& g : gammas)
+  {
+    if (!current.valid() ||
+        (std::abs(double(to - g.energy)) <
+         std::abs(double(to - current))))
+    {
+      ret.clear();
+      ret.push_back(g);
+      current = g.energy;
+    }
+    else if (current.valid() &&
+             (g.energy == current))
+    {
+      ret.push_back(g);
+    }
+  }
+  return ret;
+}

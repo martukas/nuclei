@@ -314,6 +314,13 @@ UncertainDouble & UncertainDouble::operator*=(double other)
   return *this;
 }
 
+UncertainDouble & UncertainDouble::operator*=(const UncertainDouble &other)
+{
+  //Chaltura!!!
+  *this *= other.value();
+  return *this;
+}
+
 UncertainDouble &UncertainDouble::operator +=(const UncertainDouble &other)
 {
   uint16_t sd1 = sigdec();
@@ -351,6 +358,13 @@ UncertainDouble UncertainDouble::operator -(const UncertainDouble &other) const
 {
   UncertainDouble result(*this);
   result -= other;
+  return result;
+}
+
+UncertainDouble UncertainDouble::operator *(const UncertainDouble &other) const
+{
+  UncertainDouble result(*this);
+  result *= other;
   return result;
 }
 

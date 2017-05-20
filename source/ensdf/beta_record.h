@@ -20,6 +20,6 @@ struct BetaRecord
   UncertainDouble LOGFT;
   std::string comment_flag, uniquness, quality;
 
-  std::string continuation;
+  std::map<std::string, std::string> continuations_;
   std::list<CommentsRecord> comments;
 };

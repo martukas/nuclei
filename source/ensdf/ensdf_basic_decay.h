@@ -35,9 +35,12 @@ struct LevelData
   std::list<QValueRecord> qvals;
   ProdNormalizationRecord pnorm;
 
+  //unplaced
   std::list<GammaRecord> gammas;
 
   std::list<LevelRecord> levels;
+
+  std::list<LevelRecord> find_nearest(const Energy& to);
 
   void read_hist(const std::vector<std::string>& data,
                  BlockIndices& idx);
@@ -48,8 +51,8 @@ struct LevelData
   void read_comments(const std::vector<std::string>& data,
                      BlockIndices& idx);
 
-  void read_unplaced_gammas(const std::vector<std::string>& data,
-                            BlockIndices& idx);
+  void read_unplaced(const std::vector<std::string>& data,
+                     BlockIndices& idx);
 };
 
 struct DecayData
@@ -82,6 +85,7 @@ struct DecayData
   std::list<QValueRecord> qvals;
   ProdNormalizationRecord pnorm;
 
+  //unplaced
   std::list<AlphaRecord> alphas;
   std::list<BetaRecord> betas;
   std::list<GammaRecord> gammas;
@@ -101,8 +105,10 @@ struct DecayData
 
 struct NuclideData
 {
+  std::list<HistoryRecord> history;
+  std::list<CommentsRecord> comments;
   LevelData adopted_levels;
   std::map<std::string, DecayData> decays;
 
-  void add_decay(const DecayData& dec);
+  std::string add_decay(const DecayData& dec);
 };

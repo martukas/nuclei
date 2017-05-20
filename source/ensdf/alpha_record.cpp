@@ -25,6 +25,7 @@ AlphaRecord::AlphaRecord(size_t& idx,
   comment_flag = boost::trim_copy(line.substr(76,1));
   quality = boost::trim_copy(line.substr(79,1));
 
+  std::string continuation;
   while ((idx+1 < data.size()) && (
            CommentsRecord::match(data[idx+1], "A")
            || match_cont(data[idx+1], "\\sA")
@@ -36,6 +37,9 @@ AlphaRecord::AlphaRecord(size_t& idx,
     else
       continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
   }
+
+  if (!continuation.empty())
+    continuations_ = parse_continuation(continuation);
 }
 
 bool AlphaRecord::valid() const
@@ -57,6 +61,8 @@ std::string AlphaRecord::debug() const
     ret += " comment=" + comment_flag;
   if (!quality.empty())
     ret += " quality=" + quality;
+  for (auto c : continuations_)
+    ret += "\n      Continuation: " + c.first + " = " + c.second;
   for (auto c : comments)
     ret += "\n  Comment: " + c.debug();
   return ret;

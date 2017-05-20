@@ -21,6 +21,6 @@ struct AlphaRecord
   std::string comment_flag, quality;
 
   std::list<CommentsRecord> comments;
-  std::string continuation;
+  std::map<std::string, std::string> continuations_;
 };
 

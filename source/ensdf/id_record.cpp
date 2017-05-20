@@ -41,15 +41,19 @@ IdRecord::IdRecord(size_t& idx,
       DBG << "<IdRecord> Cannot intepret month " << line;
   }
 
-  while (/*dsid.size() &&*/ (idx+1 < data.size()) && (
+  while ((idx+1 < data.size()) && (
 //           (dsid.at(dsid.size()-1) == ',')
 //           ||
            match_cont(data[idx+1], "\\s{2}")
+           || CommentsRecord::match(data[idx+1])
 //         || CommentsRecord::match(data[idx+1], "\\s")
          ))
   {
-    auto line2 = data[++idx];
-    extended_dsid += boost::trim_copy(line2.substr(9, 30));
+    ++idx;
+    if (CommentsRecord::match(data[idx]))
+      comments.push_back(CommentsRecord(idx, data));
+    else
+      extended_dsid += boost::trim_copy(data[idx].substr(9, 30));
   }
 
   type = is_type(extended_dsid);
@@ -170,6 +174,8 @@ std::string IdRecord::debug() const
   ss << " dsref=\"" << dsref << "\"";
   ss << " pub=\"" << pub << "\"  ";
   ss << year << "/" << month;
+  for (auto c : comments)
+    ss << "\n      Comment: " << c.debug();
 //  ss << " dsid=\"" << boost::trim_copy(dsid) << "\"";
 //  if (continued)
 //    ss << " CONTINUED ";

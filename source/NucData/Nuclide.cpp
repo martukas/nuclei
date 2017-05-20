@@ -65,14 +65,14 @@ void Nuclide::addTransition(const Transition& transition)
 {
   if (transition.energy().valid())
     transitions_[transition.energy()] = transition;
-  else
-    WARN << "Could not add invalid transition " << transition.to_string()
-        << " to " << id_.verboseName();
+//  else
+//    WARN << "Could not add invalid transition " << transition.to_string()
+//        << " to " << id_.verboseName();
 }
 
 void Nuclide::addNewTransition(const Energy& energy,
                                const Energy& to,
-                               double intensity)
+                               UncertainDouble intensity)
 {
   if (levels_.count(to))
   {

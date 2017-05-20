@@ -78,12 +78,6 @@ DaughterParser ENSDFParser::get_dp(uint16_t a)
 
 
 
-
-DaughterParser::DaughterParser()
-{
-
-}
-
 DaughterParser::DaughterParser(uint16_t A, std::string directory)
 {
   std::string num = std::to_string(A);
@@ -108,7 +102,6 @@ DaughterParser::DaughterParser(uint16_t A, std::string directory)
 
 std::list<NuclideId> DaughterParser::daughters() const
 {
-  //  Q_ASSERT(decays_.size() == decays_.keys().toSet().size()); // check for duplicates
   std::list<NuclideId> ret;
   for (auto &n : nuclide_data_)
     ret.push_back(n.first);
@@ -117,39 +110,10 @@ std::list<NuclideId> DaughterParser::daughters() const
 
 std::list<std::string> DaughterParser::decays(NuclideId daughter) const
 {
-  //  Q_ASSERT(decays_.value(daughterNuclide).size() == decays_.value(daughterNuclide).keys().toSet().size()); // check for duplicates
   std::list<std::string> result;
   for (auto &i : nuclide_data_.at(daughter).decays)
     result.push_back(i.first);
   return result;
-}
-
-void DaughterParser::LevelIndex::find(BlockIndices alpos,
-                                      std::string dNucid1, std::string dsid,
-                                      const std::vector<std::string>& data)
-{
-  int laststart = -1;
-  for (size_t i=alpos.first; i < alpos.last; i++)
-  {
-    const std::string line = data.at(i);
-    // extract cross reference records as long as first level was found (cross reference must be before 1st level)
-    if (laststart == -1)
-    {
-      if (line.substr(0,8) == (dNucid1 + "  X"))
-        xrefs[boost::trim_copy(line.substr(9, 30))] = line[8];
-    }
-    // find level records
-    if (line.substr(0,9) == (dNucid1 + "  L "))
-    {
-      if (laststart > 0)
-        insertAdoptedLevelsBlock(BlockIndices(laststart, i),
-                                 dsid, data);
-      laststart = i;
-    }
-  }
-  if (laststart > 0)
-    insertAdoptedLevelsBlock(BlockIndices(laststart, alpos.last),
-                             dsid, data);
 }
 
 /**
@@ -168,8 +132,8 @@ void DaughterParser::LevelIndex::insertAdoptedLevelsBlock(const BlockIndices &ne
     return;
 
   // get xref record
-  auto xreflist = extractContinuationRecords(newblock, {"XREF"}, data);
-  std::string xref = xreflist.at(0);
+//  auto xreflist = extractContinuationRecords(newblock, {"XREF"}, data);
+  std::string xref;// = xreflist.at(0);
 
   // filter data sets
 
@@ -220,6 +184,83 @@ void DaughterParser::LevelIndex::insertAdoptedLevelsBlock(const BlockIndices &ne
   adoptblocks[e] = newblock;
 }
 
+void DaughterParser::modify_delta_pol(const std::list<LevelRecord> &levels,
+                                      Energy energy,
+                                      std::string& multipolarity,
+                                      UncertainDouble& delta,
+                                      double maxdif) const
+{
+  for (const LevelRecord& ll : levels)
+  {
+    for (GammaRecord& gg : ll.find_nearest(energy))
+    {
+      if (energy-gg.energy < maxdif/1000.0*energy)
+      {
+//              DBG << "-1Changing " << multipolarity << " " << delta.to_string(true);
+
+        if (multipolarity.empty())
+          multipolarity = gg.multipolarity;
+
+        if (delta.sign() != UncertainDouble::SignMagnitudeDefined)
+        {
+          UncertainDouble adptdelta = eval_mixing_ratio(gg.mixing_ratio, multipolarity);
+          if (adptdelta.sign() > delta.sign())
+            delta = adptdelta;
+        }
+//              DBG << "+1Changing " << multipolarity << " " << delta.to_string(true);
+      }
+    }
+  }
+}
+
+void DaughterParser::modify_level(const std::list<LevelRecord>& in,
+                                  std::list<LevelRecord>& out,
+                                  Level& currentLevel,
+                                  double maxdif) const
+{
+  out.clear();
+  for (const LevelRecord& f : in)
+  {
+    if (std::abs((currentLevel.energy() - f.energy).operator double())
+        <= (maxdif/1000.0*currentLevel.energy()))
+    {
+//          DBG << "Matching E " << currentLevel.energy().to_string();
+//          DBG << "FoundE = " << f.energy.to_string();
+
+      out.push_back(f);
+
+      if (!currentLevel.halfLife().isValid())
+      {
+//            DBG << "- modifying level " << currentLevel.halfLife().to_string(true)
+//                << " " << currentLevel.spin().to_string();
+
+        currentLevel.set_halflife(f.halflife);
+        if (!currentLevel.spin().valid())
+          currentLevel.set_spin(f.spin_parity);
+
+//            DBG << "+ modified level " << currentLevel.halfLife().to_string(true)
+//                << " " << currentLevel.spin().to_string();
+      }
+      // parse continuation records
+
+      if (f.continuations_.count("MOME2"))
+      {
+        auto mome2 = f.continuations_.at("MOME2");
+//            DBG << "MOME2 from continuation " << parse_moment(mome2).to_string();
+        currentLevel.set_q(parse_moment(mome2));
+      }
+
+      if (f.continuations_.count("MOMM1"))
+      {
+        auto momm1 = f.continuations_.at("MOMM1");
+//            DBG << "MOMM1 from continuation " << parse_moment(momm1).to_string();
+        currentLevel.set_mu(parse_moment(momm1));
+      }
+    }
+  }
+}
+
+
 
 DecayScheme DaughterParser::get_decay(NuclideId daughter,
                                       std::string decay_name) const
@@ -231,169 +272,90 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   double adoptedLevelMaxDifference = 40.0;
   double gammaMaxDifference = 5.0;
 
-  BlockIndices alpos = nuclide_data_.at(daughter).adopted_levels.block;
+  LevelData leveldata = nuclide_data_.at(daughter).adopted_levels;
   DecayData decaydata = nuclide_data_.at(daughter).decays.at(decay_name);
 
   Nuclide daughter_nuclide(decaydata.id.nuclide);
 
-  double normalizeDecIntensToPercentParentDecay = 1.0;
-  double normalizeGammaIntensToPercentParentDecay = 1.0;
-  std::string dNucid1 = nid_to_ensdf(daughter, true);
-  std::string dNucid2 = nid_to_ensdf(daughter, false);
+  UncertainDouble normalizeDecIntensToPercentParentDecay(1.0,1,UncertainDouble::SignMagnitudeDefined);
+  UncertainDouble normalizeGammaIntensToPercentParentDecay(1.0,1,UncertainDouble::SignMagnitudeDefined);
 
-  //  DBG << "parsing " << dNucid.toStdString();
-
-  LevelIndex levels_index_;
-  levels_index_.find(alpos, dNucid1, decaydata.id.dsid, raw_contents_);
-  levels_index_.find(alpos, dNucid2, decaydata.id.dsid, raw_contents_);
-
-  // process all adopted level sub-blocks
-  Level currentLevel;
-  // adopted levels block of current level in decay data set
-  BlockIndices currentadoptblock;
-  for (size_t k=decaydata.block.first; k < decaydata.block.last; k++)
+  //multiple times???
+  for (auto n : decaydata.norm)
   {
-    const std::string line = raw_contents_.at(k);
+    normalizeDecIntensToPercentParentDecay = n.NB * n.BR;
+    normalizeGammaIntensToPercentParentDecay = n.NR * n.BR;
+  }
 
-    //    DBG << "c line " << line.toStdString();
+  // process normalization records
+  if (decaydata.pnorm.valid())
+  {
+    if (decaydata.pnorm.NBBR.hasFiniteValue())
+      normalizeDecIntensToPercentParentDecay = decaydata.pnorm.NBBR;
+    if (decaydata.pnorm.NRBR.hasFiniteValue())
+      normalizeGammaIntensToPercentParentDecay = decaydata.pnorm.NRBR;
+  }
 
-    // process new gamma
-    if (is_gamma_line(line, dNucid1, dNucid2))
+  for (const LevelRecord& lev : decaydata.levels)
+  {
+    std::list<LevelRecord> irrelevant_levels;
+    Level currentLevel(lev.energy, lev.spin_parity, lev.halflife, lev.isomeric);
+    modify_level(leveldata.find_nearest(lev.energy),
+                 irrelevant_levels, currentLevel,
+                 adoptedLevelMaxDifference);
+    for (const AlphaRecord& a : lev.alphas)
     {
-      Energy energy = Energy(parse_val_uncert(line.substr(9, 10),
-                                              line.substr(19, 2)));
-      std::string multipolarity = boost::trim_copy(line.substr(31, 10));
-      UncertainDouble delta = parseEnsdfMixing(line.substr(41, 14), multipolarity);
+      if (a.intensity_alpha.hasFiniteValue())
+        currentLevel.setFeedIntensity(a.intensity_alpha * normalizeDecIntensToPercentParentDecay);
+    }
+    for (const BetaRecord& b : lev.betas)
+    {
+      if (b.intensity.hasFiniteValue())
+        currentLevel.setFeedIntensity(b.intensity * normalizeDecIntensToPercentParentDecay);
+    }
+    for (const ECRecord& e : lev.ECs)
+    {
+      if (e.intensity_total.defined())
+        currentLevel.setFeedIntensity(e.intensity_total);
+      else
+        currentLevel.setFeedIntensity(e.intensity_beta_plus + e.intensity_ec);
+    }
+    daughter_nuclide.addLevel(currentLevel);
+  }
 
-      double intensity = norm(line.substr(21,8),
-                              std::numeric_limits<double>::quiet_NaN());
-      if (std::isfinite(intensity))
-        intensity *= normalizeGammaIntensToPercentParentDecay;
+  for (const LevelRecord& lev : decaydata.levels)
+  {
+    std::list<LevelRecord> irrelevant_levels;
+    Level currentLevel(lev.energy, lev.spin_parity, lev.halflife, lev.isomeric);
+    modify_level(leveldata.find_nearest(lev.energy),
+                 irrelevant_levels, currentLevel,
+                 adoptedLevelMaxDifference);
+
+    for (const GammaRecord& g : lev.gammas)
+    {
+      std::string multipolarity = g.multipolarity;
+      UncertainDouble delta = g.mixing_ratio;
 
       // parse adopted levels if necessary
-      if ((delta.sign() != UncertainDouble::SignMagnitudeDefined) ||
-          multipolarity.empty())
+      if ((delta.sign() != UncertainDouble::SignMagnitudeDefined)
+          || multipolarity.empty())
       {
-        auto e2g =
-            get_gamma_lines(raw_contents_, currentadoptblock, daughter);
-        // find gamma
-        if (!e2g.empty())
-        {
-          Energy foundE = findNearest(e2g, energy);
-          if (energy-foundE < gammaMaxDifference/1000.0*energy)
-          {
-            const std::string gammastr = e2g.at(foundE);
-            if (multipolarity.empty())
-              multipolarity = boost::trim_copy(gammastr.substr(31, 10));
-
-            if (delta.sign() != UncertainDouble::SignMagnitudeDefined)
-            {
-              UncertainDouble adptdelta = parseEnsdfMixing(gammastr.substr(41, 14), multipolarity);
-              if (adptdelta.sign() > delta.sign())
-                delta = adptdelta;
-            }
-          }
-        }
+        modify_delta_pol(irrelevant_levels, g.energy,
+                         multipolarity, delta,
+                         gammaMaxDifference);
       }
 
       // determine levels
       Energy from = currentLevel.energy();
-      Energy to = findNearest(daughter_nuclide.levels(), from - energy);
-      daughter_nuclide.addTransition(Transition(energy, intensity,
+      Energy to;
+      for (auto l : leveldata.find_nearest(from - g.energy))
+        if (l.valid())
+          to = l.energy;
+
+      daughter_nuclide.addTransition(Transition(g.energy,
+                                                g.intensity_rel_photons * normalizeGammaIntensToPercentParentDecay,
                                                 multipolarity, delta,
                                                 from, to));
-    }
-    // process new level
-    else if (is_level_line(line, dNucid1, dNucid2))
-    {
-
-      currentLevel = parse_level(line);
-
-      // get additional data from adopted leves record
-      //   find closest entry
-      currentadoptblock.clear();
-      Energy foundE = findNearest(levels_index_.adoptblocks,
-                                  currentLevel.energy());
-      if (std::abs((currentLevel.energy() - foundE).operator double()) <=
-          (adoptedLevelMaxDifference/1000.0*currentLevel.energy()))
-        currentadoptblock = levels_index_.adoptblocks.at(foundE);
-
-      // if an appropriate entry was found, read its raw_contents_
-      // set half life if necessary
-      if (currentadoptblock.first != currentadoptblock.last)
-      {
-        std::string levelfirstline(raw_contents_.at(currentadoptblock.first));
-        //                DBG << levelfirstline << " === " << currentLevel->to_string();
-        if (!currentLevel.halfLife().isValid())
-        {
-          currentLevel.set_halflife(parse_halflife(levelfirstline.substr(39, 16)));
-          if (!currentLevel.spin().valid())
-            currentLevel.set_spin(parse_spin_parity(levelfirstline.substr(21, 18)));
-          //          DBG << "newhl" << currentLevel->halfLife().to_string();
-        }
-        // parse continuation records
-        auto moms = extractContinuationRecords(currentadoptblock,
-        {"MOME2", "MOMM1"},
-                                               raw_contents_);
-        currentLevel.set_q(parse_moment(moms.at(0)));
-        currentLevel.set_mu(parse_moment(moms.at(1)));
-        //                DBG << levelfirstline << " === " << currentLevel->to_string();
-      }
-
-      daughter_nuclide.addLevel(currentLevel);
-    }
-    // process decay information
-    else if (!daughter_nuclide.empty() &&
-             (is_intensity_line(line, dNucid1, dNucid2)))
-    {
-      UncertainDouble ti = parse_val_uncert(line.substr(64, 10), line.substr(74, 2));
-      if (ti.uncertaintyType() != UncertainDouble::UndefinedType)
-        ti.setSign(UncertainDouble::SignMagnitudeDefined);
-      else
-      {
-        UncertainDouble ib = parse_val_uncert(line.substr(21, 8), line.substr(29, 2));
-        UncertainDouble ie = parse_val_uncert(line.substr(31, 8), line.substr(39, 2));
-        ti = ib;
-        if (ib.uncertaintyType() != UncertainDouble::UndefinedType && ie.uncertaintyType() != UncertainDouble::UndefinedType)
-          ti += ie;
-        else if (ie.uncertaintyType() != UncertainDouble::UndefinedType)
-          ti = ie;
-        else
-          ti = UncertainDouble();
-      }
-      if (ti.uncertaintyType() != UncertainDouble::UndefinedType)
-      {
-        currentLevel.setFeedIntensity(ti);
-        daughter_nuclide.addLevel(currentLevel);
-      }
-    }
-    else if (!daughter_nuclide.empty() &&
-             (is_feed_line(line, dNucid1, dNucid2)))
-    {
-      UncertainDouble ib = parse_val_uncert(line.substr(21, 8), line.substr(29, 2));
-      if (ib.hasFiniteValue())
-      {
-        ib.setSign(UncertainDouble::SignMagnitudeDefined);
-        ib *= normalizeDecIntensToPercentParentDecay;
-        currentLevel.setFeedIntensity(ib);
-        daughter_nuclide.addLevel(currentLevel);
-      }
-    }
-    // process normalization records
-    else if (is_norm_line(line, dNucid1, dNucid2))
-    {
-      double br = norm(line.substr(31, 8), 1.0);
-      double nb = norm(line.substr(41, 8), 1.0);
-      normalizeDecIntensToPercentParentDecay = nb * br;
-      double nr = norm(line.substr(9, 10), 1.0);
-      normalizeGammaIntensToPercentParentDecay = nr * br;
-    }
-    else if (is_p_norm_line(line, dNucid1, dNucid2))
-    {
-      normalizeDecIntensToPercentParentDecay =
-          norm(line.substr(41, 8), normalizeDecIntensToPercentParentDecay);
-      normalizeGammaIntensToPercentParentDecay =
-          norm(line.substr(9, 10), normalizeGammaIntensToPercentParentDecay);
     }
   }
 
@@ -427,37 +389,6 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
                      daughter_nuclide, decaydata.decay_info_.mode);
 }
 
-double DaughterParser::norm(std::string rec, double def_value)
-{
-  boost::replace_all(rec, "(", "");
-  boost::replace_all(rec, ")", "");
-  boost::trim(rec);
-  if (is_number(rec))
-    return boost::lexical_cast<double>(rec);
-  return def_value;
-}
-
-UncertainDouble DaughterParser::parseEnsdfMixing(const std::string &mstr,
-                                                 const std::string &multipolarity)
-{
-  if (mstr.size() != 14)
-    return UncertainDouble();
-
-  // special case for pure multipolarities
-  if (boost::trim_copy(mstr).empty())
-  {
-    std::string tmp(multipolarity);
-    boost::replace_all(tmp, "(", "");
-    boost::replace_all(tmp, ")", "");
-    if (tmp.size() == 2)
-      return UncertainDouble(0.0, 1, UncertainDouble::SignMagnitudeDefined);
-    else
-      return UncertainDouble();
-  }
-
-  return parse_val_uncert(mstr.substr(0,8), mstr.substr(8,6));
-}
-
 std::list<BlockIndices> DaughterParser::find_blocks() const
 {
   // create list of block boundaries
@@ -477,14 +408,16 @@ std::list<BlockIndices> DaughterParser::find_blocks() const
   return blocks;
 }
 
-void DaughterParser::parse_comments_block(BlockIndices block_idx)
+void DaughterParser::parse_comments_block(BlockIndices block_idx,
+                                          std::list<HistoryRecord> &hist,
+                                          std::list<CommentsRecord> &comm)
 {
   for (size_t i = block_idx.first + 1; i < block_idx.last; ++i)
   {
     if (HistoryRecord::match(raw_contents_[i]))
-      mass_history_.push_back(HistoryRecord(i, raw_contents_));
+      hist.push_back(HistoryRecord(i, raw_contents_));
     else if (CommentsRecord::match(raw_contents_[i], "\\s"))
-      mass_comments_.push_back(CommentsRecord(i, raw_contents_));
+      comm.push_back(CommentsRecord(i, raw_contents_));
     else
     {
       DBG << "Unidentified record " << raw_contents_[i];
@@ -534,10 +467,16 @@ void DaughterParser::parseBlocks()
       DBG << "Bad header  ==  " << raw_contents_[idx];
     //    DBG << "IdRecord: " << header.extended_dsid;
 
-    if (test(header.type & RecordType::Comments) &&
-        !header.nuclide.composition_known())
+    if (test(header.type & RecordType::Comments))
     {
-      parse_comments_block(block_idx);
+      if (header.nuclide.composition_known())
+        parse_comments_block(block_idx,
+                             nuclide_data_[header.nuclide].history,
+                             nuclide_data_[header.nuclide].comments);
+      else
+        parse_comments_block(block_idx,
+                             mass_history_,
+                             mass_comments_);
     }
     else if (test(header.type & RecordType::References) &&
         !header.nuclide.composition_known())
@@ -548,7 +487,7 @@ void DaughterParser::parseBlocks()
     {
 //      adopted_levels_[header.nuclide] = block_idx;
       LevelData lev(raw_contents_, block_idx);
-      if (nuclide_data_.count(lev.id.nuclide))
+      if (nuclide_data_[lev.id.nuclide].adopted_levels.valid())
         DBG << "Adopted levels for " << lev.id.nuclide.symbolicName()
             << " already exists";
       else
@@ -560,34 +499,16 @@ void DaughterParser::parseBlocks()
       //      DBG << "Getting decay " << header.debug();
       DecayData decaydata(raw_contents_, block_idx);
 
+      if (!decaydata.decay_info_.valid())
+        continue;
+
       if (!nuclide_data_.count(decaydata.id.nuclide))
         DBG << "No index for " << decaydata.id.nuclide.symbolicName()
             << " exists";
       else
-        nuclide_data_[decaydata.id.nuclide].add_decay(decaydata);
-
-      if (test(header.type & RecordType::Decay) ||
-          (test(header.type & RecordType::InelasticScattering)))
       {
-        if (!decaydata.decay_info_.mode.valid())
-        {
-          DBG << " BAD DECAY " << decaydata.to_string();
-          continue;
-        }
-
-        // get reference to daughter map to work with
-        // (create and insert if necessary)
-//        std::map<std::string, DecayData> &decmap =
-//            decays_[decaydata.id.nuclide];
-
-//        auto decayname = decaydata.name();
-
-//        // insert into decay map
-//        while (decmap.count(decayname))
-//          decayname += " (alt.)";
-//        decmap[decayname] = decaydata;
-
-        //      DBG << "Got decay " << header.debug() << " as " << decayname;
+        auto name = nuclide_data_[decaydata.id.nuclide].add_decay(decaydata);
+        get_decay(decaydata.id.nuclide, name);
       }
     }
     else
