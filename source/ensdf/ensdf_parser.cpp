@@ -95,9 +95,10 @@ DaughterParser::DaughterParser(uint16_t A, std::string directory)
   str.assign((std::istreambuf_iterator<char>(t)),
              std::istreambuf_iterator<char>());
 
-  boost::split(raw_contents_, str, boost::is_any_of("\n"));
+  std::vector<std::string> lines;
+  boost::split(lines, str, boost::is_any_of("\n"));
 
-  parseBlocks();
+  parse(lines);
 }
 
 std::list<NuclideId> DaughterParser::daughters() const
@@ -114,74 +115,6 @@ std::list<std::string> DaughterParser::decays(NuclideId daughter) const
   for (auto &i : nuclide_data_.at(daughter).decays)
     result.push_back(i.first);
   return result;
-}
-
-/**
- * @brief DaughterParser::insertAdoptedLevelsBlock
- * @param adoptblocks map of adopted levels (target)
- * @param newblock block to add
- * @param dssym Symbol of the current decay. Used to filter levels and adjust energies according to XREF records
- */
-void DaughterParser::LevelIndex::insertAdoptedLevelsBlock(const BlockIndices &newblock,
-                                                          const std::string& dsid,
-                                                          const std::vector<std::string> &data)
-{
-  if ((newblock.first >= newblock.last) ||
-      (newblock.last > data.size()) ||
-      !xrefs.count(dsid))
-    return;
-
-  // get xref record
-//  auto xreflist = extractContinuationRecords(newblock, {"XREF"}, data);
-  std::string xref;// = xreflist.at(0);
-
-  // filter data sets
-
-  // -(AB) case (do not add level if dssym is contained in the parentheses)
-  if ((xref.substr(0,2) == "-(")
-      && (xref[xref.size()-1] == ')')
-      && boost::contains(xref, dsid))
-    return;
-
-  // exit if xref is neither "+" (level valid for all datasets) nor -(...) not containing dssymb
-  // nor contains dssym
-  if (xref != "+"
-      && (xref.substr(0,2) != "-(")
-      && !boost::contains(xref, dsid))
-    return;
-
-  // if this point is reached the level will be added in any case
-
-  // read energy from level record
-  auto edata = data.at(newblock.first);
-  Energy e = Energy(parse_val_uncert(edata.substr(9, 10), edata.substr(19, 2)));
-
-  // for the A(E1) case the energy must be modified
-  boost::smatch what;
-  if (boost::regex_match(xref, what, boost::regex(dsid + "\\(([.\\d]+)\\)")) &&
-      (what.size() > 1))
-  {
-    std::string edata(what[1]);
-    std::string val, uncert;
-    if (edata.size() > 10)
-    {
-      val = edata.substr(0,10);
-      uncert = edata.substr(10,2);
-    }
-    else
-      val = edata;
-    Energy matchedE = Energy(parse_val_uncert(val, uncert));
-    DBG << "ENERGY FROM REGEXP " << xref << " --> "
-        << matchedE.to_string() << " valid "
-        << matchedE.valid();
-    //std::cerr << "Current xref: " << xref.toStdString() << " current dssymb: " << dssym << std::endl;
-    //std::cerr << "Energy translation, old: " << e << " new: " << matchedE << std::endl;
-    if (matchedE.valid())
-      e = matchedE;
-  }
-
-  // add record
-  adoptblocks[e] = newblock;
 }
 
 void DaughterParser::modify_delta_pol(const std::list<LevelRecord> &levels,
@@ -300,7 +233,7 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   {
     std::list<LevelRecord> irrelevant_levels;
     Level currentLevel(lev.energy, lev.spin_parity, lev.halflife, lev.isomeric);
-    modify_level(leveldata.find_nearest(lev.energy),
+    modify_level(leveldata.find_nearest(lev.energy, decaydata.id.dsid),
                  irrelevant_levels, currentLevel,
                  adoptedLevelMaxDifference);
     for (const AlphaRecord& a : lev.alphas)
@@ -327,7 +260,7 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   {
     std::list<LevelRecord> irrelevant_levels;
     Level currentLevel(lev.energy, lev.spin_parity, lev.halflife, lev.isomeric);
-    modify_level(leveldata.find_nearest(lev.energy),
+    modify_level(leveldata.find_nearest(lev.energy, decaydata.id.dsid),
                  irrelevant_levels, currentLevel,
                  adoptedLevelMaxDifference);
 
@@ -348,7 +281,7 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
       // determine levels
       Energy from = currentLevel.energy();
       Energy to;
-      for (auto l : leveldata.find_nearest(from - g.energy))
+      for (auto l : leveldata.find_nearest(from - g.energy, decaydata.id.dsid))
         if (l.valid())
           to = l.energy;
 
@@ -358,6 +291,7 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
                                                 from, to));
     }
   }
+  daughter_nuclide.finalize();
 
   // create relevant parent levels and collect parent half-lifes
   Nuclide parent_nuclide;
@@ -381,46 +315,46 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
       parent_nuclide.addLevel(plv);
     }
   }
-
   parent_nuclide.finalize();
-  daughter_nuclide.finalize();
+
   //HACK types
   return DecayScheme(decay_name, parent_nuclide,
                      daughter_nuclide, decaydata.decay_info_.mode);
 }
 
-std::list<BlockIndices> DaughterParser::find_blocks() const
+std::list<BlockIndices> DaughterParser::find_blocks(const std::vector<std::string>& lines) const
 {
   // create list of block boundaries
   // end index points behind last line of block!
   std::list<BlockIndices> blocks;
   size_t from = 0;
   boost::regex emptyline("^\\s*$");
-  for (size_t i=0; i < raw_contents_.size(); ++i)
-    if (boost::regex_match(raw_contents_.at(i), emptyline))
+  for (size_t i=0; i < lines.size(); ++i)
+    if (boost::regex_match(lines.at(i), emptyline))
     {
       if (i-from > 1)
         blocks.push_back(BlockIndices(from, i));
       from = i + 1;
     }
-  if (from < raw_contents_.size())
-    blocks.push_back(BlockIndices(from, raw_contents_.size()));
+  if (from < lines.size())
+    blocks.push_back(BlockIndices(from, lines.size()));
   return blocks;
 }
 
-void DaughterParser::parse_comments_block(BlockIndices block_idx,
+void DaughterParser::parse_comments_block(const std::vector<std::string>& lines,
+                                          BlockIndices block_idx,
                                           std::list<HistoryRecord> &hist,
                                           std::list<CommentsRecord> &comm)
 {
   for (size_t i = block_idx.first + 1; i < block_idx.last; ++i)
   {
-    if (HistoryRecord::match(raw_contents_[i]))
-      hist.push_back(HistoryRecord(i, raw_contents_));
-    else if (CommentsRecord::match(raw_contents_[i], "\\s"))
-      comm.push_back(CommentsRecord(i, raw_contents_));
+    if (HistoryRecord::match(lines[i]))
+      hist.push_back(HistoryRecord(i, lines));
+    else if (CommentsRecord::match(lines[i], "\\s"))
+      comm.push_back(CommentsRecord(i, lines));
     else
     {
-      DBG << "Unidentified record " << raw_contents_[i];
+      DBG << "Unidentified record " << lines[i];
     }
   }
   //      DBG << "PARSED COMMENTS RECORD";
@@ -430,22 +364,23 @@ void DaughterParser::parse_comments_block(BlockIndices block_idx,
   //        DBG << c.debug();
 }
 
-void DaughterParser::parse_reference_block(BlockIndices block_idx)
+void DaughterParser::parse_reference_block(const std::vector<std::string>& lines,
+                                           BlockIndices block_idx)
 {
   for (size_t i = block_idx.first + 1; i < block_idx.last; ++i)
   {
-    if (ReferenceRecord::match(raw_contents_[i]))
+    if (ReferenceRecord::match(lines[i]))
     {
-      auto ref = ReferenceRecord(i, raw_contents_);
+      auto ref = ReferenceRecord(i, lines);
       if (ref.valid())
         references_[ref.keynum] = ref.reference;
       else
         DBG << "Invalid reference " << ref.debug()
-            << " from " << raw_contents_[i];
+            << " from " << lines[i];
     }
     else
     {
-      DBG << "Unidentified record " << raw_contents_[i];
+      DBG << "Unidentified record " << lines[i];
     }
   }
   //  DBG << "PARSED REFERENCES RECORD";
@@ -454,39 +389,37 @@ void DaughterParser::parse_reference_block(BlockIndices block_idx)
 }
 
 
-void DaughterParser::parseBlocks()
+void DaughterParser::parse(const std::vector<std::string>& lines)
 {
-  std::list<BlockIndices> blocks = find_blocks();
-
-  for (BlockIndices &block_idx : blocks)
+  for (BlockIndices block_idx : find_blocks(lines))
   {
     auto idx = block_idx.first;
-    auto header = IdRecord(idx, raw_contents_);
+    auto header = IdRecord(idx, lines);
 
     if (!header.reflect_parse())
-      DBG << "Bad header  ==  " << raw_contents_[idx];
+      DBG << "Bad header  ==  " << lines[idx];
     //    DBG << "IdRecord: " << header.extended_dsid;
 
     if (test(header.type & RecordType::Comments))
     {
       if (header.nuclide.composition_known())
-        parse_comments_block(block_idx,
+        parse_comments_block(lines, block_idx,
                              nuclide_data_[header.nuclide].history,
                              nuclide_data_[header.nuclide].comments);
       else
-        parse_comments_block(block_idx,
+        parse_comments_block(lines, block_idx,
                              mass_history_,
                              mass_comments_);
     }
     else if (test(header.type & RecordType::References) &&
         !header.nuclide.composition_known())
     {
-      parse_reference_block(block_idx);
+      parse_reference_block(lines, block_idx);
     }
     else if (test(header.type & RecordType::AdoptedLevels))
     {
 //      adopted_levels_[header.nuclide] = block_idx;
-      LevelData lev(raw_contents_, block_idx);
+      LevelData lev(lines, block_idx);
       if (nuclide_data_[lev.id.nuclide].adopted_levels.valid())
         DBG << "Adopted levels for " << lev.id.nuclide.symbolicName()
             << " already exists";
@@ -497,7 +430,7 @@ void DaughterParser::parseBlocks()
     else if (header.type != RecordType::Invalid)
     {
       //      DBG << "Getting decay " << header.debug();
-      DecayData decaydata(raw_contents_, block_idx);
+      DecayData decaydata(lines, block_idx);
 
       if (!decaydata.decay_info_.valid())
         continue;

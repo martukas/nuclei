@@ -9,12 +9,9 @@
 #include "xref_record.h"
 
 DecayData::DecayData(const std::vector<std::string>& data,
-                               BlockIndices idx)
+                     BlockIndices idx)
 {
-  if (idx.first >= data.size())
-    return;
   id = IdRecord(idx.first, data);
-  block = idx;
   if (!id.valid())
   {
     DBG << "<DecayData> Bad ID " << data[idx.first];
@@ -29,41 +26,33 @@ DecayData::DecayData(const std::vector<std::string>& data,
 
   for (; idx.first < idx.last; ++idx.first)
   {
-    try
+    if (CommentsRecord::match(data[idx.first], "L"))
     {
-      if (CommentsRecord::match(data[idx.first], "L"))
-      {
-        auto com = CommentsRecord(idx.first, data);
-        if (com.valid())
-          comments.push_back(com);
-        else
-          DBG << "<DecayData> Invalid all-level comment " << com.debug()
-              << "\nfrom " << idx.first << " = " << data[idx.first];
-        //      DBG << "Added comment from" << idx.first << "=" << data[idx.first] << com.debug();
-      }
-      else if (LevelRecord::match(data[idx.first]))
-      {
-        auto i = idx.first;
-        auto lev = LevelRecord(idx.first, data);
-        if (lev.valid())
-          levels.push_back(lev);
-        else
-        {
-          DBG << "<DecayData>(" << id.nuclide.symbolicName() << ":" << name() << ")"
-              << " Invalid Level at " << i << "=" << data[i]
-              << "\n" << lev.debug();
-        }
-        //      DBG << "Added level from" << idx.first << "=" << data[idx.first];
-      }
+      auto com = CommentsRecord(idx.first, data);
+      if (com.valid())
+        comments.push_back(com);
+      else
+        DBG << "<DecayData> Invalid all-level comment " << com.debug()
+            << "\nfrom " << idx.first << " = " << data[idx.first];
+      //      DBG << "Added comment from" << idx.first << "=" << data[idx.first] << com.debug();
+    }
+    else if (LevelRecord::match(data[idx.first]))
+    {
+      auto i = idx.first;
+      auto lev = LevelRecord(idx.first, data);
+      if (lev.valid())
+        levels.push_back(lev);
       else
       {
-        DBG << "<DecayData> Unidentified record "
-            << idx.first << "=" << data[idx.first];
+        DBG << "<DecayData>(" << id.nuclide.symbolicName() << ":" << name() << ")"
+            << " Invalid Level at " << i << "=" << data[i]
+               << "\n" << lev.debug();
       }
+      //      DBG << "Added level from" << idx.first << "=" << data[idx.first];
     }
-    catch (...)
+    else
     {
-      DBG << "<DecayData::DecayData> Shit hit the fan at "
+      DBG << "<DecayData> Unidentified record "
           << idx.first << "=" << data[idx.first];
     }
   }
@@ -78,7 +67,7 @@ DecayData::DecayData(const std::vector<std::string>& data,
     return;
   }
 
-//  DBG << "dsid=" << id.extended_dsid;
+  //  DBG << "dsid=" << id.extended_dsid;
 
   if (test(id.type & RecordType::Decay))
     decay_info_ = DecayInfo(id.extended_dsid);
@@ -86,26 +75,33 @@ DecayData::DecayData(const std::vector<std::string>& data,
   if (ReactionInfo::match(id.extended_dsid))
   {
     reaction_info_ = ReactionInfo(id.extended_dsid, id.nuclide);
-//    if (!reaction_info_.valid())
-//      DBG << "INVALID REACTION " << id.extended_dsid;
-//    DBG << "  ----> " << reaction_info_.to_string()
-//        << (reaction_info_.valid() ? " valid" : " INVALID") ;
+    //    if (!reaction_info_.valid())
+    //      DBG << "INVALID REACTION " << id.extended_dsid;
+    //    DBG << "  ----> " << reaction_info_.to_string()
+    //        << (reaction_info_.valid() ? " valid" : " INVALID") ;
   }
 
-//  DBG << "Retrieved decay " << decay_info_.to_string()
-//      << " with h=" << history.size()
-//      << " & c=" << comments.size()
-//      << " & p=" << parents.size();
+  //  DBG << "Retrieved decay " << decay_info_.to_string()
+  //      << " with h=" << history.size()
+  //      << " & c=" << comments.size()
+  //      << " & p=" << parents.size();
 }
 
-std::list<LevelRecord> LevelData::find_nearest(const Energy &to)
+std::list<LevelRecord> LevelData::find_nearest(const Energy &to,
+                                               std::string dsid)
 {
-  //do xrefs need to match?
+  std::string ssym;
+  if (!dsid.empty() && xrefs.count(dsid))
+    ssym = xrefs[dsid];
 
   Energy current;
   std::list<LevelRecord> ret;
   for (const auto& lev : levels)
   {
+    if (!ssym.empty() && lev.continuations_.count("XREF")
+        && xref_check(lev.continuations_.at("XREF"), ssym))
+      continue;
+
     if (!current.valid() ||
         (std::abs(double(to - lev.energy)) <
          std::abs(double(to - current))))
@@ -165,7 +161,7 @@ std::string DecayData::halflife_string() const
   }
   if (!hlstrings.empty())
     return join(hlstrings, " + ");
-  return "NOHL";
+  return "NOHALFLIFE";
 }
 
 bool DecayData::valid() const
@@ -174,13 +170,13 @@ bool DecayData::valid() const
       (decay_info_.valid() || reaction_info_.valid());
 }
 
-std::string DecayData::to_string() const
+std::string DecayData::debug() const
 {
   std::string ret;
   ret = id.nuclide.verboseName();
   if (decay_info_.valid())
     ret += "   decay=" + decay_info_.to_string();
-//  ret += " block=" + std::to_string(block.first) + "-" + std::to_string(block.second)
+  //  ret += " block=" + std::to_string(block.first) + "-" + std::to_string(block.second)
   if (reaction_info_.valid())
     ret += "   reaction=" + reaction_info_.to_string();
   ret += "   dsid=\"" + id.dsid + "\"";
@@ -190,10 +186,9 @@ std::string DecayData::to_string() const
 void DecayData::read_hist(const std::vector<std::string>& data,
                           BlockIndices& idx)
 {
-  while ((idx.first < idx.last) &&
-         HistoryRecord::match(data[idx.first]))
+  while (idx.first < idx.last)
   {
-    try
+    if (HistoryRecord::match(data[idx.first]))
     {
       auto his = HistoryRecord(idx.first, data);
       if (his.valid())
@@ -201,152 +196,119 @@ void DecayData::read_hist(const std::vector<std::string>& data,
       else
         DBG << "<DecayData> Invalid Hist " << his.debug()
             << " from " << idx.first << "=" << data[idx.first];
-      idx.first++;
     }
-    catch (...)
-    {
-      DBG << "<DecayData::read_hist> Shit hit the fan at "
-          << idx.first << "=" << data[idx.first];
-    }
+    else
+      break;
+    idx.first++;
   }
 }
 
 void DecayData::read_prelims(const std::vector<std::string>& data,
                              BlockIndices& idx)
 {
-  while ((idx.first < idx.last) &&
-         (
-           ParentRecord::match(data[idx.first])
-           || QValueRecord::match(data[idx.first])
-           || CommentsRecord::match(data[idx.first])
-           || NormalizationRecord::match(data[idx.first])
-           || ProdNormalizationRecord::match(data[idx.first])
-          )
-         )
+  while (idx.first < idx.last)
   {
-    try
+    if (ProdNormalizationRecord::match(data[idx.first]))
     {
-      if (ProdNormalizationRecord::match(data[idx.first]))
+      auto pn = ProdNormalizationRecord(idx.first, data);
+      if (pn.valid())
       {
-        auto pn = ProdNormalizationRecord(idx.first, data);
-        if (pn.valid())
-        {
-          if (pnorm.valid())
-            DBG << "<DecayData> More than one pnorm " << pnorm.debug()
-                << " from " << idx.first << "=" << data[idx.first];
-          pnorm = pn;
-        }
-        else
-          DBG << "<LevelData> Invalid Pnorm " << pn.debug()
+        if (pnorm.valid())
+          DBG << "<DecayData> More than one pnorm " << pnorm.debug()
               << " from " << idx.first << "=" << data[idx.first];
+        pnorm = pn;
       }
-      else if (NormalizationRecord::match(data[idx.first]))
-      {
-        auto n = NormalizationRecord(idx.first, data);
-        if (n.valid())
-          norm.push_back(n);
-        else
-          DBG << "<DecayData> Invalid Norm " << n.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-      else if (QValueRecord::match(data[idx.first]))
-      {
-        auto qv = QValueRecord(idx.first, data);
-        if (qv.valid())
-          qvals.push_back(qv);
-        else
-          DBG << "<DecayData> Invalid Qval " << qv.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-      else if (CommentsRecord::match(data[idx.first]))
-      {
-        auto com = CommentsRecord(idx.first, data);
-        if (com.valid())
-          comments.push_back(com);
-        else
-          DBG << "<DecayData> Invalid Comment " << com.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-      else if (ParentRecord::match(data[idx.first]))
-      {
-        auto par = ParentRecord(idx.first, data);
-        if (par.valid())
-          parents.push_back(par);
-        else
-          DBG << "<DecayData> Invalid Parent " << par.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-      idx.first++;
+      else
+        DBG << "<LevelData> Invalid Pnorm " << pn.debug()
+            << " from " << idx.first << "=" << data[idx.first];
     }
-    catch (...)
+    else if (NormalizationRecord::match(data[idx.first]))
     {
-      DBG << "<DecayData::read_prelims> Shit hit the fan at "
-          << idx.first << "=" << data[idx.first];
+      auto n = NormalizationRecord(idx.first, data);
+      if (n.valid())
+        norm.push_back(n);
+      else
+        DBG << "<DecayData> Invalid Norm " << n.debug()
+            << " from " << idx.first << "=" << data[idx.first];
     }
+    else if (QValueRecord::match(data[idx.first]))
+    {
+      auto qv = QValueRecord(idx.first, data);
+      if (qv.valid())
+        qvals.push_back(qv);
+      else
+        DBG << "<DecayData> Invalid Qval " << qv.debug()
+            << " from " << idx.first << "=" << data[idx.first];
+    }
+    else if (CommentsRecord::match(data[idx.first]))
+    {
+      auto com = CommentsRecord(idx.first, data);
+      if (com.valid())
+        comments.push_back(com);
+      else
+        DBG << "<DecayData> Invalid Comment " << com.debug()
+            << " from " << idx.first << "=" << data[idx.first];
+    }
+    else if (ParentRecord::match(data[idx.first]))
+    {
+      auto par = ParentRecord(idx.first, data);
+      if (par.valid())
+        parents.push_back(par);
+      else
+        DBG << "<DecayData> Invalid Parent " << par.debug()
+            << " from " << idx.first << "=" << data[idx.first];
+    }
+    else
+      break;
+    idx.first++;
   }
 }
 
 
 void DecayData::read_unplaced(const std::vector<std::string>& data,
-                             BlockIndices& idx)
+                              BlockIndices& idx)
 {
-  while ((idx.first < idx.last) &&
-         (
-          AlphaRecord::match(data[idx.first]) ||
-          BetaRecord::match(data[idx.first]) ||
-          GammaRecord::match(data[idx.first]) ||
-          ParticleRecord::match(data[idx.first]) //|| //all comments
-//          BetaRecord::match(data[idx.first]) ||
-//          ECRecord::match(data[idx.first])
-          )
-         )
+  while (idx.first < idx.last)
   {
-    try
+    if (AlphaRecord::match(data[idx.first]))
     {
-      if (AlphaRecord::match(data[idx.first]))
-      {
-        auto a = AlphaRecord(idx.first, data);
-        if (a.valid())
-          alphas.push_back(a);
-        else
-          DBG << "<DecayData> Invalid alpha " << a.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-      else if (BetaRecord::match(data[idx.first]))
-      {
-        auto b = BetaRecord(idx.first, data);
-        if (b.valid())
-          betas.push_back(b);
-        else
-          DBG << "<DecayData> Invalid beta " << b.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-      else if (GammaRecord::match(data[idx.first]))
-      {
-        auto g = GammaRecord(idx.first, data);
-        if (g.valid())
-          gammas.push_back(g);
-        else
-          DBG << "<DecayData> Invalid gamma " << g.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-      else if (ParticleRecord::match(data[idx.first]))
-      {
-        auto p = ParticleRecord(idx.first, data);
-        if (p.valid())
-          particles.push_back(p);
-        else
-          DBG << "<DecayData> Invalid particle " << p.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-
-      idx.first++;
+      auto a = AlphaRecord(idx.first, data);
+      if (a.valid())
+        unplaced_alphas.push_back(a);
+      else
+        DBG << "<DecayData> Invalid alpha " << a.debug()
+            << " from " << idx.first << "=" << data[idx.first];
     }
-    catch (...)
+    else if (BetaRecord::match(data[idx.first]))
     {
-      DBG << "<DecayData::read_prelims> Shit hit the fan at "
-          << idx.first << "=" << data[idx.first];
+      auto b = BetaRecord(idx.first, data);
+      if (b.valid())
+        unplaced_betas.push_back(b);
+      else
+        DBG << "<DecayData> Invalid beta " << b.debug()
+            << " from " << idx.first << "=" << data[idx.first];
     }
+    else if (GammaRecord::match(data[idx.first]))
+    {
+      auto g = GammaRecord(idx.first, data);
+      if (g.valid())
+        unplaced_gammas.push_back(g);
+      else
+        DBG << "<DecayData> Invalid gamma " << g.debug()
+            << " from " << idx.first << "=" << data[idx.first];
+    }
+    else if (ParticleRecord::match(data[idx.first]))
+    {
+      auto p = ParticleRecord(idx.first, data);
+      if (p.valid())
+        unplaced_particles.push_back(p);
+      else
+        DBG << "<DecayData> Invalid particle " << p.debug()
+            << " from " << idx.first << "=" << data[idx.first];
+    }
+    else
+      break;
+    idx.first++;
   }
 }
 
@@ -357,10 +319,9 @@ void DecayData::read_unplaced(const std::vector<std::string>& data,
 void LevelData::read_hist(const std::vector<std::string>& data,
                           BlockIndices& idx)
 {
-  while ((idx.first < idx.last) &&
-         HistoryRecord::match(data[idx.first]))
+  while (idx.first < idx.last)
   {
-    try
+    if (HistoryRecord::match(data[idx.first]))
     {
       auto his = HistoryRecord(idx.first, data);
       if (his.valid())
@@ -368,23 +329,19 @@ void LevelData::read_hist(const std::vector<std::string>& data,
       else
         DBG << "<LevelData> Invalid Hist " << his.debug()
             << " from " << idx.first << "=" << data[idx.first];
-      idx.first++;
     }
-    catch (...)
-    {
-      DBG << "<LevelData::read_hist> Shit hit the fan at "
-          << idx.first << "=" << data[idx.first];
-    }
+    else
+      break;
+    idx.first++;
   }
 }
 
 void LevelData::read_comments(const std::vector<std::string>& data,
                               BlockIndices& idx)
 {
-  while ((idx.first < idx.last) &&
-         CommentsRecord::match(data[idx.first], ".")) //all comments
+  while (idx.first < idx.last)
   {
-    try
+    if (CommentsRecord::match(data[idx.first], "."))
     {
       auto com = CommentsRecord(idx.first, data);
       if (com.valid())
@@ -394,113 +351,88 @@ void LevelData::read_comments(const std::vector<std::string>& data,
             << " from " << idx.first << "=" << data[idx.first];
       idx.first++;
     }
-    catch (...)
-    {
-      DBG << "<LevelData::read_comments> Shit hit the fan at "
-          << idx.first << "=" << data[idx.first];
-    }
+    else
+      break;
   }
 }
 
 void LevelData::read_prelims(const std::vector<std::string>& data,
                              BlockIndices& idx)
 {
-  while ((idx.first < idx.last) &&
-         (QValueRecord::match(data[idx.first]) ||
-          CommentsRecord::match(data[idx.first], ".") || //all comments
-          XRefRecord::match(data[idx.first]) ||
-          ProdNormalizationRecord::match(data[idx.first])
-          )
-         )
+  while (idx.first < idx.last)
   {
-    try
+    if (ProdNormalizationRecord::match(data[idx.first]))
     {
-      if (ProdNormalizationRecord::match(data[idx.first]))
+      auto pn = ProdNormalizationRecord(idx.first, data);
+      if (pn.valid())
       {
-        auto pn = ProdNormalizationRecord(idx.first, data);
-        if (pn.valid())
-        {
-          if (pnorm.valid())
-            DBG << "<LevelData> More than one norm " << pnorm.debug()
-                << " from " << idx.first << "=" << data[idx.first];
+        if (pnorm.valid())
+          DBG << "<LevelData> More than one norm " << pnorm.debug()
+              << " from " << idx.first << "=" << data[idx.first];
 
-          pnorm = pn;
-        }
-        else
-          DBG << "<LevelData> Invalid Pnorm " << pn.debug()
-              << " from " << idx.first << "=" << data[idx.first];
+        pnorm = pn;
       }
-      else if (QValueRecord::match(data[idx.first]))
-      {
-        auto qv = QValueRecord(idx.first, data);
-        if (qv.valid())
-          qvals.push_back(qv);
-        else
-          DBG << "<LevelData> Invalid Qval " << qv.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-      else if (XRefRecord::match(data[idx.first]))
-      {
-        auto ref = XRefRecord(idx.first, data);
-        if (ref.valid())
-          xrefs[ref.dsid] = ref.dssym;
-        else
-          DBG << "<LevelData> Invalid Xref " << ref.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-      else if (CommentsRecord::match(data[idx.first], "."))
-      {
-        auto com = CommentsRecord(idx.first, data);
-        if (com.valid())
-          comments.push_back(com);
-        else
-          DBG << "<LevelData> Invalid Comment " << com.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-      idx.first++;
+      else
+        DBG << "<LevelData> Invalid Pnorm " << pn.debug()
+            << " from " << idx.first << "=" << data[idx.first];
     }
-    catch (...)
+    else if (QValueRecord::match(data[idx.first]))
     {
-      DBG << "<LevelData::read_prelims> Shit hit the fan at "
-          << idx.first << "=" << data[idx.first];
+      auto qv = QValueRecord(idx.first, data);
+      if (qv.valid())
+        qvals.push_back(qv);
+      else
+        DBG << "<LevelData> Invalid Qval " << qv.debug()
+            << " from " << idx.first << "=" << data[idx.first];
     }
+    else if (XRefRecord::match(data[idx.first]))
+    {
+      auto ref = XRefRecord(idx.first, data);
+      if (ref.valid())
+        xrefs[ref.dsid] = ref.dssym;
+      else
+        DBG << "<LevelData> Invalid Xref " << ref.debug()
+            << " from " << idx.first << "=" << data[idx.first];
+    }
+    else if (CommentsRecord::match(data[idx.first], "."))
+    {
+      auto com = CommentsRecord(idx.first, data);
+      if (com.valid())
+        comments.push_back(com);
+      else
+        DBG << "<LevelData> Invalid Comment " << com.debug()
+            << " from " << idx.first << "=" << data[idx.first];
+    }
+    else
+      break;
+    idx.first++;
   }
 }
 
 void LevelData::read_unplaced(const std::vector<std::string>& data,
-                                     BlockIndices& idx)
+                              BlockIndices& idx)
 {
-  while ((idx.first < idx.last) &&
-         GammaRecord::match(data[idx.first]))
+  while (idx.first < idx.last)
   {
-    try
+    if (GammaRecord::match(data[idx.first]))
     {
-      if (GammaRecord::match(data[idx.first]))
-      {
-        auto gam = GammaRecord(idx.first, data);
-        if (gam.valid())
-          gammas.push_back(gam);
-        else
-          DBG << "<LevelData> Invalid unplaced gamma " << gam.debug()
-              << " from " << idx.first << "=" << data[idx.first];
-      }
-      idx.first++;
+      auto gam = GammaRecord(idx.first, data);
+      if (gam.valid())
+        unplaced_gammas.push_back(gam);
+      else
+        DBG << "<LevelData> Invalid unplaced gamma " << gam.debug()
+            << " from " << idx.first << "=" << data[idx.first];
     }
-    catch (...)
-    {
-      DBG << "<LevelData::read_unplaced> Shit hit the fan at "
-          << idx.first << "=" << data[idx.first];
-    }
+    else
+      break;
+    idx.first++;
   }
 }
 
 LevelData::LevelData(const std::vector<std::string>& data,
                      BlockIndices idx)
 {
-  if (idx.first >= data.size())
-    return;
   id = IdRecord(idx.first, data);
-  block = idx;
   if (!id.valid())
   {
     DBG << "<LevelData> Bad ID " << data[idx.first];
@@ -516,41 +448,33 @@ LevelData::LevelData(const std::vector<std::string>& data,
 
   for (; idx.first < idx.last; ++idx.first)
   {
-    try
+    if (CommentsRecord::match(data[idx.first], "L"))
     {
-      if (CommentsRecord::match(data[idx.first], "L"))
-      {
-        auto com = CommentsRecord(idx.first, data);
-        if (com.valid())
-          comments.push_back(com);
-        else
-          DBG << "<LevelData> Invalid all-level comment " << com.debug()
-              << "\nfrom " << idx.first << " = " << data[idx.first];
-        //      DBG << "Added comment from" << idx.first << "=" << data[idx.first] << com.debug();
-      }
-      else if (LevelRecord::match(data[idx.first]))
-      {
-        auto i = idx.first;
-        auto lev = LevelRecord(idx.first, data);
-        if (lev.valid())
-          levels.push_back(lev);
-        else
-        {
-          DBG << "<LevelData>(" << id.nuclide.symbolicName() << ")"
-              << " Invalid Level at " << i << "=" << data[i]
-              << "\n" << lev.debug();
-        }
-        //      DBG << "Added level from" << idx.first << "=" << data[idx.first];
-      }
+      auto com = CommentsRecord(idx.first, data);
+      if (com.valid())
+        comments.push_back(com);
+      else
+        DBG << "<LevelData> Invalid all-level comment " << com.debug()
+            << "\nfrom " << idx.first << " = " << data[idx.first];
+      //      DBG << "Added comment from" << idx.first << "=" << data[idx.first] << com.debug();
+    }
+    else if (LevelRecord::match(data[idx.first]))
+    {
+      auto i = idx.first;
+      auto lev = LevelRecord(idx.first, data);
+      if (lev.valid())
+        levels.push_back(lev);
       else
       {
-        DBG << "<LevelData> Unidentified record "
-            << idx.first << "=" << data[idx.first];
+        DBG << "<LevelData>(" << id.nuclide.symbolicName() << ")"
+            << " Invalid Level at " << i << "=" << data[i]
+               << "\n" << lev.debug();
       }
+      //      DBG << "Added level from" << idx.first << "=" << data[idx.first];
     }
-    catch (...)
+    else
     {
-      DBG << "<LevelData::LevelData> Shit hit the fan at "
+      DBG << "<LevelData> Unidentified record "
           << idx.first << "=" << data[idx.first];
     }
   }
@@ -598,10 +522,10 @@ std::string LevelData::debug() const
     for (auto c : levels)
       ret += "    " + c.debug() + "\n";
   }
-  if (!gammas.empty())
+  if (!unplaced_gammas.empty())
   {
-    ret += "  Gammas:\n";
-    for (auto c : gammas)
+    ret += "  Unplaced_gammas:\n";
+    for (auto c : unplaced_gammas)
       ret += "    " + c.debug() + "\n";
   }
   return ret;
@@ -627,8 +551,8 @@ std::string NuclideData::add_decay(const DecayData& dec)
       disambiguated = base_name + " (alt.)";
   }
 
-//  if (!dec.valid())
-//    DBG << "<NuclideData> Adding decay: " << disambiguated;
+  //  if (!dec.valid())
+  //    DBG << "<NuclideData> Adding decay: " << disambiguated;
   decays[disambiguated] = dec;
 
   return disambiguated;

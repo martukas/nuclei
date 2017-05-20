@@ -64,7 +64,4 @@ struct DecayInfo
   NuclideId parent;
   DecayMode mode;
   HalfLife hl;
-
-private:
-  static DecayMode parse_type(const std::string &tstring);
 };

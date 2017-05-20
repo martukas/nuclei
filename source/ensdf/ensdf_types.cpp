@@ -258,31 +258,6 @@ Moment parse_moment(const std::string& record)
   return ret;
 }
 
-Level parse_level(const std::string& record)
-{
-  if (record.size() != 80)
-    return Level();
-
-  Energy            e = Energy(parse_val_uncert(record.substr(9,10),
-                                                record.substr(19,2)));
-  SpinParity     spin = parse_spin_parity(record.substr(21, 18));
-  HalfLife   halflife = parse_halflife(record.substr(39, 16));
-
-  // determine isomer number
-  uint16_t isomeric_ = 0;
-  std::string isostr(record.substr(77,2));
-  if (record[77] == 'M') {
-    if (is_number(record.substr(78,1)))
-      isomeric_ = boost::lexical_cast<uint16_t>(record.substr(78,1));
-    else
-      isomeric_ = 1;
-  }
-
-  Level ret(e, spin, halflife, isomeric_);
-//  DBG << record << " --> " << ret.to_string();
-  return ret;
-}
-
 NuclideId parse_check_nid(std::string nucid)
 {
   auto ret = parse_nid(nucid);
