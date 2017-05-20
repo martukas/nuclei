@@ -173,6 +173,20 @@ bool LevelRecord::valid() const
 
 std::list<GammaRecord> LevelRecord::find_nearest(const Energy &to) const
 {
+
+//  // -(AB) case (do not add level if dssym is contained in the parentheses)
+//  if ((xref.substr(0,2) == "-(")
+//      && (xref[xref.size()-1] == ')')
+//      && boost::contains(xref, dsid))
+//    return;
+
+//  // exit if xref is neither "+" (level valid for all datasets) nor -(...) not containing dssymb
+//  // nor contains dssym
+//  if (xref != "+"
+//      && (xref.substr(0,2) != "-(")
+//      && !boost::contains(xref, dsid))
+//    return;
+
   Energy current;
   std::list<GammaRecord> ret;
   for (const auto& g : gammas)

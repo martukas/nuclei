@@ -8,18 +8,6 @@
 
 class DaughterParser
 {
-  struct LevelIndex
-  {
-    void insertAdoptedLevelsBlock(const BlockIndices &newblock,
-                                  const std::string& dsid,
-                                  const std::vector<std::string>& data);
-
-    std::map<Energy, BlockIndices> adoptblocks;
-    // maps DSID to DSSYM (single letter)
-    std::map<std::string, std::string> xrefs;
-
-  };
-
 public:
   DaughterParser() {}
   DaughterParser(uint16_t A, std::string directory);
@@ -30,20 +18,21 @@ public:
   DecayScheme get_decay(NuclideId daughter, std::string decay_name) const;
 
 private:
-  std::vector<std::string> raw_contents_;
   std::list<HistoryRecord> mass_history_;
   std::list<CommentsRecord> mass_comments_;
-
   std::map<std::string, std::string> references_;
   std::map<NuclideId, NuclideData> nuclide_data_;
 
-  void parseBlocks();
-  std::list<BlockIndices> find_blocks() const;
+  std::list<BlockIndices> find_blocks(const std::vector<std::string> &lines) const;
+  void parse(const std::vector<std::string>& lines);
 
-  void parse_comments_block(BlockIndices block_idx,
+  void parse_comments_block(const std::vector<std::string>& lines,
+                            BlockIndices block_idx,
                             std::list<HistoryRecord>& hist,
                             std::list<CommentsRecord>& comm);
-  void parse_reference_block(BlockIndices block_idx);
+
+  void parse_reference_block(const std::vector<std::string>& lines,
+                             BlockIndices block_idx);
 
   void modify_delta_pol(const std::list<LevelRecord> &levels,
                         Energy energy,
@@ -55,7 +44,6 @@ private:
                     std::list<LevelRecord>& out,
                     Level& currentLevel,
                     double maxdif) const;
-
 };
 
 

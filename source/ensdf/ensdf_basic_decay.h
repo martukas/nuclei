@@ -24,24 +24,21 @@ struct LevelData
   bool valid() const;
   std::string debug() const;
 
-  //deprecate
-  BlockIndices block;
-
   IdRecord id;
   std::list<HistoryRecord> history;
-
   std::list<CommentsRecord> comments;
   std::map<std::string, std::string> xrefs;
   std::list<QValueRecord> qvals;
   ProdNormalizationRecord pnorm;
 
-  //unplaced
-  std::list<GammaRecord> gammas;
+  std::list<GammaRecord> unplaced_gammas;
 
   std::list<LevelRecord> levels;
 
-  std::list<LevelRecord> find_nearest(const Energy& to);
+  std::list<LevelRecord> find_nearest(const Energy& to,
+                                      std::string dsid);
 
+private:
   void read_hist(const std::vector<std::string>& data,
                  BlockIndices& idx);
 
@@ -62,36 +59,30 @@ struct DecayData
                  BlockIndices idx);
 
   bool valid() const;
-  std::string to_string() const;
   std::string name() const;
-
-  //private:
-  std::string parent_string() const;
-  std::string halflife_string() const;
-
-  //deprecate
-  BlockIndices block;
+  std::string debug() const;
 
   IdRecord id;
   DecayInfo decay_info_;
   ReactionInfo reaction_info_;
 
   std::list<HistoryRecord> history;
-
+  std::list<CommentsRecord> comments;
   std::vector<ParentRecord> parents;
   std::vector<NormalizationRecord> norm;
-
-  std::list<CommentsRecord> comments;
-  std::list<QValueRecord> qvals;
   ProdNormalizationRecord pnorm;
+  std::list<QValueRecord> qvals;
 
-  //unplaced
-  std::list<AlphaRecord> alphas;
-  std::list<BetaRecord> betas;
-  std::list<GammaRecord> gammas;
-  std::list<ParticleRecord> particles;
+  std::list<AlphaRecord> unplaced_alphas;
+  std::list<BetaRecord> unplaced_betas;
+  std::list<GammaRecord> unplaced_gammas;
+  std::list<ParticleRecord> unplaced_particles;
 
   std::list<LevelRecord> levels;
+
+private:
+  std::string parent_string() const;
+  std::string halflife_string() const;
 
   void read_hist(const std::vector<std::string>& data,
                  BlockIndices& idx);

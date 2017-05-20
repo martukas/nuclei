@@ -283,22 +283,6 @@ bool DecayInfo::valid() const
   return parent.valid() && mode.valid();
 }
 
-DecayMode DecayInfo::parse_type(const std::string &tstring)
-{
-  DecayMode mode;
-  if (tstring == "EC DECAY")
-    mode.set_electron_capture(1);
-  if (tstring == "B+ DECAY")
-    mode.set_beta_plus(1);
-  if (tstring == "B- DECAY")
-    mode.set_beta_minus(1);
-  if (tstring == "IT DECAY")
-    mode.set_isomeric(true);
-  if (tstring == "A DECAY")
-    mode.set_alpha(true);
-  return mode;
-}
-
 std::string DecayInfo::to_string() const
 {
   std::string ret;
