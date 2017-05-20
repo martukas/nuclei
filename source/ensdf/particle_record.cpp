@@ -31,6 +31,7 @@ ParticleRecord::ParticleRecord(size_t& idx,
   coincidence = boost::trim_copy(line.substr(77,1));
   quality = boost::trim_copy(line.substr(79,1));
 
+  std::string continuation;
   std::string signature = line.substr(7,2);
   while ((idx+1 < data.size()) &&
          (match_cont(data[idx+1], "\\s" + signature) ||
@@ -42,6 +43,9 @@ ParticleRecord::ParticleRecord(size_t& idx,
     else
       continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
   }
+
+  if (!continuation.empty())
+    continuations_ = parse_continuation(continuation);
 }
 
 bool ParticleRecord::valid() const
@@ -72,8 +76,8 @@ std::string ParticleRecord::debug() const
     ret += " coincidence=" + coincidence;
   if (!quality.empty())
     ret += " quality=" + quality;
-  if (!continuation.empty())
-    ret += "\n  Continuation:" + continuation;
+  for (auto c : continuations_)
+    ret += "\n      Continuation: " + c.first + " = " + c.second;
   for (auto c : comments)
     ret += "\n  Comment: " + c.debug();
   return ret;

@@ -9,6 +9,8 @@ bool is_uncertainty_id(const std::string& str);
 UncertainDouble parse_val_uncert(std::string val, std::string uncert);
 UncertainDouble parse_norm_value(std::string val, std::string uncert);
 
+UncertainDouble eval_mixing_ratio(UncertainDouble vu, const std::string& mpol);
+
 DataQuality quality_of(const std::string&);
 std::string strip_qualifiers(const std::string& original);
 

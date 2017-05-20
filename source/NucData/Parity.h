@@ -16,6 +16,8 @@ public:
   Parity(const Parity &other);
   Parity(const EnumParity& p, const DataQuality& q);
 
+  friend bool operator<(const Parity &left, const Parity &right);
+  friend bool operator>(const Parity &left, const Parity &right);
   friend bool operator==(const Parity &left, const Parity &right);
 
   const std::string to_string() const;

@@ -20,7 +20,7 @@ public:
 
   void addNewTransition(const Energy& energy,
                         const Energy& to,
-                        double intensity);
+                        UncertainDouble intensity);
 
   void removeTransition(const Transition& t);
 

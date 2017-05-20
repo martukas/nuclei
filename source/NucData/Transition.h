@@ -7,7 +7,7 @@ class Transition
 public:
   Transition() {}
 
-  Transition(Energy energy, double intensity,
+  Transition(Energy energy, UncertainDouble intensity,
              const std::string &multipol, UncertainDouble delta,
              Energy from, Energy to);
 
@@ -15,7 +15,7 @@ public:
   Energy from() const;
   Energy to() const;
 
-  double intensity() const;
+  UncertainDouble intensity() const;
   std::string intensity_string() const;
   std::string multipolarity() const;
   UncertainDouble delta() const;
@@ -24,7 +24,7 @@ public:
 
 private:
   Energy energy_;
-  double intensity_ {0};
+  UncertainDouble intensity_;
   std::string multipolarity_;
   UncertainDouble delta_;
   Energy from_, to_;

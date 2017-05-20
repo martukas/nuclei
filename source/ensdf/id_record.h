@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ensdf_records.h"
+#include "comment_record.h"
 
 enum class RecordType : uint64_t
 {
@@ -60,6 +61,8 @@ struct IdRecord
   uint16_t year;
   uint16_t month;
   RecordType type {RecordType::Invalid};
+
+  std::list<CommentsRecord> comments;
 
   static RecordType is_type(std::string s);
   static std::string type_to_str(RecordType t);

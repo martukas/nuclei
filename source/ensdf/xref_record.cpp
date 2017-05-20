@@ -22,7 +22,7 @@ XRefRecord::XRefRecord(size_t& idx,
 std::string XRefRecord::debug() const
 {
   return nuclide.symbolicName() + " XREF "
-      + dssym + "->" + dsid;
+      + dssym + " = " + dsid;
 }
 
 bool XRefRecord::valid() const

@@ -152,7 +152,8 @@ void SchemePlayer::alignGraphicsItems()
       gammaspace = gamma->widthFromOrigin();
     else
       gammaspace += gamma->minimalXDistance();
-    max_intensity = std::max(max_intensity, gamma->transition_.intensity());
+    if (gamma->transition_.intensity().hasFiniteValue())
+      max_intensity = std::max(max_intensity, gamma->transition_.intensity().value());
   }
   if (!boost::math::isfinite(gammaspace))
     gammaspace = 0.0;
