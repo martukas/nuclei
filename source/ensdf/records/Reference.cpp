@@ -1,4 +1,4 @@
-#include "reference_record.h"
+#include "Reference.h"
 #include "Fields.h"
 #include <boost/algorithm/string.hpp>
 
