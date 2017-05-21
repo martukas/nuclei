@@ -3,9 +3,6 @@
 #include "nid.h"
 #include <list>
 
-#include "DecayMode.h"
-#include "HalfLife.h"
-
 struct Reactants
 {
   Reactants() {}
@@ -52,16 +49,3 @@ private:
                    std::string trim_what);
 };
 
-struct DecayInfo
-{
-  DecayInfo() {}
-  DecayInfo(std::string dsid);
-
-  bool valid() const;
-  std::string to_string() const;
-  std::string name() const;
-
-  NuclideId parent;
-  DecayMode mode;
-  HalfLife hl;
-};

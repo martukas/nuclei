@@ -5,7 +5,7 @@
 #include "ensdf_types.h"
 #include "qpx_util.h"
 
-#include "ensdf_reaction_data.h"
+#include "ReactionInfo.h"
 
 bool IdRecord::match(const std::string& line)
 {

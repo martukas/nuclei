@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Energy.h"
+#include <map>
+#include <vector>
 
 class Transition
 {
@@ -24,6 +26,9 @@ public:
   void set_from(const Energy& e);
   void set_multipol(const std::string& s);
   void set_delta(const UncertainDouble& u);
+
+  std::map<std::string, std::string> kvps;
+  std::vector<std::string> comments;
 
 private:
   Energy energy_;
