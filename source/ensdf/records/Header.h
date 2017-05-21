@@ -1,9 +1,8 @@
 #pragma once
 
-#include "Record.h"
-#include "comment_record.h"
+#include "Comments.h"
 
-enum class RecordType : uint64_t
+enum class RecordType : int
 {
   Invalid             = 0,
   AdoptedLevels       = 1 << 1,

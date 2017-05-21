@@ -1,4 +1,4 @@
-#include "prod_normalization_record.h"
+#include "ProductionNorm.h"
 #include "Fields.h"
 #include "qpx_util.h"
 

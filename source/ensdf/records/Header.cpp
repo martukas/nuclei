@@ -1,11 +1,12 @@
-#include "id_record.h"
+#include "Header.h"
+#include "Fields.h"
+
 #include <boost/algorithm/string.hpp>
 #include <sstream>
-#include "custom_logger.h"
-#include "Fields.h"
 #include "qpx_util.h"
-
 #include "ReactionInfo.h"
+
+#include "custom_logger.h"
 
 bool IdRecord::match(const std::string& line)
 {

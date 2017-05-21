@@ -1,4 +1,4 @@
-#include "gamma_record.h"
+#include "Gamma.h"
 #include "Fields.h"
 #include <boost/algorithm/string.hpp>
 #include "custom_logger.h"

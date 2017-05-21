@@ -1,4 +1,4 @@
-#include "comment_record.h"
+#include "Comments.h"
 #include "Fields.h"
 #include "custom_logger.h"
 #include <boost/algorithm/string.hpp>
@@ -50,30 +50,11 @@ std::string CommentsRecord::extract(const std::string& line)
     cdata = cdata.substr(1, cdata.size() - 1);
     boost::trim_right(text);
   }
+
   if (std::isupper(ctype[0]))
-    return translate_all(cdata);
+    return Translator::instance().translate1(cdata);
+
   return cdata;
-}
-
-std::string CommentsRecord::translate_all(const std::string &s)
-{
-  auto dict = get_dictionary();
-  std::string ret;
-  // specify only the kept separators
-  boost::char_separator<char> sep("", " .,;:()-=+<>/$");
-  boost::tokenizer<boost::char_separator<char>> tokens(s, sep);
-  for (std::string t : tokens)
-  {
-    for (auto r : dict)
-      if (t == r.first)
-      {
-        t = r.second;
-        break;
-      }
-    ret += t;
-  }
-
-  return ret;
 }
 
 std::string CommentsRecord::debug() const
@@ -89,7 +70,32 @@ bool CommentsRecord::valid() const
   return nuclide.valid();
 }
 
-std::list<std::pair<std::string, std::string>> CommentsRecord::get_dictionary()
+Translator::Translator()
+{
+  make_dictionary1();
+}
+
+std::string Translator::translate1(const std::string &s)
+{
+  std::string ret;
+  // specify only the kept separators
+  boost::char_separator<char> sep("", " .,;:()-=+<>/$");
+  boost::tokenizer<boost::char_separator<char>> tokens(s, sep);
+  for (std::string t : tokens)
+  {
+    for (auto r : dict1)
+      if (t == r.first)
+      {
+        t = r.second;
+        break;
+      }
+    ret += t;
+  }
+
+  return ret;
+}
+
+void Translator::make_dictionary1()
 {
   std::map<std::string, std::string> map
   {
@@ -1115,11 +1121,8 @@ std::list<std::pair<std::string, std::string>> CommentsRecord::get_dictionary()
   for (auto l : map)
     mmap.insert({l.first.size(), {l.first, l.second}});
 
-  std::list<std::pair<std::string, std::string>> ret;
   for (auto l = mmap.rbegin(); l != mmap.rend(); ++l)
-    ret.push_back(l->second);
-
-  return ret;
+    dict1.push_back(l->second);
 }
 
 

@@ -6,7 +6,6 @@
 
 #include <boost/regex.hpp>
 
-#include "xref_record.h"
 
 DecayData::DecayData(ENSDFData& i)
 {

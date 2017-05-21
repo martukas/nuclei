@@ -6,7 +6,7 @@
 
 #include <boost/regex.hpp>
 
-#include "xref_record.h"
+#include "XRef.h"
 
 std::list<LevelRecord> LevelData::nearest_levels(const Energy &to,
                                                  std::string dsid,
