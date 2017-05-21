@@ -9,7 +9,7 @@
 #include <QDir>
 
 #include "ENSDFTreeItem.h"
-#include "ensdf_parser.h"
+#include "Parser.h"
 
 
 class ENSDFDataSource : public QObject

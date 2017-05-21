@@ -3,7 +3,7 @@
 #include "qpx_util.h"
 #include <boost/regex.hpp>
 
-#include "ensdf_types.h"
+#include "Fields.h"
 
 #define RGX_NUCLIDE "[\\w\\d]+"
 #define RGX_REACTANT "[\\w\\d\\s\\+'-]+"
