@@ -1,4 +1,4 @@
-#include "normalization_record.h"
+#include "Normalization.h"
 #include "Fields.h"
 
 bool NormalizationRecord::match(const std::string& line)

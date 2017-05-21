@@ -1,15 +1,12 @@
 #pragma once
 
-#include "Record.h"
-#include "comment_record.h"
+#include "Comments.h"
 #include <memory>
 
 struct QValueRecord
 {
   QValueRecord() {}
-  QValueRecord(ENSDFData& i,
-               bool recurse = true);
-
+  QValueRecord(ENSDFData& i, bool recurse = true);
   static bool match(const std::string& line);
 
   std::string debug() const;

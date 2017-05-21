@@ -1,20 +1,17 @@
 #pragma once
 
-#include "id_record.h"
-#include "parent_record.h"
-#include "DecayScheme.h"
+#include "Header.h"
+#include "Parent.h"
+
+#include "History.h"
+#include "QValue.h"
+#include "LevelRec.h"
+#include "ProductionNorm.h"
+#include "Normalization.h"
 
 #include "ReactionInfo.h"
 #include "DecayInfo.h"
 
-#include "id_record.h"
-#include "history_record.h"
-#include "comment_record.h"
-#include "qvalue_record.h"
-#include "level_record.h"
-#include "gamma_record.h"
-#include "prod_normalization_record.h"
-#include "normalization_record.h"
 
 struct DecayData
 {

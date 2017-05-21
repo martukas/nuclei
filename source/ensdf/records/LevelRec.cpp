@@ -1,10 +1,10 @@
-#include "level_record.h"
+#include "LevelRec.h"
 #include "Fields.h"
+
 #include "qpx_util.h"
 #include <boost/algorithm/string/trim_all.hpp>
-#include "custom_logger.h"
-
 #include <boost/regex.hpp>
+#include "custom_logger.h"
 
 #define RE_NUMBER "([\\+-]?[0-9]+\\.?[0-9]*(?:E?[\\+-]?[0-9]*))"
 #define RE_OFFSET "([A-Z]{1,2})"
@@ -128,7 +128,7 @@ void LevelRecord::merge_adopted(const LevelRecord& other,
   if (!isomeric && other.isomeric)
     isomeric = other.isomeric;
 
-  if (L.empty() && !other.L.empty())
+  if (L.empty())
     L = other.L;
 
   if (!S.hasFiniteValue())
@@ -139,8 +139,8 @@ void LevelRecord::merge_adopted(const LevelRecord& other,
                       "<Level>(" + nuclide.symbolicName()
                       + ":" + energy.to_string() + ")");
 
-  for (const auto& com : other.comments)
-    comments.push_back(com);
+//  for (const auto& com : other.comments)
+//    comments.push_back(com);
 
   for (GammaRecord& g : gammas)
     for (const GammaRecord& gg

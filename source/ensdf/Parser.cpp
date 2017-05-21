@@ -1,13 +1,13 @@
 #include "Parser.h"
+#include "Reference.h"
 #include "Fields.h"
 
-#include "custom_logger.h"
 #include "qpx_util.h"
-
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 
-#include "reference_record.h"
+#include "custom_logger.h"
+
 
 ENSDFParser::ENSDFParser()
 {}

@@ -1,4 +1,4 @@
-#include "ec_record.h"
+#include "EC.h"
 #include "Fields.h"
 #include <boost/algorithm/string.hpp>
 

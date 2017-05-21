@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Record.h"
-#include "comment_record.h"
+#include "Comments.h"
 
 struct ECRecord
 {

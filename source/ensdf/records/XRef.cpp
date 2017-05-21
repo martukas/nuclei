@@ -1,4 +1,4 @@
-#include "xref_record.h"
+#include "XRef.h"
 #include "Fields.h"
 #include <boost/algorithm/string.hpp>
 

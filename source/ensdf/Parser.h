@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Record.h"
 #include "NuclideData.h"
 
 class DaughterParser

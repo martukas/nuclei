@@ -6,8 +6,6 @@
 
 #include <boost/regex.hpp>
 
-#include "xref_record.h"
-
 void NuclideData::merge_adopted(DecayData& decaydata,
                                 double max_level_dif,
                                 double max_gamma_dif) const

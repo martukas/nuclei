@@ -1,13 +1,10 @@
 #pragma once
 
-#include "Record.h"
-#include "comment_record.h"
-
-#include "alpha_record.h"
-#include "beta_record.h"
-#include "gamma_record.h"
-#include "ec_record.h"
-#include "particle_record.h"
+#include "Alpha.h"
+#include "Beta.h"
+#include "Gamma.h"
+#include "EC.h"
+#include "Particle.h"
 
 #include "qpx_util.h"
 
