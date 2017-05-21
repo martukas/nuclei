@@ -16,7 +16,7 @@ bool is_uncertainty_id(const std::string& str)
           str == "SY");
 }
 
-UncertainDouble parse_norm_value(std::string val, std::string uncert)
+UncertainDouble parse_norm(std::string val, std::string uncert)
 {
   auto ret = parse_val_uncert(val, uncert);
   if (ret.sign() & UncertainDouble::MagnitudeDefined)
@@ -24,6 +24,10 @@ UncertainDouble parse_norm_value(std::string val, std::string uncert)
   return ret;
 }
 
+Energy parse_energy(std::string val, std::string uncert)
+{
+  return Energy(parse_val_uncert(val, uncert));
+}
 
 UncertainDouble parse_val_uncert(std::string val, std::string uncert)
 {

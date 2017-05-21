@@ -5,9 +5,7 @@
 struct ProdNormalizationRecord
 {
   ProdNormalizationRecord() {}
-  ProdNormalizationRecord(size_t& idx,
-                          const std::vector<std::string>& data);
-
+  ProdNormalizationRecord(ENSDFData& i);
   static bool match(const std::string& line);
 
   std::string debug() const;

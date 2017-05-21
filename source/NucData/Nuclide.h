@@ -3,6 +3,7 @@
 #include "nid.h"
 #include "Level.h"
 #include "Transition.h"
+#include "qpx_util.h"
 
 class Nuclide
 {
@@ -14,13 +15,15 @@ public:
 
   bool empty() const;
 
-  void addLevel(const Level& level);
-  void addTransition(const Transition& transition);
+  void add_level(const Level& level);
   void finalize();
 
-  void addNewTransition(const Energy& energy,
-                        const Energy& to,
-                        UncertainDouble intensity);
+  void add_transition_to(Transition trans,
+                         double max_dif = kDoubleNaN,
+                         double zero_thresh = 0.25);
+  void add_transition_from(Transition trans,
+                           double max_dif = kDoubleNaN,
+                           double zero_thresh = 0.25);
 
   void removeTransition(const Transition& t);
 
@@ -44,5 +47,10 @@ private:
   std::map<Energy, Level> levels_;
   std::map<Energy, Transition> transitions_;
 
-  void registerTransition(const Transition& t);
+  void add_transition(const Transition& transition);
+  void register_transition(const Transition& t);
+
+  Energy nearest_level(const Energy& goal,
+                       double max_dif = kDoubleNaN,
+                       double zero_thresh = 0.25);
 };

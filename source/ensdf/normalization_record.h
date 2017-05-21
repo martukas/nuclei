@@ -6,9 +6,7 @@
 struct NormalizationRecord
 {
   NormalizationRecord() {}
-  NormalizationRecord(size_t& idx,
-                      const std::vector<std::string>& data);
-
+  NormalizationRecord(ENSDFData& i);
   static bool match(const std::string& line);
 
   std::string debug() const;

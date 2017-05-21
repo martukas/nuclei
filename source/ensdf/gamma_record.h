@@ -6,10 +6,9 @@
 struct GammaRecord
 {
   GammaRecord() {}
-  GammaRecord(size_t& idx,
-              const std::vector<std::string>& data);
-
+  GammaRecord(ENSDFData& i);
   static bool match(const std::string& line);
+  void merge_adopted(const GammaRecord& other);
 
   std::string debug() const;
   bool valid() const;

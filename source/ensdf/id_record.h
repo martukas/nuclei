@@ -44,9 +44,7 @@ inline bool test(RecordType a)
 struct IdRecord
 {
   IdRecord() {}
-  IdRecord(size_t& idx,
-           const std::vector<std::string>& data);
-
+  IdRecord(ENSDFData& i);
   static bool match(const std::string& line);
 
   std::string debug() const;

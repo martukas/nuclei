@@ -8,52 +8,51 @@
 
 #include "xref_record.h"
 
-DecayData::DecayData(const std::vector<std::string>& data,
-                     BlockIndices idx)
+DecayData::DecayData(ENSDFData& i)
 {
-  id = IdRecord(idx.first, data);
+  auto idx = i.i.first;
+  id = IdRecord(i);
   if (!id.valid())
   {
-    DBG << "<DecayData> Bad ID " << data[idx.first];
+    DBG << "<DecayData> Bad ID " << i.lines[idx];
     return;
   }
 
-  idx.first++;
+  read_hist(i);
+  read_prelims(i);
+  read_unplaced(i);
 
-  read_hist(data, idx);
-  read_prelims(data, idx);
-  read_unplaced(data, idx);
-
-  for (; idx.first < idx.last; ++idx.first)
+  while (i.has_more())
   {
-    if (CommentsRecord::match(data[idx.first], "L"))
+    idx = i.i.first;
+    auto line = i.look_ahead();
+    if (CommentsRecord::match(line, "L"))
     {
-      auto com = CommentsRecord(idx.first, data);
+      auto com = CommentsRecord(++i);
       if (com.valid())
         comments.push_back(com);
       else
         DBG << "<DecayData> Invalid all-level comment " << com.debug()
-            << "\nfrom " << idx.first << " = " << data[idx.first];
-      //      DBG << "Added comment from" << idx.first << "=" << data[idx.first] << com.debug();
+            << "\nfrom " << idx << " = " << line;
+      //      DBG << "Added comment from" << idx << "=" << line << com.debug();
     }
-    else if (LevelRecord::match(data[idx.first]))
+    else if (LevelRecord::match(line))
     {
-      auto i = idx.first;
-      auto lev = LevelRecord(idx.first, data);
+      auto lev = LevelRecord(++i);
       if (lev.valid())
         levels.push_back(lev);
       else
       {
         DBG << "<DecayData>(" << id.nuclide.symbolicName() << ":" << name() << ")"
-            << " Invalid Level at " << i << "=" << data[i]
+            << " Invalid Level at " << idx << "=" << line
                << "\n" << lev.debug();
       }
-      //      DBG << "Added level from" << idx.first << "=" << data[idx.first];
+      //      DBG << "Added level from" << idx << "=" << line;
     }
     else
     {
       DBG << "<DecayData> Unidentified record "
-          << idx.first << "=" << data[idx.first];
+          << idx << "=" << line;
     }
   }
 
@@ -87,12 +86,16 @@ DecayData::DecayData(const std::vector<std::string>& data,
   //      << " & p=" << parents.size();
 }
 
-std::list<LevelRecord> LevelData::find_nearest(const Energy &to,
-                                               std::string dsid)
+std::list<LevelRecord> LevelData::nearest_levels(const Energy &to,
+                                                 std::string dsid,
+                                                 double maxdif,
+                                                 double zero_thresh) const
 {
+  maxdif *= to;
+
   std::string ssym;
   if (!dsid.empty() && xrefs.count(dsid))
-    ssym = xrefs[dsid];
+    ssym = xrefs.at(dsid);
 
   Energy current;
   std::list<LevelRecord> ret;
@@ -102,9 +105,14 @@ std::list<LevelRecord> LevelData::find_nearest(const Energy &to,
         && xref_check(lev.continuations_.at("XREF"), ssym))
       continue;
 
+    if (std::isfinite(maxdif) &&
+        ((to > zero_thresh) || (lev.energy.value().value() != 0)) &&
+        (std::abs(to - lev.energy) > maxdif))
+      continue;
+
     if (!current.valid() ||
-        (std::abs(double(to - lev.energy)) <
-         std::abs(double(to - current))))
+        (std::abs(to - lev.energy) <
+         std::abs(to - current)))
     {
       ret.clear();
       ret.push_back(lev);
@@ -183,132 +191,132 @@ std::string DecayData::debug() const
   return ret;
 }
 
-void DecayData::read_hist(const std::vector<std::string>& data,
-                          BlockIndices& idx)
+void DecayData::read_hist(ENSDFData& i)
 {
-  while (idx.first < idx.last)
+  while (i.has_more())
   {
-    if (HistoryRecord::match(data[idx.first]))
+    auto idx = i.i.first;
+    auto line = i.look_ahead();
+    if (HistoryRecord::match(line))
     {
-      auto his = HistoryRecord(idx.first, data);
+      auto his = HistoryRecord(++i);
       if (his.valid())
         history.push_back(his);
       else
         DBG << "<DecayData> Invalid Hist " << his.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
     else
       break;
-    idx.first++;
   }
 }
 
-void DecayData::read_prelims(const std::vector<std::string>& data,
-                             BlockIndices& idx)
+void DecayData::read_prelims(ENSDFData& i)
 {
-  while (idx.first < idx.last)
+  while (i.has_more())
   {
-    if (ProdNormalizationRecord::match(data[idx.first]))
+    auto idx = i.i.first;
+    auto line = i.look_ahead();
+    if (ProdNormalizationRecord::match(line))
     {
-      auto pn = ProdNormalizationRecord(idx.first, data);
+      auto pn = ProdNormalizationRecord(++i);
       if (pn.valid())
       {
         if (pnorm.valid())
           DBG << "<DecayData> More than one pnorm " << pnorm.debug()
-              << " from " << idx.first << "=" << data[idx.first];
+              << " from " << idx << "=" << line;
         pnorm = pn;
       }
       else
         DBG << "<LevelData> Invalid Pnorm " << pn.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
-    else if (NormalizationRecord::match(data[idx.first]))
+    else if (NormalizationRecord::match(line))
     {
-      auto n = NormalizationRecord(idx.first, data);
+      auto n = NormalizationRecord(++i);
       if (n.valid())
         norm.push_back(n);
       else
         DBG << "<DecayData> Invalid Norm " << n.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
-    else if (QValueRecord::match(data[idx.first]))
+    else if (QValueRecord::match(line))
     {
-      auto qv = QValueRecord(idx.first, data);
+      auto qv = QValueRecord(++i);
       if (qv.valid())
         qvals.push_back(qv);
       else
         DBG << "<DecayData> Invalid Qval " << qv.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
-    else if (CommentsRecord::match(data[idx.first]))
+    else if (CommentsRecord::match(line))
     {
-      auto com = CommentsRecord(idx.first, data);
+      auto com = CommentsRecord(++i);
       if (com.valid())
         comments.push_back(com);
       else
         DBG << "<DecayData> Invalid Comment " << com.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
-    else if (ParentRecord::match(data[idx.first]))
+    else if (ParentRecord::match(line))
     {
-      auto par = ParentRecord(idx.first, data);
+      auto par = ParentRecord(++i);
       if (par.valid())
         parents.push_back(par);
       else
         DBG << "<DecayData> Invalid Parent " << par.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
     else
       break;
-    idx.first++;
   }
 }
 
 
-void DecayData::read_unplaced(const std::vector<std::string>& data,
-                              BlockIndices& idx)
+void DecayData::read_unplaced(ENSDFData& i)
 {
-  while (idx.first < idx.last)
+  while (i.has_more())
   {
-    if (AlphaRecord::match(data[idx.first]))
+    auto idx = i.i.first;
+    auto line = i.look_ahead();
+    if (AlphaRecord::match(line))
     {
-      auto a = AlphaRecord(idx.first, data);
+      auto a = AlphaRecord(++i);
       if (a.valid())
         unplaced_alphas.push_back(a);
       else
         DBG << "<DecayData> Invalid alpha " << a.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
-    else if (BetaRecord::match(data[idx.first]))
+    else if (BetaRecord::match(line))
     {
-      auto b = BetaRecord(idx.first, data);
+      auto b = BetaRecord(++i);
       if (b.valid())
         unplaced_betas.push_back(b);
       else
         DBG << "<DecayData> Invalid beta " << b.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
-    else if (GammaRecord::match(data[idx.first]))
+    else if (GammaRecord::match(line))
     {
-      auto g = GammaRecord(idx.first, data);
+      auto g = GammaRecord(++i);
       if (g.valid())
         unplaced_gammas.push_back(g);
       else
         DBG << "<DecayData> Invalid gamma " << g.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
-    else if (ParticleRecord::match(data[idx.first]))
+    else if (ParticleRecord::match(line))
     {
-      auto p = ParticleRecord(idx.first, data);
+      auto p = ParticleRecord(++i);
       if (p.valid())
         unplaced_particles.push_back(p);
       else
         DBG << "<DecayData> Invalid particle " << p.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
     else
       break;
-    idx.first++;
   }
 }
 
@@ -316,166 +324,167 @@ void DecayData::read_unplaced(const std::vector<std::string>& data,
 
 
 
-void LevelData::read_hist(const std::vector<std::string>& data,
-                          BlockIndices& idx)
+void LevelData::read_hist(ENSDFData& i)
 {
-  while (idx.first < idx.last)
+  while (i.has_more())
   {
-    if (HistoryRecord::match(data[idx.first]))
+    auto idx = i.i.first;
+    auto line = i.look_ahead();
+    if (HistoryRecord::match(line))
     {
-      auto his = HistoryRecord(idx.first, data);
+      auto his = HistoryRecord(++i);
       if (his.valid())
         history.push_back(his);
       else
         DBG << "<LevelData> Invalid Hist " << his.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
     else
       break;
-    idx.first++;
   }
 }
 
-void LevelData::read_comments(const std::vector<std::string>& data,
-                              BlockIndices& idx)
+void LevelData::read_comments(ENSDFData& i)
 {
-  while (idx.first < idx.last)
+  while (i.has_more())
   {
-    if (CommentsRecord::match(data[idx.first], "."))
+    auto idx = i.i.first;
+    auto line = i.look_ahead();
+    if (CommentsRecord::match(line, "."))
     {
-      auto com = CommentsRecord(idx.first, data);
+      auto com = CommentsRecord(++i);
       if (com.valid())
         comments.push_back(com);
       else
         DBG << "<LevelData> Invalid Comment " << com.debug()
-            << " from " << idx.first << "=" << data[idx.first];
-      idx.first++;
+            << " from " << idx << "=" << line;
     }
     else
       break;
   }
 }
 
-void LevelData::read_prelims(const std::vector<std::string>& data,
-                             BlockIndices& idx)
+void LevelData::read_prelims(ENSDFData& i)
 {
-  while (idx.first < idx.last)
+  while (i.has_more())
   {
-    if (ProdNormalizationRecord::match(data[idx.first]))
+    auto idx = i.i.first;
+    auto line = i.look_ahead();
+    if (ProdNormalizationRecord::match(line))
     {
-      auto pn = ProdNormalizationRecord(idx.first, data);
+      auto pn = ProdNormalizationRecord(++i);
       if (pn.valid())
       {
         if (pnorm.valid())
           DBG << "<LevelData> More than one norm " << pnorm.debug()
-              << " from " << idx.first << "=" << data[idx.first];
+              << " from " << idx << "=" << line;
 
         pnorm = pn;
       }
       else
         DBG << "<LevelData> Invalid Pnorm " << pn.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
-    else if (QValueRecord::match(data[idx.first]))
+    else if (QValueRecord::match(line))
     {
-      auto qv = QValueRecord(idx.first, data);
+      auto qv = QValueRecord(++i);
       if (qv.valid())
         qvals.push_back(qv);
       else
         DBG << "<LevelData> Invalid Qval " << qv.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
-    else if (XRefRecord::match(data[idx.first]))
+    else if (XRefRecord::match(line))
     {
-      auto ref = XRefRecord(idx.first, data);
+      auto ref = XRefRecord(++i);
       if (ref.valid())
         xrefs[ref.dsid] = ref.dssym;
       else
         DBG << "<LevelData> Invalid Xref " << ref.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
-    else if (CommentsRecord::match(data[idx.first], "."))
+    else if (CommentsRecord::match(line, "."))
     {
-      auto com = CommentsRecord(idx.first, data);
+      auto com = CommentsRecord(++i);
       if (com.valid())
         comments.push_back(com);
       else
         DBG << "<LevelData> Invalid Comment " << com.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
     else
       break;
-    idx.first++;
   }
 }
 
-void LevelData::read_unplaced(const std::vector<std::string>& data,
-                              BlockIndices& idx)
+void LevelData::read_unplaced(ENSDFData& i)
 {
-  while (idx.first < idx.last)
+  while (i.has_more())
   {
-    if (GammaRecord::match(data[idx.first]))
+    auto idx = i.i.first;
+    auto line = i.look_ahead();
+    if (GammaRecord::match(line))
     {
-      auto gam = GammaRecord(idx.first, data);
+      auto gam = GammaRecord(++i);
       if (gam.valid())
         unplaced_gammas.push_back(gam);
       else
         DBG << "<LevelData> Invalid unplaced gamma " << gam.debug()
-            << " from " << idx.first << "=" << data[idx.first];
+            << " from " << idx << "=" << line;
     }
     else
       break;
-    idx.first++;
   }
 }
 
-LevelData::LevelData(const std::vector<std::string>& data,
-                     BlockIndices idx)
+LevelData::LevelData(ENSDFData& i)
 {
-  id = IdRecord(idx.first, data);
+  auto idx = i.i.first;
+  id = IdRecord(i);
   if (!id.valid())
   {
-    DBG << "<LevelData> Bad ID " << data[idx.first];
+    DBG << "<LevelData> Bad ID " << i.lines[idx];
     return;
   }
 
-  idx.first++;
-  read_hist(data, idx);
-  read_prelims(data, idx);
+  idx++;
+  read_hist(i);
+  read_prelims(i);
 
-  read_unplaced(data, idx);
-  read_comments(data, idx);
+  read_unplaced(i);
+  read_comments(i);
 
-  for (; idx.first < idx.last; ++idx.first)
+  while (i.has_more())
   {
-    if (CommentsRecord::match(data[idx.first], "L"))
+    auto idx = i.i.first;
+    auto line = i.look_ahead();
+    if (CommentsRecord::match(line, "L"))
     {
-      auto com = CommentsRecord(idx.first, data);
+      auto com = CommentsRecord(++i);
       if (com.valid())
         comments.push_back(com);
       else
         DBG << "<LevelData> Invalid all-level comment " << com.debug()
-            << "\nfrom " << idx.first << " = " << data[idx.first];
-      //      DBG << "Added comment from" << idx.first << "=" << data[idx.first] << com.debug();
+            << "\nfrom " << idx << " = " << line;
+      //      DBG << "Added comment from" << idx << "=" << line << com.debug();
     }
-    else if (LevelRecord::match(data[idx.first]))
+    else if (LevelRecord::match(line))
     {
-      auto i = idx.first;
-      auto lev = LevelRecord(idx.first, data);
+      auto lev = LevelRecord(++i);
       if (lev.valid())
         levels.push_back(lev);
       else
       {
         DBG << "<LevelData>(" << id.nuclide.symbolicName() << ")"
-            << " Invalid Level at " << i << "=" << data[i]
+            << " Invalid Level at " << idx << "=" << line
                << "\n" << lev.debug();
       }
-      //      DBG << "Added level from" << idx.first << "=" << data[idx.first];
+      //      DBG << "Added level from" << idx << "=" << line;
     }
     else
     {
       DBG << "<LevelData> Unidentified record "
-          << idx.first << "=" << data[idx.first];
+          << idx << "=" << line;
     }
   }
   //  if (valid())
@@ -530,6 +539,50 @@ std::string LevelData::debug() const
   }
   return ret;
 }
+
+void NuclideData::merge_adopted(DecayData& decaydata,
+                                double max_level_dif,
+                                double max_gamma_dif) const
+{
+  for (LevelRecord& lev : decaydata.levels)
+  {
+    std::list<LevelRecord> relevant_levels
+        = adopted_levels.nearest_levels(lev.energy, decaydata.id.dsid,
+                                        max_level_dif);
+
+    if (!relevant_levels.empty())
+    {
+
+//    DBG << " B E F O R E\n"
+//        << "=======================================\n"
+//        << lev.debug() << "\n"
+//        << "=======================================\n"
+//           ;
+
+    for (const LevelRecord& l
+         : adopted_levels.nearest_levels(lev.energy,
+                                         decaydata.id.dsid,
+                                         max_level_dif))
+    {
+//      DBG << "+++++FoundE = " << l.debug();
+      lev.merge_adopted(l, max_gamma_dif);
+    }
+
+//    DBG << "                              A F T E R\n"
+//        << "---------------------------------------\n"
+//        << lev.debug() << "\n"
+//        << "---------------------------------------\n"
+//           ;
+    }
+
+//    for (const LevelRecord& l : adopted_levels.levels)
+//      if (nearest_levels(l.energy, ).empty())
+//        gammas.push_back(g);
+
+
+  }
+}
+
 
 std::string NuclideData::add_decay(const DecayData& dec)
 {

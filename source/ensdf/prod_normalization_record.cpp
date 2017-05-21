@@ -7,27 +7,24 @@ bool ProdNormalizationRecord::match(const std::string& line)
   return match_first(line, "PN");
 }
 
-ProdNormalizationRecord::ProdNormalizationRecord(size_t& idx,
-                               const std::vector<std::string>& data)
+ProdNormalizationRecord::ProdNormalizationRecord(ENSDFData& i)
 {
-  if ((idx >= data.size()) || !match(data[idx]))
+  const auto& line = i.read();
+  if (!match(line))
     return;
-  const auto& line = data[idx];
 
   nuclide = parse_nid(line.substr(0,5));
-
-  NRBR = parse_norm_value(line.substr(9,10), line.substr(19,2));
-  NTBR = parse_norm_value(line.substr(21,8), line.substr(29,2));
-  NBBR = parse_norm_value(line.substr(41,8), line.substr(49,6));
-  NP = parse_norm_value(line.substr(55,7), line.substr(62,2));
+  NRBR = parse_norm(line.substr(9,10), line.substr(19,2));
+  NTBR = parse_norm(line.substr(21,8), line.substr(29,2));
+  NBBR = parse_norm(line.substr(41,8), line.substr(49,6));
+  NP = parse_norm(line.substr(55,7), line.substr(62,2));
   comment_placement = (line.substr(76,1) == "C");
   auto dopt = line.substr(77,1);
   if (is_number(dopt))
     display_option = std::stoi(dopt);
 
-  while ((idx+1 < data.size()) &&
-         match_cont(data[idx+1], "PN"))
-    caveat = boost::trim_copy(data[++idx].substr(9, 71));
+  while (i.has_more() && match_cont(i.look_ahead(), "PN"))
+    caveat = boost::trim_copy(i.read_pop().substr(9, 71));
 }
 
 std::string ProdNormalizationRecord::debug() const

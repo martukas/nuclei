@@ -12,16 +12,14 @@ bool IdRecord::match(const std::string& line)
   return match_first(line, "\\s{3}");
 }
 
-IdRecord::IdRecord(size_t& idx,
-                   const std::vector<std::string>& data)
+IdRecord::IdRecord(ENSDFData& i)
 {
-  if ((idx >= data.size()) || !match(data[idx]))
+  const auto& line = i.read();
+  if (!match(line))
     return;
-  const auto& line = data[idx];
 
   nuclide = parse_check_nid(line.substr(0, 5));
-  dsid = line.substr(9, 30);
-  extended_dsid = boost::trim_copy(line.substr(9, 30));
+  extended_dsid = dsid = boost::trim_copy(line.substr(9, 30));
   dsref = line.substr(39, 15);
   pub = line.substr(65, 8);
   std::string year_str = line.substr(74, 4);
@@ -41,19 +39,15 @@ IdRecord::IdRecord(size_t& idx,
       DBG << "<IdRecord> Cannot intepret month " << line;
   }
 
-  while ((idx+1 < data.size()) && (
-//           (dsid.at(dsid.size()-1) == ',')
-//           ||
-           match_cont(data[idx+1], "\\s{2}")
-           || CommentsRecord::match(data[idx+1])
-//         || CommentsRecord::match(data[idx+1], "\\s")
-         ))
+  while (i.has_more())
   {
-    ++idx;
-    if (CommentsRecord::match(data[idx]))
-      comments.push_back(CommentsRecord(idx, data));
+    auto line2 = i.look_ahead();
+    if (match_cont(line2, "\\s{2}"))
+      extended_dsid += boost::trim_copy(i.read_pop().substr(9, 30));
+    else if (CommentsRecord::match(line2))
+      comments.push_back(CommentsRecord(++i));
     else
-      extended_dsid += boost::trim_copy(data[idx].substr(9, 30));
+      break;
   }
 
   type = is_type(extended_dsid);

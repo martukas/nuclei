@@ -5,6 +5,10 @@
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/algorithm/string.hpp>
 
+#define kDoubleNaN std::numeric_limits<double>::quiet_NaN()
+#define kDoubleInf std::numeric_limits<double>::infinity()
+#define kDoubleNInf -std::numeric_limits<double>::infinity()
+
 const std::vector<std::string> k_UTF_superscripts = {
   "\u2070", "\u00B9", "\u00B2",
   "\u00B3", "\u2074", "\u2075",

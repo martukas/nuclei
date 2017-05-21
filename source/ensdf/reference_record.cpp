@@ -7,12 +7,11 @@ bool ReferenceRecord::match(const std::string& line)
   return match_first(line, "\\sR");
 }
 
-ReferenceRecord::ReferenceRecord(size_t& idx,
-                   const std::vector<std::string>& data)
+ReferenceRecord::ReferenceRecord(ENSDFData& i)
 {
-  if ((idx >= data.size()) || !match(data[idx]))
+  const auto& line = i.read();
+  if (!match(line))
     return;
-  const auto& line = data[idx];
 
   nuclide = parse_nid(line.substr(0,5));
   keynum = boost::trim_copy(line.substr(9,8));

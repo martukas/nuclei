@@ -18,8 +18,7 @@
 struct LevelData
 {
   LevelData() {}
-  LevelData(const std::vector<std::string>& data,
-            BlockIndices idx);
+  LevelData(ENSDFData& i);
 
   bool valid() const;
   std::string debug() const;
@@ -35,28 +34,22 @@ struct LevelData
 
   std::list<LevelRecord> levels;
 
-  std::list<LevelRecord> find_nearest(const Energy& to,
-                                      std::string dsid);
+  std::list<LevelRecord> nearest_levels(const Energy& to,
+                                        std::string dsid = "",
+                                        double maxdif = kDoubleNaN,
+                                        double zero_thresh = 0.1) const;
 
 private:
-  void read_hist(const std::vector<std::string>& data,
-                 BlockIndices& idx);
-
-  void read_prelims(const std::vector<std::string>& data,
-                    BlockIndices& idx);
-
-  void read_comments(const std::vector<std::string>& data,
-                     BlockIndices& idx);
-
-  void read_unplaced(const std::vector<std::string>& data,
-                     BlockIndices& idx);
+  void read_hist(ENSDFData& i);
+  void read_prelims(ENSDFData& i);
+  void read_comments(ENSDFData& i);
+  void read_unplaced(ENSDFData& i);
 };
 
 struct DecayData
 {
   DecayData() {}
-  DecayData(const std::vector<std::string>& data,
-                 BlockIndices idx);
+  DecayData(ENSDFData& i);
 
   bool valid() const;
   std::string name() const;
@@ -84,14 +77,9 @@ private:
   std::string parent_string() const;
   std::string halflife_string() const;
 
-  void read_hist(const std::vector<std::string>& data,
-                 BlockIndices& idx);
-
-  void read_prelims(const std::vector<std::string>& data,
-                    BlockIndices& idx);
-
-  void read_unplaced(const std::vector<std::string>& data,
-                     BlockIndices& idx);
+  void read_hist(ENSDFData& i);
+  void read_prelims(ENSDFData& i);
+  void read_unplaced(ENSDFData& i);
 };
 
 struct NuclideData
@@ -102,4 +90,7 @@ struct NuclideData
   std::map<std::string, DecayData> decays;
 
   std::string add_decay(const DecayData& dec);
+  void merge_adopted(DecayData& decaydata,
+                     double max_level_dif = 0.04,
+                     double max_gamma_dif = 0.005) const;
 };

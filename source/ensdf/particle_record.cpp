@@ -7,24 +7,20 @@ bool ParticleRecord::match(const std::string& line)
   return match_first(line, "\\s[\\sD][NPA]");
 }
 
-ParticleRecord::ParticleRecord(size_t& idx,
-                               const std::vector<std::string>& data)
+ParticleRecord::ParticleRecord(ENSDFData& i)
 {
-  if ((idx >= data.size()) || !match(data[idx]))
+  const auto& line = i.read();
+  if (!match(line))
     return;
-  const auto& line = data[idx];
 
   nuclide = parse_nid(line.substr(0,5));
   delayed = (line[7] == 'D');
   particle = line.substr(8,1);
 
-  energy = Energy(parse_val_uncert(line.substr(9,10),
-                                   line.substr(19,2)));
-  intensity = parse_norm_value(line.substr(21,8),
-                                   line.substr(29,2));
+  energy = parse_energy(line.substr(9,10), line.substr(19,2));
+  intensity = parse_norm(line.substr(21,8), line.substr(29,2));
   energy_intermediate = boost::trim_copy(line.substr(31,8));
-  transition_width = parse_norm_value(line.substr(39,10),
-                                          line.substr(49,6));
+  transition_width = parse_norm(line.substr(39,10), line.substr(49,6));
   L = boost::trim_copy(line.substr(55,9));
 
   comment_flag = boost::trim_copy(line.substr(76,1));
@@ -33,17 +29,16 @@ ParticleRecord::ParticleRecord(size_t& idx,
 
   std::string continuation;
   std::string signature = line.substr(7,2);
-  while ((idx+1 < data.size()) &&
-         (match_cont(data[idx+1], "\\s" + signature) ||
-          CommentsRecord::match(data[idx+1], signature)))
+  while (i.has_more())
   {
-    ++idx;
-    if (CommentsRecord::match(data[idx], signature))
-      comments.push_back(CommentsRecord(idx, data));
+    auto line2 = i.look_ahead();
+    if (CommentsRecord::match(line2, signature))
+      comments.push_back(CommentsRecord(++i));
+    else if (match_cont(line2, "\\s" + signature))
+      continuation += "$" + boost::trim_copy(i.read_pop().substr(9,71));
     else
-      continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
+      break;
   }
-
   if (!continuation.empty())
     continuations_ = parse_continuation(continuation);
 }

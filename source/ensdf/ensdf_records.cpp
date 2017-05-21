@@ -60,21 +60,87 @@ bool xref_check(const std::string& xref,
 {
   if (xref == "+")
     return true;
-  if (boost::regex_match(xref, boost::regex("^[A-Z]+$"))
-      && boost::contains(xref, dssym))
-    return true;
-  if (boost::regex_match(xref, boost::regex("^-\\([A-Z]+\\)$"))
-      && !boost::contains(xref, dssym))
-    return true;
-
-  std::list<std::string> items;
-  boost::sregex_token_iterator iter(xref.begin(), xref.end(),
-                                    boost::regex("[A-Z]+\\([A-Z]+(?:,[A-Z]+)\\)"), 0);
-  for( ; iter != boost::sregex_token_iterator(); ++iter )
+  else if (boost::regex_match(xref, boost::regex("^[A-Za-z]+$")))
   {
-    DBG << "  xref element = " << *iter;
+    if (boost::contains(xref, dssym))
+      return true;
+  }
+  else if (boost::regex_match(xref, boost::regex("^-\\([A-Za-z]+\\)$")))
+  {
+    if (!boost::contains(xref, dssym))
+      return true;
+  }
+  else
+  {
+//    DBG << "  xref unprocessed " << xref << "  cf  " << dssym;
+//    boost::sregex_token_iterator iter(xref.begin(), xref.end(),
+//                                      boost::regex("[A-Z]+\\([A-Z]+(?:,[A-Z]+)\\)"), 0);
+//    for( ; iter != boost::sregex_token_iterator(); ++iter )
+//    {
+//      DBG << "      element = " << *iter;
+//    }
   }
 
-
+  return false;
 }
 
+void merge_continuations(std::map<std::string, std::string>& to,
+                         const std::map<std::string, std::string>& from,
+                         const std::string &debug_line)
+{
+  for (const auto& cont : from)
+  {
+    if (cont.first == "XREF")
+      continue;
+    if (to.count(cont.first) &&
+        (to[cont.first] != cont.second))
+    {
+      DBG << debug_line
+          << " adopted continuation mismatch "
+          << cont.first
+          << "  " << to[cont.first]
+          << "!=" << cont.second;
+    }
+    to[cont.first] = cont.second;
+  }
+}
+
+
+ENSDFData::ENSDFData(const std::vector<std::string>& l, BlockIndices ii)
+  : i(ii)
+  , lines(l)
+{}
+
+bool ENSDFData::has_more() const
+{
+  return ((i.first+1) < i.last);
+}
+const std::string& ENSDFData::look_ahead() const
+{
+  return lines[i.first + 1];
+}
+
+const std::string& ENSDFData::read_pop()
+{
+  return lines[++i.first];
+}
+
+const std::string& ENSDFData::read()
+{
+  return lines[i.first];
+}
+
+// prefix
+ENSDFData& ENSDFData::operator++()
+{
+  i.first++;
+  return *this;
+}
+
+// postfix
+ENSDFData ENSDFData::operator++(int)
+{
+  ENSDFData tmp(*this);
+  operator++();
+  return tmp;
+}

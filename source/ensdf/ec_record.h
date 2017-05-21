@@ -6,8 +6,7 @@
 struct ECRecord
 {
   ECRecord() {}
-  ECRecord(size_t& idx,
-           const std::vector<std::string>& data);
+  ECRecord(ENSDFData& i);
 
   static bool match(const std::string& line);
 

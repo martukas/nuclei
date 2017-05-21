@@ -7,41 +7,33 @@ bool ECRecord::match(const std::string& line)
   return match_first(line, "\\sE");
 }
 
-ECRecord::ECRecord(size_t& idx,
-                   const std::vector<std::string>& data)
+ECRecord::ECRecord(ENSDFData& i)
 {
-  if ((idx >= data.size()) || !match(data[idx]))
+  const auto& line = i.read();
+  if (!match(line))
     return;
-  const auto& line = data[idx];
 
   nuclide = parse_nid(line.substr(0,5));
-  energy = Energy(parse_val_uncert(line.substr(9,10),
-                                   line.substr(19,2)));
-  intensity_beta_plus = parse_norm_value(line.substr(21,8),
-                                         line.substr(29,2));
-  intensity_ec = parse_norm_value(line.substr(31,8),
-                                  line.substr(39,2));
-  LOGFT = parse_norm_value(line.substr(41,8),
-                           line.substr(49,6));
-  intensity_total = parse_norm_value(line.substr(64,10),
-                                     line.substr(74,2));
-
+  energy = parse_energy(line.substr(9,10), line.substr(19,2));
+  intensity_beta_plus = parse_norm(line.substr(21,8), line.substr(29,2));
+  intensity_ec = parse_norm(line.substr(31,8), line.substr(39,2));
+  LOGFT = parse_norm(line.substr(41,8), line.substr(49,6));
+  intensity_total = parse_norm(line.substr(64,10), line.substr(74,2));
   comment_flag = boost::trim_copy(line.substr(76,1));
   uniquness = boost::trim_copy(line.substr(77,2));
   quality = boost::trim_copy(line.substr(79,1));
 
   std::string continuation;
-  while ((idx+1 < data.size()) &&
-         (match_cont(data[idx+1], "\\sE") ||
-          CommentsRecord::match(data[idx+1], "E")))
+  while (i.has_more())
   {
-    ++idx;
-    if (CommentsRecord::match(data[idx], "E"))
-      comments.push_back(CommentsRecord(idx, data));
+    auto line2 = i.look_ahead();
+    if (CommentsRecord::match(line2, "E"))
+      comments.push_back(CommentsRecord(++i));
+    else if (match_cont(line2, "\\sE"))
+      continuation += "$" + boost::trim_copy(i.read_pop().substr(9,71));
     else
-      continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
+      break;
   }
-
   if (!continuation.empty())
     continuations_ = parse_continuation(continuation);
 }
