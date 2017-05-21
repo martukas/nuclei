@@ -282,6 +282,12 @@ void Nuclei::loadDecay(DecayScheme decay)
   ui->decayView->setScene(scene);
   ui->decayView->setSceneRect(scene->sceneRect().adjusted(-20, -20, 20, 20));
 
+  QString text;
+  for (auto t : decay.comments)
+    text += QString::fromStdString(t) + "\n";
+
+  ui->textBrowser->setText(text);
+
   // update plot
   m_decay->triggerDataUpdate();
   showAll();

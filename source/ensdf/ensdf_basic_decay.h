@@ -4,7 +4,8 @@
 #include "parent_record.h"
 #include "DecayScheme.h"
 
-#include "ensdf_reaction_data.h"
+#include "ReactionInfo.h"
+#include "DecayInfo.h"
 
 #include "id_record.h"
 #include "history_record.h"
