@@ -26,24 +26,13 @@ private:
   std::list<BlockIndices> find_blocks(const std::vector<std::string> &lines) const;
   void parse(const std::vector<std::string>& lines);
 
-  void parse_comments_block(const std::vector<std::string>& lines,
-                            BlockIndices block_idx,
+  void parse_comments_block(ENSDFData &i,
                             std::list<HistoryRecord>& hist,
                             std::list<CommentsRecord>& comm);
 
-  void parse_reference_block(const std::vector<std::string>& lines,
-                             BlockIndices block_idx);
+  void parse_reference_block(ENSDFData &i);
 
-  void modify_delta_pol(const std::list<LevelRecord> &levels,
-                        Energy energy,
-                        std::string& multipolarity,
-                        UncertainDouble& delta,
-                        double maxdif) const;
-
-  void modify_level(const std::list<LevelRecord>& in,
-                    std::list<LevelRecord>& out,
-                    Level& currentLevel,
-                    double maxdif) const;
+  void modify_level(Level& currentLevel, const LevelRecord &l) const;
 };
 
 

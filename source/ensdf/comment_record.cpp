@@ -9,17 +9,14 @@ bool CommentsRecord::match(const std::string& line, std::string rt)
   return match_first(line, "[cdtCDT]" + rt);
 }
 
-CommentsRecord::CommentsRecord(size_t& idx,
-                               const std::vector<std::string>& data)
+CommentsRecord::CommentsRecord(ENSDFData& i)
 {
-  if ((idx >= data.size()) || !match(data[idx]))
+  const auto& line = i.read();
+  if (!match(line))
     return;
-  const auto& line = data[idx];
 
   nuclide = parse_check_nid(line.substr(0, 5));
-  rtype = line.substr(7, 1);
-  if (boost::trim_copy(rtype).empty())
-    rtype.clear();
+  rtype = boost::trim_copy(line.substr(7, 1));
 
 //  auto rrtype = rtype;
 //  boost::replace_all(rrtype, " ", "\\s");
@@ -27,9 +24,9 @@ CommentsRecord::CommentsRecord(size_t& idx,
 //  ignore = (ctype == "Dd");
 
   text = extract(line);
-  while ((idx+1 < data.size()) &&
-         match_cont(data[idx+1], "[cdtCDT]" + rtype))
-    text += extract(data[++idx]);
+  while (i.has_more() &&
+         match_cont(i.look_ahead(), "[cdtCDT]" + rtype))
+    text += extract(i.read_pop());
 }
 
 std::string CommentsRecord::extract(const std::string& line)

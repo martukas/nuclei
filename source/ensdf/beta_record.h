@@ -6,9 +6,7 @@
 struct BetaRecord
 {
   BetaRecord() {}
-  BetaRecord(size_t& idx,
-             const std::vector<std::string>& data);
-
+  BetaRecord(ENSDFData& i);
   static bool match(const std::string& line);
 
   std::string debug() const;

@@ -7,7 +7,8 @@
 
 bool is_uncertainty_id(const std::string& str);
 UncertainDouble parse_val_uncert(std::string val, std::string uncert);
-UncertainDouble parse_norm_value(std::string val, std::string uncert);
+UncertainDouble parse_norm(std::string val, std::string uncert);
+Energy parse_energy(std::string val, std::string uncert);
 
 UncertainDouble eval_mixing_ratio(UncertainDouble vu, const std::string& mpol);
 

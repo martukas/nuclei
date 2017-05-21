@@ -7,18 +7,17 @@ bool HistoryRecord::match(const std::string& line)
   return match_first(line, "\\sH");
 }
 
-HistoryRecord::HistoryRecord(size_t& idx,
-                             const std::vector<std::string>& data)
+HistoryRecord::HistoryRecord(ENSDFData& i)
 {
-  if ((idx >= data.size()) || !match(data[idx]))
+  const auto& line = i.read();
+  if (!match(line))
     return;
-  const auto& line = data[idx];
 
   nuclide = parse_check_nid(line.substr(0, 5));
 
   std::string hdata = line.substr(9, 71);
-  while ((idx+1 < data.size()) && match_cont(data[idx+1], "\\sH"))
-    hdata += data[++idx].substr(9,71);
+  while (i.has_more() && match_cont(i.look_ahead(), "\\sH"))
+    hdata += i.read_pop().substr(9,71);
 
   std::vector<std::string> tokens;
   boost::split(tokens, hdata, boost::is_any_of("$"));

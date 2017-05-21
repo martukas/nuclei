@@ -6,9 +6,7 @@
 struct ParticleRecord
 {
   ParticleRecord() {}
-  ParticleRecord(size_t& idx,
-                 const std::vector<std::string>& data);
-
+  ParticleRecord(ENSDFData& i);
   static bool match(const std::string& line);
 
   std::string debug() const;

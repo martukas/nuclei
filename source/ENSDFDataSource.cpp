@@ -217,6 +217,9 @@ void ENSDFDataSource::createENSDFCache()
 
     for (auto &daughter : mc.daughters())
     {
+      if (mc.decays(daughter).empty())
+        continue;
+
       ENSDFTreeItem *d = new ENSDFTreeItem(ENSDFTreeItem::DaughterType,
                                            daughter,
                                            QList<QVariant>() << QString::fromStdString(daughter.symbolicName()).toUpper(),

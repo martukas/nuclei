@@ -5,9 +5,7 @@
 struct HistoryRecord
 {
   HistoryRecord() {}
-  HistoryRecord(size_t& idx,
-                const std::vector<std::string>& data);
-
+  HistoryRecord(ENSDFData& i);
   static bool match(const std::string& line);
 
   std::string debug() const;
