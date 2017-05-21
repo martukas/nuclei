@@ -3,17 +3,19 @@
 DecayScheme::DecayScheme(const std::string &name,
                          const Nuclide &parentNuclide,
                          const Nuclide &daughterNuclide,
-                         DecayMode DecaySchemeType)
-  : decay_mode_(DecaySchemeType)
-  , name_(name)
+                         DecayInfo decayinfo, ReactionInfo reactinfo)
+  : name_(name)
   , parent_(parentNuclide)
   , daughter_(daughterNuclide)
+  , decay_info_(decayinfo)
+  , reaction_info_(reactinfo)
 {
 }
 
 bool DecayScheme::valid() const
 {
-  return (!parent_.empty() && !daughter_.empty());
+  return (!daughter_.empty() &&
+          (decay_info_.valid() || reaction_info_.valid()));
 }
 
 std::string DecayScheme::name() const
@@ -21,9 +23,14 @@ std::string DecayScheme::name() const
   return name_;
 }
 
-DecayMode DecayScheme::mode() const
+DecayInfo DecayScheme::decay_info() const
 {
-  return decay_mode_;
+  return decay_info_;
+}
+
+ReactionInfo DecayScheme::reaction_info() const
+{
+  return reaction_info_;
 }
 
 Nuclide DecayScheme::parentNuclide() const
@@ -38,8 +45,12 @@ Nuclide DecayScheme::daughterNuclide() const
 
 std::string DecayScheme::to_string() const
 {
-  std::string ret = decay_mode_.to_string() + "\n";
+  std::string ret;
   ret += "Parent: " + parent_.to_string() + "\n";
   ret += "Daughter: " + daughter_.to_string() + "\n";
+  if (decay_info_.valid())
+    ret += "Decay: " + decay_info_.name() + "\n";
+  if (decay_info_.valid())
+    ret += "React: " + reaction_info_.name() + "\n";
   return ret;
 }

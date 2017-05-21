@@ -187,6 +187,13 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
       else
         currentLevel.setFeedIntensity(e.intensity_beta_plus + e.intensity_ec);
     }
+
+    for (const CommentsRecord& c : lev.comments)
+    {
+
+    }
+
+
     daughter_nuclide.add_level(currentLevel);
   }
 
@@ -228,9 +235,15 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   }
   parent_nuclide.finalize();
 
-  //HACK types
-  return DecayScheme(decay_name, parent_nuclide,
-                     daughter_nuclide, decaydata.decay_info_.mode);
+  DecayScheme ret(decay_name, parent_nuclide, daughter_nuclide,
+                  decaydata.decay_info_, decaydata.reaction_info_);
+
+  for (const CommentsRecord& c : decaydata.comments)
+  {
+    ret.comments.push_back(c.text);
+  }
+
+  return ret;
 }
 
 std::list<BlockIndices> DaughterParser::find_blocks(const std::vector<std::string>& lines) const
@@ -332,8 +345,8 @@ void DaughterParser::parse(const std::vector<std::string>& lines)
       //      DBG << "Getting decay " << header.debug();
       DecayData decaydata(data);
 
-      if (!decaydata.decay_info_.valid())
-        continue;
+//      if (!decaydata.decay_info_.valid())
+//        continue;
 
       if (!nuclide_data_.count(decaydata.id.nuclide))
         DBG << "No index for " << decaydata.id.nuclide.symbolicName()

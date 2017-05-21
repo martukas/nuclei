@@ -2,7 +2,10 @@
 
 #include "Nuclide.h"
 #include "SpinParity.h"
-#include "DecayMode.h"
+//#include "DecayMode.h"
+
+#include "DecayInfo.h"
+#include "ReactionInfo.h"
 
 class DecayScheme
 {
@@ -11,19 +14,26 @@ public:
   DecayScheme(const std::string &name,
               const Nuclide& parentNuclide,
               const Nuclide& daughterNuclide,
-              DecayMode DecayType);
+              DecayInfo decayinfo,
+              ReactionInfo reactinfo);
 
   bool valid() const;
   std::string name() const;
-  DecayMode mode() const;
+
+  DecayInfo decay_info() const;
+  ReactionInfo reaction_info() const;
 
   Nuclide parentNuclide() const;
   Nuclide daughterNuclide() const;
 
   std::string to_string() const;
 
+  std::vector<std::string> comments;
+
 private:
-  DecayMode decay_mode_;
+//  DecayMode decay_mode_;
   std::string name_;
   Nuclide parent_, daughter_;
+  DecayInfo decay_info_;
+  ReactionInfo reaction_info_;
 };

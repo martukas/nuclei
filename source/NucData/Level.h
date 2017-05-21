@@ -42,6 +42,9 @@ public:
   bool isFeedingLevel() const;
 
 
+  std::map<std::string, std::string> kvps;
+  std::vector<std::string> comments;
+
 private:
   Energy energy_;
   SpinParity spin_;
