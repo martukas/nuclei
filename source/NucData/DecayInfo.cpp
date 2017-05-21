@@ -3,7 +3,7 @@
 #include "qpx_util.h"
 #include <boost/regex.hpp>
 
-#include "ensdf_types.h"
+#include "Fields.h"
 
 DecayInfo::DecayInfo(std::string dsid)
 {
