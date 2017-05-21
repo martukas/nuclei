@@ -5,9 +5,7 @@
 struct ReferenceRecord
 {
   ReferenceRecord() {}
-  ReferenceRecord (size_t& idx,
-                   const std::vector<std::string>& data);
-
+  ReferenceRecord (ENSDFData& i);
   static bool match(const std::string& line);
 
   std::string debug() const;

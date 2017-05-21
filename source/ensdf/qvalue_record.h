@@ -7,8 +7,7 @@
 struct QValueRecord
 {
   QValueRecord() {}
-  QValueRecord(size_t& idx,
-               const std::vector<std::string>& data,
+  QValueRecord(ENSDFData& i,
                bool recurse = true);
 
   static bool match(const std::string& line);

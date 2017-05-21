@@ -55,35 +55,122 @@ std::string Nuclide::halfLifeAsText() const
   return join(results, ", ");
 }
 
-void Nuclide::addLevel(const Level& level)
+void Nuclide::add_level(const Level& level)
 {
+//  DBG << "<Nuclide::add_level> adding " << level.energy().to_string();
   if (level.energy().valid())
     levels_[level.energy()] = level;
 }
 
-void Nuclide::addTransition(const Transition& transition)
+Energy Nuclide::nearest_level(const Energy& goal,
+                              double max_dif,
+                              double zero_thresh)
 {
-  if (transition.energy().valid())
-    transitions_[transition.energy()] = transition;
-//  else
-//    WARN << "Could not add invalid transition " << transition.to_string()
-//        << " to " << id_.verboseName();
+  double lowest = 0;
+  for (const auto& lev : levels_)
+    if (lev.first.value().hasFiniteValue() &&
+        lev.first.value().value())
+    {
+      lowest = lev.first.value().value();
+      break;
+    }
+  if (lowest)
+    zero_thresh *= lowest;
+
+  max_dif *= goal;
+  Energy best;
+//      = Energy(UncertainDouble(kDoubleInf, 1, UncertainDouble::SignMagnitudeDefined));
+//  DBG << "<Nuclide::nearest_level> maxdif " << max_dif
+//      << " for " << goal.to_string();
+  for (const auto& lev : levels_)
+  {
+    if (std::isfinite(max_dif) &&
+        ((goal > zero_thresh) || (lev.first.value().value() != 0)) &&
+        (std::abs(goal - lev.first) > max_dif))
+      continue;
+
+    //    DBG << "     result " << std::abs(goal - lev.first)
+    //        << " <? " << std::abs(goal - best)
+    //        << " " << best.value().hasFiniteValue()
+    //        << " " << (std::abs(goal - lev.first) <
+    //                   std::abs(goal - best));
+
+    if (!best.valid() ||
+        (std::abs(goal - lev.first) <
+         std::abs(goal - best)))
+      best = lev.first;
+  }
+
+//  DBG << "<Nuclide::nearest_level> found best " << best.to_string()
+//      << " " << levels_.count(best);
+  return best;
 }
 
-void Nuclide::addNewTransition(const Energy& energy,
-                               const Energy& to,
-                               UncertainDouble intensity)
+
+void Nuclide::add_transition(const Transition& transition)
 {
-  if (levels_.count(to))
+  transitions_[transition.energy()] = transition;
+  register_transition(transition);
+}
+
+void Nuclide::add_transition_to(Transition trans,
+                                double max_dif,
+                                double zero_thresh)
+{
+  if (!levels_.count(trans.to()))
   {
-    Energy from = to + energy;
-    Transition transition(energy, intensity,
-                          std::string(), UncertainDouble(),
-                          from, to);
-    transitions_[transition.energy()] = transition;
-    if (levels_.count(from))
-      levels_[from] = Level(from, SpinParity());
-    registerTransition(transition);
+    DBG << "<Nuclide::add_transition_to> no to level "
+        << trans.to_string();
+//    DBG << "  Levels " << levels_.size();
+//    for (auto l : levels_)
+//      DBG << "   " << l.first;
+    return;
+  }
+  Energy from = trans.to() + trans.energy();
+  if (std::isfinite(max_dif) && !levels_.count(from))
+    from = nearest_level(from, max_dif, zero_thresh);
+  if (from.valid() && levels_.count(from))
+  {
+    trans.set_from(from);
+    add_transition(trans);
+  }
+  else
+  {
+//    DBG << "<Nuclide::add_transition_to> no valid from "
+//        << trans.to_string()
+//        << "    expected level "
+//        << (trans.from() - trans.energy()).to_string();
+  }
+}
+
+void Nuclide::add_transition_from(Transition trans,
+                                  double max_dif,
+                                  double zero_thresh)
+{
+  if (!levels_.count(trans.from()))
+  {
+    DBG << "<Nuclide::add_transition_from> no from level "
+        << trans.to_string();
+//    DBG << "  Levels " << levels_.size();
+//    for (auto l : levels_)
+//      DBG << "   " << l.first;
+    return;
+  }
+  Energy to = trans.from() - trans.energy();
+  if (std::isfinite(max_dif) && !levels_.count(to))
+    to = nearest_level(to, max_dif, zero_thresh);
+//  DBG << "found what? " << to.to_string() << " " <<  levels_.count(to);
+  if (to.valid() && levels_.count(to))
+  {
+    trans.set_to(to);
+    add_transition(trans);
+  }
+  else
+  {
+//    DBG << "<Nuclide::add_transition_from> no valid to "
+//        << trans.to_string()
+//        << "    expected level "
+//        << (trans.from() - trans.energy()).to_string();
   }
 }
 
@@ -97,7 +184,7 @@ void Nuclide::finalize()
 {
   for (auto t : transitions_)
     if (levels_.count(t.second.from()) && levels_.count(t.second.to()))
-      registerTransition(t.second);
+      register_transition(t.second);
 //    else
 //      WARN << "Transition cannot be linked to levels: " << t.second.to_string()
 //          << " for " << id_.verboseName();
@@ -118,7 +205,7 @@ bool Nuclide::hasTransitions(const Energy& level) const
   return false;
 }
 
-void Nuclide::registerTransition(const Transition& t)
+void Nuclide::register_transition(const Transition& t)
 {
   levels_[t.from()].addDepopulatingTransition(t.energy());
   levels_[t.to()].addPopulatingTransition(t.energy());

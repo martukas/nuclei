@@ -9,13 +9,12 @@ bool QValueRecord::match(const std::string& line)
   return match_first(line, "\\sQ");
 }
 
-QValueRecord::QValueRecord(size_t& idx,
-                           const std::vector<std::string>& data,
+QValueRecord::QValueRecord(ENSDFData& i,
                            bool recurse)
 {
-  if ((idx >= data.size()) || !match(data[idx]))
+  const auto& line = i.read();
+  if (!match(line))
     return;
-  const auto& line = data[idx];
 
   nuclide = parse_check_nid(line.substr(0, 5));
 
@@ -30,14 +29,12 @@ QValueRecord::QValueRecord(size_t& idx,
       return;
 
   bool altcomment {false};
-  while ((idx+1 < data.size()) &&
-          (match_first(data[idx+1], "\\sQ") ||
-          CommentsRecord::match(data[idx+1], "Q")))
+  while (i.has_more())
   {
-    ++idx;
-    if (CommentsRecord::match(data[idx], "Q"))
+    auto line2 = i.look_ahead();
+    if (CommentsRecord::match(line2, "Q"))
     {
-      auto cr = CommentsRecord(idx, data);
+      auto cr = CommentsRecord(++i);
       if (boost::contains(cr.text, "Current evaluation has used the following Q record"))
       {
         if (altcomment)
@@ -47,17 +44,19 @@ QValueRecord::QValueRecord(size_t& idx,
       else
         comments.push_back(cr);
     }
-    else
+    else if (match_first(line2, "\\sQ"))
     {
       if (!altcomment)
         DBG << "<QValueRecord::parse> No altcomment for " << debug();
-      auto alt = QValueRecord(idx, data, false);
+      auto alt = QValueRecord(++i, false);
       if (!alternative)
         alternative =  std::shared_ptr<QValueRecord>
             (new QValueRecord(alt));
       else
         DBG << "<QValueRecord::parse> 2nd alt for " << debug();
     }
+    else
+      break;
   }
 }
 

@@ -7,37 +7,30 @@ bool AlphaRecord::match(const std::string& line)
   return match_first(line, "\\sA");
 }
 
-AlphaRecord::AlphaRecord(size_t& idx,
-                         const std::vector<std::string>& data)
+AlphaRecord::AlphaRecord(ENSDFData& i)
 {
-  if ((idx >= data.size()) || !match(data[idx]))
+  const auto& line = i.read();
+  if (!match(line))
     return;
-  const auto& line = data[idx];
 
   nuclide = parse_nid(line.substr(0,5));
-  energy = Energy(parse_val_uncert(line.substr(9,10),
-                                   line.substr(19,2)));
-  intensity_alpha = parse_norm_value(line.substr(21,8),
-                                     line.substr(29,2));
-  hindrance_factor = parse_norm_value(line.substr(31,8),
-                                      line.substr(39,2));
-
+  energy = parse_energy(line.substr(9,10), line.substr(19,2));
+  intensity_alpha = parse_norm(line.substr(21,8), line.substr(29,2));
+  hindrance_factor = parse_norm(line.substr(31,8), line.substr(39,2));
   comment_flag = boost::trim_copy(line.substr(76,1));
   quality = boost::trim_copy(line.substr(79,1));
 
   std::string continuation;
-  while ((idx+1 < data.size()) && (
-           CommentsRecord::match(data[idx+1], "A")
-           || match_cont(data[idx+1], "\\sA")
-           ))
+  while (i.has_more())
   {
-    ++idx;
-    if (CommentsRecord::match(data[idx], "A"))
-      comments.push_back(CommentsRecord(idx, data));
+    auto line2 = i.look_ahead();
+    if (CommentsRecord::match(line2, "A"))
+      comments.push_back(CommentsRecord(++i));
+    else if (match_cont(line2, "\\sA"))
+      continuation += "$" + boost::trim_copy(i.read_pop().substr(9,71));
     else
-      continuation += "$" + boost::trim_copy(data[idx].substr(9,71));
+      break;
   }
-
   if (!continuation.empty())
     continuations_ = parse_continuation(continuation);
 }
@@ -64,6 +57,6 @@ std::string AlphaRecord::debug() const
   for (auto c : continuations_)
     ret += "\n      Continuation: " + c.first + " = " + c.second;
   for (auto c : comments)
-    ret += "\n  Comment: " + c.debug();
+    ret += "\n      Comment: " + c.debug();
   return ret;
 }

@@ -7,12 +7,11 @@ bool XRefRecord::match(const std::string& line)
   return match_first(line, "\\sX");
 }
 
-XRefRecord::XRefRecord(size_t& idx,
-                       const std::vector<std::string>& data)
+XRefRecord::XRefRecord(ENSDFData& i)
 {
-  if ((idx >= data.size()) || !match(data[idx]))
+  const auto& line = i.read();
+  if (!match(line))
     return;
-  const auto& line = data[idx];
 
   nuclide = parse_check_nid(line.substr(0, 5));
   dssym = line.substr(8, 1);

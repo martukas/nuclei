@@ -2,16 +2,30 @@
 #include <boost/math/special_functions/fpclassify.hpp>
 #include "qpx_util.h"
 
-Transition::Transition(Energy energy, UncertainDouble intensity,
-                       const std::string &multipol, UncertainDouble delta,
-                       Energy from, Energy to)
+Transition::Transition(Energy energy, UncertainDouble intensity)
   : energy_(energy)
   , intensity_(intensity)
-  , multipolarity_(multipol)
-  , delta_(delta)
-  , from_(from)
-  , to_(to)
 {}
+
+void Transition::set_to(const Energy& e)
+{
+  to_ = e;
+}
+
+void Transition::set_from(const Energy& e)
+{
+  from_ = e;
+}
+
+void Transition::set_multipol(const std::string& s)
+{
+  multipolarity_ = s;
+}
+
+void Transition::set_delta(const UncertainDouble& u)
+{
+  delta_ = u;
+}
 
 Energy Transition::energy() const
 {
