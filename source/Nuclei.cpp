@@ -284,7 +284,7 @@ void Nuclei::loadDecay(DecayScheme decay)
 
   QString text;
   for (auto t : decay.comments)
-    text += QString::fromStdString(t) + "\n";
+    text += QString::fromStdString(t) + "<br>";
 
   ui->textBrowser->setText(text);
 

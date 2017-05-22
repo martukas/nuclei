@@ -3,6 +3,7 @@
 #include "custom_logger.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
+#include <algorithm>
 
 bool CommentsRecord::match(const std::string& line, std::string rt)
 {
@@ -52,10 +53,19 @@ std::string CommentsRecord::extract(const std::string& line)
   }
 
   if (std::isupper(ctype[0]))
-    return Translator::instance().translate1(cdata);
+    cdata = Translator::instance().translate1(cdata);
+
+  if (ctype[0] == 'C')
+    cdata = adjust_case(cdata);
 
   return cdata;
 }
+
+std::string CommentsRecord::html() const
+{
+  return Translator::instance().to_html(text);
+}
+
 
 std::string CommentsRecord::debug() const
 {
@@ -73,6 +83,7 @@ bool CommentsRecord::valid() const
 Translator::Translator()
 {
   make_dictionary1();
+  make_dictionary2();
 }
 
 std::string Translator::translate1(const std::string &s)
@@ -91,8 +102,205 @@ std::string Translator::translate1(const std::string &s)
       }
     ret += t;
   }
+  return ret;
+}
+
+std::string CommentsRecord::adjust_case(const std::string &s)
+{
+//  DBG << "INPUT: " << s;
+  std::string ret;
+
+  std::list<std::string> close;
+  bool opened {false};
+  boost::char_separator<char> sep("", "^0123456789");
+  boost::tokenizer<boost::char_separator<char>> tokens(s, sep);
+  for (std::string t : tokens)
+  {
+    if (t == "^")
+      opened = true;
+    else if (t.size() && is_number(t.substr(0,1)))
+    {
+      opened = true;
+      ret += t;
+    }
+    else
+    {
+      if (!opened)
+      {
+        ret += boost::algorithm::to_lower_copy(t);
+      }
+      else if (t.size())
+      {
+        boost::char_separator<char> sep2("", " ");
+        boost::tokenizer<boost::char_separator<char>> tokens2(t, sep2);
+        int j = 0;
+        for (std::string t2 : tokens2)
+        {
+          if (j == 0)
+          {
+            for (size_t i=1; i < t2.size(); ++i)
+              t2[i] = std::tolower(t2[i]);
+            ret += t2;
+          }
+          else
+            ret += boost::algorithm::to_lower_copy(t2);
+          j++;
+        }
+      }
+      opened = false;
+    }
+  }
 
   return ret;
+}
+
+
+
+std::string Translator::to_html(std::string s)
+{
+  for (auto t : dict2_s)
+    boost::replace_all(s, t.first, t.second);
+
+  boost::replace_all(s, "<", "&lt;");
+  boost::replace_all(s, ">", "&gt;");
+  boost::replace_all(s, "\n", "<br>");
+  boost::replace_all(s, " ", "&nbsp;");
+//  DBG << "INPUT: " << s;
+  std::string ret;
+
+  std::list<std::string> close;
+//  bool preserve_case {false};
+  bool opened {false};
+  boost::char_separator<char> sep("", "{}");
+  boost::tokenizer<boost::char_separator<char>> tokens(s, sep);
+  for (std::string t : tokens)
+  {
+    if (t == "{")
+      opened = true;
+    else if (t == "}")
+    {
+      if (!close.empty())
+      {
+        ret += close.back();
+        close.pop_back();
+      }
+    }
+    else
+    {
+      if (!opened)
+      {
+        ret += t;
+      }
+      else if (t.size())
+      {
+        if (t[0] == 'I')
+        {
+          ret += "<i>";
+          close.push_back("</i>");
+          if (t.size() > 1)
+            ret += t.substr(1, t.size() - 1);
+        }
+        else if (t[0] == 'B')
+        {
+          ret += "<b>";
+          close.push_back("</b>");
+          if (t.size() > 1)
+            ret += t.substr(1, t.size() - 1);
+        }
+        else if (t[0] == 'U')
+        {
+          ret += "<u>";
+          close.push_back("</u>");
+          if (t.size() > 1)
+            ret += t.substr(1, t.size() - 1);
+        }
+        else if (t[0] == '+')
+        {
+          ret += "<sup>";
+          close.push_back("</sup>");
+          if (t.size() > 1)
+            ret += t.substr(1, t.size() - 1);
+        }
+        else if (t[0] == '-')
+        {
+          ret += "<sub>";
+          close.push_back("</sub>");
+          if (t.size() > 1)
+            ret += t.substr(1, t.size() - 1);
+        }
+        else if (t[0] == '|')
+        {
+          ret += "<small>";
+          close.push_back("</small>");
+          if (t.size() > 1)
+            ret += t.substr(1, t.size() - 1);
+        }
+        else if (t[0] == '~')
+        {
+          ret += "<big>";
+          close.push_back("</big>");
+          if (t.size() > 1)
+            ret += t.substr(1, t.size() - 1);
+        }
+        opened = false;
+      }
+    }
+  }
+
+
+//  DBG << "RESULT: " << ret;
+
+  return ret;
+}
+
+void Translator::make_dictionary2()
+{
+  add_dict2c1('=', "&ne;");
+  add_dict2c1('<', "&le;");
+  add_dict2c1('>', "&ge;");
+  add_dict2c1('\'', "&deg;");
+  add_dict2c1('?', "&asymp;");
+
+  add_dict2c1('A', "&Alpha;");
+  add_dict2c1('B', "&Beta;");
+  add_dict2c1('G', "&Gamma;");
+  add_dict2c1('D', "&Delta;");
+  add_dict2c1('F', "&Phi;");
+  add_dict2c1('L', "&Lambda;");
+  add_dict2c1('M', "&Mu;");
+  add_dict2c1('N', "&Nu;");
+  add_dict2c1('P', "&Pi;");
+  add_dict2c1('Q', "&Theta;");
+  add_dict2c1('S', "&Sigma;");
+
+
+  add_dict2c1('a', "&alpha;");
+  add_dict2c1('b', "&beta;");
+  add_dict2c1('g', "&gamma;");
+  add_dict2c1('d', "&delta;");
+  add_dict2c1('f', "&phi;");
+  add_dict2c1('l', "&lambda;");
+  add_dict2c1('m', "&mu;");
+  add_dict2c1('n', "&nu;");
+  add_dict2c1('p', "&pi;");
+  add_dict2c1('q', "&theta;");
+  add_dict2c1('s', "&sigma;");
+}
+
+void Translator::add_dict2c1(char c, std::string str)
+{
+  std::string s {"| "};
+  s[1] = c;
+  dict2c1[c] = str;
+  dict2_s[s] = str;
+}
+
+void Translator::add_dict2c2(char c, std::string str)
+{
+  std::string s {"~ "};
+  s[1] = c;
+  dict2c2[c] = str;
+  dict2_s[s] = str;
 }
 
 void Translator::make_dictionary1()
