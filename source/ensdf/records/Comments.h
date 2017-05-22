@@ -23,8 +23,7 @@ private:
  void make_dictionary1();
  void make_dictionary2();
 
- void add_dict2c1(char c, std::string str);
- void add_dict2c2(char c, std::string str);
+ void add_dict2(char c, std::string alt1, std::string alt2);
 
  std::list<std::pair<std::string, std::string>> dict1;
 

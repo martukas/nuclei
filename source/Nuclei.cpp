@@ -151,8 +151,8 @@ void Nuclei::loadSelectedDecay(const QModelIndex &index)
 
   DecayScheme decay(decaySelectionModel->decay(decayProxyModel->mapToSource(index)));
 
-  if (!decay.valid())
-    return;
+//  if (!decay.valid())
+//    return;
 
   loadDecay(decay);
 }
@@ -167,8 +167,8 @@ void Nuclei::loadSearchResultCascade(const QModelIndex &index)
 
   DecayScheme decay(searchResultSelectionModel->decay(searchProxyModel->mapToSource(index)));
 
-  if (!decay.valid())
-    return;
+//  if (!decay.valid())
+//    return;
 
   loadDecay(decay);
 }
