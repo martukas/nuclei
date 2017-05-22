@@ -53,10 +53,10 @@ std::string CommentsRecord::extract(const std::string& line)
   }
 
   if (std::isupper(ctype[0]))
-    cdata = Translator::instance().translate1(cdata);
-
-  if (ctype[0] == 'C')
-    cdata = adjust_case(cdata);
+//    cdata = Translator::instance().translate1(cdata);
+    cdata = adjust_case(Translator::instance().translate1(cdata));
+//  if (ctype[0] == 'C')
+//    cdata = adjust_case(cdata);
 
   return cdata;
 }
@@ -255,52 +255,128 @@ std::string Translator::to_html(std::string s)
 
 void Translator::make_dictionary2()
 {
-  add_dict2c1('=', "&ne;");
-  add_dict2c1('<', "&le;");
-  add_dict2c1('>', "&ge;");
-  add_dict2c1('\'', "&deg;");
-  add_dict2c1('?', "&asymp;");
+  add_dict2('!', "&copy;", "!");
+  add_dict2('\"', "&macr;", "&quot;");
+  add_dict2('#', "&sect;", "&otimes;");
+  add_dict2('$', "e", "$");  //mathematical e?
+  add_dict2('%', "&radic;", "%");
+  add_dict2('&', "&equiv;", "&amp;");
+  add_dict2('\'', "&deg;", "&Aring;");
+  add_dict2('(', "&larr;", "(");
+  add_dict2(')', "&larr;", ")");
+  add_dict2('*', "&times;", "&sdot;");
+  add_dict2('+', "&plusmn;", "+");
+  add_dict2(',', "&frac12;", ",");
+  add_dict2('-', "&#8723;", "&minus;");
+  add_dict2('.', "&prop;", ".");
+  add_dict2('/', "&ne;", "/");
+  add_dict2('0', "(", "0");
+  add_dict2('1', ")", "1");
+  add_dict2('2', "[", "2");
+  add_dict2('3', "]", "3");
+  add_dict2('4', "&lt;", "4"); //should be dirac
+  add_dict2('5', "&gt;", "5"); //should be dirac
+  add_dict2('6', "&radic;", "6");
+  add_dict2('7', "&int;", "7");
+  add_dict2('8', "&prod;", "8");
+  add_dict2('9', "&sum;", "9");
+  add_dict2(':', "&dagger;", ":");
+  add_dict2(';', "&Dagger;", ";");
+  add_dict2('<', "&le;", "&lt;");
+  add_dict2('=', "&ne;", "=");
+  add_dict2('>', "&ge;", "&gt;");
+  add_dict2('?', "&asymp;", "?");
+  add_dict2('@', "&infin;", "&#9679;");
+  add_dict2('A', "&Alpha;", "&Auml;");
+  add_dict2('B', "&Beta;", "B");
+  add_dict2('C', "&Eta;", "C");
+  add_dict2('D', "&Delta;", "D");
+  add_dict2('E', "&Epsilon;", "&Eacute;");
+  add_dict2('F', "&Phi;", "F");
+  add_dict2('G', "&Gamma;", "G");
+  add_dict2('H', "&Chi;", "H");
+  add_dict2('I', "&Iota;", "I");
+  add_dict2('J', "∼", "J");
+  add_dict2('K', "&Kappa;", "K");
+  add_dict2('L', "&Lambda;", "L");
+  add_dict2('M', "&Mu;", "M");
+  add_dict2('N', "&Nu;", "N");
+  add_dict2('O', "&Omicron;", "&Ouml;");
+  add_dict2('P', "&Pi;", "P");
+  add_dict2('Q', "&Theta;", "&Otilde;");
+  add_dict2('R', "&Rho;", "R");
+  add_dict2('S', "&Sigma;", "S");
+  add_dict2('T', "&Tau;", "T");
+  add_dict2('U', "&upsih;", "&Uuml;");
+  add_dict2('V', "&nabla;", "V");
+  add_dict2('W', "&Omega;", "W");
+  add_dict2('X', "&Xi;", "X");
+  add_dict2('Y', "&Psi;", "Y");
+  add_dict2('Z', "&Zeta;", "Z");
+  add_dict2('[', "{", "[");
+  add_dict2(']', "}", "]");
+  add_dict2('^', "&uarr;", "^");
 
-  add_dict2c1('A', "&Alpha;");
-  add_dict2c1('B', "&Beta;");
-  add_dict2c1('G', "&Gamma;");
-  add_dict2c1('D', "&Delta;");
-  add_dict2c1('F', "&Phi;");
-  add_dict2c1('L', "&Lambda;");
-  add_dict2c1('M', "&Mu;");
-  add_dict2c1('N', "&Nu;");
-  add_dict2c1('P', "&Pi;");
-  add_dict2c1('Q', "&Theta;");
-  add_dict2c1('S', "&Sigma;");
+  add_dict2('_', "&darr;", "_");
+  add_dict2('`', "&rsquo;", "&lsquo;");
+
+  add_dict2('a', "&alpha;", "&auml;");
+  add_dict2('b', "&beta;", "b");
+  add_dict2('c', "&eta;", "c");
+  add_dict2('d', "&delta;", "d");
+  add_dict2('e', "&epsilon;", "&eacute;");
+  add_dict2('f', "&phi;", "f");
+  add_dict2('g', "&gamma;", "g");
+  add_dict2('h', "&chi;", "&#295;");
+  add_dict2('i', "&iota;", "i");
+  add_dict2('j', "&isin;", "j");
+  add_dict2('k', "&kappa;", "k");
+  add_dict2('l', "&lambda;", "&#411;");
+  add_dict2('m', "&mu;", "m");
+  add_dict2('n', "&nu;", "n");
+  add_dict2('o', "&omicron;", "&ouml;");
+  add_dict2('p', "&pi;", "p");
+  add_dict2('q', "&theta;", "&otilde;");
+  add_dict2('r', "&rho;", "r");
+  add_dict2('s', "&sigma;", "s");
+  add_dict2('t', "&tau;", "t");
+  add_dict2('u', "&upsilon;", "&uuml;");
+  add_dict2('v', "?", "v");
+  add_dict2('w', "&omega;", "w");
+  add_dict2('x', "&xi;", "x");
+  add_dict2('y', "&psi;", "y");
+  add_dict2('z', "&zeta;", "z");
 
 
-  add_dict2c1('a', "&alpha;");
-  add_dict2c1('b', "&beta;");
-  add_dict2c1('g', "&gamma;");
-  add_dict2c1('d', "&delta;");
-  add_dict2c1('f', "&phi;");
-  add_dict2c1('l', "&lambda;");
-  add_dict2c1('m', "&mu;");
-  add_dict2c1('n', "&nu;");
-  add_dict2c1('p', "&pi;");
-  add_dict2c1('q', "&theta;");
-  add_dict2c1('s', "&sigma;");
+  add_dict2('a', "&alpha;", "&ne;");
+  add_dict2('b', "&beta;", "&ne;");
+  add_dict2('g', "&gamma;", "&ne;");
+  add_dict2('d', "&delta;", "&ne;");
+  add_dict2('f', "&phi;", "&ne;");
+  add_dict2('l', "&lambda;", "&ne;");
+  add_dict2('m', "&mu;", "&ne;");
+  add_dict2('n', "&nu;", "&ne;");
+  add_dict2('p', "&pi;", "&ne;");
+  add_dict2('q', "&theta;", "&ne;");
+  add_dict2('s', "&sigma;", "&ne;");
 }
 
-void Translator::add_dict2c1(char c, std::string str)
+void Translator::add_dict2(char c, std::string alt1, std::string alt2)
 {
-  std::string s {"| "};
-  s[1] = c;
-  dict2c1[c] = str;
-  dict2_s[s] = str;
-}
-
-void Translator::add_dict2c2(char c, std::string str)
-{
-  std::string s {"~ "};
-  s[1] = c;
-  dict2c2[c] = str;
-  dict2_s[s] = str;
+  if ((alt1.size() > 1) || (alt1[0] != c))
+  {
+    std::string s {"| "};
+    s[1] = c;
+    dict2c1[c] = alt1;
+    dict2_s[s] = alt1;
+  }
+  if ((alt2.size() > 1) || (alt2[0] != c))
+  {
+    std::string s {"~ "};
+    s[1] = c;
+    dict2c2[c] = alt2;
+    dict2_s[s] = alt2;
+  }
 }
 
 void Translator::make_dictionary1()

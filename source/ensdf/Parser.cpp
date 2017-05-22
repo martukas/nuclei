@@ -221,7 +221,6 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
       parent_nuclide.add_level(plv);
     }
   }
-  parent_nuclide.finalize();
 
   DecayScheme ret(decay_name, parent_nuclide, daughter_nuclide,
                   decaydata.decay_info_, decaydata.reaction_info_);
