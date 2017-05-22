@@ -28,10 +28,12 @@ public:
 
   std::string to_string() const;
 
+
+
   std::vector<std::string> comments;
+  std::map<std::string, std::string> references_;
 
 private:
-//  DecayMode decay_mode_;
   std::string name_;
   Nuclide parent_, daughter_;
   DecayInfo decay_info_;
