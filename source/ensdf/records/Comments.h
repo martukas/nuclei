@@ -12,6 +12,7 @@ public:
  }
 
  std::string translate1(const std::string& s);
+ std::string to_html(std::string s);
 
 private:
  //singleton assurance
@@ -20,9 +21,16 @@ private:
  void operator=(Translator const&);
 
  void make_dictionary1();
+ void make_dictionary2();
+
+ void add_dict2c1(char c, std::string str);
+ void add_dict2c2(char c, std::string str);
 
  std::list<std::pair<std::string, std::string>> dict1;
- std::list<std::pair<std::string, std::string>> dict2;
+
+ std::map<char, std::string> dict2c1;
+ std::map<char, std::string> dict2c2;
+ std::map<std::string, std::string> dict2_s;
 };
 
 struct CommentsRecord
@@ -32,6 +40,7 @@ struct CommentsRecord
   static bool match(const std::string& line, std::string rt = "");
 
   std::string debug() const;
+  std::string html() const;
   bool valid() const;
 
   NuclideId nuclide;
@@ -41,5 +50,7 @@ struct CommentsRecord
 //  bool ignore {false};
 
   std::string extract(const std::string& line);
+
+  std::string adjust_case(const std::string& line);
 };
 
