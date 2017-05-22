@@ -228,7 +228,8 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
 
   for (const CommentsRecord& c : decaydata.comments)
   {
-    ret.comments.push_back(c.text);
+    ret.comments.push_back(c.html());
+//    ret.comments.push_back(c.text);
   }
 
   return ret;
