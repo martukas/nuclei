@@ -87,7 +87,6 @@ int ENSDFTreeItem::row() const
 {
   if (parentItem)
     return parentItem->childItems.indexOf(const_cast<ENSDFTreeItem*>(this));
-
   return 0;
 }
 
@@ -104,7 +103,8 @@ QDataStream & operator <<(QDataStream &out, const ENSDFTreeItem &treeitem)
   out << treeitem.m_isSelectable;
   out << int(treeitem.m_type);
   out << quint32(treeitem.childItems.size());
-  foreach (const ENSDFTreeItem *it, treeitem.childItems) {
+  foreach (const ENSDFTreeItem *it, treeitem.childItems)
+  {
     const ENSDFTreeItem *eit = dynamic_cast<const ENSDFTreeItem*>(it);
     if (eit)
       out << (*eit);
@@ -126,7 +126,8 @@ QDataStream & operator >>(QDataStream &in, ENSDFTreeItem &treeitem)
   treeitem.m_type = ENSDFTreeItem::ItemType(type);
   quint32 numchildren;
   in >> numchildren;
-  for (quint32 i=0; i<numchildren; i++) {
+  for (quint32 i=0; i<numchildren; i++)
+  {
     ENSDFTreeItem *childitem = new ENSDFTreeItem(ENSDFTreeItem::UnknownType, &treeitem);
     in >> (*childitem);
   }

@@ -283,8 +283,28 @@ void Nuclei::loadDecay(DecayScheme decay)
   ui->decayView->setSceneRect(scene->sceneRect().adjusted(-20, -20, 20, 20));
 
   QString text;
-  for (auto t : decay.comments)
-    text += QString::fromStdString(t) + "<br>";
+  for (json::iterator it = decay.comments.begin();
+       it != decay.comments.end(); ++it)
+  {
+    if (it.key() == "history")
+    {
+      text += "<h3>History</h3>";
+      for (auto j : it.value())
+      {
+        for (json::iterator h = j.begin(); h != j.end(); ++h)
+          text += "<b>" + QString::fromStdString(h.key()) + ":</b> "
+              + QString::fromStdString(h.value().get<std::string>()) + "<br>";
+        text += "<br>";
+      }
+    }
+    else if (it.key() == "comments")
+    {
+      text += "<h3>Comments</h3>";
+      for (json::iterator c = it.value().begin();
+           c != it.value().end(); ++c)
+        text += QString::fromStdString(c.value().get<std::string>()) + "<br>";
+    }
+  }
 
   ui->textBrowser->setText(text);
 

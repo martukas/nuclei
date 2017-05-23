@@ -117,21 +117,21 @@ void DaughterParser::modify_level(Level& currentLevel,
 
 
 DecayScheme DaughterParser::get_decay(NuclideId daughter,
-                                      std::string decay_name) const
+                                      std::string decay_name,
+                                      double max_level_dif) const
 {
   if (!nuclide_data_.count(daughter) ||
       !nuclide_data_.at(daughter).decays.count(decay_name))
     return DecayScheme();
 
-  // percent of energy
-  double max_level_dif = 0.04;
-
   DecayData decaydata = nuclide_data_.at(daughter).decays.at(decay_name);
 
   Nuclide daughter_nuclide(decaydata.id.nuclide);
 
-  UncertainDouble normalizeDecIntensToPercentParentDecay(1.0,1,UncertainDouble::SignMagnitudeDefined);
-  UncertainDouble normalizeGammaIntensToPercentParentDecay(1.0,1,UncertainDouble::SignMagnitudeDefined);
+  UncertainDouble normalizeDecIntensToPercentParentDecay
+      (1.0,1,UncertainDouble::SignMagnitudeDefined);
+  UncertainDouble normalizeGammaIntensToPercentParentDecay
+      (1.0,1,UncertainDouble::SignMagnitudeDefined);
 
   //multiple times???
   for (auto n : decaydata.norm)
@@ -176,10 +176,10 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
         currentLevel.setFeedIntensity(e.intensity_beta_plus + e.intensity_ec);
     }
 
-    for (const CommentsRecord& c : lev.comments)
-    {
+//    for (const CommentsRecord& c : lev.comments)
+//    {
 
-    }
+//    }
 
 
     daughter_nuclide.add_level(currentLevel);
@@ -225,14 +225,128 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   DecayScheme ret(decay_name, parent_nuclide, daughter_nuclide,
                   decaydata.decay_info_, decaydata.reaction_info_);
 
-  for (const CommentsRecord& c : decaydata.comments)
+  for (const HistoryRecord& h : decaydata.history)
   {
-    ret.comments.push_back(c.html());
-//    ret.comments.push_back(c.text);
+    json j;
+    for (auto kvp : h.kvps)
+      j[kvp.first] = kvp.second;
+    ret.comments["history"].push_back(j);
   }
+
+  for (const CommentsRecord& c : decaydata.comments)
+    ret.comments["comments"].push_back(c.html());
 
   return ret;
 }
+
+DecayScheme DaughterParser::get_nuclide(NuclideId daughter, double max_level_dif) const
+{
+  if (!nuclide_data_.count(daughter))
+    return DecayScheme();
+
+  UncertainDouble normalizeDecIntensToPercentParentDecay
+      (1.0,1,UncertainDouble::SignMagnitudeDefined);
+  UncertainDouble normalizeGammaIntensToPercentParentDecay
+      (1.0,1,UncertainDouble::SignMagnitudeDefined);
+
+  LevelData nucdata = nuclide_data_.at(daughter).adopted_levels;
+
+  Nuclide daughter_nuclide(daughter);
+
+  // process normalization records
+  if (nucdata.pnorm.valid())
+  {
+    if (nucdata.pnorm.NBBR.hasFiniteValue())
+      normalizeDecIntensToPercentParentDecay = nucdata.pnorm.NBBR;
+    if (nucdata.pnorm.NRBR.hasFiniteValue())
+      normalizeGammaIntensToPercentParentDecay = nucdata.pnorm.NRBR;
+  }
+
+  for (const LevelRecord& lev : nucdata.levels)
+  {
+    Level currentLevel(lev.energy, lev.spin_parity,
+                       lev.halflife, lev.isomeric);
+
+    modify_level(currentLevel, lev);
+
+    for (const AlphaRecord& a : lev.alphas)
+    {
+      if (a.intensity_alpha.hasFiniteValue())
+        currentLevel.setFeedIntensity(a.intensity_alpha * normalizeDecIntensToPercentParentDecay);
+    }
+    for (const BetaRecord& b : lev.betas)
+    {
+      if (b.intensity.hasFiniteValue())
+        currentLevel.setFeedIntensity(b.intensity * normalizeDecIntensToPercentParentDecay);
+    }
+    for (const ECRecord& e : lev.ECs)
+    {
+      if (e.intensity_total.hasFiniteValue())
+        currentLevel.setFeedIntensity(e.intensity_total);
+      else
+        currentLevel.setFeedIntensity(e.intensity_beta_plus + e.intensity_ec);
+    }
+
+//    for (const CommentsRecord& c : lev.comments)
+//    {
+
+//    }
+
+
+    daughter_nuclide.add_level(currentLevel);
+  }
+
+  for (const LevelRecord& lev : nucdata.levels)
+  {
+    for (const GammaRecord& g : lev.gammas)
+    {
+      Transition transition(g.energy,
+                            g.intensity_rel_photons
+                            * normalizeGammaIntensToPercentParentDecay);
+      transition.set_multipol(g.multipolarity);
+      transition.set_delta(g.mixing_ratio);
+      transition.set_from(lev.energy);
+      daughter_nuclide.add_transition_from(transition, max_level_dif);
+    }
+  }
+
+  DecayScheme ret(daughter.symbolicName() + " (adopted levels)",
+                  Nuclide(), daughter_nuclide,
+                  DecayInfo(), ReactionInfo());
+
+  for (const HistoryRecord& h : nucdata.history)
+  {
+    json j;
+    for (auto kvp : h.kvps)
+      j[kvp.first] = kvp.second;
+    ret.comments["history"].push_back(j);
+  }
+
+  for (const CommentsRecord& c : nucdata.comments)
+    ret.comments["comments"].push_back(c.html());
+
+  return ret;
+}
+
+DecayScheme DaughterParser::get_info() const
+{
+  DecayScheme ret("", Nuclide(), Nuclide(),
+                  DecayInfo(), ReactionInfo());
+
+  for (const HistoryRecord& h : mass_history_)
+  {
+    json j;
+    for (auto kvp : h.kvps)
+      j[kvp.first] = kvp.second;
+    ret.comments["history"].push_back(j);
+  }
+
+  for (const CommentsRecord& c : mass_comments_)
+    ret.comments["comments"].push_back(c.html());
+
+  return ret;
+}
+
 
 std::list<BlockIndices> DaughterParser::find_blocks(const std::vector<std::string>& lines) const
 {

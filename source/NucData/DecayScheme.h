@@ -1,11 +1,12 @@
 #pragma once
 
 #include "Nuclide.h"
-#include "SpinParity.h"
-//#include "DecayMode.h"
-
 #include "DecayInfo.h"
 #include "ReactionInfo.h"
+
+#include "json.h"
+
+using namespace nlohmann;
 
 class DecayScheme
 {
@@ -28,9 +29,7 @@ public:
 
   std::string to_string() const;
 
-
-
-  std::vector<std::string> comments;
+  json comments;
   std::map<std::string, std::string> references_;
 
 private:

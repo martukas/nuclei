@@ -27,10 +27,28 @@ HistoryRecord::HistoryRecord(ENSDFData& i)
     std::vector<std::string> tokens2;
     boost::split(tokens2, t, boost::is_any_of("="));
     if (tokens2.size() > 1)
-      kvps[boost::trim_copy(tokens2[0])] =
-          boost::trim_copy(tokens2[1]);
+      add_kvp(boost::trim_copy(tokens2[0]),
+          boost::trim_copy(tokens2[1]));
   }
 }
+
+void HistoryRecord::add_kvp(const std::string& key,
+                            const std::string& value)
+{
+  if (key.empty() || value.empty())
+    return;
+
+  std::string val = value;
+  if (key == "TYP")
+    val = Translator::instance().hist_eval_type(value);
+  else if (key == "AUT")
+    val = Translator::instance().auth_capitalize(value);
+  else if ((key == "CIT") && (value == "ENSDF"))
+    val = "included in ENSDF but not published";
+
+  kvps[Translator::instance().hist_key(key)] = val;
+}
+
 
 std::string HistoryRecord::debug() const
 {

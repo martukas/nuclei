@@ -56,7 +56,8 @@ QGraphicsScene * SchemePlayer::levelPlot()
       addTransition(transitions.at(gamma_nrg), visual_settings_);
   }
 
-  daughter_ = NuclideItem(scheme_.daughterNuclide(), ClickableItem::DaughterNuclideType, visual_settings_, scene_);
+  if (!scheme_.daughterNuclide().empty())
+    daughter_ = NuclideItem(scheme_.daughterNuclide(), ClickableItem::DaughterNuclideType, visual_settings_, scene_);
 
   if (visual_settings_.parentpos != NoParent)
   {
@@ -233,8 +234,9 @@ void SchemePlayer::alignGraphicsItems()
   }
 
   // set position of daughter nuclide
-  daughter_.graphicsItem()->setPos(-0.5*daughter_.graphicsItem()->boundingRect().width(),
-                                   0.3*daughter_.graphicsItem()->boundingRect().height());
+  if (!scheme_.daughterNuclide().empty())
+    daughter_.graphicsItem()->setPos(-0.5*daughter_.graphicsItem()->boundingRect().width(),
+                                     0.3*daughter_.graphicsItem()->boundingRect().height());
 
   // set position of parent nuclide
   if (visual_settings_.parentpos != NoParent)
