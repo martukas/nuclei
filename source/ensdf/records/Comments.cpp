@@ -84,6 +84,21 @@ Translator::Translator()
 {
   make_dictionary1();
   make_dictionary2();
+  make_hist();
+}
+
+std::string Translator::hist_key(const std::string& s)
+{
+  if (hist_keys_.count(s))
+    return hist_keys_.at(s);
+  return s;
+}
+
+std::string Translator::hist_eval_type(const std::string& s)
+{
+  if (hist_eval_types_.count(s))
+    return hist_eval_types_.at(s);
+  return s;
 }
 
 std::string Translator::translate1(const std::string &s)
@@ -154,7 +169,30 @@ std::string CommentsRecord::adjust_case(const std::string &s)
   return ret;
 }
 
+void Translator::to_camel(std::string& s)
+{
+  boost::algorithm::to_lower(s);
+  if (s.size())
+    s[0]= std::toupper(s[0]);
+}
 
+
+std::string Translator::auth_capitalize(const std::string& s)
+{
+  std::string ret;
+  boost::char_separator<char> sep("", " .");
+  boost::tokenizer<boost::char_separator<char>> tokens(s, sep);
+  for (std::string t : tokens)
+  {
+    auto tt = t;
+    if ((tt == "ET") || (tt == "AL") || (tt == "AND"))
+      boost::algorithm::to_lower(tt);
+    else
+      to_camel(tt);
+    ret += tt;
+  }
+  return ret;
+}
 
 std::string Translator::to_html(std::string s)
 {
@@ -251,6 +289,24 @@ std::string Translator::to_html(std::string s)
 //  DBG << "RESULT: " << ret;
 
   return ret;
+}
+
+void Translator::make_hist()
+{
+  hist_keys_["TYP"] = "Type";
+  hist_keys_["AUT"] = "Author(s)";
+  hist_keys_["DAT"] = "Date of change";
+  hist_keys_["CUT"] = "Literature cutoff date";
+  hist_keys_["CIT"] = "Citation";
+  hist_keys_["COM"] = "Comments";
+
+  hist_eval_types_["FUL"] = "Complete revision";
+  hist_eval_types_["FMT"] = "Format changes";
+  hist_eval_types_["ERR"] = "Errata";
+  hist_eval_types_["MOD"] = "Modified";
+  hist_eval_types_["UPD"] = "Update due to scan of new literature";
+  hist_eval_types_["EXP"] = "Experimental (not evaluated) data set";
+
 }
 
 void Translator::make_dictionary2()

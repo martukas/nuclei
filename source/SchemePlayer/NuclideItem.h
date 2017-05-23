@@ -17,10 +17,12 @@ class NuclideItem : public ClickableItem
 {
 public:
   NuclideItem();
-  NuclideItem(const Nuclide& nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene);
+  NuclideItem(const Nuclide& nuc, Type tp,
+              SchemeVisualSettings vis,
+              QGraphicsScene *scene);
 
-  QGraphicsSimpleTextItem *pNucHl;
-  QGraphicsLineItem *pNucVerticalArrow;
+  QGraphicsSimpleTextItem *pNucHl {nullptr};
+  QGraphicsLineItem *pNucVerticalArrow {nullptr};
 
   NuclideId id_;
 

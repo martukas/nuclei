@@ -14,11 +14,7 @@ DecayScheme::DecayScheme(const std::string &name,
 
 bool DecayScheme::valid() const
 {
-  return (!daughter_.empty() &&
-          (decay_info_.valid() ||
-           reaction_info_.valid() ||
-           !comments.empty())
-          );
+  return (!daughter_.empty() || !comments.empty());
 }
 
 std::string DecayScheme::name() const
