@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Record.h"
+#include "Comments.h"
 
 struct HistoryRecord
 {
@@ -13,4 +14,7 @@ struct HistoryRecord
 
   NuclideId nuclide;
   std::map<std::string, std::string> kvps;
+
+private:
+  void add_kvp(const std::string& key, const std::string& value);
 };

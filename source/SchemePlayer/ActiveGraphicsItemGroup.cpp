@@ -14,9 +14,8 @@ const bool ActiveGraphicsItemGroup::animateShadow = false;
 const bool ActiveGraphicsItemGroup::animate = false;
 
 ActiveGraphicsItemGroup::ActiveGraphicsItemGroup(ClickableItem *associatedItem)
-  : assocItem(associatedItem), shadow(new GraphicsDropShadowEffect), m_shape(0), m_helper(0),
-    m_highlighted(false), m_hover(false), m_shadowenabled(true),
-    aniHighlight(0), aniShadow(0), aniGroup(0)
+  : assocItem(associatedItem)
+  , shadow(new GraphicsDropShadowEffect)
 {
   // prepare highlighting
   shadow->setBlurRadius(15.0);
@@ -156,7 +155,8 @@ void ActiveGraphicsItemGroup::mousePressEvent(QGraphicsSceneMouseEvent *event)
 void ActiveGraphicsItemGroup::showHighlighting()
 {
   setZValue(1.0);
-  if (animate) {
+  if (animate)
+  {
     aniGroup->stop();
     if (m_helper && !aniHighlight->targetObject())
       aniHighlight->setTargetObject(m_helper);
@@ -165,7 +165,8 @@ void ActiveGraphicsItemGroup::showHighlighting()
     if (!aniShadow)
       shadow->setOpacity(1.0);
   }
-  else {
+  else if (m_helper && shadow)
+  {
     m_helper->show();
     shadow->setEnabled(true && m_shadowenabled);
   }
@@ -183,7 +184,8 @@ void ActiveGraphicsItemGroup::hideHighlighting()
     if (!aniShadow)
       shadow->setOpacity(0.0);
   }
-  else {
+  else if (m_helper && shadow)
+  {
     m_helper->hide();
     shadow->setEnabled(false);
   }

@@ -9,12 +9,13 @@
 #include "qpx_util.h"
 
 NuclideItem::NuclideItem()
-  : ClickableItem(ClickableItem::InvalidType),
-    pNucHl(0), pNucVerticalArrow(0)
+  : ClickableItem(ClickableItem::InvalidType)
 {
 }
 
-NuclideItem::NuclideItem(const Nuclide &nuc, Type tp, SchemeVisualSettings vis, QGraphicsScene *scene)
+NuclideItem::NuclideItem(const Nuclide &nuc, Type tp,
+                         SchemeVisualSettings vis,
+                         QGraphicsScene *scene)
   : NuclideItem()
 {
   if (nuc.empty())

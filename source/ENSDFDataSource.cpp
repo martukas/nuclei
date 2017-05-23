@@ -59,17 +59,33 @@ DecayScheme ENSDFDataSource::decay(const ENSDFTreeItem *item)
   if (!eitem)
     return DecayScheme();
 
-  if (!eitem->parent() || !eitem->isSelectable())
-    return DecayScheme();
-//  if (dparser.mass_num() == eitem->parent()->id().A())
-//  {
-//    DecayScheme dec(dparser.get_decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
-//    return dec;
-//  }
+  if (eitem->isSelectable())
+  {
+    if (eitem->parent()
+        && eitem->parent()->id().valid())
+    {
+      auto eitem2 = eitem->parent();
+      if (eitem2->parent()
+          && eitem2->parent()->id().valid())
+      {
+        dparser = parser.get_dp(eitem->parent()->id().A());
+        return DecayScheme(dparser.get_decay(eitem->parent()->id(),
+                                             eitem->data(0).toString().toStdString()));
+      }
+      else
+      {
+        dparser = parser.get_dp(eitem->id().A());
+        return DecayScheme(dparser.get_nuclide(eitem->id()));
+      }
+    }
+    else
+    {
+      dparser = parser.get_dp(eitem->id().A());
+      return DecayScheme(dparser.get_info());
+    }
+  }
 
-  dparser = parser.get_dp(eitem->parent()->id().A());
-  DecayScheme dec(dparser.get_decay(eitem->parent()->id(), eitem->data(0).toString().toStdString()));
-  return dec;
+  return DecayScheme();
 }
 
 void ENSDFDataSource::deleteDatabaseAndCache()
@@ -213,18 +229,25 @@ void ENSDFDataSource::createENSDFCache()
 
   for (auto &a : aList)
   {
+    NuclideId na;
+    na.set_A(a);
+    ENSDFTreeItem *aa = new ENSDFTreeItem(ENSDFTreeItem::DaughterType,
+                                          na,
+                                          QList<QVariant>() << ("A=" + QString::number(a)),
+                                          true,
+                                          root);
+
     auto mc = parser.get_dp(a);
 
     for (auto &daughter : mc.daughters())
     {
-      if (mc.decays(daughter).empty())
-        continue;
 
       ENSDFTreeItem *d = new ENSDFTreeItem(ENSDFTreeItem::DaughterType,
                                            daughter,
-                                           QList<QVariant>() << QString::fromStdString(daughter.symbolicName()).toUpper(),
-                                           false,
-                                           root);
+                                           QList<QVariant>() << QString::fromStdString(daughter.symbolicName()),
+                                           true,
+                                           aa);
+
       for (auto &decay : mc.decays(daughter))
       {
         QString st = QString::fromStdString(decay);

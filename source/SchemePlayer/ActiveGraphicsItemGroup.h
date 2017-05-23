@@ -41,13 +41,16 @@ private:
     void hideHighlighting();
     void updateHighlightColor();
     ClickableItem *assocItem;
-    GraphicsDropShadowEffect *shadow;
-    mutable QPainterPath *m_shape;
-    mutable GraphicsHighlightItem *m_helper;
-    bool m_highlighted, m_hover, m_shadowenabled;
+    GraphicsDropShadowEffect *shadow {nullptr};
+    mutable QPainterPath *m_shape {nullptr};
+    mutable GraphicsHighlightItem *m_helper {nullptr};
+    bool m_highlighted {false};
+    bool m_hover {false};
+    bool m_shadowenabled {true};
 
-    QPropertyAnimation *aniHighlight, *aniShadow;
-    QParallelAnimationGroup *aniGroup;
+    QPropertyAnimation *aniHighlight {nullptr};
+    QPropertyAnimation *aniShadow {nullptr};
+    QParallelAnimationGroup *aniGroup {nullptr};
     QColor activeColor;
 
     static const QColor hoverColor;
