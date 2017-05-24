@@ -16,48 +16,57 @@ class TransitionItem;
 
 class SchemePlayer : public QObject
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
 
-    explicit SchemePlayer(DecayScheme scheme, QObject *parent = 0);
+  explicit SchemePlayer(DecayScheme scheme, QObject *parent = 0);
 
-    void setStyle(const QFont &fontfamily, unsigned int sizePx);
-    QGraphicsScene * levelPlot();
+  void setStyle(const QFont &fontfamily, unsigned int sizePx);
+  QGraphicsScene * levelPlot();
 
-    void setShadowEnabled(bool enable);
+  void setShadowEnabled(bool enable);
 
-    QString name() const;
+  const DecayScheme& scheme() const;
 
-    void triggerDataUpdate();
+  QString name() const;
+
+  void triggerDataUpdate();
+
+  std::set<Energy> selected_levels() const;
+  std::set<Energy> selected_parent_levels() const;
+  std::set<Energy> selected_transistions() const;
 
 signals:
-    void enabledShadow(bool enable);
-    
+  void enabledShadow(bool enable);
+  void selectionChanged();
+
 private slots:
-    void itemClicked(ClickableItem *item);
+  void itemClicked(ClickableItem *item);
 
 private:
-    DecayScheme scheme_;
+  DecayScheme scheme_;
 
-    void clickedGamma(TransitionItem *g);
-    void clickedEnergyLevel(LevelItem *e);
-    void alignGraphicsItems();
+  void clickedGamma(TransitionItem *g);
+  void clickedEnergyLevel(LevelItem *e);
+  void alignGraphicsItems();
 
 
-    QGraphicsScene *scene_ {nullptr};
+  QGraphicsScene *scene_ {nullptr};
 
-    // highlighted items
-    Energy firstSelectedGamma, secondSelectedGamma;
-    Energy selectedEnergyLevel;
+  SchemeVisualSettings visual_settings_;
 
-    SchemeVisualSettings visual_settings_;
+  NuclideItem parent_, daughter_;
+  std::map<Energy, LevelItem*> levels_;
+  std::map<Energy, LevelItem*> parent_levels_;
+  std::map<Energy, TransitionItem*> transitions_;
 
-    NuclideItem parent_, daughter_;
-    std::map<Energy,LevelItem*> levels_;
-    std::map<Energy,LevelItem*> parent_levels_;
-    QList<TransitionItem*> transitions_;
+  std::set<Energy> selected_levels_;
+  std::set<Energy> selected_parent_levels_;
+  std::set<Energy> selected_transitions_;
 
-    void addLevel(Level level, SchemeVisualSettings vis);
-    void addParentLevel(Level level, SchemeVisualSettings vis);
-    void addTransition(Transition transition, SchemeVisualSettings vis);
+  void addLevel(Level level, SchemeVisualSettings vis);
+  void addParentLevel(Level level, SchemeVisualSettings vis);
+  void addTransition(Transition transition, SchemeVisualSettings vis);
+
+  void deselect_all();
 };
