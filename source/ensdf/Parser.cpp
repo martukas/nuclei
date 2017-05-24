@@ -176,11 +176,8 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
         currentLevel.setFeedIntensity(e.intensity_beta_plus + e.intensity_ec);
     }
 
-//    for (const CommentsRecord& c : lev.comments)
-//    {
-
-//    }
-
+    for (const CommentsRecord& c : lev.comments)
+      currentLevel.comments.push_back(c.html());
 
     daughter_nuclide.add_level(currentLevel);
   }
@@ -236,6 +233,10 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   for (const CommentsRecord& c : decaydata.comments)
     ret.comments["comments"].push_back(c.html());
 
+  ret.references_ = references_;
+  for (auto r : references_)
+    ret.references_[CommentsRecord::adjust_case(r.first)] = r.second;
+
   return ret;
 }
 
@@ -287,11 +288,8 @@ DecayScheme DaughterParser::get_nuclide(NuclideId daughter, double max_level_dif
         currentLevel.setFeedIntensity(e.intensity_beta_plus + e.intensity_ec);
     }
 
-//    for (const CommentsRecord& c : lev.comments)
-//    {
-
-//    }
-
+    for (const CommentsRecord& c : lev.comments)
+      currentLevel.comments.push_back(c.html());
 
     daughter_nuclide.add_level(currentLevel);
   }
@@ -325,6 +323,10 @@ DecayScheme DaughterParser::get_nuclide(NuclideId daughter, double max_level_dif
   for (const CommentsRecord& c : nucdata.comments)
     ret.comments["comments"].push_back(c.html());
 
+  ret.references_ = references_;
+  for (auto r : references_)
+    ret.references_[CommentsRecord::adjust_case(r.first)] = r.second;
+
   return ret;
 }
 
@@ -343,6 +345,10 @@ DecayScheme DaughterParser::get_info() const
 
   for (const CommentsRecord& c : mass_comments_)
     ret.comments["comments"].push_back(c.html());
+
+  ret.references_ = references_;
+  for (auto r : references_)
+    ret.references_[CommentsRecord::adjust_case(r.first)] = r.second;
 
   return ret;
 }

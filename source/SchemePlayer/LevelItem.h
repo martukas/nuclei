@@ -20,8 +20,9 @@ public:
   LevelItem(Level level, SchemeVisualSettings vis, QGraphicsScene *scene);
 
   //returns feeding arrow height, if any
-  double align(double leftlinelength, double rightlinelength, double arrowleft, double arrowright,
-             SchemeVisualSettings vis);
+  double align(double leftlinelength, double rightlinelength,
+               double arrowleft, double arrowright,
+               SchemeVisualSettings vis);
 
 //private:
   QGraphicsLineItem *graline, *grafeedarrow;

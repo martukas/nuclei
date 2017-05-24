@@ -20,7 +20,9 @@ class TransitionItem : public ClickableItem
 public:
 
   TransitionItem();
-  TransitionItem(Transition transition, SchemeVisualSettings vis, QGraphicsScene *scene);
+  TransitionItem(Transition transition,
+                 SchemeVisualSettings vis,
+                 QGraphicsScene *scene);
 
   virtual ~TransitionItem();
 

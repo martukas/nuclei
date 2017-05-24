@@ -38,6 +38,8 @@ private slots:
     void zoomOut();
 
     void showPreferences();
+
+    void playerSelectionChanged();
     
 protected:
     void closeEvent(QCloseEvent * event);

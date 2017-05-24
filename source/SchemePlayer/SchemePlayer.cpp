@@ -35,7 +35,12 @@ SchemePlayer::SchemePlayer(DecayScheme scheme, QObject *parent)
   else
     visual_settings_.parentpos = RightParent;
 
-//  DBG << "Creating scheme player for:\n" << scheme_.to_string();
+  //  DBG << "Creating scheme player for:\n" << scheme_.to_string();
+}
+
+const DecayScheme& SchemePlayer::scheme() const
+{
+  return scheme_;
 }
 
 QGraphicsScene * SchemePlayer::levelPlot()
@@ -94,7 +99,7 @@ void SchemePlayer::addTransition(Transition transition, SchemeVisualSettings vis
   TransitionItem *transrend = new TransitionItem(transition, vis, scene_);
   connect(this, SIGNAL(enabledShadow(bool)), transrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
   connect(transrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
-  transitions_.append(transrend);
+  transitions_[transition.energy()] = transrend;
 }
 
 void SchemePlayer::alignGraphicsItems()
@@ -151,11 +156,11 @@ void SchemePlayer::alignGraphicsItems()
   for (auto &gamma : transitions_)
   {
     if (boost::math::isnan(gammaspace))
-      gammaspace = gamma->widthFromOrigin();
+      gammaspace = gamma.second->widthFromOrigin();
     else
-      gammaspace += gamma->minimalXDistance();
-    if (gamma->transition_.intensity().hasFiniteValue())
-      max_intensity = std::max(max_intensity, gamma->transition_.intensity().value());
+      gammaspace += gamma.second->minimalXDistance();
+    if (gamma.second->transition_.intensity().hasFiniteValue())
+      max_intensity = std::max(max_intensity, gamma.second->transition_.intensity().value());
   }
   if (!boost::math::isfinite(gammaspace))
     gammaspace = 0.0;
@@ -167,23 +172,23 @@ void SchemePlayer::alignGraphicsItems()
   {
     if (firstgamma)
     {
-      currentgammapos -= gamma->widthFromOrigin();
+      currentgammapos -= gamma.second->widthFromOrigin();
       firstgamma = false;
     }
     else
-      currentgammapos -= gamma->minimalXDistance();
+      currentgammapos -= gamma.second->minimalXDistance();
 
-    if (levels_.count(gamma->transition_.from()) && levels_.count(gamma->transition_.to()))
+    if (levels_.count(gamma.second->transition_.from()) && levels_.count(gamma.second->transition_.to()))
     {
-      double arrowDestY = levels_.at(gamma->transition_.to())->graYPos
-          - levels_.at(gamma->transition_.from())->graYPos;
-      gamma->updateArrow(arrowDestY, max_intensity);
+      double arrowDestY = levels_.at(gamma.second->transition_.to())->graYPos
+          - levels_.at(gamma.second->transition_.from())->graYPos;
+      gamma.second->updateArrow(arrowDestY, max_intensity);
     }
 
-    if (levels_.count(gamma->transition_.from()))
-      gamma->graphicsItem()->setPos(std::floor(currentgammapos) + 0.5 * gamma->pen().widthF(),
-                                    levels_.at(gamma->transition_.from())->graYPos + 0.5
-                                    * levels_.at(gamma->transition_.from())->graline->pen().widthF());
+    if (levels_.count(gamma.second->transition_.from()))
+      gamma.second->graphicsItem()->setPos(std::floor(currentgammapos) + 0.5 * gamma.second->pen().widthF(),
+                                           levels_.at(gamma.second->transition_.from())->graYPos + 0.5
+                                           * levels_.at(gamma.second->transition_.from())->graline->pen().widthF());
   }
 
   // determine line length for parent levels
@@ -307,7 +312,16 @@ void SchemePlayer::clickedGamma(TransitionItem *g)
   if (!g)
     return;
 
-  DBG << "Clicked transition " << g->transition_.energy().to_string();
+  if (g->graphicsItem()->isHighlighted())
+    g->graphicsItem()->setHighlighted(false);
+  else
+  {
+    deselect_all();
+    g->graphicsItem()->setHighlighted(true);
+    selected_transitions_.insert(g->transition_.energy());
+  }
+
+  //  DBG << "Clicked transition " << g->transition_.energy().to_string();
 
   triggerDataUpdate();
 }
@@ -317,14 +331,53 @@ void SchemePlayer::clickedEnergyLevel(LevelItem *e)
   if (!e)
     return;
 
-  DBG << "Clicked level " << e->energy_.to_string();
+  if (e->graphicsItem()->isHighlighted())
+    e->graphicsItem()->setHighlighted(false);
+  else
+  {
+    deselect_all();
+    e->graphicsItem()->setHighlighted(true);
+    if (levels_.count(e->energy_))
+      selected_levels_.insert(e->energy_);
+    else if (parent_levels_.count(e->energy_))
+      selected_parent_levels_.insert(e->energy_);
+  }
 
   triggerDataUpdate();
 }
 
+void SchemePlayer::deselect_all()
+{
+  for (auto l : levels_)
+    l.second->graphicsItem()->setHighlighted(false);
+  for (auto l : parent_levels_)
+    l.second->graphicsItem()->setHighlighted(false);
+  for (auto l : transitions_)
+    l.second->graphicsItem()->setHighlighted(false);
+  selected_levels_.clear();
+  selected_parent_levels_.clear();
+  selected_transitions_.clear();
+}
+
+std::set<Energy> SchemePlayer::selected_levels() const
+{
+  return selected_levels_;
+}
+
+std::set<Energy> SchemePlayer::selected_parent_levels() const
+{
+  return selected_parent_levels_;
+}
+
+std::set<Energy> SchemePlayer::selected_transistions() const
+{
+  return selected_transitions_;
+}
+
+
 void SchemePlayer::triggerDataUpdate()
 {
-  //  emit updatedData(decayDataSet());
+  emit selectionChanged();
 }
 
 void SchemePlayer::setStyle(const QFont &fontfamily, unsigned int sizePx)
