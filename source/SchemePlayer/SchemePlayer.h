@@ -22,7 +22,7 @@ public:
   explicit SchemePlayer(DecayScheme scheme, QObject *parent = 0);
 
   void setStyle(const QFont &fontfamily, unsigned int sizePx);
-  QGraphicsScene * levelPlot();
+  QGraphicsScene* levelPlot();
 
   void setShadowEnabled(bool enable);
 
@@ -31,6 +31,8 @@ public:
   QString name() const;
 
   void triggerDataUpdate();
+
+  void clearSelection();
 
   std::set<Energy> selected_levels() const;
   std::set<Energy> selected_parent_levels() const;
