@@ -61,6 +61,6 @@ struct CommentsRecord
 
   std::string extract(const std::string& line);
 
-  std::string adjust_case(const std::string& line);
+  static std::string adjust_case(const std::string& line);
 };
 

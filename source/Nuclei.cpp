@@ -276,40 +276,93 @@ void Nuclei::loadDecay(DecayScheme decay)
 
   m_decay = QSharedPointer<SchemePlayer>(new SchemePlayer(decay, this));
 
-//  connect(m_decay.data(), SIGNAL(updatedData(SchemePlayer::DecayDataSet)), this, SLOT(updateDecayData(SchemePlayer::DecayDataSet)));
+  connect(m_decay.data(), SIGNAL(selectionChanged()),
+          this, SLOT(playerSelectionChanged()));
   m_decay->setStyle(preferencesDialogUi->fontFamily->currentFont(), preferencesDialogUi->fontSize->value());
   QGraphicsScene *scene = m_decay->levelPlot();
   ui->decayView->setScene(scene);
   ui->decayView->setSceneRect(scene->sceneRect().adjusted(-20, -20, 20, 20));
 
   QString text;
-  for (json::iterator it = decay.comments.begin();
-       it != decay.comments.end(); ++it)
+  if (decay.comments.count("comments"))
   {
-    if (it.key() == "history")
+    text += "<h3>Comments</h3>";
+    int refnum = 1;
+    for (auto c : decay.comments["comments"])
     {
-      text += "<h3>History</h3>";
-      for (auto j : it.value())
-      {
-        for (json::iterator h = j.begin(); h != j.end(); ++h)
-          text += "<b>" + QString::fromStdString(h.key()) + ":</b> "
-              + QString::fromStdString(h.value().get<std::string>()) + "<br>";
-        text += "<br>";
-      }
-    }
-    else if (it.key() == "comments")
-    {
-      text += "<h3>Comments</h3>";
-      for (json::iterator c = it.value().begin();
-           c != it.value().end(); ++c)
-        text += QString::fromStdString(c.value().get<std::string>()) + "<br>";
+      auto newtext = c.get<std::string>();
+      for (const auto& r : decay.references_)
+        if (boost::contains(newtext, r.first))
+        {
+          boost::replace_all(newtext, r.first,
+                             "<a href=\"https://www.nndc.bnl.gov/nsr/knum_act.jsp?ofrml=Normal&keylst="
+                             + r.first + "%0D%0A&getkl=Search\">["
+                             + std::to_string(refnum++)
+                             + "]</a>");
+        }
+      text += QString::fromStdString(newtext) + "<br>";
     }
   }
 
-  ui->textBrowser->setText(text);
+  if (decay.comments.count("history"))
+  {
+    text += "<h3>History</h3>";
+    for (auto j : decay.comments["history"])
+    {
+      for (json::iterator h = j.begin(); h != j.end(); ++h)
+        text += "<b>" + QString::fromStdString(h.key()) + ":</b> "
+            + QString::fromStdString(h.value().get<std::string>()) + "<br>";
+      text += "<br>";
+    }
+  }
+
+  ui->textBrowser->setOpenLinks(true);
+  ui->textBrowser->setOpenExternalLinks(true);
+  ui->textBrowser->setHtml(text);
 
   // update plot
   m_decay->triggerDataUpdate();
   showAll();
 }
 
+void Nuclei::playerSelectionChanged()
+{
+  if (!m_decay)
+    return;
+
+  if (m_decay->selected_levels().size())
+  {
+    auto nrg = *m_decay->selected_levels().begin();
+    auto levels = m_decay->scheme().daughterNuclide().levels();
+    if (!levels.count(nrg))
+      return;
+    const auto& level = levels[nrg];
+    auto refs = m_decay->scheme().references_;
+
+    QString text;
+
+    text += "<h3>Level comments for "
+        + QString::fromStdString(level.energy().to_string())
+        + "</h3>";
+
+    int refnum = 1;
+    for (auto c : level.comments)
+    {
+      auto newtext = c;
+      for (const auto& r : refs)
+        if (boost::contains(newtext, r.first))
+        {
+          boost::replace_all(newtext, r.first,
+                             "<a href=\"https://www.nndc.bnl.gov/nsr/knum_act.jsp?ofrml=Normal&keylst="
+                             + r.first + "%0D%0A&getkl=Search\">["
+                             + std::to_string(refnum++)
+                             + "]</a>");
+        }
+      text += QString::fromStdString(newtext) + "<br>";
+    }
+
+    ui->textBrowser->setOpenLinks(true);
+    ui->textBrowser->setOpenExternalLinks(true);
+    ui->textBrowser->setHtml(text);
+  }
+}
