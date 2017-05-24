@@ -87,9 +87,6 @@
    <addaction name="actionPDF_Export"/>
    <addaction name="actionSVG_Export"/>
    <addaction name="separator"/>
-   <addaction name="actionZoom_In"/>
-   <addaction name="actionZoom_Out"/>
-   <addaction name="actionOriginal_Size"/>
    <addaction name="actionShow_all"/>
    <addaction name="separator"/>
   </widget>
