@@ -43,7 +43,7 @@ const DecayScheme& SchemePlayer::scheme() const
   return scheme_;
 }
 
-QGraphicsScene * SchemePlayer::levelPlot()
+QGraphicsScene* SchemePlayer::levelPlot()
 {
   if (scene_)
     return scene_;
@@ -75,6 +75,7 @@ QGraphicsScene * SchemePlayer::levelPlot()
   }
 
   alignGraphicsItems();
+
   return scene_;
 }
 
@@ -305,6 +306,11 @@ void SchemePlayer::itemClicked(ClickableItem *item)
     clickedEnergyLevel(dynamic_cast<LevelItem*>(item));
   else if (item->type() == ClickableItem::GammaTransitionType)
     clickedGamma(dynamic_cast<TransitionItem*>(item));
+}
+
+void SchemePlayer::clearSelection()
+{
+  deselect_all();
 }
 
 void SchemePlayer::clickedGamma(TransitionItem *g)

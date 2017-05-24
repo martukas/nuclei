@@ -33,9 +33,6 @@ private slots:
     void pdfExport();
 
     void showAll();
-    void showOriginalSize();
-    void zoomIn();
-    void zoomOut();
 
     void showPreferences();
 
@@ -54,4 +51,6 @@ private:
     DecayCascadeItemModel *decaySelectionModel, *searchResultSelectionModel;
     DecayCascadeFilterProxyModel *decayProxyModel, *searchProxyModel;
     QSharedPointer<SchemePlayer> m_decay;
+
+    std::string make_reference_link(std::string ref, int num);
 };

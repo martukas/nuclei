@@ -18,6 +18,8 @@
 #include "DecayCascadeItemModel.h"
 #include "DecayCascadeFilterProxyModel.h"
 
+#include "ScrollZoomView.h"
+
 #include "custom_logger.h"
 
 Nuclei::Nuclei(QWidget *parent) :
@@ -50,13 +52,17 @@ Nuclei::Nuclei(QWidget *parent) :
   connect(ui->actionPDF_Export, SIGNAL(triggered()), this, SLOT(pdfExport()));
 
   connect(ui->actionShow_all, SIGNAL(triggered()), this, SLOT(showAll()));
-  connect(ui->actionOriginal_Size, SIGNAL(triggered()), this, SLOT(showOriginalSize()));
-  connect(ui->actionZoom_In, SIGNAL(triggered()), this, SLOT(zoomIn()));
-  connect(ui->actionZoom_Out, SIGNAL(triggered()), this, SLOT(zoomOut()));
 
   connect(ui->actionPreferences, SIGNAL(triggered()), this, SLOT(showPreferences()));
 
   ui->decayView->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
+
+  ui->decayView->setInteractive(true);
+  ui->decayView->setDragMode(QGraphicsView::ScrollHandDrag);
+  ui->decayView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  ui->decayView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  Graphics_view_zoom* z = new Graphics_view_zoom(ui->decayView);
+  z->set_modifiers(Qt::NoModifier);
 
   // separate init from constructor to avoid crash on cancel
   QTimer::singleShot(0, this, SLOT(initialize()));
@@ -92,6 +98,7 @@ void Nuclei::initialize()
 
   restoreGeometry(s.value("geometry").toByteArray());
   restoreState(s.value("windowState").toByteArray());
+  ui->splitter->restoreState(s.value("splitter").toByteArray());
 
   QSize wsize = size();
   if (wsize.width() > QApplication::desktop()->availableGeometry().width())
@@ -239,21 +246,6 @@ void Nuclei::showAll()
   return;
 }
 
-void Nuclei::showOriginalSize()
-{
-  ui->decayView->setTransform(QTransform());
-}
-
-void Nuclei::zoomIn()
-{
-  ui->decayView->scale(1.25, 1.25);
-}
-
-void Nuclei::zoomOut()
-{
-  ui->decayView->scale(0.8, 0.8);
-}
-
 void Nuclei::showPreferences()
 {
   preferencesDialog->exec();
@@ -264,6 +256,7 @@ void Nuclei::closeEvent(QCloseEvent *event)
   QSettings s;
   s.setValue("geometry", saveGeometry());
   s.setValue("windowState", saveState());
+  s.setValue("splitter", ui->splitter->saveState());
   QMainWindow::closeEvent(event);
 }
 
@@ -295,10 +288,7 @@ void Nuclei::loadDecay(DecayScheme decay)
         if (boost::contains(newtext, r.first))
         {
           boost::replace_all(newtext, r.first,
-                             "<a href=\"https://www.nndc.bnl.gov/nsr/knum_act.jsp?ofrml=Normal&keylst="
-                             + r.first + "%0D%0A&getkl=Search\">["
-                             + std::to_string(refnum++)
-                             + "]</a>");
+                             make_reference_link(r.first, refnum++));
         }
       text += QString::fromStdString(newtext) + "<br>";
     }
@@ -353,10 +343,7 @@ void Nuclei::playerSelectionChanged()
         if (boost::contains(newtext, r.first))
         {
           boost::replace_all(newtext, r.first,
-                             "<a href=\"https://www.nndc.bnl.gov/nsr/knum_act.jsp?ofrml=Normal&keylst="
-                             + r.first + "%0D%0A&getkl=Search\">["
-                             + std::to_string(refnum++)
-                             + "]</a>");
+                             make_reference_link(r.first, refnum++));
         }
       text += QString::fromStdString(newtext) + "<br>";
     }
@@ -366,3 +353,12 @@ void Nuclei::playerSelectionChanged()
     ui->textBrowser->setHtml(text);
   }
 }
+
+std::string Nuclei::make_reference_link(std::string ref, int num)
+{
+  return "<a href=\"https://www.nndc.bnl.gov/nsr/knum_act.jsp?ofrml=Normal&keylst="
+      + ref + "%0D%0A&getkl=Search\"><small>"
+      + std::to_string(num++)
+      + "</small></a>";
+}
+
