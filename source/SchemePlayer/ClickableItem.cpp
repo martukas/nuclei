@@ -3,41 +3,20 @@
 #include "ActiveGraphicsItemGroup.h"
 
 ClickableItem::ClickableItem(Type type)
-    : item(0), t(type)
-{
-}
+  :t(type) {}
 
 ClickableItem::Type ClickableItem::type() const
 {
-    return t;
+  return t;
 }
 
 ActiveGraphicsItemGroup *ClickableItem::graphicsItem() const
 {
-    return item;
+  return item;
 }
 
-SchemeVisualSettings::SchemeVisualSettings()
-{
-  parentpos = NoParent;
-
-  outerGammaMargin = 50.0;
-  outerLevelTextMargin = 4.0; // level lines extend beyond the beginning/end of the level texts by this value
-  maxExtraLevelDistance = 120.0;
-  levelToHalfLifeDistance = 10.0;
-  parentNuclideLevelLineLength = 110.0; // initial (minimal) length of parent level lines
-  parentNuclideLevelLineExtraLength = 15.5; // extra length of "active" levels (i.e. levels decaying to the daughter nuclide)
-  parentNuclideMinSpinEnergyDistance = 15.0;
-  feedingArrowLineLength = 110.0;
-  feedingArrowHeadLength = 11.0;
-  feedingArrowHeadWidth = 5.0;
-  feedingArrowGap = 5.0;
-  feedingArrowTextMargin = 4.0;
-  parentNuclideToEnergyLevelsDistance = 30.0;
-  highlightWidth = 5.0;
-}
-
-void SchemeVisualSettings::setStyle(const QFont &fontfamily, unsigned int sizePx)
+void SchemeVisualSettings::setStyle(const QFont &fontfamily,
+                                    unsigned int sizePx)
 {
   // prepare fonts and their metrics
   stdFont = fontfamily;
