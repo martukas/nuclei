@@ -114,15 +114,17 @@ void SchemePlayer::alignGraphicsItems()
   //  QFontMetrics feedIntensityFontMetrics(feedIntensityFont);
 
   // determine size information
-  double maxEnergyLabelWidth = 0.0;
-  double maxSpinLabelWidth = 0.0;
+  int maxEnergyLabelWidth {0};
+  int maxSpinLabelWidth {0};
 
   for (auto level : levels_)
   {
-    if (stdBoldFontMetrics.width(level.second->graspintext->text()) > maxSpinLabelWidth)
-      maxSpinLabelWidth = stdBoldFontMetrics.width(level.second->graspintext->text());
-    if (stdBoldFontMetrics.width(level.second->graetext->text()) > maxEnergyLabelWidth)
-      maxEnergyLabelWidth = stdBoldFontMetrics.width(level.second->graetext->text());
+    maxSpinLabelWidth
+        = std::max(maxSpinLabelWidth,
+                   stdBoldFontMetrics.width(level.second->spin_text()));
+    maxEnergyLabelWidth
+        = std::max(maxEnergyLabelWidth,
+                   stdBoldFontMetrics.width(level.second->energy_text()));
   }
 
   // determine y coordinates for all levels
@@ -145,7 +147,7 @@ void SchemePlayer::alignGraphicsItems()
       double minheight = 0.5*(i.second->graphicsItem()->boundingRect().height() + prev_level->graphicsItem()->boundingRect().height());
       double extraheight = visual_settings_.maxExtraLevelDistance * (i.first - prev_energy) / maxEnergyGap;
 
-      i.second->graYPos = std::floor(prev_level->graYPos - minheight - extraheight) + 0.5 * prev_level->graline->pen().widthF();
+      i.second->adjust_ypos(minheight + extraheight);
       prev_energy = i.first;
       prev_level = i.second;
     }
@@ -179,32 +181,33 @@ void SchemePlayer::alignGraphicsItems()
     else
       currentgammapos -= gamma.second->minimalXDistance();
 
-    if (levels_.count(gamma.second->transition_.from()) && levels_.count(gamma.second->transition_.to()))
+    if (levels_.count(gamma.second->transition_.from())
+        && levels_.count(gamma.second->transition_.to()))
     {
-      double arrowDestY = levels_.at(gamma.second->transition_.to())->graYPos
-          - levels_.at(gamma.second->transition_.from())->graYPos;
+      double arrowDestY =
+          levels_.at(gamma.second->transition_.to())->ypos()
+          - levels_.at(gamma.second->transition_.from())->ypos();
       gamma.second->updateArrow(arrowDestY, max_intensity);
     }
 
     if (levels_.count(gamma.second->transition_.from()))
-      gamma.second->graphicsItem()->setPos(std::floor(currentgammapos) + 0.5 * gamma.second->pen().widthF(),
-                                           levels_.at(gamma.second->transition_.from())->graYPos + 0.5
-                                           * levels_.at(gamma.second->transition_.from())->graline->pen().widthF());
+      gamma.second->graphicsItem()->setPos(
+            std::floor(currentgammapos) + 0.5 * gamma.second->pen().widthF(),
+            levels_.at(gamma.second->transition_.from())->bottom_ypos());
   }
 
   // determine line length for parent levels
   double pNucLineLength = visual_settings_.parentNuclideLevelLineLength;
   if (visual_settings_.parentpos != NoParent)
   {
-    pNucLineLength = qMax(visual_settings_.parentNuclideLevelLineLength, parent_.graphicsItem()->boundingRect().width() + 20.0);
+    pNucLineLength
+        = qMax(visual_settings_.parentNuclideLevelLineLength,
+               parent_.graphicsItem()->boundingRect().width() + 20.0);
     for (auto level : parent_levels_)
-    {
-      pNucLineLength = qMax(pNucLineLength,
-                            level.second->graetext->boundingRect().width() +
-                            level.second->graspintext->boundingRect().width() +
-                            visual_settings_.parentNuclideMinSpinEnergyDistance +
-                            2.0 * visual_settings_.outerLevelTextMargin);
-    }
+      pNucLineLength
+          = qMax(pNucLineLength, level.second->nuc_line_width()
+                 + visual_settings_.parentNuclideMinSpinEnergyDistance
+                 + 2.0 * visual_settings_.outerLevelTextMargin);
   }
   pNucLineLength = std::ceil(pNucLineLength);
 
@@ -212,15 +215,18 @@ void SchemePlayer::alignGraphicsItems()
   double arrowLineLength = visual_settings_.feedingArrowLineLength;
   if (visual_settings_.parentpos != NoParent)
     for (auto level : levels_)
-      if (level.second->grafeedintens)
-        arrowLineLength = qMax(arrowLineLength,
-                               level.second->grafeedintens->boundingRect().width() +
-                               visual_settings_.parentNuclideLevelLineExtraLength +
-                               2.0 * visual_settings_.feedingArrowTextMargin);
+      arrowLineLength = qMax(arrowLineLength,
+                             level.second->feed_intensity_width()
+                             + visual_settings_.parentNuclideLevelLineExtraLength
+                             + 2.0 * visual_settings_.feedingArrowTextMargin);
 
   // calculate length of level lines
-  double leftlinelength = visual_settings_.outerLevelTextMargin + maxSpinLabelWidth + visual_settings_.outerGammaMargin + 0.5*gammaspace;
-  double rightlinelength = visual_settings_.outerLevelTextMargin + maxEnergyLabelWidth + visual_settings_.outerGammaMargin + 0.5*gammaspace;
+  double leftlinelength = visual_settings_.outerLevelTextMargin
+      + maxSpinLabelWidth + visual_settings_.outerGammaMargin
+      + 0.5*gammaspace;
+  double rightlinelength = visual_settings_.outerLevelTextMargin
+      + maxEnergyLabelWidth + visual_settings_.outerGammaMargin
+      + 0.5*gammaspace;
 
   // calculate start and end points of parent level lines
   double arrowleft = std::floor((visual_settings_.parentpos == RightParent) ? rightlinelength : -leftlinelength - arrowLineLength - visual_settings_.parentNuclideLevelLineExtraLength) - 0.5*visual_settings_.feedArrowPen.widthF();
@@ -263,19 +269,27 @@ void SchemePlayer::alignGraphicsItems()
     for (auto level : parent_levels_)
     {
       bool feeding = false;
-      if (scheme_.parentNuclide().levels().count(level.second->energy_))
-        feeding = scheme_.parentNuclide().levels().at(level.second->energy_).isFeedingLevel();
+      if (scheme_.parentNuclide().levels().count(level.second->energy()))
+        feeding = scheme_.parentNuclide().levels().at(level.second->energy()).isFeedingLevel();
       double left = feeding ? activeleft : normalleft;
       double right = feeding ? activeright : normalright;
 
-      level.second->graline->setLine(left, y, right, y);
-      level.second->graetext->setPos((parent_levels_.size() == 1 ? activeright : normalright) - visual_settings_.outerLevelTextMargin - level.second->graetext->boundingRect().width(), y - level.second->graetext->boundingRect().height());
-      level.second->graspintext->setPos((parent_levels_.size() == 1 ? activeleft : normalleft) + visual_settings_.outerLevelTextMargin, y - level.second->graetext->boundingRect().height());
+      level.second->line_->setLine(left, y, right, y);
+      level.second->etext_->setPos(
+            (parent_levels_.size() == 1 ? activeright : normalright)
+            - visual_settings_.outerLevelTextMargin
+            - level.second->etext_->boundingRect().width(),
+            y - level.second->etext_->boundingRect().height());
+      level.second->spintext_->setPos(
+            (parent_levels_.size() == 1 ? activeleft : normalleft)
+            + visual_settings_.outerLevelTextMargin,
+            y - level.second->etext_->boundingRect().height());
 
       topMostLevel = y;
 
       // update y
-      y -= qMax(level.second->graetext->boundingRect().height(), level.second->graspintext->boundingRect().height()) + 10.0;
+      y -= qMax(level.second->etext_->boundingRect().height(),
+                level.second->spintext_->boundingRect().height()) + 10.0;
     }
 
     double arrowVStart = topMostLevel - 0.5*visual_settings_.stableLevelPen.widthF();
@@ -343,10 +357,10 @@ void SchemePlayer::clickedEnergyLevel(LevelItem *e)
   {
     deselect_all();
     e->graphicsItem()->setHighlighted(true);
-    if (levels_.count(e->energy_))
-      selected_levels_.insert(e->energy_);
-    else if (parent_levels_.count(e->energy_))
-      selected_parent_levels_.insert(e->energy_);
+    if (levels_.count(e->energy()))
+      selected_levels_.insert(e->energy());
+    else if (parent_levels_.count(e->energy()))
+      selected_parent_levels_.insert(e->energy());
   }
 
   triggerDataUpdate();
