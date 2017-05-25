@@ -2,6 +2,8 @@
 #include "Fields.h"
 #include <boost/algorithm/string.hpp>
 
+#include "Translator.h"
+
 bool HistoryRecord::match(const std::string& line)
 {
   return match_first(line, "\\sH");

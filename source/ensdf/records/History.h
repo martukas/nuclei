@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Record.h"
-#include "Comments.h"
 
 struct HistoryRecord
 {
