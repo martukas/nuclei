@@ -97,6 +97,28 @@ TransitionItem::~TransitionItem()
 {
 }
 
+double TransitionItem::intensity() const
+{
+  if (transition_.intensity().hasFiniteValue())
+    return transition_.intensity().value();
+  return 0;
+}
+
+Energy TransitionItem::energy() const
+{
+  return transition_.energy();
+}
+
+Energy TransitionItem::from() const
+{
+  return transition_.from();
+}
+
+Energy TransitionItem::to() const
+{
+  return transition_.to();
+}
+
 void TransitionItem::updateArrow(double arrowDestY, double max_intensity)
 {
   item->removeFromGroup(clickarea);
