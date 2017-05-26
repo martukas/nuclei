@@ -62,8 +62,9 @@ void LevelItem::set_funky2_position(double xe,
                                     double xspin,
                                     double y)
 {
-   etext_->setPos(xe, y - etext_->boundingRect().height());
-   spintext_->setPos(xspin, y - etext_->boundingRect().height());
+  double yy = y - etext_->boundingRect().height();
+  etext_->setPos(xe - etext_->boundingRect().width(), yy);
+  spintext_->setPos(xspin, yy);
 }
 
 double LevelItem::max_y_height() const
@@ -73,14 +74,14 @@ double LevelItem::max_y_height() const
            spintext_->boundingRect().height());
 }
 
-//void LevelItem::set_ypos(double new_ypos)
-//{
-//  ypos_ = new_ypos;
-//}
-
-void LevelItem::adjust_ypos(double offset)
+void LevelItem::set_ypos(double new_ypos)
 {
-  ypos_ = std::floor(ypos_ - offset) + 0.5 * line_->pen().widthF();
+  ypos_ = new_ypos;
+}
+
+double LevelItem::above_ypos(double offset)
+{
+  return std::floor(ypos_ - offset) + 0.5 * line_->pen().widthF();
 }
 
 LevelItem::LevelItem(Level level,
@@ -105,12 +106,12 @@ LevelItem::LevelItem(Level level,
     line_->setPen(vis.stableLevelPen);
 
   clickarea_ = new QGraphicsRectItem(-vis.outerGammaMargin, -0.5*stdBoldFontMetrics.height(),
-                                       2.0*vis.outerGammaMargin, stdBoldFontMetrics.height());
+                                     2.0*vis.outerGammaMargin, stdBoldFontMetrics.height());
   clickarea_->setPen(Qt::NoPen);
   clickarea_->setBrush(Qt::NoBrush);
 
   highlighthelper_ = new GraphicsHighlightItem(-vis.outerGammaMargin, -0.5*vis.highlightWidth,
-                                                 2.0*vis.outerGammaMargin, vis.highlightWidth);
+                                               2.0*vis.outerGammaMargin, vis.highlightWidth);
   highlighthelper_->setOpacity(0.0);
 
   QString etext = QString::fromStdString(energy_.to_string());
