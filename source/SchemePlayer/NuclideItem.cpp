@@ -13,6 +13,20 @@ NuclideItem::NuclideItem()
 {
 }
 
+void NuclideItem::position_arrow(double x, double start, double end)
+{
+  if (std::isfinite(start) && std::isfinite(end))
+    pNucVerticalArrow->setLine(x, start, x, end);
+}
+
+void NuclideItem::position_text(double parent_center_x,
+                                double ypos)
+{
+  pNucHl->setPos(parent_center_x - 0.5*pNucHl->boundingRect().width(),
+                 ypos - 12.0);
+}
+
+
 NuclideItem::NuclideItem(const Nuclide &nuc, Type tp,
                          SchemeVisualSettings vis,
                          QGraphicsScene *scene)

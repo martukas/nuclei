@@ -120,17 +120,17 @@ void SchemePlayer::alignGraphicsItems()
   for (auto level : levels_)
   {
     maxSpinLabelWidth
-        = std::max(maxSpinLabelWidth,
-                   stdBoldFontMetrics.width(level.second->spin_text()));
+        = qMax(maxSpinLabelWidth,
+               stdBoldFontMetrics.width(level.second->spin_text()));
     maxEnergyLabelWidth
-        = std::max(maxEnergyLabelWidth,
-                   stdBoldFontMetrics.width(level.second->energy_text()));
+        = qMax(maxEnergyLabelWidth,
+               stdBoldFontMetrics.width(level.second->energy_text()));
   }
 
   // determine y coordinates for all levels
-  double maxEnergyGap = 0.0;
   if (!levels_.empty())
   {
+    double maxEnergyGap = 0.0;
     Energy prev_energy = levels_.begin()->first;
     for (auto i : levels_)
     {
@@ -144,29 +144,27 @@ void SchemePlayer::alignGraphicsItems()
     prev_energy = levels_.begin()->first;
     for (auto i : levels_)
     {
-      double minheight = 0.5*(i.second->graphicsItem()->boundingRect().height() + prev_level->graphicsItem()->boundingRect().height());
-      double extraheight = visual_settings_.maxExtraLevelDistance * (i.first - prev_energy) / maxEnergyGap;
+      double minheight
+          = 0.5*(i.second->graphicsItem()->boundingRect().height()
+                 + prev_level->graphicsItem()->boundingRect().height());
+      double extraheight
+          = visual_settings_.maxExtraLevelDistance
+          * (i.first - prev_energy) / maxEnergyGap;
 
-      i.second->adjust_ypos(minheight + extraheight);
+      i.second->set_ypos(prev_level->above_ypos(minheight + extraheight));
       prev_energy = i.first;
       prev_level = i.second;
     }
   }
 
   // determine space needed for gammas
-  double gammaspace = std::numeric_limits<double>::quiet_NaN();
-  double max_intensity = 0;
+  double gammaspace {0};
+  double max_intensity {0};
   for (auto &gamma : transitions_)
   {
-    if (boost::math::isnan(gammaspace))
-      gammaspace = gamma.second->widthFromOrigin();
-    else
-      gammaspace += gamma.second->minimalXDistance();
-    if (gamma.second->transition_.intensity().hasFiniteValue())
-      max_intensity = std::max(max_intensity, gamma.second->transition_.intensity().value());
+    gammaspace += gamma.second->minimalXDistance();
+    max_intensity = qMax(max_intensity, gamma.second->intensity());
   }
-  if (!boost::math::isfinite(gammaspace))
-    gammaspace = 0.0;
 
   // set gamma positions
   double currentgammapos = 0.5*gammaspace;
@@ -181,19 +179,19 @@ void SchemePlayer::alignGraphicsItems()
     else
       currentgammapos -= gamma.second->minimalXDistance();
 
-    if (levels_.count(gamma.second->transition_.from())
-        && levels_.count(gamma.second->transition_.to()))
+    if (levels_.count(gamma.second->from())
+        && levels_.count(gamma.second->to()))
     {
       double arrowDestY =
-          levels_.at(gamma.second->transition_.to())->ypos()
-          - levels_.at(gamma.second->transition_.from())->ypos();
+          levels_.at(gamma.second->to())->ypos()
+          - levels_.at(gamma.second->from())->ypos();
       gamma.second->updateArrow(arrowDestY, max_intensity);
     }
 
-    if (levels_.count(gamma.second->transition_.from()))
+    if (levels_.count(gamma.second->from()))
       gamma.second->graphicsItem()->setPos(
             std::floor(currentgammapos) + 0.5 * gamma.second->pen().widthF(),
-            levels_.at(gamma.second->transition_.from())->bottom_ypos());
+            levels_.at(gamma.second->from())->bottom_ypos());
   }
 
   // determine line length for parent levels
@@ -274,31 +272,29 @@ void SchemePlayer::alignGraphicsItems()
       double left = feeding ? activeleft : normalleft;
       double right = feeding ? activeright : normalright;
 
-      level.second->line_->setLine(left, y, right, y);
-      level.second->etext_->setPos(
+      level.second->set_funky_position(left, right, y);
+      level.second->set_funky2_position(
             (parent_levels_.size() == 1 ? activeright : normalright)
-            - visual_settings_.outerLevelTextMargin
-            - level.second->etext_->boundingRect().width(),
-            y - level.second->etext_->boundingRect().height());
-      level.second->spintext_->setPos(
+            - visual_settings_.outerLevelTextMargin,
             (parent_levels_.size() == 1 ? activeleft : normalleft)
             + visual_settings_.outerLevelTextMargin,
-            y - level.second->etext_->boundingRect().height());
+            y);
 
       topMostLevel = y;
 
       // update y
-      y -= qMax(level.second->etext_->boundingRect().height(),
-                level.second->spintext_->boundingRect().height()) + 10.0;
+      y -= level.second->max_y_height() + 10.0;
     }
 
-    double arrowVStart = topMostLevel - 0.5*visual_settings_.stableLevelPen.widthF();
-    double arrowX = (visual_settings_.parentpos == RightParent) ? activeright : activeleft;
-    if (boost::math::isfinite(arrowVStart) && boost::math::isfinite(arrowVEnd))
-      parent_.pNucVerticalArrow->setLine(arrowX, arrowVStart, arrowX, arrowVEnd);
-
-    parent_.pNucHl->setPos(parentcenter - 0.5*parent_.pNucHl->boundingRect().width(),
-                           topMostLevel - stdBoldFontMetrics.height() - parentHlFontMetrics.height() - 12.0);
+    double arrowVStart = topMostLevel -
+        0.5 * visual_settings_.stableLevelPen.widthF();
+    double arrowX = (visual_settings_.parentpos == RightParent)
+        ? activeright : activeleft;
+    parent_.position_arrow(arrowX, arrowVStart, arrowVEnd);
+    parent_.position_text(parentcenter,
+                           topMostLevel
+                           - stdBoldFontMetrics.height()
+                           - parentHlFontMetrics.height());
   }
 }
 
@@ -338,7 +334,7 @@ void SchemePlayer::clickedGamma(TransitionItem *g)
   {
     deselect_all();
     g->graphicsItem()->setHighlighted(true);
-    selected_transitions_.insert(g->transition_.energy());
+    selected_transitions_.insert(g->energy());
   }
 
   //  DBG << "Clicked transition " << g->transition_.energy().to_string();
@@ -393,7 +389,6 @@ std::set<Energy> SchemePlayer::selected_transistions() const
 {
   return selected_transitions_;
 }
-
 
 void SchemePlayer::triggerDataUpdate()
 {

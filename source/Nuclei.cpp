@@ -64,6 +64,9 @@ Nuclei::Nuclei(QWidget *parent) :
   Graphics_view_zoom* z = new Graphics_view_zoom(ui->decayView);
   z->set_modifiers(Qt::NoModifier);
 
+  ui->textBrowser->setOpenLinks(true);
+  ui->textBrowser->setOpenExternalLinks(true);
+
   // separate init from constructor to avoid crash on cancel
   QTimer::singleShot(0, this, SLOT(initialize()));
 }
@@ -306,8 +309,6 @@ void Nuclei::loadDecay(DecayScheme decay)
     }
   }
 
-  ui->textBrowser->setOpenLinks(true);
-  ui->textBrowser->setOpenExternalLinks(true);
   ui->textBrowser->setHtml(text);
 
   // update plot
@@ -348,9 +349,11 @@ void Nuclei::playerSelectionChanged()
       text += QString::fromStdString(newtext) + "<br>";
     }
 
-    ui->textBrowser->setOpenLinks(true);
-    ui->textBrowser->setOpenExternalLinks(true);
     ui->textBrowser->setHtml(text);
+  }
+  else
+  {
+
   }
 }
 

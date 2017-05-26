@@ -28,12 +28,19 @@ public:
 
   void updateArrow(double arrowDestY, double max_intensity);
   double minimalXDistance() const;
-  /**
-     * Distance between origin and right edge of the bounding rect
-     */
+  // Distance between origin and right edge of the bounding rect
   double widthFromOrigin() const;
 
+  double intensity() const;
   QPen pen() const;
+
+  //deprecate, return underlying transition instead
+  Energy energy() const;
+  Energy from() const;
+  Energy to() const;
+
+
+private:
 
   QGraphicsLineItem* arrow {nullptr};
   QGraphicsTextItem* text {nullptr};

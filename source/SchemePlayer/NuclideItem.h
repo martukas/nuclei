@@ -21,9 +21,13 @@ public:
               SchemeVisualSettings vis,
               QGraphicsScene *scene);
 
+  void position_arrow(double x, double start, double end);
+  void position_text(double parent_center_x,
+                     double ypos);
+
+private:
   QGraphicsSimpleTextItem *pNucHl {nullptr};
   QGraphicsLineItem *pNucVerticalArrow {nullptr};
 
   NuclideId id_;
-
 };

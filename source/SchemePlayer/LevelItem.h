@@ -31,8 +31,8 @@ public:
   QString energy_text() const;
   QString spin_text() const;
 
-  void adjust_ypos(double offset);
-//  void set_ypos(double new_ypos);
+  double above_ypos(double offset);
+  void set_ypos(double new_ypos);
   double ypos() const;
   double bottom_ypos() const;
   double nuc_line_width() const;
@@ -43,7 +43,7 @@ public:
 
   double max_y_height() const;
 
-//private:
+private:
   QGraphicsLineItem *line_ {nullptr}; //
   QGraphicsLineItem *feedarrow_ {nullptr};
   QGraphicsPolygonItem *arrowhead_ {nullptr};
