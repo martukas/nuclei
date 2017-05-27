@@ -5,6 +5,10 @@
 #include "Transition.h"
 #include "qpx_util.h"
 
+#include "json.h"
+using namespace nlohmann;
+
+
 class Nuclide
 {
 public:
@@ -41,11 +45,16 @@ public:
 
   std::string to_string() const;
 
+  json comments() const;
+  void add_comments(const std::string &s, const json &j);
+
 private:
   NuclideId   id_;
   std::vector <HalfLife> halflives_;
   std::map<Energy, Level> levels_;
   std::map<Energy, Transition> transitions_;
+
+  json comments_;
 
   void add_transition(const Transition& transition);
   void register_transition(const Transition& t);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QPointer>
 #include "DecayScheme.h"
 #include "SchemePlayer.h"
 
@@ -50,7 +51,11 @@ private:
 
     DecayCascadeItemModel *decaySelectionModel, *searchResultSelectionModel;
     DecayCascadeFilterProxyModel *decayProxyModel, *searchProxyModel;
-    QSharedPointer<SchemePlayer> m_decay;
+
+    QPointer<SchemePlayer> decay_viewer_;
+    DecayScheme current_scheme_;
 
     std::string make_reference_link(std::string ref, int num);
+    QString prep_comments(const json& j,
+                          const std::set<std::string>& refs);
 };

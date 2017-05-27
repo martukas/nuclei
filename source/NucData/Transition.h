@@ -4,6 +4,9 @@
 #include <map>
 #include <vector>
 
+#include "json.h"
+using namespace nlohmann;
+
 class Transition
 {
 public:
@@ -27,8 +30,10 @@ public:
   void set_multipol(const std::string& s);
   void set_delta(const UncertainDouble& u);
 
-  std::map<std::string, std::string> kvps;
-  std::vector<std::string> comments;
+//  std::map<std::string, std::string> kvps;
+
+  json comments() const;
+  void add_comments(const std::string &s, const json &j);
 
 private:
   Energy energy_;
@@ -36,4 +41,6 @@ private:
   std::string multipolarity_;
   UncertainDouble delta_;
   Energy from_, to_;
+
+  json comments_;
 };

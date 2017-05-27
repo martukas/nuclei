@@ -108,3 +108,14 @@ bool Level::isFeedingLevel() const
 {
   return feeding_level_;
 }
+
+void Level::add_comments(const std::string &s, const json &j)
+{
+  comments_[s] = j;
+}
+
+json Level::comments() const
+{
+  return comments_;
+}
+

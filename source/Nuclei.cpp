@@ -187,7 +187,7 @@ void Nuclei::svgExport()
 {
   QSettings s;
 
-  if (m_decay.isNull())
+  if (decay_viewer_.isNull())
     return;
 
   QString fn(QFileDialog::getSaveFileName(this, "Save As", s.value("exportDir").toString(), "Scalable Vector Graphics (*.svg)"));
@@ -201,20 +201,20 @@ void Nuclei::svgExport()
   svgGen.setFileName(fn);
   svgGen.setSize(outrect.toRect().size());
   svgGen.setViewBox(outrect);
-  svgGen.setTitle("Decay Level Scheme for the decay " + m_decay->name());
+  svgGen.setTitle("Decay Level Scheme for the decay " + decay_viewer_->name());
   svgGen.setDescription(QString::fromUtf8("This scheme was created using Nuclei"));
 
-  m_decay->setShadowEnabled(false);
+  decay_viewer_->setShadowEnabled(false);
   QPainter painter(&svgGen);
   ui->decayView->scene()->render(&painter, inrect, inrect);
-  m_decay->setShadowEnabled(true);
+  decay_viewer_->setShadowEnabled(true);
 }
 
 void Nuclei::pdfExport()
 {
   QSettings s;
 
-  if (m_decay.isNull())
+  if (decay_viewer_.isNull())
     return;
 
   QString fn(QFileDialog::getSaveFileName(this, "Save As", s.value("exportDir").toString(), "Portable Document Format (*.pdf)"));
@@ -232,13 +232,13 @@ void Nuclei::pdfExport()
   p.setPageMargins(margin, margin, margin, margin, QPrinter::Millimeter);
   p.setOutputFormat(QPrinter::PdfFormat);
   p.setPaperSize(outrect.toRect().size() / scalefactor, QPrinter::Millimeter);
-  p.setDocName("Decay Level Scheme for the decay " + m_decay->name());
+  p.setDocName("Decay Level Scheme for the decay " + decay_viewer_->name());
   p.setCreator(QString("%1 %2 (%3)").arg(QCoreApplication::applicationName(), QCoreApplication::applicationVersion(), "NUCLEIURL"));
 
-  m_decay->setShadowEnabled(false);
+  decay_viewer_->setShadowEnabled(false);
   QPainter painter(&p);
   ui->decayView->scene()->render(&painter);
-  m_decay->setShadowEnabled(true);
+  decay_viewer_->setShadowEnabled(true);
 }
 
 void Nuclei::showAll()
@@ -270,92 +270,132 @@ void Nuclei::loadDecay(DecayScheme decay)
   s.setValue("preferences/gammaTolerance", preferencesDialogUi->gammaDiff->value());
   s.sync();
 
-  m_decay = QSharedPointer<SchemePlayer>(new SchemePlayer(decay, this));
+  current_scheme_ = decay;
+  decay_viewer_ = new SchemePlayer(decay, this);
 
-  connect(m_decay.data(), SIGNAL(selectionChanged()),
+  connect(decay_viewer_.data(), SIGNAL(selectionChanged()),
           this, SLOT(playerSelectionChanged()));
-  m_decay->setStyle(preferencesDialogUi->fontFamily->currentFont(), preferencesDialogUi->fontSize->value());
-  QGraphicsScene *scene = m_decay->levelPlot();
+  decay_viewer_->setStyle(preferencesDialogUi->fontFamily->currentFont(), preferencesDialogUi->fontSize->value());
+  QGraphicsScene *scene = decay_viewer_->levelPlot();
   ui->decayView->setScene(scene);
   ui->decayView->setSceneRect(scene->sceneRect().adjusted(-20, -20, 20, 20));
 
-  QString text;
-  if (decay.comments.count("comments"))
-  {
-    text += "<h3>Comments</h3>";
-    int refnum = 1;
-    for (auto c : decay.comments["comments"])
-    {
-      auto newtext = c.get<std::string>();
-      for (const auto& r : decay.references_)
-        if (boost::contains(newtext, r.first))
-        {
-          boost::replace_all(newtext, r.first,
-                             make_reference_link(r.first, refnum++));
-        }
-      text += QString::fromStdString(newtext) + "<br>";
-    }
-  }
-
-  if (decay.comments.count("history"))
-  {
-    text += "<h3>History</h3>";
-    for (auto j : decay.comments["history"])
-    {
-      for (json::iterator h = j.begin(); h != j.end(); ++h)
-        text += "<b>" + QString::fromStdString(h.key()) + ":</b> "
-            + QString::fromStdString(h.value().get<std::string>()) + "<br>";
-      text += "<br>";
-    }
-  }
-
-  ui->textBrowser->setHtml(text);
-
   // update plot
-  m_decay->triggerDataUpdate();
+  decay_viewer_->triggerDataUpdate();
   showAll();
+  playerSelectionChanged();
 }
 
 void Nuclei::playerSelectionChanged()
 {
-  if (!m_decay)
+  if (!decay_viewer_)
     return;
 
-  if (m_decay->selected_levels().size())
+  auto refs = current_scheme_.references();
+
+  if (decay_viewer_->selected_levels().size())
   {
-    auto nrg = *m_decay->selected_levels().begin();
-    auto levels = m_decay->scheme().daughterNuclide().levels();
+    auto nrg = *decay_viewer_->selected_levels().begin();
+    auto levels = current_scheme_.daughterNuclide().levels();
     if (!levels.count(nrg))
       return;
     const auto& level = levels[nrg];
-    auto refs = m_decay->scheme().references_;
 
     QString text;
 
-    text += "<h3>Level comments for "
-        + QString::fromStdString(level.energy().to_string())
-        + "</h3>";
+    if (level.comments().count("comments"))
+      text = "<h3>Level comments for "
+          + QString::fromStdString(level.energy().to_string())
+          + "</h3>"
+          + prep_comments(level.comments()["comments"], refs);
 
-    int refnum = 1;
-    for (auto c : level.comments)
-    {
-      auto newtext = c;
-      for (const auto& r : refs)
-        if (boost::contains(newtext, r.first))
-        {
-          boost::replace_all(newtext, r.first,
-                             make_reference_link(r.first, refnum++));
-        }
-      text += QString::fromStdString(newtext) + "<br>";
-    }
+    ui->textBrowser->setHtml(text);
+  }
+  else if (decay_viewer_->selected_transistions().size())
+  {
+    auto nrg = *decay_viewer_->selected_transistions().begin();
+    auto transitions = current_scheme_.daughterNuclide().transitions();
+    if (!transitions.count(nrg))
+      return;
+    const auto& transition = transitions[nrg];
 
+    QString text;
+
+    if (transition.comments().count("comments"))
+      text = "<h3>Transistion comments for "
+          + QString::fromStdString(transition.energy().to_string())
+          + "</h3>"
+          + prep_comments(transition.comments()["comments"], refs);
+
+    ui->textBrowser->setHtml(text);
+  }
+  else if (decay_viewer_->parent_selected())
+  {
+    auto comments = current_scheme_.parentNuclide().comments();
+    QString text;
+    if (comments.count("comments"))
+      text = "<h3>Parent info for "
+          + QString::fromStdString(current_scheme_.parentNuclide().id().symbolicName())
+          + "</h3>"
+          + prep_comments(comments["comments"], refs);
+    ui->textBrowser->setHtml(text);
+  }
+  else if (decay_viewer_->daughter_selected())
+  {
+    auto comments = current_scheme_.daughterNuclide().comments();
+    QString text;
+    if (comments.count("comments"))
+      text = "<h3>Daughter info for "
+          + QString::fromStdString(current_scheme_.daughterNuclide().id().symbolicName())
+          + "</h3>"
+          + prep_comments(comments["comments"], refs);
     ui->textBrowser->setHtml(text);
   }
   else
   {
+    QString text;
 
+    auto comments = current_scheme_.comments();
+    if (comments.count("comments"))
+      text += "<h3>Comments</h3>"
+          + prep_comments(comments["comments"], refs);
+
+    if (comments.count("history"))
+    {
+      text += "<h3>History</h3>";
+      for (auto j : comments["history"])
+      {
+        for (json::iterator h = j.begin(); h != j.end(); ++h)
+          text += "<b>" + QString::fromStdString(h.key()) + ":</b> "
+              + QString::fromStdString(h.value().get<std::string>()) + "<br>";
+        text += "<br>";
+      }
+    }
+    ui->textBrowser->setHtml(text);
   }
 }
+
+QString Nuclei::prep_comments(const json& j,
+                              const std::set<std::string>& refs)
+{
+  QString text;
+
+  int refnum = 1;
+  for (auto c : j)
+  {
+    auto newtext = c.get<std::string>();
+    for (const auto& r : refs)
+      if (boost::contains(newtext, r))
+      {
+        boost::replace_all(newtext, r,
+                           make_reference_link(r, refnum++));
+      }
+    text += QString::fromStdString(newtext) + "<br>";
+  }
+
+  return text;
+}
+
 
 std::string Nuclei::make_reference_link(std::string ref, int num)
 {

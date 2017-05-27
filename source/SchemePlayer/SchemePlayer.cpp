@@ -43,6 +43,16 @@ const DecayScheme& SchemePlayer::scheme() const
   return scheme_;
 }
 
+bool SchemePlayer::parent_selected() const
+{
+  return parent_selected_;
+}
+
+bool SchemePlayer::daughter_selected() const
+{
+  return daughter_selected_;
+}
+
 QGraphicsScene* SchemePlayer::levelPlot()
 {
   if (scene_)
@@ -54,22 +64,40 @@ QGraphicsScene* SchemePlayer::levelPlot()
     return scene_;
 
   auto transitions = scheme_.daughterNuclide().transitions();
-  for (auto &level : scheme_.daughterNuclide().levels())
+  auto levels = scheme_.daughterNuclide().levels();
+  for (auto level = levels.begin(); level != levels.end(); ++level)
   {
-    addLevel(level.second, visual_settings_);
-    for (auto gamma_nrg : level.second.depopulatingTransitions())
-      addTransition(transitions.at(gamma_nrg), visual_settings_);
+    addLevel(level->second, visual_settings_);
+    auto depoptrans = level->second.depopulatingTransitions();
+
+    for (auto it = depoptrans.begin(); it != depoptrans.end(); ++it)
+      addTransition(transitions.at(*it), visual_settings_);
   }
 
   if (!scheme_.daughterNuclide().empty())
-    daughter_ = NuclideItem(scheme_.daughterNuclide(), ClickableItem::DaughterNuclideType, visual_settings_, scene_);
+  {
+    daughter_ = new NuclideItem(scheme_.daughterNuclide(),
+                                ClickableItem::DaughterNuclideType,
+                                visual_settings_, scene_);
+    connect(this, SIGNAL(enabledShadow(bool)),
+            daughter_->graphicsItem(), SLOT(setShadowEnabled(bool)));
+    connect(daughter_->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
+  }
 
   if (visual_settings_.parentpos != NoParent)
   {
     SchemeVisualSettings parent_visual_settings = visual_settings_;
     parent_visual_settings.parentpos = NoParent;
 
-    parent_ = NuclideItem(scheme_.parentNuclide(), ClickableItem::ParentNuclideType, parent_visual_settings, scene_);
+    parent_ = new NuclideItem(scheme_.parentNuclide(),
+                              ClickableItem::ParentNuclideType,
+                              parent_visual_settings, scene_);
+
+    connect(this, SIGNAL(enabledShadow(bool)),
+            parent_->graphicsItem(), SLOT(setShadowEnabled(bool)));
+    connect(parent_->graphicsItem(), SIGNAL(clicked(ClickableItem*)),
+            this, SLOT(itemClicked(ClickableItem*)));
+
     for (auto &level : scheme_.parentNuclide().levels())
       addParentLevel(level.second, parent_visual_settings);
   }
@@ -100,7 +128,7 @@ void SchemePlayer::addTransition(Transition transition, SchemeVisualSettings vis
   TransitionItem *transrend = new TransitionItem(transition, vis, scene_);
   connect(this, SIGNAL(enabledShadow(bool)), transrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
   connect(transrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
-  transitions_[transition.energy()] = transrend;
+  transitions_.push_back(transrend);
 }
 
 void SchemePlayer::alignGraphicsItems()
@@ -120,11 +148,9 @@ void SchemePlayer::alignGraphicsItems()
   for (auto level : levels_)
   {
     maxSpinLabelWidth
-        = qMax(maxSpinLabelWidth,
-               stdBoldFontMetrics.width(level.second->spin_text()));
+        = qMax(maxSpinLabelWidth, level.second->spin_width());
     maxEnergyLabelWidth
-        = qMax(maxEnergyLabelWidth,
-               stdBoldFontMetrics.width(level.second->energy_text()));
+        = qMax(maxEnergyLabelWidth, level.second->energy_width());
   }
 
   // determine y coordinates for all levels
@@ -162,8 +188,10 @@ void SchemePlayer::alignGraphicsItems()
   double max_intensity {0};
   for (auto &gamma : transitions_)
   {
-    gammaspace += gamma.second->minimalXDistance();
-    max_intensity = qMax(max_intensity, gamma.second->intensity());
+    if (!gammaspace)
+      gammaspace = gamma->widthFromOrigin();
+    gammaspace += gamma->minimalXDistance();
+    max_intensity = qMax(max_intensity, gamma->intensity());
   }
 
   // set gamma positions
@@ -173,34 +201,34 @@ void SchemePlayer::alignGraphicsItems()
   {
     if (firstgamma)
     {
-      currentgammapos -= gamma.second->widthFromOrigin();
+      currentgammapos -= gamma->widthFromOrigin();
       firstgamma = false;
     }
     else
-      currentgammapos -= gamma.second->minimalXDistance();
+      currentgammapos -= gamma->minimalXDistance();
 
-    if (levels_.count(gamma.second->from())
-        && levels_.count(gamma.second->to()))
+    if (levels_.count(gamma->from())
+        && levels_.count(gamma->to()))
     {
       double arrowDestY =
-          levels_.at(gamma.second->to())->ypos()
-          - levels_.at(gamma.second->from())->ypos();
-      gamma.second->updateArrow(arrowDestY, max_intensity);
+          levels_.at(gamma->to())->ypos()
+          - levels_.at(gamma->from())->ypos();
+      gamma->updateArrow(arrowDestY, max_intensity);
     }
 
-    if (levels_.count(gamma.second->from()))
-      gamma.second->graphicsItem()->setPos(
-            std::floor(currentgammapos) + 0.5 * gamma.second->pen().widthF(),
-            levels_.at(gamma.second->from())->bottom_ypos());
+    if (levels_.count(gamma->from()))
+      gamma->graphicsItem()->setPos(
+            std::floor(currentgammapos) + 0.5 * gamma->pen().widthF(),
+            levels_.at(gamma->from())->bottom_ypos());
   }
 
   // determine line length for parent levels
   double pNucLineLength = visual_settings_.parentNuclideLevelLineLength;
-  if (visual_settings_.parentpos != NoParent)
+  if (parent_ && (visual_settings_.parentpos != NoParent))
   {
     pNucLineLength
         = qMax(visual_settings_.parentNuclideLevelLineLength,
-               parent_.graphicsItem()->boundingRect().width() + 20.0);
+               parent_->graphicsItem()->boundingRect().width() + 20.0);
     for (auto level : parent_levels_)
       pNucLineLength
           = qMax(pNucLineLength, level.second->nuc_line_width()
@@ -238,32 +266,35 @@ void SchemePlayer::alignGraphicsItems()
   double arrowVEnd = std::numeric_limits<double>::quiet_NaN();
   for (auto level : levels_)
   {
-    double newVEnd = level.second->align(leftlinelength, rightlinelength, arrowleft, arrowright, visual_settings_);
+    double newVEnd
+        = level.second->align(leftlinelength, rightlinelength,
+                              arrowleft, arrowright,
+                              visual_settings_);
     if (boost::math::isnan(arrowVEnd) && !boost::math::isnan(newVEnd))
       arrowVEnd = newVEnd;
   }
 
   // set position of daughter nuclide
-  if (!scheme_.daughterNuclide().empty())
-    daughter_.graphicsItem()->setPos(-0.5*daughter_.graphicsItem()->boundingRect().width(),
-                                     0.3*daughter_.graphicsItem()->boundingRect().height());
+  if (daughter_ && !scheme_.daughterNuclide().empty())
+    daughter_->graphicsItem()->setPos(-0.5*daughter_->graphicsItem()->boundingRect().width(),
+                                      0.3*daughter_->graphicsItem()->boundingRect().height());
 
   // set position of parent nuclide
-  if (visual_settings_.parentpos != NoParent)
+  if (parent_ && (visual_settings_.parentpos != NoParent))
   {
     double parentY = std::numeric_limits<double>::quiet_NaN();
     if (!levels_.empty())
       parentY = levels_.rbegin()->second->graphicsItem()->y() -
           levels_.rbegin()->second->graphicsItem()->boundingRect().height() -
-          parent_.graphicsItem()->boundingRect().height() - visual_settings_.parentNuclideToEnergyLevelsDistance;
+          parent_->graphicsItem()->boundingRect().height() - visual_settings_.parentNuclideToEnergyLevelsDistance;
 
     double parentcenter = (normalleft + normalright) / 2.0;
 
-    parent_.graphicsItem()->setPos(parentcenter - 0.5*parent_.graphicsItem()->boundingRect().width(), parentY);
+    parent_->graphicsItem()->setPos(parentcenter - 0.5*parent_->graphicsItem()->boundingRect().width(), parentY);
 
     // set position of parent levels
     double topMostLevel = 0.0;
-    double y = qRound(parentY - 0.3*parent_.graphicsItem()->boundingRect().height()) + 0.5*visual_settings_.stableLevelPen.widthF();
+    double y = qRound(parentY - 0.3*parent_->graphicsItem()->boundingRect().height()) + 0.5*visual_settings_.stableLevelPen.widthF();
     for (auto level : parent_levels_)
     {
       bool feeding = false;
@@ -272,7 +303,7 @@ void SchemePlayer::alignGraphicsItems()
       double left = feeding ? activeleft : normalleft;
       double right = feeding ? activeright : normalright;
 
-      level.second->set_funky_position(left, right, y);
+      level.second->set_funky_position(left, right, y, visual_settings_);
       level.second->set_funky2_position(
             (parent_levels_.size() == 1 ? activeright : normalright)
             - visual_settings_.outerLevelTextMargin,
@@ -290,8 +321,8 @@ void SchemePlayer::alignGraphicsItems()
         0.5 * visual_settings_.stableLevelPen.widthF();
     double arrowX = (visual_settings_.parentpos == RightParent)
         ? activeright : activeleft;
-    parent_.position_arrow(arrowX, arrowVStart, arrowVEnd);
-    parent_.position_text(parentcenter,
+    parent_->position_arrow(arrowX, arrowVStart, arrowVEnd);
+    parent_->position_text(parentcenter,
                            topMostLevel
                            - stdBoldFontMetrics.height()
                            - parentHlFontMetrics.height());
@@ -316,6 +347,15 @@ void SchemePlayer::itemClicked(ClickableItem *item)
     clickedEnergyLevel(dynamic_cast<LevelItem*>(item));
   else if (item->type() == ClickableItem::GammaTransitionType)
     clickedGamma(dynamic_cast<TransitionItem*>(item));
+  else if (item && (item->type() == ClickableItem::ParentNuclideType))
+    clickedParent();
+  else if (item && (item->type() == ClickableItem::DaughterNuclideType))
+    clickedDaughter();
+  else
+  {
+    deselect_all();
+    triggerDataUpdate();
+  }
 }
 
 void SchemePlayer::clearSelection()
@@ -336,8 +376,6 @@ void SchemePlayer::clickedGamma(TransitionItem *g)
     g->graphicsItem()->setHighlighted(true);
     selected_transitions_.insert(g->energy());
   }
-
-  //  DBG << "Clicked transition " << g->transition_.energy().to_string();
 
   triggerDataUpdate();
 }
@@ -362,6 +400,30 @@ void SchemePlayer::clickedEnergyLevel(LevelItem *e)
   triggerDataUpdate();
 }
 
+void SchemePlayer::clickedParent()
+{
+  if (parent_selected_)
+    parent_selected_ = false;
+  else
+  {
+    deselect_all();
+    parent_selected_ = true;
+  }
+  triggerDataUpdate();
+}
+
+void SchemePlayer::clickedDaughter()
+{
+  if (daughter_selected_)
+    daughter_selected_ = false;
+  else
+  {
+    deselect_all();
+    daughter_selected_ = true;
+  }
+  triggerDataUpdate();
+}
+
 void SchemePlayer::deselect_all()
 {
   for (auto l : levels_)
@@ -369,10 +431,12 @@ void SchemePlayer::deselect_all()
   for (auto l : parent_levels_)
     l.second->graphicsItem()->setHighlighted(false);
   for (auto l : transitions_)
-    l.second->graphicsItem()->setHighlighted(false);
+    l->graphicsItem()->setHighlighted(false);
   selected_levels_.clear();
   selected_parent_levels_.clear();
   selected_transitions_.clear();
+  daughter_selected_ = false;
+  parent_selected_ = false;
 }
 
 std::set<Energy> SchemePlayer::selected_levels() const

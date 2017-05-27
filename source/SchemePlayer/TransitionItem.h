@@ -41,15 +41,14 @@ public:
 
 
 private:
-
-  QGraphicsLineItem* arrow {nullptr};
-  QGraphicsTextItem* text {nullptr};
-  QGraphicsPolygonItem* arrowhead {nullptr};
-  QGraphicsPolygonItem* arrowbase {nullptr};
-  QGraphicsRectItem* clickarea {nullptr};
-  GraphicsHighlightItem* highlightHelper {nullptr};
-  double mindist {0.0};
-  QPen m_pen;
+  QGraphicsTextItem* text_ {nullptr};
+  QGraphicsLineItem* arrow_ {nullptr};
+  QGraphicsPolygonItem* arrow_head_ {nullptr};
+  QGraphicsPolygonItem* arrow_base_ {nullptr};
+  QGraphicsRectItem* click_area_ {nullptr};
+  GraphicsHighlightItem* highlight_helper_ {nullptr};
+  double min_x_distance_ {0.0};
+  QPen pen_;
 
   Transition transition_;
 

@@ -16,18 +16,18 @@ Energy LevelItem::energy() const
   return energy_;
 }
 
-QString LevelItem::energy_text() const
+int LevelItem::energy_width() const
 {
   if (etext_)
-    return etext_->text();
-  return "";
+    return etext_->boundingRect().width();
+  return 0;
 }
 
-QString LevelItem::spin_text() const
+int LevelItem::spin_width() const
 {
   if (spintext_)
-    return spintext_->text();
-  return "";
+    return spintext_->boundingRect().width();
+  return 0;
 }
 
 double LevelItem::ypos() const
@@ -53,9 +53,26 @@ double LevelItem::feed_intensity_width() const
   return 0;
 }
 
-void LevelItem::set_funky_position(double left, double right, double y)
+void LevelItem::set_funky_position(double left, double right,
+                                   double y,
+                                   SchemeVisualSettings vis)
 {
+  QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
+  item->removeFromGroup(click_area_);
+  item->removeFromGroup(line_);
+  item->removeHighlightHelper(highlight_helper_);
   line_->setLine(left, y, right, y);
+  highlight_helper_->setRect(left,
+                             y - 0.5*vis.highlightWidth,
+                             right - left,
+                             vis.highlightWidth);
+  click_area_->setRect(left,
+                       y - 0.5*stdBoldFontMetrics.height(),
+                       right - left,
+                       stdBoldFontMetrics.height());
+  item->addHighlightHelper(highlight_helper_);
+  item->addToGroup(line_);
+  item->addToGroup(click_area_);
 }
 
 void LevelItem::set_funky2_position(double xe,
@@ -105,14 +122,20 @@ LevelItem::LevelItem(Level level,
   if (level.halfLife().isStable() || level.isomerNum() > 0)
     line_->setPen(vis.stableLevelPen);
 
-  clickarea_ = new QGraphicsRectItem(-vis.outerGammaMargin, -0.5*stdBoldFontMetrics.height(),
-                                     2.0*vis.outerGammaMargin, stdBoldFontMetrics.height());
-  clickarea_->setPen(Qt::NoPen);
-  clickarea_->setBrush(Qt::NoBrush);
+  click_area_
+      = new QGraphicsRectItem(-vis.outerGammaMargin,
+                              -0.5*stdBoldFontMetrics.height(),
+                              2.0*vis.outerGammaMargin,
+                              stdBoldFontMetrics.height());
+  click_area_->setPen(Qt::NoPen);
+  click_area_->setBrush(Qt::NoBrush);
 
-  highlighthelper_ = new GraphicsHighlightItem(-vis.outerGammaMargin, -0.5*vis.highlightWidth,
-                                               2.0*vis.outerGammaMargin, vis.highlightWidth);
-  highlighthelper_->setOpacity(0.0);
+  highlight_helper_
+      = new GraphicsHighlightItem(-vis.outerGammaMargin,
+                                  -0.5*vis.highlightWidth,
+                                  2.0*vis.outerGammaMargin,
+                                  vis.highlightWidth);
+  highlight_helper_->setOpacity(0.0);
 
   QString etext = QString::fromStdString(energy_.to_string());
   etext_ = new QGraphicsSimpleTextItem(etext, item);
@@ -133,9 +156,9 @@ LevelItem::LevelItem(Level level,
     item->addToGroup(hltext_);
   }
 
-  item->addHighlightHelper(highlighthelper_);
+  item->addHighlightHelper(highlight_helper_);
   item->addToGroup(line_);
-  item->addToGroup(clickarea_);
+  item->addToGroup(click_area_);
   item->addToGroup(etext_);
   item->addToGroup(spintext_);
   scene->addItem(item);
@@ -168,42 +191,33 @@ LevelItem::LevelItem(Level level,
 
 double LevelItem::align(double leftlinelength,
                         double rightlinelength,
-                        double arrowleft, double arrowright,
+                        double arrowleft,
+                        double arrowright,
                         SchemeVisualSettings vis)
 {
   QFontMetrics stdFontMetrics(vis.stdFont);
   QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
 
-  // temporarily remove items from group (workaround)
+  set_funky_position(-leftlinelength, rightlinelength, 0, vis);
+
   item->removeFromGroup(spintext_);
   item->removeFromGroup(etext_);
-  item->removeFromGroup(clickarea_);
-  item->removeFromGroup(line_);
-  item->removeHighlightHelper(highlighthelper_);
-  if (vis.parentpos != NoParent)
-    item->removeFromGroup(hltext_);
-
-  // rescale
-  highlighthelper_->setRect(-leftlinelength, -0.5*vis.highlightWidth, leftlinelength+rightlinelength, vis.highlightWidth);
-  line_->setLine(-leftlinelength, 0.0, rightlinelength, 0.0);
-  clickarea_->setRect(-leftlinelength, -0.5*stdBoldFontMetrics.height(), leftlinelength+rightlinelength, stdBoldFontMetrics.height());
   spintext_->setPos(-leftlinelength + vis.outerLevelTextMargin, -stdBoldFontMetrics.height());
   etext_->setPos(rightlinelength - vis.outerLevelTextMargin - stdBoldFontMetrics.width(etext_->text()), -etext_->boundingRect().height());
-  double levelHlPos = 0.0;
-  if (vis.parentpos == RightParent && hltext_)
-    levelHlPos = -leftlinelength - vis.levelToHalfLifeDistance - stdFontMetrics.width(hltext_->text());
-  else
-    levelHlPos = rightlinelength + vis.levelToHalfLifeDistance;
-
-  if (vis.parentpos != NoParent)
-    hltext_->setPos(levelHlPos, -0.5*stdBoldFontMetrics.height());
-
-  // re-add items to group
-  item->addHighlightHelper(highlighthelper_);
-  item->addToGroup(line_);
-  item->addToGroup(clickarea_);
   item->addToGroup(etext_);
   item->addToGroup(spintext_);
+
+  if (vis.parentpos != NoParent)
+    item->removeFromGroup(hltext_);
+  double levelHlPos = 0.0;
+  if (vis.parentpos == RightParent && hltext_)
+    levelHlPos = -leftlinelength
+        - vis.levelToHalfLifeDistance
+        - stdFontMetrics.width(hltext_->text());
+  else
+    levelHlPos = rightlinelength + vis.levelToHalfLifeDistance;
+  if (vis.parentpos != NoParent)
+    hltext_->setPos(levelHlPos, -0.5*stdBoldFontMetrics.height());
   item->addToGroup(hltext_);
 
   item->setPos(0.0, ypos_); // add 0.5*pen-width to avoid antialiasing artifacts

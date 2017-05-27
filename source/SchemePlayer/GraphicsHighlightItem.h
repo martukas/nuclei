@@ -13,8 +13,4 @@ public:
                         qreal width, qreal height,
                         QGraphicsItem *parent = 0);
 
-signals:
-
-public slots:
-
 };

@@ -12,6 +12,8 @@ class QGraphicsItemGroup;
 class QGraphicsScene;
 class QGraphicsLineItem;
 class QGraphicsSimpleTextItem;
+class QGraphicsRectItem;
+class GraphicsHighlightItem;
 
 class NuclideItem : public ClickableItem
 {
@@ -26,8 +28,10 @@ public:
                      double ypos);
 
 private:
-  QGraphicsSimpleTextItem *pNucHl {nullptr};
-  QGraphicsLineItem *pNucVerticalArrow {nullptr};
+  GraphicsHighlightItem *highlight_helper_ {nullptr};
+  QGraphicsSimpleTextItem *halflife_text_ {nullptr};
+  QGraphicsLineItem *vertical_arrow_ {nullptr};
+  QGraphicsRectItem *click_area_ {nullptr};
 
   NuclideId id_;
 };
