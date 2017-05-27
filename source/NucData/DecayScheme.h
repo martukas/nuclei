@@ -5,7 +5,6 @@
 #include "ReactionInfo.h"
 
 #include "json.h"
-
 using namespace nlohmann;
 
 class DecayScheme
@@ -29,12 +28,19 @@ public:
 
   std::string to_string() const;
 
-  json comments;
-  std::map<std::string, std::string> references_;
+
+  std::set<std::string> references() const;
+  void insert_reference(const std::string &s);
+
+  json comments() const;
+  void add_comments(const std::string &s, const json &j);
 
 private:
   std::string name_;
   Nuclide parent_, daughter_;
   DecayInfo decay_info_;
   ReactionInfo reaction_info_;
+
+  json comments_;
+  std::set<std::string> references_;
 };

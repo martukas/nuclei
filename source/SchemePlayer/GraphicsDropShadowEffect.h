@@ -11,8 +11,6 @@ public:
     qreal opacity() const;
     void setOpacity(qreal opacity);
     
-signals:
-    
 public slots:
     void setColor(const QColor &color);
     

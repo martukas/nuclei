@@ -38,6 +38,9 @@ public:
   std::set<Energy> selected_parent_levels() const;
   std::set<Energy> selected_transistions() const;
 
+  bool parent_selected() const;
+  bool daughter_selected() const;
+
 signals:
   void enabledShadow(bool enable);
   void selectionChanged();
@@ -48,27 +51,32 @@ private slots:
 private:
   DecayScheme scheme_;
 
-  void clickedGamma(TransitionItem *g);
-  void clickedEnergyLevel(LevelItem *e);
-  void alignGraphicsItems();
-
-
   QGraphicsScene *scene_ {nullptr};
 
   SchemeVisualSettings visual_settings_;
 
-  NuclideItem parent_, daughter_;
+  NuclideItem* parent_ {nullptr};
+  NuclideItem* daughter_ {nullptr};
   std::map<Energy, LevelItem*> levels_;
   std::map<Energy, LevelItem*> parent_levels_;
-  std::map<Energy, TransitionItem*> transitions_;
+  std::list<TransitionItem*> transitions_;
 
   std::set<Energy> selected_levels_;
   std::set<Energy> selected_parent_levels_;
   std::set<Energy> selected_transitions_;
+  bool parent_selected_ {false};
+  bool daughter_selected_ {false};
+
+  void alignGraphicsItems();
 
   void addLevel(Level level, SchemeVisualSettings vis);
   void addParentLevel(Level level, SchemeVisualSettings vis);
   void addTransition(Transition transition, SchemeVisualSettings vis);
+
+  void clickedGamma(TransitionItem *g);
+  void clickedEnergyLevel(LevelItem *e);
+  void clickedParent();
+  void clickedDaughter();
 
   void deselect_all();
 };

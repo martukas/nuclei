@@ -22,6 +22,7 @@ public:
     void setPos(qreal x, qreal y);
     virtual QPainterPath shape() const;
     void setActiveColor(const QColor &color);
+    void setHoverColor(const QColor &color);
     void setHighlighted(bool active);
     bool isHighlighted() const;
 
@@ -52,8 +53,8 @@ private:
     QPropertyAnimation *aniShadow {nullptr};
     QParallelAnimationGroup *aniGroup {nullptr};
     QColor activeColor;
+    QColor hoverColor;
 
-    static const QColor hoverColor;
     static const double animationDuration;
     static const bool animateShadow;
     static const bool animate;

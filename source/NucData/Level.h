@@ -7,6 +7,9 @@
 #include "SpinParity.h"
 #include "Moment.h"
 
+#include "json.h"
+using namespace nlohmann;
+
 class Level
 {
 public:
@@ -41,9 +44,10 @@ public:
 
   bool isFeedingLevel() const;
 
+//  std::map<std::string, std::string> kvps;
 
-  std::map<std::string, std::string> kvps;
-  std::vector<std::string> comments;
+  json comments() const;
+  void add_comments(const std::string &s, const json &j);
 
 private:
   Energy energy_;
@@ -57,4 +61,6 @@ private:
 
   std::set<Energy> populating_transitions_;
   std::set<Energy> depopulating_transitions_;
+
+  json comments_;
 };
