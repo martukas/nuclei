@@ -1,5 +1,4 @@
 #include "ClickableItem.h"
-
 #include "ActiveGraphicsItemGroup.h"
 
 ClickableItem::ClickableItem(Type type)

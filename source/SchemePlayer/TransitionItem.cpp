@@ -39,54 +39,60 @@ TransitionItem::TransitionItem(Transition transition,
 
   transition_ = transition;
 
-  m_pen = vis.gammaPen;
+  pen_ = vis.gammaPen;
 
   // group origin is set to the start level!
   item = new ActiveGraphicsItemGroup(this);
   item->setActiveColor(QColor(64, 166, 255, 180));
 
-  arrowhead = new QGraphicsPolygonItem(initArrowHead(arrowHeadWidth));
-  arrowhead->setBrush(QBrush(m_pen.color()));
-  arrowhead->setPen(Qt::NoPen);
+  arrow_head_ = new QGraphicsPolygonItem(initArrowHead(arrowHeadWidth));
+  arrow_head_->setBrush(QBrush(pen_.color()));
+  arrow_head_->setPen(Qt::NoPen);
 
-  arrowbase = new QGraphicsPolygonItem(initArrowBase(arrowBaseWidth));
-  arrowbase->setBrush(QBrush(m_pen.color()));
-  arrowbase->setPen(Qt::NoPen);
-  arrowbase->setPos(0.0, 0.0);
+  arrow_base_ = new QGraphicsPolygonItem(initArrowBase(arrowBaseWidth));
+  arrow_base_->setBrush(QBrush(pen_.color()));
+  arrow_base_->setPen(Qt::NoPen);
+  arrow_base_->setPos(0.0, 0.0);
 
-  arrow = new QGraphicsLineItem;
-  arrow->setPen(m_pen);
+  arrow_ = new QGraphicsLineItem;
+  arrow_->setPen(pen_);
 
-  QString intensstr = QString::fromStdString(transition.intensity_string());
-  if (!intensstr.isEmpty())
-    intensstr += " ";
-  QString textstr = QString("<html><body bgcolor=\"white\">%1<b>%2</b> %3</body></html>")
+  QString intensstr;
+  if (transition.intensity().defined())
+    intensstr = QString::fromStdString(transition.intensity_string()) + " ";
+  QString textstr
+      = QString("<html><body bgcolor=\"white\">%1<b>%2</b> %3</body></html>")
       .arg(intensstr).arg(QString::fromStdString(transition.energy().to_string()))
       .arg(QString::fromStdString(transition.multipolarity()));
-  text = new QGraphicsTextItem;
-  text->setFont(vis.gammaFont);
-  text->document()->setDocumentMargin(0.0);
-  text->setHtml(textstr);
-//  new QGraphicsRectItem(text->boundingRect(), text);
-  double textheight = text->boundingRect().height();
-  text->setPos(0.0, -textheight);
-  text->setTransformOriginPoint(0.0, 0.5*textheight);
-  text->setRotation(textAngle);
-  mindist = std::abs(textheight / std::sin(-textAngle/180.0*M_PI));
-  text->moveBy(0.5*textheight*std::sin(-textAngle/180.0*M_PI) - 0.5*mindist, 0.0);
+  text_ = new QGraphicsTextItem;
+  text_->setFont(vis.gammaFont);
+  text_->document()->setDocumentMargin(0.0);
+  text_->setHtml(textstr);
+//  new QGraphicsRectItem(text_->boundingRect(), text_);
+  double textheight = text_->boundingRect().height();
+  text_->setPos(0.0, -textheight);
+  text_->setTransformOriginPoint(0.0, 0.5*textheight);
+  text_->setRotation(textAngle);
+  min_x_distance_ = std::abs(textheight / std::sin(-textAngle/180.0*M_PI));
+  text_->moveBy(0.5*textheight*std::sin(-textAngle/180.0*M_PI)
+                - 0.5*min_x_distance_, 0.0);
 
-  clickarea = new QGraphicsRectItem(-0.5*mindist, 0.0, mindist, 0.0);
-  clickarea->setPen(Qt::NoPen);
-  clickarea->setBrush(Qt::NoBrush);
+  click_area_ = new QGraphicsRectItem(-0.5*min_x_distance_, 0.0,
+                                      min_x_distance_, 0.0);
+  click_area_->setPen(Qt::NoPen);
+  click_area_->setBrush(Qt::NoBrush);
 
-  highlightHelper = new GraphicsHighlightItem(-0.5*highlightWidth, 0.0, highlightWidth, 0.0);
+  highlight_helper_
+      = new GraphicsHighlightItem(
+        -0.5*highlightWidth, 0.0,
+        highlightWidth, 0.0);
 
-  item->addHighlightHelper(highlightHelper);
-  item->addToGroup(arrowbase);
-  item->addToGroup(text);
-  item->addToGroup(arrow);
-  item->addToGroup(arrowhead);
-  item->addToGroup(clickarea);
+  item->addHighlightHelper(highlight_helper_);
+  item->addToGroup(arrow_base_);
+  item->addToGroup(text_);
+  item->addToGroup(arrow_);
+  item->addToGroup(arrow_head_);
+  item->addToGroup(click_area_);
 
   scene->addItem(item);
 
@@ -121,34 +127,37 @@ Energy TransitionItem::to() const
 
 void TransitionItem::updateArrow(double arrowDestY, double max_intensity)
 {
-  item->removeFromGroup(clickarea);
-  item->removeFromGroup(arrowhead);
-  item->removeFromGroup(arrowbase);
-  item->removeFromGroup(arrow);
-  item->removeHighlightHelper(highlightHelper);
-  arrowhead->setPos(0.0, arrowDestY - arrowHeadLength);
-  arrow->setLine(0.0, 0.0, 0.0, arrowDestY - arrowHeadLength);
-  clickarea->setRect(-0.5*mindist, 0.0, mindist, arrowDestY);
-  highlightHelper->setRect(-0.5*highlightWidth, 0.0, highlightWidth, arrowDestY - arrowHeadLength);
-  item->addHighlightHelper(highlightHelper);
-  item->addToGroup(arrow);
-  item->addToGroup(arrowbase);
-  item->addToGroup(arrowhead);
-  item->addToGroup(clickarea);
+  item->removeFromGroup(click_area_);
+  item->removeFromGroup(arrow_head_);
+  item->removeFromGroup(arrow_base_);
+  item->removeFromGroup(arrow_);
+  item->removeHighlightHelper(highlight_helper_);
+  arrow_head_->setPos(0.0, arrowDestY - arrowHeadLength);
+  arrow_->setLine(0.0, 0.0, 0.0, arrowDestY - arrowHeadLength);
+  click_area_->setRect(-0.5*min_x_distance_, 0.0,
+                       min_x_distance_, arrowDestY);
+  highlight_helper_->setRect(
+        -0.5*highlightWidth, 0.0,
+        highlightWidth, arrowDestY - arrowHeadLength);
+  item->addHighlightHelper(highlight_helper_);
+  item->addToGroup(arrow_);
+  item->addToGroup(arrow_base_);
+  item->addToGroup(arrow_head_);
+  item->addToGroup(click_area_);
 
 //  double width = std::ceil(maxwidth * transition_.intensity() / max_intensity);
 
-//  auto linepen = m_pen;
+//  auto linepen = pen_;
 //  linepen.setWidth(width);
-//  arrow->setPen(linepen);
+//  arrow_->setPen(linepen);
 
-//  arrowhead->setPolygon(initArrowBase(width + arrowHeadWidth));
-//  arrowbase->setPolygon(initArrowBase(width + arrowBaseWidth));
+//  arrow_head_->setPolygon(initArrowBase(width + arrowHeadWidth));
+//  arrow_base_->setPolygon(initArrowBase(width + arrowBaseWidth));
 }
 
 double TransitionItem::minimalXDistance() const
 {
-  return std::max(mindist, maxwidth);
+  return std::max(min_x_distance_, maxwidth);
 }
 
 double TransitionItem::widthFromOrigin() const
@@ -158,7 +167,7 @@ double TransitionItem::widthFromOrigin() const
 
 QPen TransitionItem::pen() const
 {
-  return m_pen;
+  return pen_;
 }
 
 QPolygonF TransitionItem::initArrowHead(double width)

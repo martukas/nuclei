@@ -8,7 +8,6 @@
 #include "GraphicsDropShadowEffect.h"
 #include "ClickableItem.h"
 
-const QColor ActiveGraphicsItemGroup::hoverColor(178, 223, 150, 180);
 const double ActiveGraphicsItemGroup::animationDuration = 100.0;
 const bool ActiveGraphicsItemGroup::animateShadow = false;
 const bool ActiveGraphicsItemGroup::animate = false;
@@ -20,6 +19,8 @@ ActiveGraphicsItemGroup::ActiveGraphicsItemGroup(ClickableItem *associatedItem)
   // prepare highlighting
   shadow->setBlurRadius(15.0);
   shadow->setOffset(QPointF(0.0, 0.0));
+
+  hoverColor = QColor(178, 223, 150, 180);
 
   setGraphicsEffect(shadow);
   setAcceptHoverEvents(true);
@@ -110,6 +111,11 @@ QPainterPath ActiveGraphicsItemGroup::shape() const
 void ActiveGraphicsItemGroup::setActiveColor(const QColor &color)
 {
   activeColor = color;
+}
+
+void ActiveGraphicsItemGroup::setHoverColor(const QColor &color)
+{
+  hoverColor = color;
 }
 
 void ActiveGraphicsItemGroup::setHighlighted(bool hl)

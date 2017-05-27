@@ -59,7 +59,7 @@ UncertainDouble Transition::delta() const
 
 std::string Transition::intensity_string() const
 {
-  if (intensity_.hasFiniteValue())
+  if (intensity_.defined())
     return intensity_.to_string(false) + "%";
   else
     return intensity_.to_string(false);
@@ -78,3 +78,14 @@ std::string Transition::to_string() const
     ss << "  delta="  << delta_.to_string(false);
   return ss.str();
 }
+
+void Transition::add_comments(const std::string &s, const json &j)
+{
+  comments_[s] = j;
+}
+
+json Transition::comments() const
+{
+  return comments_;
+}
+

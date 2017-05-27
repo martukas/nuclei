@@ -232,5 +232,12 @@ std::string Nuclide::to_string() const
   return ret;
 }
 
+void Nuclide::add_comments(const std::string &s, const json &j)
+{
+  comments_[s] = j;
+}
 
-
+json Nuclide::comments() const
+{
+  return comments_;
+}
