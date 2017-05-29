@@ -57,9 +57,9 @@ void GammaRecord::merge_adopted(const GammaRecord& other)
   if (multipolarity.empty())
     multipolarity = other.multipolarity;
 
-  if (mixing_ratio.sign() != UncertainDouble::SignMagnitudeDefined)
+  if (mixing_ratio.sign() != Uncert::SignMagnitudeDefined)
   {
-    UncertainDouble adptdelta
+    Uncert adptdelta
         = eval_mixing_ratio(other.mixing_ratio, multipolarity);
     if (adptdelta.sign() > mixing_ratio.sign())
       mixing_ratio = adptdelta;

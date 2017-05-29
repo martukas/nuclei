@@ -7,10 +7,10 @@ HalfLife::HalfLife()
 {}
 
 HalfLife::HalfLife(double val, std::string units)
-  : HalfLife( UncertainDouble(val, order_of(val), UncertainDouble::SignMagnitudeDefined), units)
+  : HalfLife( Uncert(val, order_of(val), Uncert::SignMagnitudeDefined), units)
 {}
 
-HalfLife::HalfLife(UncertainDouble time, std::string units)
+HalfLife::HalfLife(Uncert time, std::string units)
   : time_(time)
 {
   if (known_units_.count(units))
@@ -21,7 +21,7 @@ HalfLife HalfLife::preferred_units() const
 {
   if (!known_units_.count(units_))
     return *this;
-  UncertainDouble time = time_;
+  Uncert time = time_;
   double conversion = 1.0;
   conversion = known_units_.at(units_);
   time *= conversion;
@@ -38,7 +38,7 @@ bool HalfLife::isValid() const
 
 double HalfLife::seconds() const
 {
-  UncertainDouble tmp = time_;
+  Uncert tmp = time_;
   double factor = 1.0;
   if (known_units_.count(units_))
     factor = known_units_.at(units_);

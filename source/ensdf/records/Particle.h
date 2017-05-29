@@ -17,8 +17,8 @@ struct ParticleRecord
   std::string particle;
 
   Energy     energy;
-  UncertainDouble intensity;
-  UncertainDouble transition_width;
+  Uncert intensity;
+  Uncert transition_width;
   std::string energy_intermediate, L;
   std::string comment_flag, coincidence, quality;
 

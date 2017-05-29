@@ -1,16 +1,16 @@
 #pragma once
 
-#include "UncertainDouble.h"
+#include "Uncert.h"
 #include "Level.h"
 #include "DecayMode.h"
 #include "nid.h"
 
 bool is_uncertainty_id(const std::string& str);
-UncertainDouble parse_val_uncert(std::string val, std::string uncert);
-UncertainDouble parse_norm(std::string val, std::string uncert);
+Uncert parse_val_uncert(std::string val, std::string uncert);
+Uncert parse_norm(std::string val, std::string uncert);
 Energy parse_energy(std::string val, std::string uncert);
 
-UncertainDouble eval_mixing_ratio(UncertainDouble vu, const std::string& mpol);
+Uncert eval_mixing_ratio(Uncert vu, const std::string& mpol);
 
 DataQuality quality_of(const std::string&);
 std::string strip_qualifiers(const std::string& original);

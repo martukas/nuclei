@@ -13,8 +13,8 @@ struct AlphaRecord
 
   NuclideId  nuclide;
   Energy     energy;
-  UncertainDouble intensity_alpha;
-  UncertainDouble hindrance_factor;
+  Uncert intensity_alpha;
+  Uncert hindrance_factor;
   std::string comment_flag, quality;
 
   std::list<CommentsRecord> comments;

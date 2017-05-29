@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UncertainDouble.h"
+#include "Uncert.h"
 #include <vector>
 
 class Moment
@@ -8,7 +8,7 @@ class Moment
 public:
   Moment() {}
   Moment(const Moment &p);
-  Moment(const UncertainDouble &v);
+  Moment(const Uncert &v);
 
   bool valid() const;
 
@@ -19,6 +19,6 @@ public:
   const std::string to_markup() const;
 
 private:
-  UncertainDouble moment_;
+  Uncert moment_;
   std::vector<std::string> references_; // TODO? not converted to string
 };

@@ -12,23 +12,23 @@ class Transition
 public:
   Transition() {}
 
-  Transition(Energy energy, UncertainDouble intensity);
+  Transition(Energy energy, Uncert intensity);
 
   Energy energy() const;
   Energy from() const;
   Energy to() const;
 
-  UncertainDouble intensity() const;
+  Uncert intensity() const;
   std::string intensity_string() const;
   std::string multipolarity() const;
-  UncertainDouble delta() const;
+  Uncert delta() const;
 
   std::string to_string() const;
 
   void set_to(const Energy& e);
   void set_from(const Energy& e);
   void set_multipol(const std::string& s);
-  void set_delta(const UncertainDouble& u);
+  void set_delta(const Uncert& u);
 
 //  std::map<std::string, std::string> kvps;
 
@@ -37,9 +37,9 @@ public:
 
 private:
   Energy energy_;
-  UncertainDouble intensity_;
+  Uncert intensity_;
   std::string multipolarity_;
-  UncertainDouble delta_;
+  Uncert delta_;
   Energy from_, to_;
 
   json comments_;

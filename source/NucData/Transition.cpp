@@ -2,7 +2,7 @@
 #include <boost/math/special_functions/fpclassify.hpp>
 #include "qpx_util.h"
 
-Transition::Transition(Energy energy, UncertainDouble intensity)
+Transition::Transition(Energy energy, Uncert intensity)
   : energy_(energy)
   , intensity_(intensity)
 {}
@@ -22,7 +22,7 @@ void Transition::set_multipol(const std::string& s)
   multipolarity_ = s;
 }
 
-void Transition::set_delta(const UncertainDouble& u)
+void Transition::set_delta(const Uncert& u)
 {
   delta_ = u;
 }
@@ -42,7 +42,7 @@ Energy Transition::to() const
   return to_;
 }
 
-UncertainDouble Transition::intensity() const
+Uncert Transition::intensity() const
 {
   return intensity_;
 }
@@ -52,7 +52,7 @@ std::string Transition::multipolarity() const
   return multipolarity_;
 }
 
-UncertainDouble Transition::delta() const
+Uncert Transition::delta() const
 {
   return delta_;
 }

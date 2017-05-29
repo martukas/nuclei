@@ -13,8 +13,8 @@ struct BetaRecord
 
   NuclideId  nuclide;
   Energy     energy;
-  UncertainDouble intensity;
-  UncertainDouble LOGFT;
+  Uncert intensity;
+  Uncert LOGFT;
   std::string comment_flag, uniquness, quality;
 
   std::map<std::string, std::string> continuations_;

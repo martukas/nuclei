@@ -105,14 +105,151 @@ std::list<std::string> DaughterParser::decays(NuclideId daughter) const
   return result;
 }
 
-void DaughterParser::modify_level(Level& currentLevel,
-                                  const LevelRecord& l) const
+Uncert DaughterParser::feed_norm(const ProdNormalizationRecord& pnorm,
+                                 std::vector<NormalizationRecord> norm)
 {
-  if (l.continuations_.count("MOME2"))
-    currentLevel.set_q(parse_moment(l.continuations_.at("MOME2")));
+  Uncert ret(1.0,1,Uncert::SignMagnitudeDefined);
 
-  if (l.continuations_.count("MOMM1"))
-    currentLevel.set_mu(parse_moment(l.continuations_.at("MOMM1")));
+  //multiple times???
+  for (auto n : norm)
+    if (n.NB.hasFiniteValue() && n.BR.hasFiniteValue())
+      ret = n.NB * n.BR;
+
+  if (pnorm.NBBR.hasFiniteValue())
+    ret = pnorm.NBBR;
+
+  return ret;
+}
+
+Uncert DaughterParser::gamma_norm(const ProdNormalizationRecord& pnorm,
+                                  std::vector<NormalizationRecord> norm)
+{
+  Uncert ret(1.0,1,Uncert::SignMagnitudeDefined);
+
+  //multiple times???
+  for (auto n : norm)
+    if (n.NR.hasFiniteValue() && n.BR.hasFiniteValue())
+      ret = n.NR * n.BR;
+
+  if (pnorm.NRBR.hasFiniteValue())
+    ret = pnorm.NRBR;
+
+  return ret;
+}
+
+Level DaughterParser::construct_level(const LevelRecord& record,
+                                      Uncert intensity_norm)
+{
+  Level ret(record.energy, record.spin_parity,
+            record.halflife, record.isomeric);
+
+  for (const AlphaRecord& a : record.alphas)
+    if (a.intensity_alpha.hasFiniteValue())
+      ret.setFeedIntensity(a.intensity_alpha * intensity_norm);
+
+  for (const BetaRecord& b : record.betas)
+    if (b.intensity.hasFiniteValue())
+      ret.setFeedIntensity(b.intensity * intensity_norm);
+
+  for (const ECRecord& e : record.ECs)
+    if (e.intensity_total.hasFiniteValue())
+      ret.setFeedIntensity(e.intensity_total);
+    else
+      ret.setFeedIntensity(e.intensity_beta_plus + e.intensity_ec);
+
+  if (record.continuations_.count("MOME2"))
+    ret.set_q(parse_moment(record.continuations_.at("MOME2")));
+
+  if (record.continuations_.count("MOMM1"))
+    ret.set_mu(parse_moment(record.continuations_.at("MOMM1")));
+
+  json comments;
+  for (const CommentsRecord& c : record.comments)
+    comments.push_back(c.html());
+  ret.add_comments("comments", comments);
+
+  return ret;
+}
+
+Transition DaughterParser::construct_transition(const GammaRecord& record,
+                                                Uncert intensity_norm)
+{
+  Transition transition(record.energy,
+                        record.intensity_rel_photons
+                        * intensity_norm);
+  transition.set_multipol(record.multipolarity);
+  transition.set_delta(record.mixing_ratio);
+
+  json comments;
+  for (const CommentsRecord& c : record.comments)
+    comments.push_back(c.html());
+  transition.add_comments("comments", comments);
+
+  return transition;
+}
+
+Nuclide DaughterParser::construct_parent(const std::vector<ParentRecord>& parents)
+{
+  // is this really the best way to deal with multiple parents?
+
+  if (parents.empty())
+    return Nuclide();
+
+  Nuclide ret = Nuclide(parents.at(0).nuclide);
+
+  json comments;
+  for (ParentRecord p : parents)
+  {
+    ret.addHalfLife(p.hl);
+
+    Level plv(p.energy, p.spin, p.hl);
+    plv.setFeedingLevel(true);
+    ret.add_level(plv);
+
+    comments.push_back(p.debug());
+  }
+
+  ret.add_comments("comments", comments);
+
+  if (!ret.empty() &&
+      (ret.levels().begin()->second.energy() > 0.0))
+  {
+    Level plv(Energy(0.0, Uncert::SignMagnitudeDefined), SpinParity(), HalfLife());
+    plv.setFeedingLevel(false);
+    ret.add_level(plv);
+  }
+
+  return ret;
+}
+
+void DaughterParser::add_text(DecayScheme& scheme,
+                              const std::list<HistoryRecord>& hist,
+                              const std::list<CommentsRecord>& comm) const
+{
+  if (!comm.empty())
+  {
+    json comments;
+    comments["heading"] = "Comments";
+    for (const CommentsRecord& c : comm)
+      comments["pars"].push_back(c.html());
+    scheme.add_text(comments);
+  }
+
+  if (!hist.empty())
+  {
+    json history;
+    history["heading"] = "History";
+    for (const HistoryRecord& h : hist)
+      for (const auto& kvp : h.kvps)
+        history["pars"].push_back("<b>" + kvp.first + ":</b> " + kvp.second);
+    scheme.add_text(history);
+  }
+
+  for (auto r : references_)
+  {
+    scheme.insert_reference(r.first);
+    scheme.insert_reference(CommentsRecord::adjust_case(r.first));
+  }
 }
 
 
@@ -125,138 +262,29 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
     return DecayScheme();
 
   DecayData decaydata = nuclide_data_.at(daughter).decays.at(decay_name);
+  Uncert feed_n = feed_norm(decaydata.pnorm, decaydata.norm);
+  Uncert gamma_n = gamma_norm(decaydata.pnorm, decaydata.norm);
 
   Nuclide daughter_nuclide(decaydata.id.nuclide);
 
-  UncertainDouble normalizeDecIntensToPercentParentDecay
-      (1.0,1,UncertainDouble::SignMagnitudeDefined);
-  UncertainDouble normalizeGammaIntensToPercentParentDecay
-      (1.0,1,UncertainDouble::SignMagnitudeDefined);
-
-  //multiple times???
-  for (auto n : decaydata.norm)
-  {
-    if (n.NB.hasFiniteValue() && n.BR.hasFiniteValue())
-      normalizeDecIntensToPercentParentDecay = n.NB * n.BR;
-    if (n.NR.hasFiniteValue() && n.BR.hasFiniteValue())
-      normalizeGammaIntensToPercentParentDecay = n.NR * n.BR;
-  }
-
-  // process normalization records
-  if (decaydata.pnorm.valid())
-  {
-    if (decaydata.pnorm.NBBR.hasFiniteValue())
-      normalizeDecIntensToPercentParentDecay = decaydata.pnorm.NBBR;
-    if (decaydata.pnorm.NRBR.hasFiniteValue())
-      normalizeGammaIntensToPercentParentDecay = decaydata.pnorm.NRBR;
-  }
+  for (const LevelRecord& lev : decaydata.levels)
+    daughter_nuclide.add_level(construct_level(lev, feed_n));
 
   for (const LevelRecord& lev : decaydata.levels)
-  {
-    Level currentLevel(lev.energy, lev.spin_parity,
-                       lev.halflife, lev.isomeric);
-
-    modify_level(currentLevel, lev);
-
-    for (const AlphaRecord& a : lev.alphas)
-    {
-      if (a.intensity_alpha.hasFiniteValue())
-        currentLevel.setFeedIntensity(a.intensity_alpha * normalizeDecIntensToPercentParentDecay);
-    }
-    for (const BetaRecord& b : lev.betas)
-    {
-      if (b.intensity.hasFiniteValue())
-        currentLevel.setFeedIntensity(b.intensity * normalizeDecIntensToPercentParentDecay);
-    }
-    for (const ECRecord& e : lev.ECs)
-    {
-      if (e.intensity_total.hasFiniteValue())
-        currentLevel.setFeedIntensity(e.intensity_total);
-      else
-        currentLevel.setFeedIntensity(e.intensity_beta_plus + e.intensity_ec);
-    }
-
-    json comments;
-    for (const CommentsRecord& c : lev.comments)
-      comments.push_back(c.html());
-    currentLevel.add_comments("comments", comments);
-
-    daughter_nuclide.add_level(currentLevel);
-  }
-
-  for (const LevelRecord& lev : decaydata.levels)
-  {
     for (const GammaRecord& g : lev.gammas)
     {
-      Transition transition(g.energy,
-                            g.intensity_rel_photons
-                            * normalizeGammaIntensToPercentParentDecay);
-      transition.set_multipol(g.multipolarity);
-      transition.set_delta(g.mixing_ratio);
+      Transition transition
+          = construct_transition(g, gamma_n);
       transition.set_from(lev.energy);
-
-      json comments;
-      for (const CommentsRecord& c : g.comments)
-        comments.push_back(c.html());
-      transition.add_comments("comments", comments);
-
       daughter_nuclide.add_transition_from(transition, max_level_dif);
     }
-  }
 
-  // create relevant parent levels and collect parent half-lifes
-  Nuclide parent_nuclide;
-  if (!decaydata.parents.empty())
-  {
-    parent_nuclide = Nuclide(decaydata.parents.at(0).nuclide);
-    json comments;
-    for (ParentRecord p : decaydata.parents)
-    {
-      parent_nuclide.addHalfLife(p.hl);
-
-      Level plv(p.energy, p.spin, p.hl);
-      plv.setFeedingLevel(true);
-      parent_nuclide.add_level(plv);
-
-      comments.push_back(p.debug());
-    }
-
-    parent_nuclide.add_comments("comments", comments);
-
-    if (!parent_nuclide.empty() &&
-        (parent_nuclide.levels().begin()->second.energy() > 0.0))
-    {
-      Level plv(Energy(0.0, UncertainDouble::SignMagnitudeDefined), SpinParity(), HalfLife());
-      plv.setFeedingLevel(false);
-      parent_nuclide.add_level(plv);
-    }
-  }
+  Nuclide parent_nuclide = construct_parent(decaydata.parents);
 
   DecayScheme ret(decay_name, parent_nuclide, daughter_nuclide,
                   decaydata.decay_info_, decaydata.reaction_info_);
 
-  json history;
-  for (const HistoryRecord& h : decaydata.history)
-  {
-    json j;
-    for (auto kvp : h.kvps)
-      j[kvp.first] = kvp.second;
-    history.push_back(j);
-  }
-  if (!history.empty())
-    ret.add_comments("history", history);
-
-  json comments;
-  for (const CommentsRecord& c : decaydata.comments)
-    comments.push_back(c.html());
-  if (!comments.empty())
-    ret.add_comments("comments", comments);
-
-  for (auto r : references_)
-  {
-    ret.insert_reference(r.first);
-    ret.insert_reference(CommentsRecord::adjust_case(r.first));
-  }
+  add_text(ret, decaydata.history, decaydata.comments);
 
   return ret;
 }
@@ -266,103 +294,29 @@ DecayScheme DaughterParser::get_nuclide(NuclideId daughter, double max_level_dif
   if (!nuclide_data_.count(daughter))
     return DecayScheme();
 
-  UncertainDouble normalizeDecIntensToPercentParentDecay
-      (1.0,1,UncertainDouble::SignMagnitudeDefined);
-  UncertainDouble normalizeGammaIntensToPercentParentDecay
-      (1.0,1,UncertainDouble::SignMagnitudeDefined);
-
   LevelData nucdata = nuclide_data_.at(daughter).adopted_levels;
+  std::vector<NormalizationRecord> dummy;
+  Uncert feed_n = feed_norm(nucdata.pnorm, dummy);
+  Uncert gamma_n = gamma_norm(nucdata.pnorm, dummy);
 
   Nuclide daughter_nuclide(daughter);
-
-  // process normalization records
-  if (nucdata.pnorm.valid())
-  {
-    if (nucdata.pnorm.NBBR.hasFiniteValue())
-      normalizeDecIntensToPercentParentDecay = nucdata.pnorm.NBBR;
-    if (nucdata.pnorm.NRBR.hasFiniteValue())
-      normalizeGammaIntensToPercentParentDecay = nucdata.pnorm.NRBR;
-  }
+  for (const LevelRecord& lev : nucdata.levels)
+    daughter_nuclide.add_level(construct_level(lev, feed_n));
 
   for (const LevelRecord& lev : nucdata.levels)
-  {
-    Level currentLevel(lev.energy, lev.spin_parity,
-                       lev.halflife, lev.isomeric);
-
-    modify_level(currentLevel, lev);
-
-    for (const AlphaRecord& a : lev.alphas)
-    {
-      if (a.intensity_alpha.hasFiniteValue())
-        currentLevel.setFeedIntensity(a.intensity_alpha * normalizeDecIntensToPercentParentDecay);
-    }
-    for (const BetaRecord& b : lev.betas)
-    {
-      if (b.intensity.hasFiniteValue())
-        currentLevel.setFeedIntensity(b.intensity * normalizeDecIntensToPercentParentDecay);
-    }
-    for (const ECRecord& e : lev.ECs)
-    {
-      if (e.intensity_total.hasFiniteValue())
-        currentLevel.setFeedIntensity(e.intensity_total);
-      else
-        currentLevel.setFeedIntensity(e.intensity_beta_plus + e.intensity_ec);
-    }
-
-    json comments;
-    for (const CommentsRecord& c : lev.comments)
-      comments.push_back(c.html());
-    currentLevel.add_comments("comments", comments);
-
-    daughter_nuclide.add_level(currentLevel);
-  }
-
-  for (const LevelRecord& lev : nucdata.levels)
-  {
     for (const GammaRecord& g : lev.gammas)
     {
-      Transition transition(g.energy,
-                            g.intensity_rel_photons
-                            * normalizeGammaIntensToPercentParentDecay);
-      transition.set_multipol(g.multipolarity);
-      transition.set_delta(g.mixing_ratio);
+      Transition transition
+          = construct_transition(g, gamma_n);
       transition.set_from(lev.energy);
-
-      json comments;
-      for (const CommentsRecord& c : g.comments)
-        comments.push_back(c.html());
-      transition.add_comments("comments", comments);
-
       daughter_nuclide.add_transition_from(transition, max_level_dif);
     }
-  }
 
   DecayScheme ret(daughter.symbolicName() + " (adopted levels)",
                   Nuclide(), daughter_nuclide,
                   DecayInfo(), ReactionInfo());
 
-  json history;
-  for (const HistoryRecord& h : nucdata.history)
-  {
-    json j;
-    for (auto kvp : h.kvps)
-      j[kvp.first] = kvp.second;
-    history.push_back(j);
-  }
-  if (!history.empty())
-    ret.add_comments("history", history);
-
-  json comments;
-  for (const CommentsRecord& c : nucdata.comments)
-    comments.push_back(c.html());
-  if (!comments.empty())
-    ret.add_comments("comments", comments);
-
-  for (auto r : references_)
-  {
-    ret.insert_reference(r.first);
-    ret.insert_reference(CommentsRecord::adjust_case(r.first));
-  }
+  add_text(ret, nucdata.history, nucdata.comments);
 
   return ret;
 }
@@ -372,29 +326,7 @@ DecayScheme DaughterParser::get_info() const
   DecayScheme ret("", Nuclide(), Nuclide(),
                   DecayInfo(), ReactionInfo());
 
-  json history;
-  for (const HistoryRecord& h : mass_history_)
-  {
-    json j;
-    for (auto kvp : h.kvps)
-      j[kvp.first] = kvp.second;
-    history.push_back(j);
-  }
-  if (!history.empty())
-    ret.add_comments("history", history);
-
-  json comments;
-  for (const CommentsRecord& c : mass_comments_)
-    comments.push_back(c.html());
-  if (!comments.empty())
-    ret.add_comments("comments", comments);
-
-  for (auto r : references_)
-  {
-    ret.insert_reference(r.first);
-    ret.insert_reference(CommentsRecord::adjust_case(r.first));
-  }
-
+  add_text(ret, mass_history_, mass_comments_);
   return ret;
 }
 
@@ -472,14 +404,14 @@ void DaughterParser::parse(const std::vector<std::string>& lines)
       if (header.nuclide.composition_known())
         parse_comments_block(data,
                              nuclide_data_[header.nuclide].history,
-                             nuclide_data_[header.nuclide].comments);
+            nuclide_data_[header.nuclide].comments);
       else
         parse_comments_block(data,
                              mass_history_,
                              mass_comments_);
     }
     else if (test(header.type & RecordType::References) &&
-        !header.nuclide.composition_known())
+             !header.nuclide.composition_known())
     {
       parse_reference_block(data);
     }
@@ -498,8 +430,8 @@ void DaughterParser::parse(const std::vector<std::string>& lines)
       //      DBG << "Getting decay " << header.debug();
       DecayData decaydata(data);
 
-//      if (!decaydata.decay_info_.valid())
-//        continue;
+      //      if (!decaydata.decay_info_.valid())
+      //        continue;
 
       if (!nuclide_data_.count(decaydata.id.nuclide))
         DBG << "No index for " << decaydata.id.nuclide.symbolicName()

@@ -26,16 +26,34 @@ private:
   std::map<std::string, std::string> references_;
   std::map<NuclideId, NuclideData> nuclide_data_;
 
+  // block parsing
   std::list<BlockIndices> find_blocks(const std::vector<std::string> &lines) const;
   void parse(const std::vector<std::string>& lines);
-
+  void parse_reference_block(ENSDFData &i);
   void parse_comments_block(ENSDFData &i,
                             std::list<HistoryRecord>& hist,
                             std::list<CommentsRecord>& comm);
 
-  void parse_reference_block(ENSDFData &i);
 
-  void modify_level(Level& currentLevel, const LevelRecord &l) const;
+
+  // object construction
+
+  static Uncert feed_norm(const ProdNormalizationRecord& pnorm,
+                          std::vector<NormalizationRecord> norm);
+
+  static Uncert gamma_norm(const ProdNormalizationRecord& pnorm,
+                           std::vector<NormalizationRecord> norm);
+
+  static Level construct_level(const LevelRecord& record,
+                               Uncert intensity_norm);
+  static Transition construct_transition(const GammaRecord& record,
+                                         Uncert intensity_norm);
+
+  static Nuclide construct_parent(const std::vector<ParentRecord>& parents);
+
+  void add_text(DecayScheme& scheme,
+                const std::list<HistoryRecord>& hist,
+                const std::list<CommentsRecord>& comm) const;
 };
 
 
