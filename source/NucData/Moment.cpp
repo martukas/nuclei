@@ -4,7 +4,7 @@ Moment::Moment(const Moment &p)
   : moment_(p.moment_)
 {}
 
-Moment::Moment(const UncertainDouble &v)
+Moment::Moment(const Uncert &v)
   : moment_(v)
 {}
 

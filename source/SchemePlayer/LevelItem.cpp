@@ -165,7 +165,7 @@ LevelItem::LevelItem(Level level,
 
   // plot level feeding arrow if necessary
   if (level.normalizedFeedIntensity().uncertaintyType()
-      != UncertainDouble::UndefinedType)
+      != Uncert::UndefinedType)
   {
     // create line
     feedarrow_ = new QGraphicsLineItem;

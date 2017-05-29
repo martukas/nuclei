@@ -1,16 +1,16 @@
 #pragma once
 
-#include "UncertainDouble.h"
+#include "Uncert.h"
 
 class Energy
 {
 public:
   Energy() {}
-  explicit Energy(const UncertainDouble &v);
-  explicit Energy(double energy, UncertainDouble::Sign s);
+  explicit Energy(const Uncert &v);
+  explicit Energy(double energy, Uncert::Sign s);
 
   bool valid() const;
-  UncertainDouble value() const;
+  Uncert value() const;
 
   std::string to_string() const;
 
@@ -27,5 +27,5 @@ public:
   Energy operator+(const Energy& other) const;
 
 private:
-  UncertainDouble value_;
+  Uncert value_;
 };

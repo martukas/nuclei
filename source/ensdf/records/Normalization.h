@@ -12,7 +12,7 @@ struct NormalizationRecord
   bool valid() const;
 
   NuclideId nuclide;
-  UncertainDouble NR, NT, BR, NB, NP;
+  Uncert NR, NT, BR, NB, NP;
 
   std::list<CommentsRecord> comments;
 };

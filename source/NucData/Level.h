@@ -22,7 +22,7 @@ public:
   SpinParity spin() const;
   HalfLife halfLife() const;
   uint16_t isomerNum() const;
-  UncertainDouble normalizedFeedIntensity() const;
+  Uncert normalizedFeedIntensity() const;
   Moment mu() const;
   Moment q() const;
 
@@ -39,7 +39,7 @@ public:
 
   std::string to_string() const;
 
-  void setFeedIntensity(UncertainDouble intensity);
+  void setFeedIntensity(Uncert intensity);
   void setFeedingLevel(bool isfeeding);
 
   bool isFeedingLevel() const;
@@ -56,7 +56,7 @@ private:
   Moment q_, mu_; // quadrupole and magnetic moments
   uint16_t isomeric_ {0}; // >0 for isomeric levels (counted from low energy to high), 0 otherwise
 
-  UncertainDouble feeding_intensity_; // says how often this level is directly fed per 100 parent decays
+  Uncert feeding_intensity_; // says how often this level is directly fed per 100 parent decays
   bool feeding_level_ {false}; // true if this is belonging to a parent nuclide and is a starting point for decays
 
   std::set<Energy> populating_transitions_;

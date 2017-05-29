@@ -13,7 +13,7 @@ struct QValueRecord
   bool valid() const;
 
   NuclideId nuclide;
-  UncertainDouble Q, SN, SP, QA;
+  Uncert Q, SN, SP, QA;
   std::string ref;
 
   std::list<CommentsRecord> comments;

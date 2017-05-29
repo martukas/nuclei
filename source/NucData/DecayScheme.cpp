@@ -14,7 +14,7 @@ DecayScheme::DecayScheme(const std::string &name,
 
 bool DecayScheme::valid() const
 {
-  return (!daughter_.empty() || !comments_.empty());
+  return (!daughter_.empty() || !text_.empty());
 }
 
 void DecayScheme::insert_reference(const std::string &s)
@@ -22,14 +22,14 @@ void DecayScheme::insert_reference(const std::string &s)
   references_.insert(s);
 }
 
-void DecayScheme::add_comments(const std::string &s, const json &j)
+void DecayScheme::add_text(const json &j)
 {
-  comments_[s] = j;
+  text_.push_back(j);
 }
 
-json DecayScheme::comments() const
+json DecayScheme::text() const
 {
-  return comments_;
+  return text_;
 }
 
 std::set<std::string> DecayScheme::references() const

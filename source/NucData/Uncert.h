@@ -2,7 +2,7 @@
 
 #include <string>
 
-class UncertainDouble
+class Uncert
 {
 public:
   enum UncertaintyType
@@ -27,18 +27,18 @@ public:
     SignMagnitudeDefined  = 0x3
   };
 
-  UncertainDouble();
-  UncertainDouble(double d, uint16_t sigf, Sign s);
-  UncertainDouble(double d, uint16_t sigf, Sign s, double symmetricSigma);
+  Uncert();
+  Uncert(double d, uint16_t sigf, Sign s);
+  Uncert(double d, uint16_t sigf, Sign s, double symmetricSigma);
 
-  UncertainDouble & operator=(const UncertainDouble & other);
-  UncertainDouble & operator*=(double other);
-  UncertainDouble & operator*=(const UncertainDouble &other);
-  UncertainDouble & operator+=(const UncertainDouble &other);
-  UncertainDouble & operator-=(const UncertainDouble &other);
-  UncertainDouble operator*(const UncertainDouble &other) const;
-  UncertainDouble operator+(const UncertainDouble &other) const;
-  UncertainDouble operator-(const UncertainDouble &other) const;
+  Uncert & operator=(const Uncert & other);
+  Uncert & operator*=(double other);
+  Uncert & operator*=(const Uncert &other);
+  Uncert & operator+=(const Uncert &other);
+  Uncert & operator-=(const Uncert &other);
+  Uncert operator*(const Uncert &other) const;
+  Uncert operator+(const Uncert &other) const;
+  Uncert operator-(const Uncert &other) const;
   operator double() const;
 
   double value() const;
