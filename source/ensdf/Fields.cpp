@@ -16,11 +16,11 @@ bool is_uncertainty_id(const std::string& str)
           str == "SY");
 }
 
-UncertainDouble parse_norm(std::string val, std::string uncert)
+Uncert parse_norm(std::string val, std::string uncert)
 {
   auto ret = parse_val_uncert(val, uncert);
-  if (ret.sign() & UncertainDouble::MagnitudeDefined)
-    ret.setSign(UncertainDouble::SignMagnitudeDefined);
+  if (ret.sign() & Uncert::MagnitudeDefined)
+    ret.setSign(Uncert::SignMagnitudeDefined);
   return ret;
 }
 
@@ -29,7 +29,7 @@ Energy parse_energy(std::string val, std::string uncert)
   return Energy(parse_val_uncert(val, uncert));
 }
 
-UncertainDouble parse_val_uncert(std::string val, std::string uncert)
+Uncert parse_val_uncert(std::string val, std::string uncert)
 {
   boost::trim(val);
   boost::trim(uncert);
@@ -50,34 +50,34 @@ UncertainDouble parse_val_uncert(std::string val, std::string uncert)
   }
 
   if (val.empty() || !is_number(val))
-    return UncertainDouble();
+    return Uncert();
 
-  UncertainDouble result(boost::lexical_cast<double>(val), sig_digits(val), UncertainDouble::UndefinedSign);
+  Uncert result(boost::lexical_cast<double>(val), sig_digits(val), Uncert::UndefinedSign);
   double val_order = get_precision(val);
 
   if (boost::contains(val, "+") || boost::contains(val, "-"))
-    result.setSign(UncertainDouble::SignMagnitudeDefined);
+    result.setSign(Uncert::SignMagnitudeDefined);
   else
-    result.setSign(UncertainDouble::MagnitudeDefined);
+    result.setSign(Uncert::MagnitudeDefined);
 
   // parse uncertainty
   // symmetric or special case (consider symmetric if not + and - are both contained in string)
   if ( !( boost::contains(uncert,"+") && boost::contains(uncert, "-"))
        || flag_tentative ) {
     if (uncert == "LT")
-      result.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, UncertainDouble::LessThan);
+      result.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, Uncert::LessThan);
     else if (uncert == "GT")
-      result.setUncertainty(0.0, std::numeric_limits<double>::infinity(), UncertainDouble::GreaterThan);
+      result.setUncertainty(0.0, std::numeric_limits<double>::infinity(), Uncert::GreaterThan);
     else if (uncert == "LE")
-      result.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, UncertainDouble::LessEqual);
+      result.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, Uncert::LessEqual);
     else if (uncert == "GE")
-      result.setUncertainty(0.0, std::numeric_limits<double>::infinity(), UncertainDouble::GreaterEqual);
+      result.setUncertainty(0.0, std::numeric_limits<double>::infinity(), Uncert::GreaterEqual);
     else if (uncert == "AP" || uncert.empty() || !is_number(uncert) || flag_tentative)
-      result.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::Approximately);
+      result.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), Uncert::Approximately);
     else if (uncert == "CA" || flag_theoretical)
-      result.setUncertainty(0.0, 0.0, UncertainDouble::Calculated);
+      result.setUncertainty(0.0, 0.0, Uncert::Calculated);
     else if (uncert == "SY")
-      result.setUncertainty(0.0, 0.0, UncertainDouble::Systematics);
+      result.setUncertainty(0.0, 0.0, Uncert::Systematics);
     else {
       // determine significant figure
       if (!uncert.empty() && is_number(uncert))
@@ -85,7 +85,7 @@ UncertainDouble parse_val_uncert(std::string val, std::string uncert)
       else
         result.setUncertainty(std::numeric_limits<double>::quiet_NaN(),
                               std::numeric_limits<double>::quiet_NaN(),
-                              UncertainDouble::UndefinedType);
+                              Uncert::UndefinedType);
     }
   }
   // asymmetric case
@@ -130,7 +130,7 @@ UncertainDouble parse_val_uncert(std::string val, std::string uncert)
     {
       result.setUncertainty(std::numeric_limits<double>::quiet_NaN(),
                             std::numeric_limits<double>::quiet_NaN(),
-                            UncertainDouble::Approximately);
+                            Uncert::Approximately);
       WARN << "Found asymmetric error of -0+0 in '"
            << uncert
            << "' parsed as -" << unegstr << " +" << uposstr
@@ -406,13 +406,13 @@ HalfLife parse_halflife(const std::string& record)
   if (timeparts.size() >= 3)
     uncert_str = timeparts[2];
 
-  UncertainDouble time = parse_val_uncert(value_str, uncert_str);
+  Uncert time = parse_val_uncert(value_str, uncert_str);
   if (boost::contains(boost::to_upper_copy(record), "STABLE"))
     time.setValue(std::numeric_limits<double>::infinity(),
-                  UncertainDouble::SignMagnitudeDefined);
+                  Uncert::SignMagnitudeDefined);
   else if (boost::contains(record, "EV"))
     time.setValue(std::numeric_limits<double>::quiet_NaN(),
-                  UncertainDouble::SignMagnitudeDefined);
+                  Uncert::SignMagnitudeDefined);
 
   return HalfLife(time, units_str).preferred_units();
 }
@@ -556,7 +556,7 @@ bool check_nid_parse(const std::string& s, const NuclideId& n)
   return (ss == s1) || (ss == s2);
 }
 
-UncertainDouble eval_mixing_ratio(UncertainDouble vu,
+Uncert eval_mixing_ratio(Uncert vu,
                                   const std::string& mpol)
 {
   if (!vu.hasFiniteValue())
@@ -565,9 +565,9 @@ UncertainDouble eval_mixing_ratio(UncertainDouble vu,
     boost::replace_all(tmp, "(", "");
     boost::replace_all(tmp, ")", "");
     if (tmp.size() == 2)
-      return UncertainDouble(0.0, 1, UncertainDouble::SignMagnitudeDefined);
+      return Uncert(0.0, 1, Uncert::SignMagnitudeDefined);
     else
-      return UncertainDouble();
+      return Uncert();
   }
   return vu;
 }

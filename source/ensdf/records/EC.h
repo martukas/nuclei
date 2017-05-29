@@ -14,10 +14,10 @@ struct ECRecord
 
   NuclideId  nuclide;
   Energy     energy;
-  UncertainDouble intensity_beta_plus;
-  UncertainDouble intensity_ec;
-  UncertainDouble LOGFT;
-  UncertainDouble intensity_total;
+  Uncert intensity_beta_plus;
+  Uncert intensity_ec;
+  Uncert LOGFT;
+  Uncert intensity_total;
   std::string comment_flag, uniquness, quality;
 
   std::map<std::string, std::string> continuations_;

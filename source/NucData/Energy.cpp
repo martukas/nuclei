@@ -1,12 +1,12 @@
 #include "Energy.h"
 #include "qpx_util.h"
 
-Energy::Energy(const UncertainDouble &v)
+Energy::Energy(const Uncert &v)
 {
   value_ = v;
 }
 
-Energy::Energy(double energy, UncertainDouble::Sign s)
+Energy::Energy(double energy, Uncert::Sign s)
   : value_(energy, order_of(energy), s) //sigfig hack
 {
   if (energy == 0)
@@ -18,7 +18,7 @@ bool Energy::valid() const
   return value_.defined();
 }
 
-UncertainDouble Energy::value() const
+Uncert Energy::value() const
 {
   return value_;
 }
@@ -36,7 +36,7 @@ std::string Energy::to_string() const
 
   if (value_ >= 10000.0)
   {
-    UncertainDouble mev = value_;
+    Uncert mev = value_;
     mev *= 0.001;
     return mev.to_string(false) + " MeV";
   }

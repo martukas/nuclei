@@ -354,22 +354,12 @@ void Nuclei::playerSelectionChanged()
   else
   {
     QString text;
-
-    auto comments = current_scheme_.comments();
-    if (comments.count("comments"))
-      text += "<h3>Comments</h3>"
-          + prep_comments(comments["comments"], refs);
-
-    if (comments.count("history"))
+    auto comments = current_scheme_.text();
+    for (const auto& j : comments)
     {
-      text += "<h3>History</h3>";
-      for (auto j : comments["history"])
-      {
-        for (json::iterator h = j.begin(); h != j.end(); ++h)
-          text += "<b>" + QString::fromStdString(h.key()) + ":</b> "
-              + QString::fromStdString(h.value().get<std::string>()) + "<br>";
-        text += "<br>";
-      }
+      text += "<h3>" + QString::fromStdString(j["heading"]) + "</h3>";
+      for (const auto& p : j["pars"])
+        text += prep_comments(p, refs);
     }
     ui->textBrowser->setHtml(text);
   }

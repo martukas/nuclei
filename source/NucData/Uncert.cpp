@@ -1,4 +1,4 @@
-#include "UncertainDouble.h"
+#include "Uncert.h"
 
 #include <limits>
 #include <cmath>
@@ -7,7 +7,7 @@
 #include "qpx_util.h"
 //#include "custom_logger.h"
 
-UncertainDouble::UncertainDouble()
+Uncert::Uncert()
   : value_(std::numeric_limits<double>::quiet_NaN())
   , lower_sigma_(std::numeric_limits<double>::quiet_NaN())
   , upper_sigma_(std::numeric_limits<double>::quiet_NaN())
@@ -17,7 +17,7 @@ UncertainDouble::UncertainDouble()
 {
 }
 
-UncertainDouble::UncertainDouble(double d, uint16_t sigf, Sign s)
+Uncert::Uncert(double d, uint16_t sigf, Sign s)
   : value_(d)
   , lower_sigma_(0.0)
   , upper_sigma_(0.0)
@@ -27,7 +27,7 @@ UncertainDouble::UncertainDouble(double d, uint16_t sigf, Sign s)
 {
 }
 
-UncertainDouble::UncertainDouble(double d, uint16_t sigf, UncertainDouble::Sign s, double symmetricSigma)
+Uncert::Uncert(double d, uint16_t sigf, Uncert::Sign s, double symmetricSigma)
   : value_(d)
   , lower_sigma_(symmetricSigma)
   , upper_sigma_(symmetricSigma)
@@ -37,7 +37,7 @@ UncertainDouble::UncertainDouble(double d, uint16_t sigf, UncertainDouble::Sign 
 {
 }
 
-UncertainDouble &UncertainDouble::operator =(const UncertainDouble &other)
+Uncert &Uncert::operator =(const Uncert &other)
 {
   if (this != &other) {
     value_ = other.value_;
@@ -50,37 +50,37 @@ UncertainDouble &UncertainDouble::operator =(const UncertainDouble &other)
   return *this;
 }
 
-double UncertainDouble::value() const
+double Uncert::value() const
 {
   return value_;
 }
 
-double UncertainDouble::lowerUncertainty() const
+double Uncert::lowerUncertainty() const
 {
   return lower_sigma_;
 }
 
-double UncertainDouble::upperUncertainty() const
+double Uncert::upperUncertainty() const
 {
   return upper_sigma_;
 }
 
-UncertainDouble::UncertaintyType UncertainDouble::uncertaintyType() const
+Uncert::UncertaintyType Uncert::uncertaintyType() const
 {
   return type_;
 }
 
-UncertainDouble::Sign UncertainDouble::sign() const
+Uncert::Sign Uncert::sign() const
 {
   return sign_;
 }
 
-uint16_t UncertainDouble::sigfigs() const
+uint16_t Uncert::sigfigs() const
 {
   return sigfigs_;
 }
 
-uint16_t UncertainDouble::sigdec() const
+uint16_t Uncert::sigdec() const
 {
   int orderOfValue = order_of(value_);
   if (sigfigs_ > orderOfValue) {
@@ -90,62 +90,62 @@ uint16_t UncertainDouble::sigdec() const
     return 0;
 }
 
-void UncertainDouble::setValue(double val, Sign s)
+void Uncert::setValue(double val, Sign s)
 {
   value_ = val;
   sign_ = s;
 }
 
-void UncertainDouble::setUncertainty(double lower, double upper, UncertainDouble::UncertaintyType type)
+void Uncert::setUncertainty(double lower, double upper, Uncert::UncertaintyType type)
 {
   lower_sigma_ = lower;
   upper_sigma_ = upper;
   type_ = type;
 }
 
-void UncertainDouble::setSymmetricUncertainty(double sigma)
+void Uncert::setSymmetricUncertainty(double sigma)
 {
   setUncertainty(sigma, sigma, SymmetricUncertainty);
 }
 
-void UncertainDouble::setAsymmetricUncertainty(double lowerSigma, double upperSigma)
+void Uncert::setAsymmetricUncertainty(double lowerSigma, double upperSigma)
 {
   setUncertainty(lowerSigma, upperSigma, AsymmetricUncertainty);
 }
 
-void UncertainDouble::setSign(UncertainDouble::Sign s)
+void Uncert::setSign(Uncert::Sign s)
 {
   sign_ = s;
 }
 
-void UncertainDouble::setSigFigs(uint16_t sig)
+void Uncert::setSigFigs(uint16_t sig)
 {
   sigfigs_ = sig;
 }
 
-bool UncertainDouble::hasFiniteValue() const
+bool Uncert::hasFiniteValue() const
 {
-  if (sign() != UncertainDouble::MagnitudeDefined &&
-      sign() != UncertainDouble::SignMagnitudeDefined)
+  if (sign() != Uncert::MagnitudeDefined &&
+      sign() != Uncert::SignMagnitudeDefined)
     return false;
   
-  if (uncertaintyType() == UncertainDouble::SymmetricUncertainty ||
-      uncertaintyType() == UncertainDouble::AsymmetricUncertainty ||
-      uncertaintyType() == UncertainDouble::Approximately ||
-      uncertaintyType() == UncertainDouble::Calculated ||
-      uncertaintyType() == UncertainDouble::Systematics)
+  if (uncertaintyType() == Uncert::SymmetricUncertainty ||
+      uncertaintyType() == Uncert::AsymmetricUncertainty ||
+      uncertaintyType() == Uncert::Approximately ||
+      uncertaintyType() == Uncert::Calculated ||
+      uncertaintyType() == Uncert::Systematics)
     return true;
 
   return false;
 }
 
-bool UncertainDouble::defined() const
+bool Uncert::defined() const
 {
   return (sign() != UndefinedSign) &&
       (uncertaintyType() != UndefinedType);
 }
 
-std::string UncertainDouble::to_string(bool prefix_magn, bool with_uncert) const
+std::string Uncert::to_string(bool prefix_magn, bool with_uncert) const
 {
   std::string plusminus("\u00B1");
   std::string times_ten("\u00D710");
@@ -276,7 +276,7 @@ std::string UncertainDouble::to_string(bool prefix_magn, bool with_uncert) const
   }
 }
 
-std::string UncertainDouble::to_markup() const
+std::string Uncert::to_markup() const
 {
   std::string ret = to_string(true);
   boost::replace_all(ret, "(sys)", "<i>(sys)</i>");
@@ -286,7 +286,7 @@ std::string UncertainDouble::to_markup() const
   return ret;
 }
 
-UncertainDouble & UncertainDouble::operator*=(double other)
+Uncert & Uncert::operator*=(double other)
 {
   setValue(value() * other);
   if (other >= 0.0 ||
@@ -314,14 +314,14 @@ UncertainDouble & UncertainDouble::operator*=(double other)
   return *this;
 }
 
-UncertainDouble & UncertainDouble::operator*=(const UncertainDouble &other)
+Uncert & Uncert::operator*=(const Uncert &other)
 {
   //Chaltura!!!
   *this *= other.value();
   return *this;
 }
 
-UncertainDouble &UncertainDouble::operator +=(const UncertainDouble &other)
+Uncert &Uncert::operator +=(const Uncert &other)
 {
   uint16_t sd1 = sigdec();
   uint16_t sd2 = other.sigdec();
@@ -334,7 +334,7 @@ UncertainDouble &UncertainDouble::operator +=(const UncertainDouble &other)
   return *this;
 }
 
-UncertainDouble &UncertainDouble::operator -=(const UncertainDouble &other)
+Uncert &Uncert::operator -=(const Uncert &other)
 {
   uint16_t sd1 = sigdec();
   uint16_t sd2 = other.sigdec();
@@ -347,28 +347,28 @@ UncertainDouble &UncertainDouble::operator -=(const UncertainDouble &other)
   return *this;
 }
 
-UncertainDouble UncertainDouble::operator +(const UncertainDouble &other) const
+Uncert Uncert::operator +(const Uncert &other) const
 {
-  UncertainDouble result(*this);
+  Uncert result(*this);
   result += other;
   return result;
 }
 
-UncertainDouble UncertainDouble::operator -(const UncertainDouble &other) const
+Uncert Uncert::operator -(const Uncert &other) const
 {
-  UncertainDouble result(*this);
+  Uncert result(*this);
   result -= other;
   return result;
 }
 
-UncertainDouble UncertainDouble::operator *(const UncertainDouble &other) const
+Uncert Uncert::operator *(const Uncert &other) const
 {
-  UncertainDouble result(*this);
+  Uncert result(*this);
   result *= other;
   return result;
 }
 
-UncertainDouble::operator double() const
+Uncert::operator double() const
 {
   return value_;
 }

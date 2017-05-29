@@ -32,8 +32,8 @@ public:
   std::set<std::string> references() const;
   void insert_reference(const std::string &s);
 
-  json comments() const;
-  void add_comments(const std::string &s, const json &j);
+  json text() const;
+  void add_text(const json &j);
 
 private:
   std::string name_;
@@ -41,6 +41,6 @@ private:
   DecayInfo decay_info_;
   ReactionInfo reaction_info_;
 
-  json comments_;
+  json text_;
   std::set<std::string> references_;
 };

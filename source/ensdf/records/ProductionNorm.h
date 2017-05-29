@@ -12,7 +12,7 @@ struct ProdNormalizationRecord
   bool valid() const;
 
   NuclideId nuclide;
-  UncertainDouble NRBR, NTBR, NBBR, NP;
+  Uncert NRBR, NTBR, NBBR, NP;
   bool comment_placement {false};
   int display_option {0};
   std::string caveat;

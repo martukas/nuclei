@@ -47,7 +47,7 @@ uint16_t Level::isomerNum() const
   return isomeric_;
 }
 
-UncertainDouble Level::normalizedFeedIntensity() const
+Uncert Level::normalizedFeedIntensity() const
 {
   return feeding_intensity_;
 }
@@ -94,7 +94,7 @@ void Level::addDepopulatingTransition(const Energy& e)
     depopulating_transitions_.insert(e);
 }
 
-void Level::setFeedIntensity(UncertainDouble intensity)
+void Level::setFeedIntensity(Uncert intensity)
 {
   feeding_intensity_ = intensity;
 }

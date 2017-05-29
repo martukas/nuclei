@@ -79,7 +79,7 @@ Energy Nuclide::nearest_level(const Energy& goal,
 
   max_dif *= goal;
   Energy best;
-//      = Energy(UncertainDouble(kDoubleInf, 1, UncertainDouble::SignMagnitudeDefined));
+//      = Energy(Uncert(kDoubleInf, 1, Uncert::SignMagnitudeDefined));
 //  DBG << "<Nuclide::nearest_level> maxdif " << max_dif
 //      << " for " << goal.to_string();
   for (const auto& lev : levels_)

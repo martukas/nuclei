@@ -25,7 +25,7 @@ struct LevelRecord
   HalfLife   halflife;
   uint16_t   isomeric {0};
   std::string L;     //anglular momentum
-  UncertainDouble S; //spectroscopic strength
+  Uncert S; //spectroscopic strength
   std::string comment_flag, quality;
 
   std::map<std::string, std::string> continuations_;

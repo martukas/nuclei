@@ -14,10 +14,10 @@ struct GammaRecord
 
   NuclideId  nuclide;
   Energy     energy;
-  UncertainDouble intensity_rel_photons;
-  UncertainDouble intensity_total_transition;
-  UncertainDouble mixing_ratio;
-  UncertainDouble conversion_coef;
+  Uncert intensity_rel_photons;
+  Uncert intensity_total_transition;
+  Uncert mixing_ratio;
+  Uncert conversion_coef;
   std::string multipolarity;
   std::string comment_flag, coincidence, quality;
 
