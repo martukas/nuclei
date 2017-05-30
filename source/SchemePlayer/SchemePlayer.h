@@ -74,7 +74,8 @@ private:
   void addTransition(Transition transition, SchemeVisualSettings vis);
 
   void clickedGamma(TransitionItem *g);
-  void clickedEnergyLevel(LevelItem *e);
+  void clickedParentLevel(LevelItem *e);
+  void clickedDaughterLevel(LevelItem *e);
   void clickedParent();
   void clickedDaughter();
 

@@ -19,6 +19,9 @@ public:
  std::string translate1(const std::string& s);
  std::string to_html(std::string s);
 
+ void spaces_to_html(std::string& s);
+ std::string spaces_to_html_copy(const std::string& s);
+
  std::string hist_key(const std::string& s);
  std::string hist_eval_type(const std::string& s);
 

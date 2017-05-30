@@ -28,7 +28,7 @@ struct LevelRecord
   Uncert S; //spectroscopic strength
   std::string comment_flag, quality;
 
-  std::map<std::string, std::string> continuations_;
+  std::map<std::string, Continuation> continuations_;
 
   std::list<std::string> offsets;
 

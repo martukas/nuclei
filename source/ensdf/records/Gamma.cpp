@@ -102,7 +102,8 @@ std::string GammaRecord::debug() const
   if (!quality.empty())
     ret += " quality=" + quality;
   for (auto c : continuations_)
-    ret += "\n        Continuation: " + c.first + " = " + c.second;
+    ret += "\n        Continuation: " + c.first
+        + " = " + c.second.value_refs();
   for (auto c : comments)
     ret += "\n        Comment: " + c.debug();
   return ret;

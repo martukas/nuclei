@@ -6,6 +6,8 @@
 
 #include <boost/regex.hpp>
 
+#include "Continuation.h"
+
 #define RGX_NUCLIDE_ID "[\\s0-9A-Za-z]{5}"
 #define RGX_CONTINUATION_ID "[0-9A-Za-z!@#\\$%\\^&\\*-\\+\"]"
 
@@ -29,30 +31,6 @@ bool match_cont(const std::string& line,
   return match_record_type(line,
                            "^" RGX_NUCLIDE_ID RGX_CONTINUATION_ID
                            + sub_pattern + ".*$");
-}
-
-std::map<std::string, std::string>
-parse_continuation(const std::string& crecs)
-{
-//  DBG << "CONT: " << crecs;
-  std::map<std::string, std::string> ret;
-  std::vector<std::string> crecs2;
-  boost::split(crecs2, crecs, boost::is_any_of("$"));
-  for (size_t i=0; i<crecs2.size(); i++)
-  {
-    boost::trim(crecs2[i]);
-    if (crecs2[i].empty())
-      continue;
-    std::vector<std::string> kvp;
-    boost::split(kvp, crecs2[i], boost::is_any_of("="));
-    if (kvp.size() == 2)
-      ret[boost::trim_copy(kvp[0])] = boost::trim_copy(kvp[1]);
-//    else
-//      DBG << "  bad crec: " << crecs2[i];
-  }
-//  for (auto r :ret)
-//    DBG << "  crec: " << r.first << " = " << r.second;
-  return ret;
 }
 
 bool xref_check(const std::string& xref,
@@ -82,27 +60,6 @@ bool xref_check(const std::string& xref,
   }
 
   return false;
-}
-
-void merge_continuations(std::map<std::string, std::string>& to,
-                         const std::map<std::string, std::string>& from,
-                         const std::string &debug_line)
-{
-  for (const auto& cont : from)
-  {
-    if (cont.first == "XREF")
-      continue;
-    if (to.count(cont.first) &&
-        (to[cont.first] != cont.second))
-    {
-      DBG << debug_line
-          << " adopted continuation mismatch "
-          << cont.first
-          << "  " << to[cont.first]
-          << "!=" << cont.second;
-    }
-    to[cont.first] = cont.second;
-  }
 }
 
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Comments.h"
+#include "Continuation.h"
 
 struct AlphaRecord
 {
@@ -18,6 +19,6 @@ struct AlphaRecord
   std::string comment_flag, quality;
 
   std::list<CommentsRecord> comments;
-  std::map<std::string, std::string> continuations_;
+  std::map<std::string, Continuation> continuations_;
 };
 

@@ -7,10 +7,6 @@
 #include <QTextDocument>
 #include "custom_logger.h"
 
-LevelItem::LevelItem()
-  : ClickableItem(ClickableItem::EnergyLevelType)
-{}
-
 Energy LevelItem::energy() const
 {
   return energy_;
@@ -101,7 +97,7 @@ double LevelItem::above_ypos(double offset)
   return std::floor(ypos_ - offset) + 0.5 * line_->pen().widthF();
 }
 
-LevelItem::LevelItem(Level level,
+LevelItem::LevelItem(Level level, Type type,
                      SchemeVisualSettings vis,
                      QGraphicsScene *scene)
   : LevelItem()
@@ -109,6 +105,7 @@ LevelItem::LevelItem(Level level,
   if (!level.energy().valid())
     return;
 
+  t = type;
   energy_ = level.energy();
 
   QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
