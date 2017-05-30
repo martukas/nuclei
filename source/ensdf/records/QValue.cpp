@@ -47,8 +47,8 @@ QValueRecord::QValueRecord(ENSDFData& i,
     }
     else if (match_first(line2, "\\sQ"))
     {
-      if (!altcomment)
-        DBG << "<QValueRecord::parse> No altcomment for " << debug();
+//      if (!altcomment)
+//        DBG << "<QValueRecord::parse> No altcomment for " << debug();
       auto alt = QValueRecord(++i, false);
       if (!alternative)
         alternative =  std::shared_ptr<QValueRecord>

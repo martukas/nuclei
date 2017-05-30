@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Comments.h"
+#include "Continuation.h"
 
 struct GammaRecord
 {
@@ -21,6 +22,6 @@ struct GammaRecord
   std::string multipolarity;
   std::string comment_flag, coincidence, quality;
 
-  std::map<std::string, std::string> continuations_;
+  std::map<std::string, Continuation> continuations_;
   std::list<CommentsRecord> comments;
 };

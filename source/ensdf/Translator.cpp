@@ -70,6 +70,19 @@ std::string Translator::auth_capitalize(const std::string& s)
   return ret;
 }
 
+void Translator::spaces_to_html(std::string &s)
+{
+  boost::replace_all(s, "\n", "<br>");
+  boost::replace_all(s, " ", "&nbsp;");
+}
+
+std::string Translator::spaces_to_html_copy(const std::string &s)
+{
+  return boost::replace_all_copy(
+        boost::replace_all_copy(s, "\n", "<br>"),
+        " ", "&nbsp;");
+}
+
 std::string Translator::to_html(std::string s)
 {
   for (auto t : dict2_s)
@@ -77,8 +90,7 @@ std::string Translator::to_html(std::string s)
 
   boost::replace_all(s, "<", "&lt;");
   boost::replace_all(s, ">", "&gt;");
-  boost::replace_all(s, "\n", "<br>");
-  boost::replace_all(s, " ", "&nbsp;");
+  spaces_to_html(s);
 //  DBG << "INPUT: " << s;
   std::string ret;
 

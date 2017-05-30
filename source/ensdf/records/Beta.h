@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Comments.h"
+#include "Continuation.h"
 
 struct BetaRecord
 {
@@ -17,6 +18,6 @@ struct BetaRecord
   Uncert LOGFT;
   std::string comment_flag, uniquness, quality;
 
-  std::map<std::string, std::string> continuations_;
+  std::map<std::string, Continuation> continuations_;
   std::list<CommentsRecord> comments;
 };

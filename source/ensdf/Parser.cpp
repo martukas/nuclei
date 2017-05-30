@@ -7,7 +7,7 @@
 #include <boost/filesystem.hpp>
 
 #include "custom_logger.h"
-
+#include "Translator.h"
 
 ENSDFParser::ENSDFParser()
 {}
@@ -157,16 +157,70 @@ Level DaughterParser::construct_level(const LevelRecord& record,
     else
       ret.setFeedIntensity(e.intensity_beta_plus + e.intensity_ec);
 
-  if (record.continuations_.count("MOME2"))
-    ret.set_q(parse_moment(record.continuations_.at("MOME2")));
+//  if (record.continuations_.count("MOME2"))
+//    ret.set_q(parse_moment(record.continuations_.at("MOME2")));
 
-  if (record.continuations_.count("MOMM1"))
-    ret.set_mu(parse_moment(record.continuations_.at("MOMM1")));
+//  if (record.continuations_.count("MOMM1"))
+//    ret.set_mu(parse_moment(record.continuations_.at("MOMM1")));
 
-  json comments;
-  for (const CommentsRecord& c : record.comments)
-    comments.push_back(c.html());
-  ret.add_comments("comments", comments);
+  json vals;
+  if (record.offsets.size())
+  {
+    std::string offsets;
+    for (auto o : record.offsets)
+      offsets += o + " ";
+    vals.push_back("<b>Offsets:</b> " + offsets);
+  }
+  if (record.spin_parity.valid())
+    vals.push_back("<b>Spin & parity:</b> "
+                   + record.spin_parity.to_string());
+  if (record.halflife.isValid())
+    vals.push_back("<b>Halflife:</b> "
+                   + record.halflife.to_string());
+  if (record.isomeric)
+    vals.push_back("<b>Isomeric level:</b> "
+                   + record.isomeric);
+  if (record.L.size())
+    vals.push_back("<b>Angular momentum:</b> "
+                   + record.L);
+  if (record.S.defined())
+    vals.push_back("<b>Spectroscopic strength:</b> "
+                   + record.S.to_string(true));
+  if (!record.comment_flag.empty())
+    vals.push_back("<b>Comment flag:</b> " + record.comment_flag);
+  if (!record.quality.empty())
+    vals.push_back("<b>Quality:</b> " + record.quality);
+  ret.add_text("Values", vals);
+
+  if (record.continuations_.size())
+  {
+    json cont;
+    for (const auto& c : record.continuations_)
+      cont.push_back("<b>" + c.first + "</b>: " + c.second.value_refs());
+    ret.add_text("Continued...", cont);
+  }
+
+  if (record.comments.size())
+  {
+    json comments;
+    for (const CommentsRecord& c : record.comments)
+      comments.push_back(c.html());
+    ret.add_text("Comments", comments);
+  }
+
+  json extras;
+  for (auto a : record.alphas)
+    extras.push_back(Translator::instance().spaces_to_html_copy(a.debug()));
+  for (auto a : record.betas)
+    extras.push_back(Translator::instance().spaces_to_html_copy(a.debug()));
+//  for (auto a : record.gammas)
+//    extras.push_back(Translator::instance().spaces_to_html_copy(a.debug()));
+  for (auto a : record.ECs)
+    extras.push_back(Translator::instance().spaces_to_html_copy(a.debug()));
+  for (auto a : record.particles)
+    extras.push_back(Translator::instance().spaces_to_html_copy(a.debug()));
+  if (!extras.empty())
+    ret.add_text("Extras", extras);
 
   return ret;
 }
@@ -174,18 +228,49 @@ Level DaughterParser::construct_level(const LevelRecord& record,
 Transition DaughterParser::construct_transition(const GammaRecord& record,
                                                 Uncert intensity_norm)
 {
-  Transition transition(record.energy,
-                        record.intensity_rel_photons
-                        * intensity_norm);
-  transition.set_multipol(record.multipolarity);
-  transition.set_delta(record.mixing_ratio);
+  Transition ret(record.energy,
+                 record.intensity_rel_photons * intensity_norm);
+  ret.set_multipol(record.multipolarity);
+  ret.set_delta(record.mixing_ratio);
 
-  json comments;
-  for (const CommentsRecord& c : record.comments)
-    comments.push_back(c.html());
-  transition.add_comments("comments", comments);
+  json vals;
+  if (record.intensity_rel_photons.defined())
+    vals.push_back("<b>Relative photon intensity:</b> "
+                   + record.intensity_rel_photons.to_string(true));
+  if (record.intensity_total_transition.defined())
+    vals.push_back("<b>Total transition intensity:</b> "
+                   + record.intensity_total_transition.to_string(true));
+  if (record.mixing_ratio.defined())
+    vals.push_back("<b>Mixing ratio:</b> "
+                   + record.mixing_ratio.to_string(true));
+  if (record.conversion_coef.defined())
+    vals.push_back("<b>Conversion coefficient:</b> "
+                   + record.conversion_coef.to_string(true));
+  if (!record.comment_flag.empty())
+    vals.push_back("<b>Comment flag:</b> " + record.comment_flag);
+  if (!record.coincidence.empty())
+    vals.push_back("<b>Coincidence:</b> " + record.coincidence);
+  if (!record.quality.empty())
+    vals.push_back("<b>Quality:</b> " + record.quality);
+  ret.add_text("Values", vals);
 
-  return transition;
+  if (record.continuations_.size())
+  {
+    json cont;
+    for (const auto& c : record.continuations_)
+      cont.push_back("<b>" + c.first + "</b>: " + c.second.value_refs());
+    ret.add_text("Continued...", cont);
+  }
+
+  if (record.comments.size())
+  {
+    json comments;
+    for (const CommentsRecord& c : record.comments)
+      comments.push_back(c.html());
+    ret.add_text("Comments", comments);
+  }
+
+  return ret;
 }
 
 Nuclide DaughterParser::construct_parent(const std::vector<ParentRecord>& parents)
@@ -197,7 +282,7 @@ Nuclide DaughterParser::construct_parent(const std::vector<ParentRecord>& parent
 
   Nuclide ret = Nuclide(parents.at(0).nuclide);
 
-  json comments;
+  json comm;
   for (ParentRecord p : parents)
   {
     ret.addHalfLife(p.hl);
@@ -206,10 +291,11 @@ Nuclide DaughterParser::construct_parent(const std::vector<ParentRecord>& parent
     plv.setFeedingLevel(true);
     ret.add_level(plv);
 
-    comments.push_back(p.debug());
+    comm.push_back(p.debug());
   }
 
-  ret.add_comments("comments", comments);
+  if (!comm.empty())
+    ret.add_text("Parent records", comm);
 
   if (!ret.empty() &&
       (ret.levels().begin()->second.energy() > 0.0))
@@ -229,20 +315,18 @@ void DaughterParser::add_text(DecayScheme& scheme,
   if (!comm.empty())
   {
     json comments;
-    comments["heading"] = "Comments";
     for (const CommentsRecord& c : comm)
-      comments["pars"].push_back(c.html());
-    scheme.add_text(comments);
+      comments.push_back(c.html());
+    scheme.add_text("Comments", comments);
   }
 
   if (!hist.empty())
   {
     json history;
-    history["heading"] = "History";
     for (const HistoryRecord& h : hist)
       for (const auto& kvp : h.kvps)
-        history["pars"].push_back("<b>" + kvp.first + ":</b> " + kvp.second);
-    scheme.add_text(history);
+        history.push_back("<b>" + kvp.first + ":</b> " + kvp.second);
+    scheme.add_text("History", history);
   }
 
   for (auto r : references_)

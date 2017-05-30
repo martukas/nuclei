@@ -176,7 +176,8 @@ std::string LevelRecord::debug() const
   if (!L.empty())
     ret += " L=" + L;
   for (auto c : continuations_)
-    ret += "\n      Continuation: " + c.first + " = " + c.second;
+    ret += "\n      Continuation: " + c.first
+        + " = " + c.second.value_refs();
   for (auto c : comments)
     ret += "\n      Comment: " + c.debug();
   for (auto c : alphas)

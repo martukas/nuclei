@@ -45,8 +45,8 @@ public:
 
   std::string to_string() const;
 
-  json comments() const;
-  void add_comments(const std::string &s, const json &j);
+  json text() const;
+  void add_text(const std::string& heading, const json &j);
 
 private:
   NuclideId   id_;
@@ -54,7 +54,7 @@ private:
   std::map<Energy, Level> levels_;
   std::map<Energy, Transition> transitions_;
 
-  json comments_;
+  json text_;
 
   void add_transition(const Transition& transition);
   void register_transition(const Transition& t);

@@ -37,11 +37,7 @@ bool match_cont(const std::string& line,
 bool match_record_type(const std::string& line,
                        const std::string& pattern);
 
-std::map<std::string, std::string> parse_continuation(const std::string&crecs);
-
 bool xref_check(const std::string& xref,
                 const std::string& dssym);
 
-void merge_continuations(std::map<std::string, std::string>& to,
-                         const std::map<std::string, std::string>& from,
-                         const std::string& debug_line);
+
