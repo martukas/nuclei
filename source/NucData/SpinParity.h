@@ -3,6 +3,7 @@
 #include "Parity.h"
 #include "Spin.h"
 #include <vector>
+#include <set>
 
 class SpinParity
 {
@@ -21,4 +22,7 @@ public:
 private:
   Parity parity_;
   std::vector<Spin> spins_;
+
+  bool have_valid_spins_ {false};
+  std::set<DataQuality> qs_;
 };
