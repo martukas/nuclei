@@ -1,4 +1,5 @@
 #include "SpinParity.h"
+#include <boost/algorithm/string.hpp>
 
 void SpinParity::set_parity(Parity p)
 {
@@ -8,20 +9,22 @@ void SpinParity::set_parity(Parity p)
 void SpinParity::add_spin(Spin s)
 {
   spins_.push_back(s);
+  if (s.valid())
+    have_valid_spins_ = true;
+  qs_.insert(s.quality());
 }
 
 bool SpinParity::valid() const
 {
-  return ( (parity_.quality() != DataQuality::kUnknown) && (spins_.size() == 1) );
+  return ( (parity_.quality() != DataQuality::kUnknown) || have_valid_spins_ );
 }
 
 std::string SpinParity::to_string() const
 {
-  std::string ret;
-  for (size_t i=0; i < spins_.size(); ++i) {
-    ret += spins_[i].to_string() + parity_.to_string();
-    ret += ((i+1) < spins_.size()) ? "," : "";
-  }
+  std::list<std::string> spinstrs;
+  for (auto s : spins_)
+    spinstrs.push_back(s.to_string());
+  std::string ret = boost::join(spinstrs, ",");
   return add_qualifiers(ret, parity_.quality());
 }
 
