@@ -9,6 +9,8 @@ public:
   Spin(const Spin &spin);
   Spin(uint16_t num, uint16_t denom, DataQuality q);
 
+  bool valid();
+
   void set(uint16_t num, uint16_t denom = 1);
   uint16_t numerator() const;
   uint16_t denominator() const;
@@ -32,7 +34,7 @@ public:
 
 protected:
   uint16_t numerator_   {0};
-  uint16_t denominator_ {1}; // should be 1 or 2 for a spin
+  uint16_t denominator_ {0}; // should be 1 or 2 for a spin
 
   float to_float() const;
 };

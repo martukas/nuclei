@@ -62,8 +62,8 @@ Continuation::Continuation(std::string s)
       boost::replace_all(vs, "< ", "<");
       boost::replace_all(vs, "> ", ">");
       boost::split(vals, vs, boost::is_any_of(" "));
-      for (auto vvv : vals)
-        DBG << "    " << vvv;
+//      for (auto vvv : vals)
+//        DBG << "    " << vvv;
 
       while (vals.size())
       {
@@ -112,8 +112,8 @@ Continuation::Continuation(std::string s)
           vals.pop_front();
         }
 
-        DBG << "Extracted from " << vs << " val=" << val
-            << " uncert=" << uncert;
+//        DBG << "Extracted from " << vs << " val=" << val
+//            << " uncert=" << uncert;
 
         Uncert u = parse_val_uncert(val, uncert);
         values.push_back(u);
