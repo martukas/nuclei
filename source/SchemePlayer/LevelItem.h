@@ -16,8 +16,8 @@ class QGraphicsItemGroup;
 class LevelItem : public ClickableItem
 {
 public:
-  LevelItem();
-  LevelItem(Level level,
+  LevelItem() {}
+  LevelItem(Level level, Type type,
             SchemeVisualSettings vis,
             QGraphicsScene *scene);
 

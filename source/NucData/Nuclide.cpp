@@ -11,6 +11,19 @@ Nuclide::Nuclide(NuclideId id)
 {
 }
 
+void Nuclide::add_text(const std::string &heading, const json &j)
+{
+  json block;
+  block["heading"] = heading;
+  block["pars"] = j;
+  text_.push_back(block);
+}
+
+json Nuclide::text() const
+{
+  return text_;
+}
+
 NuclideId Nuclide::id() const
 {
   return id_;
@@ -230,14 +243,4 @@ std::string Nuclide::to_string() const
       ret += "  " + t.second.to_string() +  "\n";
   }
   return ret;
-}
-
-void Nuclide::add_comments(const std::string &s, const json &j)
-{
-  comments_[s] = j;
-}
-
-json Nuclide::comments() const
-{
-  return comments_;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Comments.h"
+#include "Continuation.h"
 
 struct ParticleRecord
 {
@@ -22,6 +23,6 @@ struct ParticleRecord
   std::string energy_intermediate, L;
   std::string comment_flag, coincidence, quality;
 
-  std::map<std::string, std::string> continuations_;
+  std::map<std::string, Continuation> continuations_;
   std::list<CommentsRecord> comments;
 };

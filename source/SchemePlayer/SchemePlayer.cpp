@@ -109,7 +109,9 @@ QGraphicsScene* SchemePlayer::levelPlot()
 
 void SchemePlayer::addLevel(Level level, SchemeVisualSettings vis)
 {
-  LevelItem *levrend = new LevelItem(level, vis, scene_);
+  LevelItem *levrend = new LevelItem(level,
+                                     LevelItem::DaughterLevelType,
+                                     vis, scene_);
   connect(this, SIGNAL(enabledShadow(bool)), levrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
   connect(levrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
   levels_[level.energy()] = levrend;
@@ -117,7 +119,9 @@ void SchemePlayer::addLevel(Level level, SchemeVisualSettings vis)
 
 void SchemePlayer::addParentLevel(Level level, SchemeVisualSettings vis)
 {
-  LevelItem *levrend = new LevelItem(level, vis, scene_);
+  LevelItem *levrend = new LevelItem(level,
+                                     LevelItem::ParentLevelType,
+                                     vis, scene_);
   connect(this, SIGNAL(enabledShadow(bool)), levrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
   connect(levrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
   parent_levels_[level.energy()] = levrend;
@@ -343,8 +347,10 @@ QString SchemePlayer::name() const
 
 void SchemePlayer::itemClicked(ClickableItem *item)
 {
-  if (item->type() == ClickableItem::EnergyLevelType)
-    clickedEnergyLevel(dynamic_cast<LevelItem*>(item));
+  if (item->type() == ClickableItem::DaughterLevelType)
+    clickedDaughterLevel(dynamic_cast<LevelItem*>(item));
+  else if (item->type() == ClickableItem::ParentLevelType)
+    clickedParentLevel(dynamic_cast<LevelItem*>(item));
   else if (item->type() == ClickableItem::GammaTransitionType)
     clickedGamma(dynamic_cast<TransitionItem*>(item));
   else if (item && (item->type() == ClickableItem::ParentNuclideType))
@@ -380,7 +386,7 @@ void SchemePlayer::clickedGamma(TransitionItem *g)
   triggerDataUpdate();
 }
 
-void SchemePlayer::clickedEnergyLevel(LevelItem *e)
+void SchemePlayer::clickedParentLevel(LevelItem *e)
 {
   if (!e)
     return;
@@ -391,10 +397,24 @@ void SchemePlayer::clickedEnergyLevel(LevelItem *e)
   {
     deselect_all();
     e->graphicsItem()->setHighlighted(true);
-    if (levels_.count(e->energy()))
-      selected_levels_.insert(e->energy());
-    else if (parent_levels_.count(e->energy()))
-      selected_parent_levels_.insert(e->energy());
+    selected_parent_levels_.insert(e->energy());
+  }
+
+  triggerDataUpdate();
+}
+
+void SchemePlayer::clickedDaughterLevel(LevelItem *e)
+{
+  if (!e)
+    return;
+
+  if (e->graphicsItem()->isHighlighted())
+    e->graphicsItem()->setHighlighted(false);
+  else
+  {
+    deselect_all();
+    e->graphicsItem()->setHighlighted(true);
+    selected_levels_.insert(e->energy());
   }
 
   triggerDataUpdate();

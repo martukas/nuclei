@@ -291,25 +291,20 @@ void Nuclei::playerSelectionChanged()
   if (!decay_viewer_)
     return;
 
-  auto refs = current_scheme_.references();
-
+  json comments;
   if (decay_viewer_->selected_levels().size())
   {
     auto nrg = *decay_viewer_->selected_levels().begin();
     auto levels = current_scheme_.daughterNuclide().levels();
-    if (!levels.count(nrg))
-      return;
-    const auto& level = levels[nrg];
-
-    QString text;
-
-    if (level.comments().count("comments"))
-      text = "<h3>Level comments for "
-          + QString::fromStdString(level.energy().to_string())
-          + "</h3>"
-          + prep_comments(level.comments()["comments"], refs);
-
-    ui->textBrowser->setHtml(text);
+    if (levels.count(nrg))
+      comments = levels[nrg].text();
+  }
+  else if (decay_viewer_->selected_parent_levels().size())
+  {
+    auto nrg = *decay_viewer_->selected_parent_levels().begin();
+    auto levels = current_scheme_.parentNuclide().levels();
+    if (levels.count(nrg))
+      comments = levels[nrg].text();
   }
   else if (decay_viewer_->selected_transistions().size())
   {
@@ -317,52 +312,29 @@ void Nuclei::playerSelectionChanged()
     auto transitions = current_scheme_.daughterNuclide().transitions();
     if (!transitions.count(nrg))
       return;
-    const auto& transition = transitions[nrg];
-
-    QString text;
-
-    if (transition.comments().count("comments"))
-      text = "<h3>Transistion comments for "
-          + QString::fromStdString(transition.energy().to_string())
-          + "</h3>"
-          + prep_comments(transition.comments()["comments"], refs);
-
-    ui->textBrowser->setHtml(text);
+    comments = transitions[nrg].text();
   }
   else if (decay_viewer_->parent_selected())
-  {
-    auto comments = current_scheme_.parentNuclide().comments();
-    QString text;
-    if (comments.count("comments"))
-      text = "<h3>Parent info for "
-          + QString::fromStdString(current_scheme_.parentNuclide().id().symbolicName())
-          + "</h3>"
-          + prep_comments(comments["comments"], refs);
-    ui->textBrowser->setHtml(text);
-  }
+    comments = current_scheme_.parentNuclide().text();
   else if (decay_viewer_->daughter_selected())
-  {
-    auto comments = current_scheme_.daughterNuclide().comments();
-    QString text;
-    if (comments.count("comments"))
-      text = "<h3>Daughter info for "
-          + QString::fromStdString(current_scheme_.daughterNuclide().id().symbolicName())
-          + "</h3>"
-          + prep_comments(comments["comments"], refs);
-    ui->textBrowser->setHtml(text);
-  }
+    comments = current_scheme_.daughterNuclide().text();
   else
+    comments = current_scheme_.text();
+
+  set_text(comments);
+}
+
+void Nuclei::set_text(const json& jj)
+{
+  auto refs = current_scheme_.references();
+  QString text;
+  for (const auto& j : jj)
   {
-    QString text;
-    auto comments = current_scheme_.text();
-    for (const auto& j : comments)
-    {
-      text += "<h3>" + QString::fromStdString(j["heading"]) + "</h3>";
-      for (const auto& p : j["pars"])
-        text += prep_comments(p, refs);
-    }
-    ui->textBrowser->setHtml(text);
+    text += "<h3>" + QString::fromStdString(j["heading"]) + "</h3>";
+    for (const auto& p : j["pars"])
+      text += prep_comments(p, refs) + "<br>";
   }
+  ui->textBrowser->setHtml(text);
 }
 
 QString Nuclei::prep_comments(const json& j,
@@ -380,7 +352,7 @@ QString Nuclei::prep_comments(const json& j,
         boost::replace_all(newtext, r,
                            make_reference_link(r, refnum++));
       }
-    text += QString::fromStdString(newtext) + "<br>";
+    text += QString::fromStdString(newtext);
   }
 
   return text;

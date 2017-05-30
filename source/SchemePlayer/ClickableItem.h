@@ -19,11 +19,12 @@ class ClickableItem
 public:
   enum Type
   {
-    EnergyLevelType,
-    GammaTransitionType,
+    InvalidType,
     ParentNuclideType,
+    ParentLevelType,
     DaughterNuclideType,
-    InvalidType
+    DaughterLevelType,
+    GammaTransitionType
   };
 
   ClickableItem() {}

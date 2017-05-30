@@ -32,8 +32,8 @@ public:
 
 //  std::map<std::string, std::string> kvps;
 
-  json comments() const;
-  void add_comments(const std::string &s, const json &j);
+  json text() const;
+  void add_text(const std::string& heading, const json &j);
 
 private:
   Energy energy_;
@@ -42,5 +42,5 @@ private:
   Uncert delta_;
   Energy from_, to_;
 
-  json comments_;
+  json text_;
 };

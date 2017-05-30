@@ -58,4 +58,5 @@ private:
     std::string make_reference_link(std::string ref, int num);
     QString prep_comments(const json& j,
                           const std::set<std::string>& refs);
+    void set_text(const json& jj);
 };

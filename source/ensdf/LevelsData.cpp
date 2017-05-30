@@ -24,7 +24,7 @@ std::list<LevelRecord> LevelData::nearest_levels(const Energy &to,
   for (const auto& lev : levels)
   {
     if (!ssym.empty() && lev.continuations_.count("XREF")
-        && xref_check(lev.continuations_.at("XREF"), ssym))
+        && xref_check(lev.continuations_.at("XREF").symbols, ssym))
       continue;
 
     if (std::isfinite(maxdif) &&

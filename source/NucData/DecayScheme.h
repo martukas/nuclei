@@ -33,7 +33,7 @@ public:
   void insert_reference(const std::string &s);
 
   json text() const;
-  void add_text(const json &j);
+  void add_text(const std::string& heading, const json &j);
 
 private:
   std::string name_;

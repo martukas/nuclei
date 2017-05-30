@@ -22,9 +22,12 @@ void DecayScheme::insert_reference(const std::string &s)
   references_.insert(s);
 }
 
-void DecayScheme::add_text(const json &j)
+void DecayScheme::add_text(const std::string &heading, const json &j)
 {
-  text_.push_back(j);
+  json block;
+  block["heading"] = heading;
+  block["pars"] = j;
+  text_.push_back(block);
 }
 
 json DecayScheme::text() const
