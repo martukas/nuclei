@@ -39,3 +39,9 @@ std::string QualifiedData::add_qualifiers(const std::string& original,
   return ::add_qualifiers(original, quality_, unknown);
 }
 
+std::string QualifiedData::debug() const
+{
+  return add_qualifiers("");
+}
+
+

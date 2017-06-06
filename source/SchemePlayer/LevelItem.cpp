@@ -139,7 +139,7 @@ LevelItem::LevelItem(Level level, Type type,
   etext_->setFont(vis.stdBoldFont);
   etext_->setPos(0.0, -stdBoldFontMetrics.height());
 
-  QString spintext = QString::fromStdString(level.spin().to_string());
+  QString spintext = QString::fromStdString(level.spins().to_pretty_string());
   spintext_ = new QGraphicsSimpleTextItem(spintext, item);
   spintext_->setFont(vis.stdBoldFont);
   spintext_->setPos(0.0, -stdBoldFontMetrics.height());

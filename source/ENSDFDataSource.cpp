@@ -69,19 +69,20 @@ DecayScheme ENSDFDataSource::decay(const ENSDFTreeItem *item)
           && eitem2->parent()->id().valid())
       {
         dparser = parser.get_dp(eitem->parent()->id().A());
-        return DecayScheme(dparser.get_decay(eitem->parent()->id(),
-                                             eitem->data(0).toString().toStdString()));
+        return DecayScheme(dparser.decay(eitem->parent()->id(),
+                                         eitem->data(0).toString().toStdString(),
+                                         true));
       }
       else
       {
         dparser = parser.get_dp(eitem->id().A());
-        return DecayScheme(dparser.get_nuclide(eitem->id()));
+        return DecayScheme(dparser.nuclide_info(eitem->id()));
       }
     }
     else
     {
       dparser = parser.get_dp(eitem->id().A());
-      return DecayScheme(dparser.get_info());
+      return DecayScheme(dparser.mass_info());
     }
   }
 

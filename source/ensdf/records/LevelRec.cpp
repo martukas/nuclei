@@ -17,12 +17,12 @@ bool LevelRecord::match(const std::string& line)
 LevelRecord::LevelRecord(ENSDFData& i)
 {
   const auto& line = i.read();
-  if (!match(line))
-    return;
+//  if (!match(line))
+//    return;
 
   nuclide = parse_nid(line.substr(0,5));
   parse_energy_offset(line.substr(9,10), line.substr(19,2));
-  spin_parity = parse_spin_parity(line.substr(21, 18));
+  spins = parse_spins(line.substr(21, 18));
   halflife = parse_halflife(line.substr(39, 16)); //not always true!!!!
   L = boost::trim_copy(line.substr(55,9));
 
@@ -56,15 +56,15 @@ LevelRecord::LevelRecord(ENSDFData& i)
     else if (CommentsRecord::match(line2, "L"))
       comments.push_back(CommentsRecord(++i));
     else if (AlphaRecord::match(line2))
-      alphas.push_back(AlphaRecord(++i));
+      transitions.alpha.push_back(AlphaRecord(++i));
     else if (BetaRecord::match(line2))
-      betas.push_back(BetaRecord(++i));
+      transitions.beta.push_back(BetaRecord(++i));
     else if (GammaRecord::match(line2))
-      gammas.push_back(GammaRecord(++i));
+      transitions.gamma.push_back(GammaRecord(++i));
     else if (ECRecord::match(line2))
-      ECs.push_back(ECRecord(++i));
+      transitions.EC.push_back(ECRecord(++i));
     else if (ParticleRecord::match(line2))
-      particles.push_back(ParticleRecord(++i));
+      transitions.particle.push_back(ParticleRecord(++i));
     else
       break;
   }
@@ -75,6 +75,7 @@ LevelRecord::LevelRecord(ENSDFData& i)
 void LevelRecord::parse_energy_offset(std::string val,
                                       std::string uncert)
 {
+//  auto oval = val;
   boost::replace_all(val, " ", "");
 
   boost::smatch what1, what2, what3;
@@ -113,6 +114,17 @@ void LevelRecord::parse_energy_offset(std::string val,
   }
 
   energy = parse_energy(val, uncert);
+//  if (offsets.size())
+//  {
+//    DBG << nuclide.symbolicName() <<  " offset v=" << oval << " u=" << uncert
+//        << " ---> " << offsets_to_str() << energy.to_string();
+//  }
+}
+
+
+std::string LevelRecord::offsets_to_str() const
+{
+  return boost::join(offsets, "");
 }
 
 void LevelRecord::merge_adopted(const LevelRecord& other,
@@ -121,8 +133,8 @@ void LevelRecord::merge_adopted(const LevelRecord& other,
   if (!halflife.isValid())
   {
     halflife = other.halflife;
-    if (!spin_parity.valid())
-      spin_parity = other.spin_parity;
+    if (!spins.valid())
+      spins = other.spins;
   }
 
   if (!isomeric && other.isomeric)
@@ -142,16 +154,15 @@ void LevelRecord::merge_adopted(const LevelRecord& other,
 //  for (const auto& com : other.comments)
 //    comments.push_back(com);
 
-  for (GammaRecord& g : gammas)
+  for (GammaRecord& g : transitions.gamma)
     for (const GammaRecord& gg
          : other.nearest_gammas(g.energy, max_gamma_dif))
       g.merge_adopted(gg);
 
-  for (const GammaRecord& g : other.gammas)
+  for (const GammaRecord& g : other.transitions.gamma)
     if (nearest_gammas(g.energy, max_gamma_dif).empty())
-      gammas.push_back(g);
+      transitions.gamma.push_back(g);
 }
-
 
 std::string LevelRecord::debug() const
 {
@@ -163,8 +174,8 @@ std::string LevelRecord::debug() const
     ret += "+" + o;
   if (isomeric)
     ret += " M" + std::to_string(isomeric);
-  if (spin_parity.valid())
-    ret += " SpinParity=" + spin_parity.to_string();
+  if (spins.valid())
+    ret += " Spins=" + spins.to_string();
   if (halflife.isValid())
     ret += " Halflife=" + halflife.to_string(true);
   if (S.hasFiniteValue())
@@ -180,15 +191,15 @@ std::string LevelRecord::debug() const
         + " = " + c.second.value_refs();
   for (auto c : comments)
     ret += "\n      Comment: " + c.debug();
-  for (auto c : alphas)
+  for (auto c : transitions.alpha)
     ret += "\n      Alpha: " + c.debug();
-  for (auto c : betas)
+  for (auto c : transitions.beta)
     ret += "\n      Beta: " + c.debug();
-  for (auto c : gammas)
+  for (auto c : transitions.gamma)
     ret += "\n      Gamma: " + c.debug();
-  for (auto c : ECs)
+  for (auto c : transitions.EC)
     ret += "\n      EC: " + c.debug();
-  for (auto c : particles)
+  for (auto c : transitions.particle)
     ret += "\n      Particle: " + c.debug();
   return ret;
 }
@@ -220,7 +231,7 @@ std::list<GammaRecord> LevelRecord::nearest_gammas(const Energy &to,
 
   Energy current;
   std::list<GammaRecord> ret;
-  for (const auto& g : gammas)
+  for (const auto& g : transitions.gamma)
   {
     if (std::isfinite(maxdif) &&
         (std::abs(to - g.energy) > maxdif))

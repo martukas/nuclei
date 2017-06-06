@@ -14,7 +14,7 @@ ParentRecord::ParentRecord(ENSDFData& i)
 
   nuclide = parse_nid(line.substr(0,5));
   energy = parse_energy(line.substr(9,10), line.substr(19,2));
-  spin = parse_spin_parity(line.substr(21, 18));
+  spins = parse_spins(line.substr(21, 18));
   hl = parse_halflife(line.substr(39, 16));
   QP = parse_energy(line.substr(64,10), line.substr(74,2));
   ionization = line.substr(76,4);
@@ -30,7 +30,7 @@ std::string ParentRecord::debug() const
   std::string ret;
   ret = nuclide.symbolicName() + " PARENT "
       + " E=" + energy.to_string()
-      + " SpinParity=" + spin.to_string()
+      + " SpinParity=" + spins.to_string()
       + " HL=" + hl.to_string()
       + " QP=" + QP.to_string()
       + " ion=" + ionization;

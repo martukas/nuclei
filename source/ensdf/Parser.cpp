@@ -140,18 +140,18 @@ Uncert DaughterParser::gamma_norm(const ProdNormalizationRecord& pnorm,
 Level DaughterParser::construct_level(const LevelRecord& record,
                                       Uncert intensity_norm)
 {
-  Level ret(record.energy, record.spin_parity,
+  Level ret(record.energy, record.spins,
             record.halflife, record.isomeric);
 
-  for (const AlphaRecord& a : record.alphas)
+  for (const AlphaRecord& a : record.transitions.alpha)
     if (a.intensity_alpha.hasFiniteValue())
       ret.setFeedIntensity(a.intensity_alpha * intensity_norm);
 
-  for (const BetaRecord& b : record.betas)
+  for (const BetaRecord& b : record.transitions.beta)
     if (b.intensity.hasFiniteValue())
       ret.setFeedIntensity(b.intensity * intensity_norm);
 
-  for (const ECRecord& e : record.ECs)
+  for (const ECRecord& e : record.transitions.EC)
     if (e.intensity_total.hasFiniteValue())
       ret.setFeedIntensity(e.intensity_total);
     else
@@ -171,9 +171,9 @@ Level DaughterParser::construct_level(const LevelRecord& record,
       offsets += o + " ";
     vals.push_back("<b>Offsets:</b> " + offsets);
   }
-  if (record.spin_parity.valid())
+  if (record.spins.valid())
     vals.push_back("<b>Spin & parity:</b> "
-                   + record.spin_parity.to_string());
+                   + record.spins.to_string());
   if (record.halflife.isValid())
     vals.push_back("<b>Halflife:</b> "
                    + record.halflife.to_string());
@@ -209,15 +209,15 @@ Level DaughterParser::construct_level(const LevelRecord& record,
   }
 
   json extras;
-  for (auto a : record.alphas)
+  for (auto a : record.transitions.alpha)
     extras.push_back(Translator::instance().spaces_to_html_copy(a.debug()));
-  for (auto a : record.betas)
+  for (auto a : record.transitions.beta)
     extras.push_back(Translator::instance().spaces_to_html_copy(a.debug()));
 //  for (auto a : record.gammas)
 //    extras.push_back(Translator::instance().spaces_to_html_copy(a.debug()));
-  for (auto a : record.ECs)
+  for (auto a : record.transitions.EC)
     extras.push_back(Translator::instance().spaces_to_html_copy(a.debug()));
-  for (auto a : record.particles)
+  for (auto a : record.transitions.particle)
     extras.push_back(Translator::instance().spaces_to_html_copy(a.debug()));
   if (!extras.empty())
     ret.add_text("Extras", extras);
@@ -287,7 +287,7 @@ Nuclide DaughterParser::construct_parent(const std::vector<ParentRecord>& parent
   {
     ret.addHalfLife(p.hl);
 
-    Level plv(p.energy, p.spin, p.hl);
+    Level plv(p.energy, p.spins, p.hl);
     plv.setFeedingLevel(true);
     ret.add_level(plv);
 
@@ -300,7 +300,8 @@ Nuclide DaughterParser::construct_parent(const std::vector<ParentRecord>& parent
   if (!ret.empty() &&
       (ret.levels().begin()->second.energy() > 0.0))
   {
-    Level plv(Energy(0.0, Uncert::SignMagnitudeDefined), SpinParity(), HalfLife());
+    Level plv(Energy(0.0, Uncert::SignMagnitudeDefined),
+              SpinSet(), HalfLife());
     plv.setFeedingLevel(false);
     ret.add_level(plv);
   }
@@ -337,15 +338,18 @@ void DaughterParser::add_text(DecayScheme& scheme,
 }
 
 
-DecayScheme DaughterParser::get_decay(NuclideId daughter,
-                                      std::string decay_name,
-                                      double max_level_dif) const
+DecayScheme DaughterParser::decay(NuclideId daughter,
+                                  std::string decay_name, bool merge_adopted,
+                                  double max_level_dif) const
 {
   if (!nuclide_data_.count(daughter) ||
       !nuclide_data_.at(daughter).decays.count(decay_name))
     return DecayScheme();
 
   DecayData decaydata = nuclide_data_.at(daughter).decays.at(decay_name);
+  if (merge_adopted)
+    nuclide_data_.at(daughter).merge_adopted(decaydata);
+
   Uncert feed_n = feed_norm(decaydata.pnorm, decaydata.norm);
   Uncert gamma_n = gamma_norm(decaydata.pnorm, decaydata.norm);
 
@@ -355,7 +359,7 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
     daughter_nuclide.add_level(construct_level(lev, feed_n));
 
   for (const LevelRecord& lev : decaydata.levels)
-    for (const GammaRecord& g : lev.gammas)
+    for (const GammaRecord& g : lev.transitions.gamma)
     {
       Transition transition
           = construct_transition(g, gamma_n);
@@ -373,12 +377,16 @@ DecayScheme DaughterParser::get_decay(NuclideId daughter,
   return ret;
 }
 
-DecayScheme DaughterParser::get_nuclide(NuclideId daughter, double max_level_dif) const
+DecayScheme DaughterParser::nuclide_info(NuclideId daughter, double max_level_dif) const
 {
   if (!nuclide_data_.count(daughter))
     return DecayScheme();
 
-  LevelData nucdata = nuclide_data_.at(daughter).adopted_levels;
+  AdoptedLevels nucdata;
+  //HACKITY HACK!!!!
+  if (nuclide_data_.at(daughter).adopted_levels.size())
+    nucdata = nuclide_data_.at(daughter).adopted_levels.front();
+
   std::vector<NormalizationRecord> dummy;
   Uncert feed_n = feed_norm(nucdata.pnorm, dummy);
   Uncert gamma_n = gamma_norm(nucdata.pnorm, dummy);
@@ -388,7 +396,7 @@ DecayScheme DaughterParser::get_nuclide(NuclideId daughter, double max_level_dif
     daughter_nuclide.add_level(construct_level(lev, feed_n));
 
   for (const LevelRecord& lev : nucdata.levels)
-    for (const GammaRecord& g : lev.gammas)
+    for (const GammaRecord& g : lev.transitions.gamma)
     {
       Transition transition
           = construct_transition(g, gamma_n);
@@ -405,7 +413,7 @@ DecayScheme DaughterParser::get_nuclide(NuclideId daughter, double max_level_dif
   return ret;
 }
 
-DecayScheme DaughterParser::get_info() const
+DecayScheme DaughterParser::mass_info() const
 {
   DecayScheme ret("", Nuclide(), Nuclide(),
                   DecayInfo(), ReactionInfo());
@@ -475,13 +483,10 @@ void DaughterParser::parse(const std::vector<std::string>& lines)
 {
   for (BlockIndices block_idx : find_blocks(lines))
   {
-    ENSDFData d(lines, block_idx);
-    auto header = IdRecord(d);
-
     ENSDFData data(lines, block_idx);
-    if (!header.reflect_parse())
-      DBG << "Bad header  ==  " << data.read();
-    //    DBG << "IdRecord: " << header.extended_dsid;
+
+    auto d2 = data;
+    auto header = IdRecord(d2);
 
     if (test(header.type & RecordType::Comments))
     {
@@ -500,32 +505,12 @@ void DaughterParser::parse(const std::vector<std::string>& lines)
       parse_reference_block(data);
     }
     else if (test(header.type & RecordType::AdoptedLevels))
-    {
-      LevelData lev(data);
-      if (nuclide_data_[lev.id.nuclide].adopted_levels.valid())
-        DBG << "Adopted levels for " << lev.id.nuclide.symbolicName()
-            << " already exists";
-      else
-        nuclide_data_[lev.id.nuclide].adopted_levels = lev;
-      //      DBG << "Got level " << lev.id.debug();
-    }
+      nuclide_data_[header.nuclide].add_adopted(AdoptedLevels(data));
     else if (header.type != RecordType::Invalid)
     {
-      //      DBG << "Getting decay " << header.debug();
-      DecayData decaydata(data);
-
-      //      if (!decaydata.decay_info_.valid())
-      //        continue;
-
-      if (!nuclide_data_.count(decaydata.id.nuclide))
-        DBG << "No index for " << decaydata.id.nuclide.symbolicName()
-            << " exists";
-      else
-      {
-        nuclide_data_[decaydata.id.nuclide].merge_adopted(decaydata);
-        auto name = nuclide_data_[decaydata.id.nuclide].add_decay(decaydata);
-        get_decay(decaydata.id.nuclide, name);
-      }
+//        auto name =
+        nuclide_data_[header.nuclide].add_decay(DecayData(data));
+//        decay(decaydata.id.nuclide, name);
     }
     else
     {

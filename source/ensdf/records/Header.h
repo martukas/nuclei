@@ -6,18 +6,9 @@ enum class RecordType : int
 {
   Invalid             = 0,
   AdoptedLevels       = 1 << 1,
-  Gammas              = 1 << 3,
-  CoulombExcitation   = 1 << 4,
-  Decay               = 1 << 5,
-  References          = 1 << 6,
-  Comments            = 1 << 7,
-  MuonicAtom          = 1 << 8,
-  InelasticScattering = 1 << 9,
-  HiXng               = 1 << 10,
-  Tentative           = 1 << 11,
-  Reaction            = 1 << 12,
-  NeutronResonances   = 1 << 13,
-  IsomericTransition  = 1 << 14
+  References          = 1 << 2,
+  Comments            = 1 << 3,
+  ReactionDecay       = 1 << 4,
 };
 
 
@@ -48,7 +39,6 @@ struct IdRecord
 
   std::string debug() const;
   bool valid() const;
-  bool reflect_parse() const;
 
   NuclideId nuclide;
   std::string dsid;

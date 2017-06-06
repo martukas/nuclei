@@ -1,56 +1,31 @@
 #include "LevelsData.h"
 #include "Fields.h"
+#include "XRef.h"
 
 #include "custom_logger.h"
 #include "qpx_util.h"
 
-#include <boost/regex.hpp>
-
-#include "XRef.h"
-
-std::list<LevelRecord> LevelData::nearest_levels(const Energy &to,
-                                                 std::string dsid,
-                                                 double maxdif,
-                                                 double zero_thresh) const
+LevelsData::LevelsData(ENSDFData& i)
 {
-  maxdif *= to;
-
-  std::string ssym;
-  if (!dsid.empty() && xrefs.count(dsid))
-    ssym = xrefs.at(dsid);
-
-  Energy current;
-  std::list<LevelRecord> ret;
-  for (const auto& lev : levels)
+  auto idx = i.i.first;
+  id = IdRecord(i);
+  if (!id.valid())
   {
-    if (!ssym.empty() && lev.continuations_.count("XREF")
-        && xref_check(lev.continuations_.at("XREF").symbols, ssym))
-      continue;
-
-    if (std::isfinite(maxdif) &&
-        ((to > zero_thresh) || (lev.energy.value().value() != 0)) &&
-        (std::abs(to - lev.energy) > maxdif))
-      continue;
-
-    if (!current.valid() ||
-        (std::abs(to - lev.energy) <
-         std::abs(to - current)))
-    {
-      ret.clear();
-      ret.push_back(lev);
-      current = lev.energy;
-    }
-    else if (current.valid() &&
-             (lev.energy == current))
-    {
-      ret.push_back(lev);
-    }
+    DBG << "<LevelsData> Bad ID " << i.lines[idx];
+    return;
   }
-  return ret;
+
+  read_hist(i);
+  read_prelims(i);
+  read_unplaced(i);
+  read_comments(i);
+  read_levels(i);
+
+  //  if (valid())
+  //    DBG << debug();
 }
 
-
-void LevelData::read_hist(ENSDFData& i)
+void LevelsData::read_hist(ENSDFData& i)
 {
   while (i.has_more())
   {
@@ -62,7 +37,7 @@ void LevelData::read_hist(ENSDFData& i)
       if (his.valid())
         history.push_back(his);
       else
-        DBG << "<LevelData> Invalid Hist " << his.debug()
+        DBG << "<LevelsData> Invalid Hist " << his.debug()
             << " from " << idx << "=" << line;
     }
     else
@@ -70,7 +45,7 @@ void LevelData::read_hist(ENSDFData& i)
   }
 }
 
-void LevelData::read_comments(ENSDFData& i)
+void LevelsData::read_comments(ENSDFData& i)
 {
   while (i.has_more())
   {
@@ -82,7 +57,7 @@ void LevelData::read_comments(ENSDFData& i)
       if (com.valid())
         comments.push_back(com);
       else
-        DBG << "<LevelData> Invalid Comment " << com.debug()
+        DBG << "<LevelsData> Invalid Comment " << com.debug()
             << " from " << idx << "=" << line;
     }
     else
@@ -90,7 +65,7 @@ void LevelData::read_comments(ENSDFData& i)
   }
 }
 
-void LevelData::read_prelims(ENSDFData& i)
+void LevelsData::read_prelims(ENSDFData& i)
 {
   while (i.has_more())
   {
@@ -102,13 +77,13 @@ void LevelData::read_prelims(ENSDFData& i)
       if (pn.valid())
       {
         if (pnorm.valid())
-          DBG << "<LevelData> More than one norm " << pnorm.debug()
+          DBG << "<LevelsData> More than one norm " << pnorm.debug()
               << " from " << idx << "=" << line;
 
         pnorm = pn;
       }
       else
-        DBG << "<LevelData> Invalid Pnorm " << pn.debug()
+        DBG << "<LevelsData> Invalid Pnorm " << pn.debug()
             << " from " << idx << "=" << line;
     }
     else if (QValueRecord::match(line))
@@ -117,16 +92,7 @@ void LevelData::read_prelims(ENSDFData& i)
       if (qv.valid())
         qvals.push_back(qv);
       else
-        DBG << "<LevelData> Invalid Qval " << qv.debug()
-            << " from " << idx << "=" << line;
-    }
-    else if (XRefRecord::match(line))
-    {
-      auto ref = XRefRecord(++i);
-      if (ref.valid())
-        xrefs[ref.dsid] = ref.dssym;
-      else
-        DBG << "<LevelData> Invalid Xref " << ref.debug()
+        DBG << "<LevelsData> Invalid Qval " << qv.debug()
             << " from " << idx << "=" << line;
     }
     else if (CommentsRecord::match(line, "."))
@@ -135,7 +101,34 @@ void LevelData::read_prelims(ENSDFData& i)
       if (com.valid())
         comments.push_back(com);
       else
-        DBG << "<LevelData> Invalid Comment " << com.debug()
+        DBG << "<LevelsData> Invalid Comment " << com.debug()
+            << " from " << idx << "=" << line;
+    }
+    else if (XRefRecord::match(line))
+    {
+      auto ref = XRefRecord(++i);
+      if (ref.valid())
+        xrefs[ref.dsid] = ref.dssym;
+      else
+        DBG << "<LevelsData> Invalid Xref " << ref.debug()
+            << " from " << idx << "=" << line;
+    }
+    else if (NormalizationRecord::match(line))
+    {
+      auto n = NormalizationRecord(++i);
+      if (n.valid())
+        norm.push_back(n);
+      else
+        DBG << "<DecayData> Invalid Norm " << n.debug()
+            << " from " << idx << "=" << line;
+    }
+    else if (ParentRecord::match(line))
+    {
+      auto par = ParentRecord(++i);
+      if (par.valid())
+        parents.push_back(par);
+      else
+        DBG << "<DecayData> Invalid Parent " << par.debug()
             << " from " << idx << "=" << line;
     }
     else
@@ -143,19 +136,46 @@ void LevelData::read_prelims(ENSDFData& i)
   }
 }
 
-void LevelData::read_unplaced(ENSDFData& i)
+void LevelsData::read_unplaced(ENSDFData& i)
 {
   while (i.has_more())
   {
     auto idx = i.i.first;
     auto line = i.look_ahead();
-    if (GammaRecord::match(line))
+    if (AlphaRecord::match(line))
     {
-      auto gam = GammaRecord(++i);
-      if (gam.valid())
-        unplaced_gammas.push_back(gam);
+      auto a = AlphaRecord(++i);
+      if (a.valid())
+        unplaced.alpha.push_back(a);
       else
-        DBG << "<LevelData> Invalid unplaced gamma " << gam.debug()
+        DBG << "<DecayData> Invalid alpha " << a.debug()
+            << " from " << idx << "=" << line;
+    }
+    else if (BetaRecord::match(line))
+    {
+      auto b = BetaRecord(++i);
+      if (b.valid())
+        unplaced.beta.push_back(b);
+      else
+        DBG << "<DecayData> Invalid beta " << b.debug()
+            << " from " << idx << "=" << line;
+    }
+    else if (GammaRecord::match(line))
+    {
+      auto g = GammaRecord(++i);
+      if (g.valid())
+        unplaced.gamma.push_back(g);
+      else
+        DBG << "<DecayData> Invalid gamma " << g.debug()
+            << " from " << idx << "=" << line;
+    }
+    else if (ParticleRecord::match(line))
+    {
+      auto p = ParticleRecord(++i);
+      if (p.valid())
+        unplaced.particle.push_back(p);
+      else
+        DBG << "<DecayData> Invalid particle " << p.debug()
             << " from " << idx << "=" << line;
     }
     else
@@ -163,105 +183,25 @@ void LevelData::read_unplaced(ENSDFData& i)
   }
 }
 
-LevelData::LevelData(ENSDFData& i)
+void LevelsData::read_levels(ENSDFData& i)
 {
-  auto idx = i.i.first;
-  id = IdRecord(i);
-  if (!id.valid())
-  {
-    DBG << "<LevelData> Bad ID " << i.lines[idx];
-    return;
-  }
-
-  idx++;
-  read_hist(i);
-  read_prelims(i);
-
-  read_unplaced(i);
-  read_comments(i);
-
   while (i.has_more())
   {
     auto idx = i.i.first;
     auto line = i.look_ahead();
-    if (CommentsRecord::match(line, "L"))
-    {
-      auto com = CommentsRecord(++i);
-      if (com.valid())
-        comments.push_back(com);
-      else
-        DBG << "<LevelData> Invalid all-level comment " << com.debug()
-            << "\nfrom " << idx << " = " << line;
-      //      DBG << "Added comment from" << idx << "=" << line << com.debug();
-    }
-    else if (LevelRecord::match(line))
+    if (LevelRecord::match(line))
     {
       auto lev = LevelRecord(++i);
       if (lev.valid())
         levels.push_back(lev);
       else
-      {
-        DBG << "<LevelData>(" << id.nuclide.symbolicName() << ")"
-            << " Invalid Level at " << idx << "=" << line
-               << "\n" << lev.debug();
-      }
-      //      DBG << "Added level from" << idx << "=" << line;
+        i.print("<LevelsData> Invalid level", idx, lev.debug());
     }
     else
     {
-      DBG << "<LevelData> Unidentified record "
-          << idx << "=" << line;
+      i.print("<LevelsData> Unidentified record", idx);
+      ++i;
     }
   }
-  //  if (valid())
-  //    DBG << debug();
-}
 
-bool LevelData::valid() const
-{
-  return id.valid();
-}
-
-std::string LevelData::debug() const
-{
-  std::string ret;
-  ret += "===LEVEL DATA===\n" + id.debug() + "\n";
-
-  if (!history.empty())
-  {
-    ret += "  History:\n";
-    for (auto c : history)
-      ret += "    " + c.debug() + "\n";
-  }
-  if (!comments.empty())
-  {
-    ret += "  Comments:\n";
-    for (auto c : comments)
-      ret += "    " + c.debug() + "\n";
-  }
-  if (!xrefs.empty())
-  {
-    ret += "  Xrefs:\n";
-    for (auto c : xrefs)
-      ret += "    " + c.first + "=" + c.second + "\n";
-  }
-  if (!qvals.empty())
-  {
-    ret += "  QValues:\n";
-    for (auto c : qvals)
-      ret += "    " + c.debug() + "\n";
-  }
-  if (!levels.empty())
-  {
-    ret += "  Levels:\n";
-    for (auto c : levels)
-      ret += "    " + c.debug() + "\n";
-  }
-  if (!unplaced_gammas.empty())
-  {
-    ret += "  Unplaced_gammas:\n";
-    for (auto c : unplaced_gammas)
-      ret += "    " + c.debug() + "\n";
-  }
-  return ret;
 }
