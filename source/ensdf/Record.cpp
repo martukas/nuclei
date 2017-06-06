@@ -109,6 +109,6 @@ void ENSDFData::print(const std::string& prefix,
   if (idx >= lines.size())
     return;
   DBG << prefix << " [" << idx << "] " << lines.at(idx)
-      << "\n" << suffix;
+      << (suffix.empty() ? " " : "\n") << suffix;
 }
 

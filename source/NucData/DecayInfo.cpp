@@ -59,11 +59,13 @@ DecayInfo::DecayInfo(std::string dsid)
 //  else
 //    DBG << "Failed parents " << parents;
 
-  mode = parse_decay_mode(tokens.at(1));
-  if (mode_to_ensdf(mode) != tokens.at(1))
+  auto m = parse_decay_mode(tokens.at(1));
+  if (mode_to_ensdf(mode) == tokens.at(1))
+    mode = m;
+  else
   {
 //    ERR << "Could not parse decay mode in \"" << record.extended_dsid << "\"";
-    return;
+//    return;
   }
 
   if (tokens.size() > 2)

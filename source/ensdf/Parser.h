@@ -13,9 +13,6 @@ public:
 
   DecayScheme mass_info() const;
 
-  DecayScheme nuclide_info(NuclideId daughter,
-                           double max_level_dif = 0.04) const;
-
   DecayScheme decay(NuclideId daughter,
                     std::string decay_name, bool merge_adopted,
                     double max_level_dif = 0.04) const;
