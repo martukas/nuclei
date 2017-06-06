@@ -6,17 +6,20 @@
 
 #include <boost/regex.hpp>
 
-void NuclideData::merge_adopted(DecayData& decaydata,
+void NuclideData::merge_adopted(LevelsData &decaydata,
                                 double max_level_dif,
                                 double max_gamma_dif) const
 {
   for (LevelRecord& lev : decaydata.levels)
   {
-    for (auto ad : adopted_levels)
+    for (auto ad : decays)
     {
+      if (!ad.second.adopted)
+        continue;
+
       std::list<LevelRecord> relevant_levels
-          = ad.nearest_levels(lev.energy, decaydata.id.dsid,
-                              max_level_dif);
+          = ad.second.nearest_levels(lev.energy, decaydata.id.dsid,
+                                     max_level_dif);
 
       if (!relevant_levels.empty())
       {
@@ -28,9 +31,9 @@ void NuclideData::merge_adopted(DecayData& decaydata,
         //           ;
 
         for (const LevelRecord& l
-             : ad.nearest_levels(lev.energy,
-                                 decaydata.id.dsid,
-                                 max_level_dif))
+             : ad.second.nearest_levels(lev.energy,
+                                        decaydata.id.dsid,
+                                        max_level_dif))
         {
           //      DBG << "+++++FoundE = " << l.debug();
           lev.merge_adopted(l, max_gamma_dif);
@@ -52,16 +55,9 @@ void NuclideData::merge_adopted(DecayData& decaydata,
   }
 }
 
-void NuclideData::add_adopted(const AdoptedLevels &dec)
-{
-  adopted_levels.push_back(dec);
-}
-
-std::string NuclideData::add_decay(const DecayData& dec)
+std::string NuclideData::add(const LevelsData& dec)
 {
   auto base_name = dec.name();
-  if (!dec.valid())
-    base_name = "INVALID PARSE of " + dec.id.extended_dsid;
 
   // insert into decay map
   int count {0};

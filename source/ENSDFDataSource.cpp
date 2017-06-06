@@ -74,10 +74,7 @@ DecayScheme ENSDFDataSource::decay(const ENSDFTreeItem *item)
                                          true));
       }
       else
-      {
-        dparser = parser.get_dp(eitem->id().A());
-        return DecayScheme(dparser.nuclide_info(eitem->id()));
-      }
+        return DecayScheme();
     }
     else
     {
