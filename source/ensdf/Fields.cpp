@@ -304,6 +304,7 @@ NuclideId parse_check_nid(std::string nucid)
 
 NuclideId parse_nid(std::string id)
 {
+  boost::to_upper(id);
   boost::regex nid_expr("^(?:\\s)*([0-9]+)([A-Z]+)(?:\\s)*$");
   boost::smatch what;
   if (boost::regex_match(id, what, nid_expr) && (what.size() == 3))

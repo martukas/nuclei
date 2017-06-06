@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Comments.h"
+#include "ProductionNorm.h"
 
 struct NormalizationRecord
 {
@@ -13,6 +14,8 @@ struct NormalizationRecord
 
   NuclideId nuclide;
   Uncert NR, NT, BR, NB, NP;
+
+  ProdNormalizationRecord production;
 
   std::list<CommentsRecord> comments;
 };
