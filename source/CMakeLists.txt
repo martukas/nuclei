@@ -1,16 +1,27 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 project(nuclei CXX)
 
-# Common flags
-set (CMAKE_CXX_STANDARD 11)
+#===========================================================
+# Internal compiler options
+#===========================================================
+# C++ standard
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+if(NOT CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD LESS 14)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+
+# the compiler used for C++ files
+MESSAGE( STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER_VERSION} )
 
 FIND_PACKAGE ( Threads REQUIRED )
 
 # Boost
-find_package(Boost COMPONENTS system filesystem thread timer date_time 
-             log log_setup regex REQUIRED)
-link_directories( ${BOOST_LIBRARY_DIRS} )
+find_package(Boost COMPONENTS
+  system filesystem thread
+  timer date_time log log_setup
+  regex REQUIRED)
 add_definitions(-DBOOST_LOG_DYN_LINK)
 
 # Qt

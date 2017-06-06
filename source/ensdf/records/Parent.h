@@ -14,7 +14,7 @@ struct ParentRecord
   NuclideId nuclide;
   Energy energy;
   HalfLife hl;
-  SpinParity spin;
+  SpinSet spins;
   Energy QP;
   std::string ionization;
 };

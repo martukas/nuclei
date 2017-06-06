@@ -1,44 +1,42 @@
 #pragma once
 
 #include "Header.h"
-#include "Parent.h"
-
 #include "History.h"
 #include "QValue.h"
 #include "LevelRec.h"
+
+#include "Parent.h"
+
+#include "Normalization.h"
 #include "ProductionNorm.h"
 
-#include "ReactionInfo.h"
-#include "DecayInfo.h"
-
-struct LevelData
+struct LevelsData
 {
-  LevelData() {}
-  LevelData(ENSDFData& i);
-
-  bool valid() const;
-  std::string debug() const;
+  LevelsData() {}
+  LevelsData(ENSDFData& i);
 
   IdRecord id;
   std::list<HistoryRecord> history;
   std::list<CommentsRecord> comments;
-  std::map<std::string, std::string> xrefs;
   std::list<QValueRecord> qvals;
-  ProdNormalizationRecord pnorm;
 
-  std::list<GammaRecord> unplaced_gammas;
+  // some issues here
+  ProdNormalizationRecord pnorm;
+  std::vector<NormalizationRecord> norm;
+
+  //for adopted levels only
+  std::map<std::string, std::string> xrefs;
+
+  //for decays only
+  std::vector<ParentRecord> parents;
 
   std::list<LevelRecord> levels;
+  Transitions unplaced;
 
-  std::list<LevelRecord> nearest_levels(const Energy& to,
-                                        std::string dsid = "",
-                                        double maxdif = kDoubleNaN,
-                                        double zero_thresh = 0.1) const;
-
-private:
+protected:
   void read_hist(ENSDFData& i);
   void read_prelims(ENSDFData& i);
   void read_comments(ENSDFData& i);
   void read_unplaced(ENSDFData& i);
+  void read_levels(ENSDFData& i);
 };
-

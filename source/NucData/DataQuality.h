@@ -21,6 +21,8 @@ public:
   QualifiedData() {}
   QualifiedData(const QualifiedData &other);
 
+  std::string debug() const;
+
   void set_quality(const DataQuality& q);
   DataQuality quality() const;
 

@@ -210,8 +210,8 @@ parse_continuation(const std::string& crecs)
 
     Continuation ccc(crecs2[i]);
 
-    if ((ccc.quants.size() > 1) || !ccc.valid())
-      DBG << crecs2[i] << "  --->  " << ccc.debug();
+//    if ((ccc.quants.size() > 1) || !ccc.valid())
+//      DBG << crecs2[i] << "  --->  " << ccc.debug();
 
     if (ccc.key().size())
       ret[ccc.key()] = ccc;

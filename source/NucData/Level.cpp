@@ -1,11 +1,11 @@
 #include "Level.h"
 #include "qpx_util.h"
 
-Level::Level(Energy energy, SpinParity spin, HalfLife halfLife, uint16_t isomerNum)
+Level::Level(Energy energy, SpinSet spin, HalfLife halfLife, uint16_t isomerNum)
   : Level()
 {
   energy_ = energy;
-  spin_ = spin;
+  spins_ = spin;
   halflife_ = halfLife;
   isomeric_ = isomerNum;
 }
@@ -14,14 +14,10 @@ std::string Level::to_string() const
 {
   std::stringstream ss;
   ss << std::setw(16) << energy().to_string();
-  if (spin_.valid())
-    ss << std::setw(7) << spin().to_string();
+  if (spins_.valid())
+    ss << std::setw(10) << spins().to_string();
   if (halflife_.isValid())
     ss << std::setw(13) << halflife_.to_string();
-  if (q_.valid())
-    ss << " Q=" + q_.to_string();
-  if (mu_.valid())
-    ss << " mu=" + mu_.to_string();
   if (isomeric_)
     ss << " M" + std::to_string(isomeric_);
   return ss.str();
@@ -32,9 +28,9 @@ Energy Level::energy() const
   return energy_;
 }
 
-SpinParity Level::spin() const
+SpinSet Level::spins() const
 {
-  return spin_;
+  return spins_;
 }
 
 HalfLife Level::halfLife() const
@@ -52,34 +48,14 @@ Uncert Level::normalizedFeedIntensity() const
   return feeding_intensity_;
 }
 
-Moment Level::mu() const
-{
-  return mu_;
-}
-
-Moment Level::q() const
-{
-  return q_;
-}
-
-void Level::set_mu(const Moment &m)
-{
-  mu_ = m;
-}
-
-void Level::set_q(const Moment &m)
-{
-  q_ = m;
-}
-
 void Level::set_halflife(const HalfLife& h)
 {
   halflife_ = h;
 }
 
-void Level::set_spin(const SpinParity& s)
+void Level::set_spins(const SpinSet& s)
 {
-  spin_ = s;
+  spins_ = s;
 }
 
 void Level::addPopulatingTransition(const Energy& e)

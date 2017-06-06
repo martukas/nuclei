@@ -5,6 +5,16 @@
 #include "qpx_util.h"
 #include "custom_logger.h"
 
+#define RGX_SPIN "\\d+(?:/\\d+)?"
+#define RGX_QSPIN "[\\[\\(~]?" RGX_SPIN "[\\]\\)]?"
+#define RGX_PARITY "[\\-\\+\\?]{1}"
+#define RGX_QPARITY "[\\[\\(~]?" RGX_PARITY "[\\]\\)]?"
+#define RGX_SP "^(" RGX_QSPIN ")?(" RGX_QPARITY  ")?$"
+
+using dlim = std::numeric_limits<double>;
+//using d_inf = std::numeric_limits<double>::infinity();
+//using d_NaN = std::numeric_limits<double>::quiet_NaN();
+
 bool is_uncertainty_id(const std::string& str)
 {
   return (str == "LT" ||
@@ -15,6 +25,77 @@ bool is_uncertainty_id(const std::string& str)
           str == "CA" ||
           str == "SY");
 }
+
+bool has_uncertainty_id(const std::string& str)
+{
+  return boost::contains(str, "LT") ||
+      boost::contains(str, "GT") ||
+      boost::contains(str, "LE") ||
+      boost::contains(str, "GE") ||
+      boost::contains(str, "AP") ||
+      boost::contains(str, "CA") ||
+      boost::contains(str, "SY");
+}
+
+std::string uncert_to_ensdf(Uncert::UncertaintyType t)
+{
+  if (t == Uncert::LessThan)
+    return "LT";
+  else if (t == Uncert::GreaterThan)
+    return "GT";
+  else if (t == Uncert::LessEqual)
+    return "LE";
+  else if (t == Uncert::GreaterEqual)
+    return "GE";
+  else if (t == Uncert::Approximately)
+    return "AP";
+  else if (t == Uncert::Calculated)
+    return "CA";
+  else if (t == Uncert::Systematics)
+    return "SY";
+  return "";
+}
+
+std::string strip_uncert_type(const std::string& str)
+{
+  auto ret = str;
+  boost::replace_all(ret, "LT", "");
+  boost::replace_all(ret, "GT", "");
+  boost::replace_all(ret, "LE", "");
+  boost::replace_all(ret, "GE", "");
+  boost::replace_all(ret, "AP", "");
+  boost::replace_all(ret, "CA", "");
+  boost::replace_all(ret, "SY", "");
+  return boost::trim_copy(ret);
+}
+
+
+Uncert::UncertaintyType parse_uncert_type(const std::string& uncert)
+{
+  if (boost::contains(uncert, "LT"))
+    return Uncert::LessThan;
+  else if (boost::contains(uncert, "GT"))
+    return Uncert::GreaterThan;
+  else if (boost::contains(uncert, "LE"))
+    return Uncert::LessEqual;
+  else if (boost::contains(uncert, "GE"))
+    return Uncert::GreaterEqual;
+  else if (boost::contains(uncert, "AP")
+           || uncert.empty()
+           || !is_number(uncert)
+           /*|| flag_tentative*/)
+    return Uncert::Approximately;
+  else if (boost::contains(uncert, "CA")
+           /*|| flag_theoretical*/)
+    return Uncert::Calculated;
+  else if (boost::contains(uncert, "SY"))
+    return Uncert::Systematics;
+  return Uncert::UndefinedType;
+
+//  SymmetricUncertainty  = 0x1,
+//  AsymmetricUncertainty = 0x2,
+}
+
 
 Uncert parse_norm(std::string val, std::string uncert)
 {
@@ -63,17 +144,18 @@ Uncert parse_val_uncert(std::string val, std::string uncert)
   // parse uncertainty
   // symmetric or special case (consider symmetric if not + and - are both contained in string)
   if ( !( boost::contains(uncert,"+") && boost::contains(uncert, "-"))
-       || flag_tentative ) {
+       || flag_tentative )
+  {
     if (uncert == "LT")
-      result.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, Uncert::LessThan);
+      result.setUncertainty(-dlim::infinity(), 0.0, Uncert::LessThan);
     else if (uncert == "GT")
-      result.setUncertainty(0.0, std::numeric_limits<double>::infinity(), Uncert::GreaterThan);
+      result.setUncertainty(0.0, dlim::infinity(), Uncert::GreaterThan);
     else if (uncert == "LE")
-      result.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, Uncert::LessEqual);
+      result.setUncertainty(-dlim::infinity(), 0.0, Uncert::LessEqual);
     else if (uncert == "GE")
-      result.setUncertainty(0.0, std::numeric_limits<double>::infinity(), Uncert::GreaterEqual);
+      result.setUncertainty(0.0, dlim::infinity(), Uncert::GreaterEqual);
     else if (uncert == "AP" || uncert.empty() || !is_number(uncert) || flag_tentative)
-      result.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), Uncert::Approximately);
+      result.setUncertainty(dlim::quiet_NaN(), dlim::quiet_NaN(), Uncert::Approximately);
     else if (uncert == "CA" || flag_theoretical)
       result.setUncertainty(0.0, 0.0, Uncert::Calculated);
     else if (uncert == "SY")
@@ -83,8 +165,8 @@ Uncert parse_val_uncert(std::string val, std::string uncert)
       if (!uncert.empty() && is_number(uncert))
         result.setSymmetricUncertainty(val_order * boost::lexical_cast<int16_t>(uncert));
       else
-        result.setUncertainty(std::numeric_limits<double>::quiet_NaN(),
-                              std::numeric_limits<double>::quiet_NaN(),
+        result.setUncertainty(dlim::quiet_NaN(),
+                              dlim::quiet_NaN(),
                               Uncert::UndefinedType);
     }
   }
@@ -118,18 +200,18 @@ Uncert parse_val_uncert(std::string val, std::string uncert)
     if (!uposstr.empty() && is_number(uposstr))
       upositive = boost::lexical_cast<int16_t>(uposstr);
     else if (uposstr == "|@")
-      upositive = std::numeric_limits<double>::infinity();
+      upositive = dlim::infinity();
 
     if (!unegstr.empty() && is_number(unegstr))
       unegative = boost::lexical_cast<int16_t>(unegstr);
     else if (unegstr == "|@")
-      unegative = -1 * std::numeric_limits<double>::infinity();
+      unegative = -1 * dlim::infinity();
 
     // work aournd bad entries with asymmetric uncertainty values of 0.
     if (upositive == 0.0 && unegative == 0.0)
     {
-      result.setUncertainty(std::numeric_limits<double>::quiet_NaN(),
-                            std::numeric_limits<double>::quiet_NaN(),
+      result.setUncertainty(dlim::quiet_NaN(),
+                            dlim::quiet_NaN(),
                             Uncert::Approximately);
       WARN << "Found asymmetric error of -0+0 in '"
            << uncert
@@ -152,114 +234,64 @@ Uncert parse_val_uncert(std::string val, std::string uncert)
   return result;
 }
 
+size_t occurrences(const std::string&s, const std::string&sub)
+{
+  size_t count = 0;
+  std::string::size_type pos = 0;
+  while ((pos = s.find(sub, pos )) != std::string::npos)
+  {
+    ++count;
+    pos += sub.length();
+  }
+  return count;
+}
+
+bool common_brackets(const std::string&s, char open, char close)
+{
+  if ((s.size() < 2) || (s[0] != open) || (s[s.size()-1] != close))
+    return false;
+  int o {0};
+  for (size_t i = 0; i < (s.size()-1); ++i)
+  {
+    if (s[i] == open)
+      o++;
+    else if (s[i] == close)
+      o--;
+    if (o < 1)
+      return false;
+  }
+  return true;
+}
+
 
 DataQuality quality_of(const std::string& s)
 {
-  std::string st = s;
-  int16_t nb, nb_unkown, nb_theo_left, nb_theo_right, nb_tenta_left,
-      nb_tenta_right, nb_about;
-  nb = nb_unkown = nb_theo_left = nb_theo_right = nb_tenta_left =
-      nb_tenta_right = nb_about = 0;
-
-  // reads the string and counts the specfics characters
-  size_t end = st.length();
-  for(size_t i = 0 ; i < end; i++)
-  {
-    if ( st[i] == '?' )
-    {
-      nb_unkown++;
-      nb++;
-    }
-    if ( st[i] == '(' )
-    {
-      nb_tenta_left++;
-      nb++;
-    }
-    if ( st[i] == ')' )
-    {
-      nb_tenta_right++;
-      nb++;
-    }
-    if ( st[i] == '[' )
-    {
-      nb_theo_left++; nb++;
-    }
-    if ( st[i] == ']' )
-    {
-      nb_theo_right++;
-      nb++;
-    }
-    if ( st[i] == '~' )
-    {
-      nb_about++;
-      nb++;
-    }
-  }
-  // set the informations
-  if ( nb  > 2 ) return DataQuality::kUnknown;
-  if ( nb == 0 ) return DataQuality::kKnown;
-
-  if ( nb == 1 ) {
-    if ( nb_about  == 1 ) return DataQuality::kAbout;
-    else return DataQuality::kUnknown;
-  }
-  else { // nb = 2
-    if ( nb_tenta_left == 1 && nb_tenta_right == 1 )
-      return DataQuality::kTentative;
-    if (  nb_theo_left == 1 &&  nb_theo_right == 1  )
-      return DataQuality::kTheoretical;
-  }
-  return DataQuality::kUnknown;
+  if (s.empty())
+    return DataQuality::kUnknown;
+  if (s[0] == '~')
+    return DataQuality::kAbout;
+  if ((s.size() > 1) && (s[0] == '(') && (s[s.size()-1] == ')'))
+    return DataQuality::kTentative;
+  if ((s.size() > 1) && (s[0] == '[') && (s[s.size()-1] == ']'))
+    return DataQuality::kTheoretical;
+  if (s[0] == '?')
+    return DataQuality::kUnknown;
+  return DataQuality::kKnown;
 }
 
-std::string strip_qualifiers(const std::string& original)
+std::string strip_qualifiers(const std::string& s)
 {
-  std::string ret = original;
-  boost::replace_all(ret, "~","");
-  boost::replace_all(ret, "(","");
-  boost::replace_all(ret, ")","");
-  boost::replace_all(ret, "[","");
-  boost::replace_all(ret, "]","");
-  boost::trim(ret);
-  return ret;
-}
-
-
-Moment parse_moment(const std::string& record)
-{
-  std::string value_str;
-  std::string uncert_str;
-  std::string references_str;
-
-  std::vector<std::string> momentparts;
-  std::string rec_copy = trim_all(record);
-  boost::trim(rec_copy);
-  boost::split(momentparts, rec_copy, boost::is_any_of(" \r\t\n\0"));
-  if (momentparts.size() >= 1)
-    value_str = momentparts[0];
-  if (momentparts.size() >= 2)
-    uncert_str = momentparts[1];
-  if (momentparts.size() >= 3)
-    references_str = momentparts[2];
-
-  if (is_uncertainty_id(value_str))
-  {
-    value_str = uncert_str;
-    uncert_str = momentparts[0];
-  }
-
-  Moment ret(parse_val_uncert(value_str, uncert_str));
-
-  if (!references_str.empty())
-  {
-    std::vector<std::string> refs;
-    boost::replace_all(references_str, "(", "");
-    boost::replace_all(references_str, ")", "");
-    boost::split(refs, references_str, boost::is_any_of(","));
-    ret.set_references(refs);
-  }
-
-  return ret;
+  if (s.size() < 1)
+    return s;
+  if (s[0] == '~')
+    return s.substr(1, s.size()-1);
+  if ((s.size() > 1) && (s[0] == '(') && (s[s.size()-1] == ')'))
+    return s.substr(1, s.size()-1).substr(0, s.size()-2);
+  if ((s.size() > 1) && (s[0] == '[') && (s[s.size()-1] == ']'))
+    return s.substr(1, s.size()-1).substr(0, s.size()-2);
+  if ((s.size() == 1) && (s[0] == '?'))
+    return "";
+  return s;
 }
 
 NuclideId parse_check_nid(std::string nucid)
@@ -337,7 +369,7 @@ NuclideId parse_nid(std::string id)
 Spin parse_spin(const std::string& s)
 {
   uint16_t numerator {0};
-  uint16_t denominator {1};
+  uint16_t denominator {0};
   std::string st = strip_qualifiers(s);
   std::istringstream input; input.clear();
   if ( boost::contains(st, "/") )
@@ -364,29 +396,192 @@ Parity parse_parity(const std::string& s)
   auto quality = quality_of(s);
   if ( boost::contains(s, "-") )
     return Parity(Parity::EnumParity::kMinus, quality);
-  else
+  else if ( boost::contains(s, "+") )
     return Parity(Parity::EnumParity::kPlus, quality);
+  else
+    return Parity();
+}
+
+bool common_qualifiers(const std::string& s)
+{
+  if (common_brackets(s, '(', ')'))
+    return true;
+  if (common_brackets(s, '[', ']'))
+    return true;
+  if ((s.size() > 1)
+      && (s[0] == '~')
+      && !occurrences(s, "(")
+      && !occurrences(s, ")")
+      && !occurrences(s, "[")
+      && !occurrences(s, "]"))
+    return true;
+  return false;
+}
+
+Parity get_common_parity(std::string&s)
+{
+  Parity ret;
+  if ((s.size() > 5) &&
+          ((s.substr(s.size()-3, 3) == "(+)") ||
+           (s.substr(s.size()-3, 3) == "(-)")) &&
+(common_brackets(s.substr(0, s.size()-3), '(', ')') ||
+  common_brackets(s.substr(0, s.size()-3), '[', ']')))
+  {
+    ret = parse_parity(s.substr(s.size()-3, 3));
+    s = s.substr(0, s.size()-3);
+  }
+  if ((s.size() > 3) &&
+          ((s[s.size()-1] == '+') || (s[s.size()-1] == '-')) &&
+(common_brackets(s.substr(0, s.size()-1), '(', ')') ||
+  common_brackets(s.substr(0, s.size()-1), '[', ']')))
+  {
+    ret = parse_parity(s.substr(s.size()-1, 1));
+    s = s.substr(0, s.size()-1);
+  }
+
+  boost::trim(s);
+  return ret;
+}
+
+DataQuality scrape_quality(std::string& s)
+{
+  auto ret = quality_of(s);
+  s = strip_qualifiers(s);
+  return ret;
+}
+
+void simplify_logic(std::string& s)
+{
+  boost::replace_all(s, "OR", ",");
+  boost::replace_all(s, "AND", "&");
+  boost::replace_all(s, "TO", ":");
+}
+
+std::string split_spins_type(std::string& s)
+{
+  bool sor = boost::contains(s, ",");
+  bool sand = boost::contains(s, "&");
+  bool sto = boost::contains(s, ":");
+  if (std::abs(int(sor) + int(sand) + int(sto)) > 1)
+    DBG << "Bad things " << s;
+  if (sor)
+    return ",";
+  if (sand)
+    return "&";
+  if (sto)
+    return ":";
+  return "";
+}
+
+std::pair<std::string, std::vector<std::string>>
+spin_split(const std::string& data)
+{
+  std::pair<std::string, std::vector<std::string>> ret;
+  int parens = 0;
+  size_t start = 0;
+  for (size_t i=0; i < data.size(); ++i)
+  {
+    if (data[i] == '(')
+      parens++;
+    else if (data[i] == ')')
+      parens--;
+    else if (!parens &&
+             ((data[i] == ',') || (data[i] == ':') || (data[i] == '&')))
+    {
+      auto sep = std::string(1, data[i]);
+      if (ret.first != sep)
+        ret.first += sep;
+      ret.second.push_back(data.substr(start, i-start));
+      start = i+1;
+    }
+  }
+  if (start < data.size())
+    ret.second.push_back(data.substr(start, data.size()-start));
+  return ret;
 }
 
 
+SpinSet parse_spins(std::string data)
+{
+  SpinSet ret;
+  boost::to_upper(data);
+  simplify_logic(data);
+  boost::replace_all(data, " ", "");
+//  boost::trim(data);
+
+  auto data2 = data;
+
+  Parity common_parity = get_common_parity(data2);
+  if (common_parity.valid())
+  {
+    ret.merge(parse_spins(data2));
+    ret.set_common_parity(common_parity);
+  }
+  else if (common_qualifiers(data2))
+  {
+    DataQuality comqual = quality_of(data2);
+    ret.merge(parse_spins(strip_qualifiers(data2)));
+    ret.set_common_quality(comqual);
+  }
+  else
+  {
+    auto split = spin_split(data2);
+    if (split.first.empty())
+    {
+      SpinParity sp = parse_spin_parity(data);
+      if (sp.valid())
+        ret.add(sp);
+    }
+    else if (split.first.size() > 1)
+    {
+//      DBG << "  *  Something funky here " << data2;
+    }
+    else if (split.first.size() == 1)
+    {
+      for (auto &token : split.second)
+        ret.merge(parse_spins(token));
+      ret.set_logic(split.first);
+    }
+    else
+      ret.merge(parse_spins(data2));
+  }
+
+//  auto result = boost::replace_all_copy(ret.to_string(), " ", "");
+
+//  if (data.size() && (data != result))
+//  {
+//    DBG << "SpinParity \'" << data << "\' --> \'"
+//        << ret.debug() << "\' --> \'"
+//        << ret.to_string() << "\'";
+//  }
+  return ret;
+}
+
 SpinParity parse_spin_parity(std::string data)
 {
+  boost::trim(data);
   SpinParity ret;
-
   //what if tentative only parity or spin only?
-  boost::trim_copy(data);
-  ret.set_parity(parse_parity(data));
-  boost::replace_all(data, "(", "");
-  boost::replace_all(data, ")", "");
-  std::vector<std::string> spin_strs;
-  boost::split(spin_strs, data, boost::is_any_of(","));
-  for (auto &token : spin_strs) {
-    Spin spin = parse_spin(token);
-    spin.set_quality(quality_of(data));
-    ret.add_spin(spin);
+
+//  DBG << " Data " << data;
+
+  if (has_uncertainty_id(data))
+  {
+    ret.set_eq_type(parse_uncert_type(data));
+    data = strip_uncert_type(data);
   }
-//  if (!ret.parity_.has_quality(DataQuality::kKnown))
-//    DBG << "SpinParity " << data << " --> " << ret.to_string();
+
+  boost::smatch what;
+  if (boost::regex_match(data, what, boost::regex(RGX_SP)))
+  {
+//    for (auto w : what)
+//      DBG << "   " << w;
+    if (what.size() > 1)
+      ret.set_spin(parse_spin(what[1]));
+    if (what.size() > 2)
+      ret.set_parity(parse_parity(what[2]));
+  }
+
   return ret;
 }
 
@@ -408,10 +603,10 @@ HalfLife parse_halflife(const std::string& record)
 
   Uncert time = parse_val_uncert(value_str, uncert_str);
   if (boost::contains(boost::to_upper_copy(record), "STABLE"))
-    time.setValue(std::numeric_limits<double>::infinity(),
+    time.setValue(dlim::infinity(),
                   Uncert::SignMagnitudeDefined);
   else if (boost::contains(record, "EV"))
-    time.setValue(std::numeric_limits<double>::quiet_NaN(),
+    time.setValue(dlim::quiet_NaN(),
                   Uncert::SignMagnitudeDefined);
 
   return HalfLife(time, units_str).preferred_units();

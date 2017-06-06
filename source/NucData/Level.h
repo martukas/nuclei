@@ -14,22 +14,18 @@ class Level
 {
 public:
   Level() {}
-  Level(Energy energy, SpinParity spin,
+  Level(Energy energy, SpinSet spin,
         HalfLife halfLife = HalfLife(std::numeric_limits<double>::infinity()),
         uint16_t isomerNum = 0);
 
   Energy energy() const;
-  SpinParity spin() const;
+  SpinSet spins() const;
   HalfLife halfLife() const;
   uint16_t isomerNum() const;
   Uncert normalizedFeedIntensity() const;
-  Moment mu() const;
-  Moment q() const;
 
-  void set_mu(const Moment &);
-  void set_q(const Moment &);
   void set_halflife(const HalfLife&);
-  void set_spin(const SpinParity&);
+  void set_spins(const SpinSet&);
 
   std::set<Energy> depopulatingTransitions() const { return depopulating_transitions_; }
   std::set<Energy> populatingTransitions() const { return populating_transitions_; }
@@ -51,9 +47,8 @@ public:
 
 private:
   Energy energy_;
-  SpinParity spin_;
+  SpinSet spins_;
   HalfLife halflife_;
-  Moment q_, mu_; // quadrupole and magnetic moments
   uint16_t isomeric_ {0}; // >0 for isomeric levels (counted from low energy to high), 0 otherwise
 
   Uncert feeding_intensity_; // says how often this level is directly fed per 100 parent decays

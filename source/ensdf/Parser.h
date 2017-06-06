@@ -11,14 +11,14 @@ public:
   std::list<NuclideId> daughters() const;
   std::list<std::string> decays(NuclideId daughter) const;
 
-  DecayScheme get_info() const;
+  DecayScheme mass_info() const;
 
-  DecayScheme get_decay(NuclideId daughter,
-                        std::string decay_name,
-                        double max_level_dif = 0.04) const;
+  DecayScheme nuclide_info(NuclideId daughter,
+                           double max_level_dif = 0.04) const;
 
-  DecayScheme get_nuclide(NuclideId daughter,
-                          double max_level_dif = 0.04) const;
+  DecayScheme decay(NuclideId daughter,
+                    std::string decay_name, bool merge_adopted,
+                    double max_level_dif = 0.04) const;
 
 private:
   std::list<HistoryRecord> mass_history_;

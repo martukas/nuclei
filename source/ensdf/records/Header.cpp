@@ -54,40 +54,6 @@ IdRecord::IdRecord(ENSDFData& i)
   type = is_type(extended_dsid);
 }
 
-bool IdRecord::reflect_parse() const
-{
-  if (test(type & RecordType::Comments))
-  {
-//    DBG << boost::trim_copy(extended_dsid)
-//        << " " << nuclide.symbolicName();
-  }
-  else if (test(type & RecordType::References))
-  {  }
-  else if (test(type & RecordType::CoulombExcitation))
-  {  }
-  else if (test(type & RecordType::IsomericTransition))
-  {  }
-  else if (test(type & RecordType::NeutronResonances))
-  {  }
-  else if (test(type & RecordType::MuonicAtom))
-  {  }
-  else if (test(type & RecordType::Reaction))
-  {  }
-  else if (test(type & RecordType::HiXng))
-  {  }
-  else if (test(type & RecordType::AdoptedLevels))
-  {  }
-  else if (test(type & RecordType::Decay) ||
-           (test(type & RecordType::InelasticScattering)))
-  {  }
-  else
-  {
-      DBG << "Unknown header type -- " << debug();
-      return false;
-  }
-  return true;
-}
-
 RecordType IdRecord::is_type(std::string s)
 {
   std::string str = boost::to_upper_copy(s);
@@ -95,32 +61,12 @@ RecordType IdRecord::is_type(std::string s)
     return RecordType::Comments;
   else if (boost::contains(str, "REFERENCES"))
     return RecordType::References;
-  else if (boost::contains(str, "MUONIC ATOM"))
-    return RecordType::MuonicAtom;
-  else if (boost::contains(str, "(HI,"))
-    return RecordType::HiXng;
-
-  RecordType ret = RecordType::Invalid;
-  if (ReactionInfo::match(s))
-    ret |= RecordType::Reaction;
-  if (boost::contains(str, "INELASTIC SCATTERING"))
-    ret |= RecordType::InelasticScattering;
-  if (boost::contains(str, "COULOMB EXCITATION"))
-    ret |= RecordType::CoulombExcitation;
-  if (boost::contains(str, "ADOPTED LEVELS"))
-    ret |= RecordType::AdoptedLevels;
-  if (boost::contains(str, "TENTATIVE"))
-    ret |= RecordType::Tentative;
-  if (boost::contains(str, "ISOMERIC TRANSITION"))
-    ret |= RecordType::IsomericTransition;
-  if (boost::contains(str, "NEUTRON RESONANCES"))
-    ret |= RecordType::NeutronResonances;
-  if (boost::contains(str, "GAMMAS"))
-    ret |= RecordType::Gammas;
-  if (boost::contains(str, "DECAY"))
-    ret |= RecordType::Decay;
-
-  return ret;
+  else if (boost::contains(str, "ADOPTED LEVELS"))
+    return RecordType::AdoptedLevels;
+//  else if (ReactionInfo(str, NuclideId()).valid()
+//           || DecayInfo(str).valid())
+  return RecordType::ReactionDecay;
+//  return RecordType::Invalid;
 }
 
 std::string IdRecord::type_to_str(RecordType t)
@@ -129,35 +75,11 @@ std::string IdRecord::type_to_str(RecordType t)
     return "COMMENTS";
   else if (test(t & RecordType::References))
     return "REFERENCES";
-  else if (test(t & RecordType::MuonicAtom))
-    return "MUONIC ATOM";
-  else if (test(t & RecordType::Invalid))
-    return "INVALID";
-  else if (test(t & RecordType::HiXng))
-    return "(HI,XNG)";
-
-  std::string ret;
-
-  if (test(t & RecordType::AdoptedLevels))
-    ret += "ADOPTED LEVELS";
-  if (test(t & RecordType::CoulombExcitation))
-    ret += "COULOMB EXCITATION";
-  if (test(t & RecordType::InelasticScattering))
-    ret += "INELASTIC SCATTERING";
-  if (test(t & RecordType::IsomericTransition))
-    ret += "ISOMERIC TRANSITION";
-  if (test(t & RecordType::NeutronResonances))
-    ret += "NEUTRON RESONANCES";
-  if (test(t & RecordType::Reaction))
-    ret += "REACTION";
-  if (test(t & RecordType::Decay))
-    ret += "DECAY";
-  if (test(t & RecordType::Gammas))
-    ret += ", GAMMAS";
-  if (test(t & RecordType::Tentative))
-    ret += ": TENTATIVE";
-
-  return ret;
+  else if (test(t & RecordType::AdoptedLevels))
+    return "ADOPTED LEVELS";
+  if (test(t & RecordType::ReactionDecay))
+    return "REACTION / DECAY";
+  return "INVALID";
 }
 
 std::string IdRecord::debug() const

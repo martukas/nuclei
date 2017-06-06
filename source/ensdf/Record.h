@@ -26,6 +26,9 @@ struct ENSDFData
 
   ENSDFData& operator++();   // prefix
   ENSDFData operator++(int); // postfix
+
+  void print(const std::string& prefix, size_t idx,
+             std::string suffix = "");
 };
 
 bool match_first(const std::string& line,
