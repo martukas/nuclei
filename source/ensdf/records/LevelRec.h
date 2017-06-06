@@ -8,6 +8,15 @@
 
 #include "qpx_util.h"
 
+struct Transitions
+{
+  std::list<AlphaRecord> alpha;
+  std::list<BetaRecord> beta;
+  std::list<GammaRecord> gamma;
+  std::list<ECRecord> EC;
+  std::list<ParticleRecord> particle;
+};
+
 struct LevelRecord
 {
   LevelRecord() {}
@@ -21,7 +30,7 @@ struct LevelRecord
 
   NuclideId  nuclide;
   Energy     energy;
-  SpinParity spin_parity;
+  SpinSet    spins;
   HalfLife   halflife;
   uint16_t   isomeric {0};
   std::string L;     //anglular momentum
@@ -34,11 +43,7 @@ struct LevelRecord
 
   std::list<CommentsRecord> comments;
 
-  std::list<AlphaRecord> alphas;
-  std::list<BetaRecord> betas;
-  std::list<GammaRecord> gammas;
-  std::list<ECRecord> ECs;
-  std::list<ParticleRecord> particles;
+  Transitions transitions;
 
   std::list<GammaRecord> nearest_gammas(const Energy& to,
                                         double maxdif = kDoubleNaN) const;
@@ -46,4 +51,6 @@ struct LevelRecord
 private:
   void parse_energy_offset(std::string val,
                            std::string uncert);
+
+  std::string offsets_to_str() const;
 };

@@ -128,7 +128,7 @@ const std::string Spin::to_string() const
   if ( quality_ == DataQuality::kUnknown )
     return "";
   else if (!denominator_)
-    return "NaN";
+    return "";
   else if ( denominator_ == 1 )
     return std::to_string(numerator_);
   else

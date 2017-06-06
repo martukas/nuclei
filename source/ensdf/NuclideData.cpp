@@ -12,43 +12,50 @@ void NuclideData::merge_adopted(DecayData& decaydata,
 {
   for (LevelRecord& lev : decaydata.levels)
   {
-    std::list<LevelRecord> relevant_levels
-        = adopted_levels.nearest_levels(lev.energy, decaydata.id.dsid,
-                                        max_level_dif);
-
-    if (!relevant_levels.empty())
+    for (auto ad : adopted_levels)
     {
+      std::list<LevelRecord> relevant_levels
+          = ad.nearest_levels(lev.energy, decaydata.id.dsid,
+                              max_level_dif);
 
-//    DBG << " B E F O R E\n"
-//        << "=======================================\n"
-//        << lev.debug() << "\n"
-//        << "=======================================\n"
-//           ;
+      if (!relevant_levels.empty())
+      {
 
-    for (const LevelRecord& l
-         : adopted_levels.nearest_levels(lev.energy,
-                                         decaydata.id.dsid,
-                                         max_level_dif))
-    {
-//      DBG << "+++++FoundE = " << l.debug();
-      lev.merge_adopted(l, max_gamma_dif);
+        //    DBG << " B E F O R E\n"
+        //        << "=======================================\n"
+        //        << lev.debug() << "\n"
+        //        << "=======================================\n"
+        //           ;
+
+        for (const LevelRecord& l
+             : ad.nearest_levels(lev.energy,
+                                 decaydata.id.dsid,
+                                 max_level_dif))
+        {
+          //      DBG << "+++++FoundE = " << l.debug();
+          lev.merge_adopted(l, max_gamma_dif);
+        }
+
+        //    DBG << "                              A F T E R\n"
+        //        << "---------------------------------------\n"
+        //        << lev.debug() << "\n"
+        //        << "---------------------------------------\n"
+        //           ;
+      }
+
+      //    for (const LevelRecord& l : adopted_levels.levels)
+      //      if (nearest_levels(l.energy, ).empty())
+      //        gammas.push_back(g);
     }
-
-//    DBG << "                              A F T E R\n"
-//        << "---------------------------------------\n"
-//        << lev.debug() << "\n"
-//        << "---------------------------------------\n"
-//           ;
-    }
-
-//    for (const LevelRecord& l : adopted_levels.levels)
-//      if (nearest_levels(l.energy, ).empty())
-//        gammas.push_back(g);
 
 
   }
 }
 
+void NuclideData::add_adopted(const AdoptedLevels &dec)
+{
+  adopted_levels.push_back(dec);
+}
 
 std::string NuclideData::add_decay(const DecayData& dec)
 {

@@ -101,3 +101,14 @@ ENSDFData ENSDFData::operator++(int)
   operator++();
   return tmp;
 }
+
+void ENSDFData::print(const std::string& prefix,
+                      size_t idx,
+                      std::string suffix)
+{
+  if (idx >= lines.size())
+    return;
+  DBG << prefix << " [" << idx << "] " << lines.at(idx)
+      << "\n" << suffix;
+}
+
