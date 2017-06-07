@@ -3,51 +3,84 @@
 #include "qpx_util.h"
 
 HalfLife::HalfLife()
-  : HalfLife(std::numeric_limits<double>::quiet_NaN(), "")
+  : HalfLife(kDoubleNaN, false, "")
 {}
 
-HalfLife::HalfLife(double val, std::string units)
-  : HalfLife( Uncert(val, order_of(val), Uncert::SignMagnitudeDefined), units)
-{}
-
-HalfLife::HalfLife(Uncert time, std::string units)
-  : time_(time)
+HalfLife::HalfLife(double val, bool approx, std::string units)
+  : HalfLife(Uncert(val, order_of(val), Uncert::SignMagnitudeDefined),
+             approx, units)
 {
-  if (known_units_.count(units))
-    units_ = units;
+}
+
+
+HalfLife::HalfLife(Uncert time, bool approx, std::string units)
+  : time_(time)
+  , units_(units)
+  , tentative_(approx)
+{
+//  time_.setUncertainty(time.lowerUncertainty(),
+//                       time.upperUncertainty(),
+//                       Uncert::SymmetricUncertainty);
+}
+
+Uncert HalfLife::time() const
+{
+  return time_;
+}
+
+std::string HalfLife::units() const
+{
+  return units_;
+}
+
+bool HalfLife::tentative() const
+{
+  return tentative_;
 }
 
 HalfLife HalfLife::preferred_units() const
 {
-  if (!known_units_.count(units_))
-    return *this;
-  Uncert time = time_;
-  double conversion = 1.0;
-  conversion = known_units_.at(units_);
-  time *= conversion;
-  std::string preferred = preferred_units(time.value());
-  time *= (1/known_units_.at(preferred));
-  return HalfLife(time, preferred);
+  auto ret = *this;
+  if (e_units_.count(units_))
+  {
+    ret.time_ *= e_units_.at(units_);
+    ret.units_ = preferred_e_units(ret.time_.value());
+  }
+  if (time_units_.count(units_))
+  {
+    ret.time_ *= time_units_.at(units_);
+    ret.units_ = preferred_time_units(ret.time_.value());
+  }
+  return ret;
 }
 
-bool HalfLife::isValid() const
+bool HalfLife::valid() const
 {
   //  INFO << "HL " << to_string() << " valid=" << !boost::math::isnan(time_.value());
   return !boost::math::isnan(time_.value());
 }
 
-double HalfLife::seconds() const
+double HalfLife::ev() const
 {
+  if (!e_units_.count(units_))
+    return kDoubleNaN;
   Uncert tmp = time_;
-  double factor = 1.0;
-  if (known_units_.count(units_))
-    factor = known_units_.at(units_);
-  tmp *= factor;
+  tmp *= e_units_.at(units_);
   //  INFO << "HL " << to_string() << " s=" << tmp.value();
   return tmp.value();
 }
 
-bool HalfLife::isStable() const
+double HalfLife::seconds() const
+{
+  if (!time_units_.count(units_))
+    return kDoubleNaN;
+  Uncert tmp = time_;
+  tmp *= time_units_.at(units_);
+  //  INFO << "HL " << to_string() << " s=" << tmp.value();
+  return tmp.value();
+}
+
+bool HalfLife::stable() const
 {
   //  INFO << "HL " << to_string() << " stable=" << boost::math::isinf(time_.value());
   return boost::math::isinf(time_.value());
@@ -55,14 +88,43 @@ bool HalfLife::isStable() const
 
 std::string HalfLife::to_string(bool with_uncert) const
 {
-  if (!isValid())
+  if (!valid())
     return "";
-  if (isStable())
-    return "stable";
-  return time_.to_string(false, with_uncert) + units_;
+  std::string ret;
+  if (stable())
+    ret = "stable";
+  else
+    ret = time_.to_string(false, with_uncert);
+  if (units_.size())
+    ret += " " + units_;
+  if (tentative_)
+    return "(" + ret + ")";
+  return ret;
 }
 
-std::string HalfLife::preferred_units(double secs)
+
+bool HalfLife::operator >(const HalfLife &right) const
+{
+  //  INFO << "HLC " << to_string() << ">" << right.to_string() << " " << (seconds() > right.seconds());
+  return seconds() > right.seconds();
+}
+
+bool HalfLife::operator >=(const HalfLife &right) const
+{
+  //  INFO << "HLC " << to_string() << ">=" << right.to_string() << " " << (seconds() >= right.seconds());
+  return seconds() >= right.seconds();
+}
+
+bool HalfLife::operator <(const HalfLife &right) const
+{
+  //  INFO << "HLC " << to_string() << "<" << right.to_string() << " " << (seconds() < right.seconds());
+  return seconds() < right.seconds();
+}
+
+
+
+
+std::string HalfLife::preferred_time_units(double secs)
 {
   if (secs > 86400. * 365. * 2.)
     return "y";
@@ -84,31 +146,22 @@ std::string HalfLife::preferred_units(double secs)
     return "µs";
   else if (secs < 1.)
     return "ms";
-  else
-    return "s";
+  return "s";
 }
 
-bool HalfLife::operator >(const HalfLife &right) const
+std::string HalfLife::preferred_e_units(double ev)
 {
-  //  INFO << "HLC " << to_string() << ">" << right.to_string() << " " << (seconds() > right.seconds());
-  return seconds() > right.seconds();
+  if (ev > 1.E6)
+    return "MeV";
+  else if (ev > 1.E3)
+    return "keV";
+  return "eV";
 }
 
-bool HalfLife::operator >=(const HalfLife &right) const
-{
-  //  INFO << "HLC " << to_string() << ">=" << right.to_string() << " " << (seconds() >= right.seconds());
-  return seconds() >= right.seconds();
-}
+const std::map<std::string, double> HalfLife::time_units_ = init_time_units();
+const std::map<std::string, double> HalfLife::e_units_ = init_e_units();
 
-bool HalfLife::operator <(const HalfLife &right) const
-{
-  //  INFO << "HLC " << to_string() << "<" << right.to_string() << " " << (seconds() < right.seconds());
-  return seconds() < right.seconds();
-}
-
-const std::map<std::string, double> HalfLife::known_units_ = init_units();
-
-std::map<std::string, double> HalfLife::init_units()
+std::map<std::string, double> HalfLife::init_time_units()
 {
   std::map<std::string, double> result;
   result["y"] = 365. * 86400.;
@@ -123,6 +176,24 @@ std::map<std::string, double> HalfLife::init_units()
   result["fs"] = 1.E-15;
   result["as"] = 1.E-18;
   result["us"] = result["µs"];
+
+  std::map<std::string, double> res2;
+  for (auto r : result)
+  {
+    res2.insert(r);
+    res2[boost::to_upper_copy(r.first)] = r.second;
+  }
+  return res2;
+}
+
+std::map<std::string, double> HalfLife::init_e_units()
+{
+  std::map<std::string, double> result;
+
+  result["eV"] = 1.0;
+  result["keV"] = 1.E3;
+  result["MeV"] = 1.E6;
+
   std::map<std::string, double> res2;
   for (auto r : result)
   {

@@ -5,7 +5,7 @@
 
 #include "ENSDFDataSource.h"
 
-DecayCascadeItemModel::DecayCascadeItemModel(ENSDFDataSource *datasource, QObject *parent)
+DecayCascadeItemModel::DecayCascadeItemModel(QPointer<ENSDFDataSource> datasource, QObject *parent)
   : QAbstractItemModel(parent), ds(datasource)
 {
 }
@@ -17,7 +17,6 @@ DecayCascadeItemModel::~DecayCascadeItemModel()
 void DecayCascadeItemModel::setDataSource(ENSDFDataSource *datasource)
 {
   beginResetModel();
-  delete ds;
   ds = datasource;
   endResetModel();
 }
@@ -108,14 +107,15 @@ Qt::ItemFlags DecayCascadeItemModel::flags(const QModelIndex &index) const
   return result;
 }
 
-DecayScheme DecayCascadeItemModel::decay(const QModelIndex &index) const
+DecayScheme DecayCascadeItemModel::decay(const QModelIndex &index,
+                                         bool merge) const
 {
   if (!index.isValid())
     return DecayScheme();
 
   ENSDFTreeItem *item = static_cast<ENSDFTreeItem*>(index.internalPointer());
 
-  return ds->decay(item);
+  return ds->decay(item, merge);
 }
 
 //Decay::CascadeIdentifier DecayCascadeItemModel::cascade(const QModelIndex &index) const

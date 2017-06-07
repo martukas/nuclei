@@ -63,7 +63,7 @@ std::string Nuclide::halfLifeAsText() const
 {
   std::vector<std::string> results;
   for (auto &h : halflives_)
-    if (h.isValid() && !h.isStable())
+    if (h.valid() && !h.stable())
       results.push_back(h.to_string());
   return join(results, ", ");
 }

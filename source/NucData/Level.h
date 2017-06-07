@@ -7,6 +7,7 @@
 #include "SpinParity.h"
 #include "Moment.h"
 
+#include "qpx_util.h"
 #include "json.h"
 using namespace nlohmann;
 
@@ -15,7 +16,7 @@ class Level
 public:
   Level() {}
   Level(Energy energy, SpinSet spin,
-        HalfLife halfLife = HalfLife(std::numeric_limits<double>::infinity()),
+        HalfLife halfLife = HalfLife(),
         uint16_t isomerNum = 0);
 
   Energy energy() const;

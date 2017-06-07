@@ -3,16 +3,16 @@
 #include <QAbstractItemModel>
 #include <QSharedPointer>
 
-#include "SchemePlayer.h"
-
-class ENSDFDataSource;
+#include "ENSDFDataSource.h"
+#include <QPointer>
 
 class DecayCascadeItemModel : public QAbstractItemModel
 {
     Q_OBJECT
 
 public:
-    explicit DecayCascadeItemModel(ENSDFDataSource *datasource, QObject *parent = 0);
+    explicit DecayCascadeItemModel(QPointer<ENSDFDataSource> datasource,
+                                   QObject *parent = 0);
     ~DecayCascadeItemModel();
 
     virtual void setDataSource(ENSDFDataSource *datasource);
@@ -24,7 +24,7 @@ public:
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 
-    virtual DecayScheme decay(const QModelIndex &index) const;
+    virtual DecayScheme decay(const QModelIndex &index, bool merge) const;
 //    virtual Decay::CascadeIdentifier cascade(const QModelIndex &index) const;
     
 signals:
@@ -32,6 +32,6 @@ signals:
 public slots:
 
 private:
-    ENSDFDataSource *ds;
+    QPointer<ENSDFDataSource> ds;
     
 };
