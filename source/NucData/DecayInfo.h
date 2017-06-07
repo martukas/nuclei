@@ -7,7 +7,6 @@
 struct DecayInfo
 {
   DecayInfo() {}
-  DecayInfo(std::string dsid);
 
   bool valid() const;
   std::string to_string() const;

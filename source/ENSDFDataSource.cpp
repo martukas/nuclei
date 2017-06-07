@@ -52,7 +52,7 @@ ENSDFTreeItem *ENSDFDataSource::rootItem() const
   return root;
 }
 
-DecayScheme ENSDFDataSource::decay(const ENSDFTreeItem *item)
+DecayScheme ENSDFDataSource::decay(const ENSDFTreeItem *item, bool merge)
 {
   QMutexLocker locker(&m);
   const ENSDFTreeItem *eitem = dynamic_cast<const ENSDFTreeItem*>(item);
@@ -71,7 +71,7 @@ DecayScheme ENSDFDataSource::decay(const ENSDFTreeItem *item)
         dparser = parser.get_dp(eitem->parent()->id().A());
         return DecayScheme(dparser.decay(eitem->parent()->id(),
                                          eitem->data(0).toString().toStdString(),
-                                         true));
+                                         merge));
       }
       else
         return DecayScheme();

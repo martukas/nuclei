@@ -16,7 +16,7 @@ std::string Level::to_string() const
   ss << std::setw(16) << energy().to_string();
   if (spins_.valid())
     ss << std::setw(10) << spins().to_string();
-  if (halflife_.isValid())
+  if (halflife_.valid())
     ss << std::setw(13) << halflife_.to_string();
   if (isomeric_)
     ss << " M" + std::to_string(isomeric_);

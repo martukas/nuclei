@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <functional>
 
-#include "ENSDFDataSource.h"
 #include "DecayCascadeItemModel.h"
 #include "DecayCascadeFilterProxyModel.h"
 
@@ -22,14 +21,11 @@
 
 #include "custom_logger.h"
 
-Nuclei::Nuclei(QWidget *parent) :
-  QMainWindow(parent),
-  ui(new Ui::NucleiMainWindow),
-  preferencesDialog(new QDialog(this)), preferencesDialogUi(new Ui::PreferencesDialog),
-  decaySelectionModel(0),
-  searchResultSelectionModel(0),
-  decayProxyModel(0),
-  searchProxyModel(0)
+Nuclei::Nuclei(QWidget *parent)
+  : QMainWindow(parent)
+  , ui(new Ui::NucleiMainWindow)
+  , preferencesDialog(new QDialog(this))
+  , preferencesDialogUi(new Ui::PreferencesDialog)
 {
   CustomLogger::initLogger(nullptr, "");
 
@@ -41,22 +37,15 @@ Nuclei::Nuclei(QWidget *parent) :
   QAction *toggleSelector = ui->decaySelectorDock->toggleViewAction();
   toggleSelector->setToolTip(toggleSelector->toolTip().prepend("Show/Hide "));
   toggleSelector->setIcon(QIcon(":/toolbar/checkbox.png"));
-  ui->mainToolBar->insertAction(ui->actionZoom_In, toggleSelector);
-
-  ui->mainToolBar->insertSeparator(ui->actionZoom_In);
 
   connect(ui->decayTreeCollapseButton, SIGNAL(clicked()), ui->decayTreeView, SLOT(collapseAll()));
   connect(ui->decayTreeExpandButton, SIGNAL(clicked()), ui->decayTreeView, SLOT(expandAll()));
-
   connect(ui->actionSVG_Export, SIGNAL(triggered()), this, SLOT(svgExport()));
   connect(ui->actionPDF_Export, SIGNAL(triggered()), this, SLOT(pdfExport()));
-
   connect(ui->actionShow_all, SIGNAL(triggered()), this, SLOT(showAll()));
-
   connect(ui->actionPreferences, SIGNAL(triggered()), this, SLOT(showPreferences()));
 
   ui->decayView->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-
   ui->decayView->setInteractive(true);
   ui->decayView->setDragMode(QGraphicsView::ScrollHandDrag);
   ui->decayView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -122,12 +111,14 @@ void Nuclei::initialize()
   preferencesDialogUi->buttonBox->setFocus();
   s.endGroup();
 
-  ENSDFDataSource *ds = new ENSDFDataSource(this);
+  data_source_ = new ENSDFDataSource(this);
 
-  connect(preferencesDialogUi->resetCacheButton, SIGNAL(clicked()), ds, SLOT(deleteCache()));
-  connect(preferencesDialogUi->resetDatabaseButton, SIGNAL(clicked()), ds, SLOT(deleteDatabaseAndCache()));
+//  ENSDFDataSource *ds = new ENSDFDataSource(this);
 
-  decaySelectionModel = new DecayCascadeItemModel(ds, this);
+  connect(preferencesDialogUi->resetCacheButton, SIGNAL(clicked()), data_source_, SLOT(deleteCache()));
+  connect(preferencesDialogUi->resetDatabaseButton, SIGNAL(clicked()), data_source_, SLOT(deleteDatabaseAndCache()));
+
+  decaySelectionModel = new DecayCascadeItemModel(data_source_, this);
   decayProxyModel = new DecayCascadeFilterProxyModel(this);
   decayProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
   connect(ui->decayFilterLineEdit, SIGNAL(textChanged(QString)), decayProxyModel, SLOT(setFilterWildcard(QString)));
@@ -159,12 +150,8 @@ void Nuclei::loadSelectedDecay(const QModelIndex &index)
   if (!decaySelectionModel)
     return;
 
-  DecayScheme decay(decaySelectionModel->decay(decayProxyModel->mapToSource(index)));
-
-//  if (!decay.valid())
-//    return;
-
-  loadDecay(decay);
+  loadDecay(decaySelectionModel->decay(decayProxyModel->mapToSource(index),
+                                       ui->actionMerge_adopted->isChecked()));
 }
 
 void Nuclei::loadSearchResultCascade(const QModelIndex &index)
@@ -175,12 +162,8 @@ void Nuclei::loadSearchResultCascade(const QModelIndex &index)
   if (!searchResultSelectionModel)
     return;
 
-  DecayScheme decay(searchResultSelectionModel->decay(searchProxyModel->mapToSource(index)));
-
-//  if (!decay.valid())
-//    return;
-
-  loadDecay(decay);
+  loadDecay(searchResultSelectionModel->decay(searchProxyModel->mapToSource(index),
+                                              ui->actionMerge_adopted->isChecked()));
 }
 
 void Nuclei::svgExport()
@@ -367,3 +350,10 @@ std::string Nuclei::make_reference_link(std::string ref, int num)
       + "</small></a>";
 }
 
+
+void Nuclei::on_actionMerge_adopted_triggered()
+{
+  auto si = ui->decayTreeView->selectionModel()->selectedIndexes();
+  if (si.size())
+    loadSelectedDecay(*si.begin());
+}

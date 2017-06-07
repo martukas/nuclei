@@ -22,7 +22,7 @@ public:
 
     virtual ENSDFTreeItem * rootItem() const;
 
-    virtual DecayScheme decay(const ENSDFTreeItem *item);
+    virtual DecayScheme decay(const ENSDFTreeItem *item, bool merge);
 
 public slots:
     void deleteDatabaseAndCache();

@@ -116,7 +116,7 @@ LevelItem::LevelItem(Level level, Type type,
   line_ = new QGraphicsLineItem(-vis.outerGammaMargin, 0.0, vis.outerGammaMargin, 0.0, item);
   line_->setPen(vis.levelPen);
   // thick line for stable/isomeric levels
-  if (level.halfLife().isStable() || level.isomerNum() > 0)
+  if (level.halfLife().stable() || level.isomerNum() > 0)
     line_->setPen(vis.stableLevelPen);
 
   click_area_
@@ -146,7 +146,8 @@ LevelItem::LevelItem(Level level, Type type,
 
   if (vis.parentpos != NoParent)
   {
-    QString hltext = QString::fromStdString(level.halfLife().to_string());
+    QString hltext
+        = QString::fromStdString(level.halfLife().preferred_units().to_string());
     hltext_ = new QGraphicsSimpleTextItem(hltext, item);
     hltext_->setFont(vis.stdFont);
     hltext_->setPos(0.0, -0.5*stdBoldFontMetrics.height());
