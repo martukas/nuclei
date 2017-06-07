@@ -2,7 +2,7 @@
 
 #include "Uncert.h"
 #include "Level.h"
-#include "DecayMode.h"
+#include "DecayInfo.h"
 #include "nid.h"
 #include <tuple>
 
@@ -33,11 +33,14 @@ void simplify_logic(std::string& s);
 std::pair<std::string, std::vector<std::string> > spin_split(const std::string& data);
 SpinSet parse_spins(std::string data);
 
-HalfLife parse_halflife(const std::string& record);
-
+HalfLife parse_halflife(std::string record_orig);
+std::string hl_to_ensdf(HalfLife hl);
 DecayMode parse_decay_mode(std::string record);
+DecayInfo parse_decay_info(std::string dsid);
 
 std::string mode_to_ensdf(DecayMode);
+
+std::string uncert_to_ensdf(Uncert);
 
 NuclideId parse_nid(std::string nucid);
 NuclideId parse_check_nid(std::string nucid);

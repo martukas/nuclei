@@ -193,37 +193,8 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionPreferences"/>
+   <addaction name="actionMerge_adopted"/>
   </widget>
-  <action name="actionZoom_In">
-   <property name="icon">
-    <iconset resource="resources/nuclei.qrc">
-     <normaloff>:/toolbar/zoom-in.png</normaloff>:/toolbar/zoom-in.png</iconset>
-   </property>
-   <property name="text">
-    <string>Zoom In</string>
-   </property>
-   <property name="toolTip">
-    <string>Zoom In</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl++</string>
-   </property>
-  </action>
-  <action name="actionZoom_Out">
-   <property name="icon">
-    <iconset resource="resources/nuclei.qrc">
-     <normaloff>:/toolbar/zoom-out.png</normaloff>:/toolbar/zoom-out.png</iconset>
-   </property>
-   <property name="text">
-    <string>Zoom Out</string>
-   </property>
-   <property name="toolTip">
-    <string>Zoom Out</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+-</string>
-   </property>
-  </action>
   <action name="actionShow_all">
    <property name="icon">
     <iconset resource="resources/nuclei.qrc">
@@ -234,18 +205,6 @@
    </property>
    <property name="toolTip">
     <string>Show all</string>
-   </property>
-  </action>
-  <action name="actionOriginal_Size">
-   <property name="icon">
-    <iconset resource="resources/nuclei.qrc">
-     <normaloff>:/toolbar/zoom-original.png</normaloff>:/toolbar/zoom-original.png</iconset>
-   </property>
-   <property name="text">
-    <string>Original Size</string>
-   </property>
-   <property name="toolTip">
-    <string>Zoom to Original Size</string>
    </property>
   </action>
   <action name="actionSVG_Export">
@@ -285,6 +244,21 @@
    </property>
    <property name="toolTip">
     <string>Change application preferences</string>
+   </property>
+  </action>
+  <action name="actionMerge_adopted">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources/nuclei.qrc">
+     <normaloff>:/toolbar/checkbox.png</normaloff>:/toolbar/checkbox.png</iconset>
+   </property>
+   <property name="text">
+    <string>Merge adopted</string>
+   </property>
+   <property name="toolTip">
+    <string>Merge adopted levels info</string>
    </property>
   </action>
  </widget>

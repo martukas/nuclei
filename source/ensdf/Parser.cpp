@@ -174,7 +174,7 @@ Level DaughterParser::construct_level(const LevelRecord& record,
   if (record.spins.valid())
     vals.push_back("<b>Spin & parity:</b> "
                    + record.spins.to_string());
-  if (record.halflife.isValid())
+  if (record.halflife.valid())
     vals.push_back("<b>Halflife:</b> "
                    + record.halflife.to_string());
   if (record.isomeric)

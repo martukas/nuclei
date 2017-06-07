@@ -2,8 +2,8 @@
 
 #include <QMainWindow>
 #include <QPointer>
-#include "DecayScheme.h"
 #include "SchemePlayer.h"
+#include "ENSDFDataSource.h"
 
 namespace Ui {
 class NucleiMainWindow;
@@ -39,18 +39,24 @@ private slots:
 
     void playerSelectionChanged();
     
+    void on_actionMerge_adopted_triggered();
+
 protected:
     void closeEvent(QCloseEvent * event);
 
 private:
     void loadDecay(DecayScheme decay);
 
-    Ui::NucleiMainWindow *ui;
-    QDialog *preferencesDialog;
-    Ui::PreferencesDialog *preferencesDialogUi;
+    Ui::NucleiMainWindow *ui {nullptr};
+    QDialog *preferencesDialog {nullptr};
+    Ui::PreferencesDialog *preferencesDialogUi {nullptr};
 
-    DecayCascadeItemModel *decaySelectionModel, *searchResultSelectionModel;
-    DecayCascadeFilterProxyModel *decayProxyModel, *searchProxyModel;
+    DecayCascadeItemModel *decaySelectionModel {nullptr};
+    DecayCascadeItemModel *searchResultSelectionModel {nullptr};
+    DecayCascadeFilterProxyModel *decayProxyModel {nullptr};
+    DecayCascadeFilterProxyModel *searchProxyModel {nullptr};
+
+    QPointer<ENSDFDataSource> data_source_;
 
     QPointer<SchemePlayer> decay_viewer_;
     DecayScheme current_scheme_;

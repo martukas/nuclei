@@ -130,7 +130,7 @@ std::string LevelRecord::offsets_to_str() const
 void LevelRecord::merge_adopted(const LevelRecord& other,
                                 double max_gamma_dif)
 {
-  if (!halflife.isValid())
+  if (!halflife.valid())
   {
     halflife = other.halflife;
     if (!spins.valid())
@@ -176,7 +176,7 @@ std::string LevelRecord::debug() const
     ret += " M" + std::to_string(isomeric);
   if (spins.valid())
     ret += " Spins=" + spins.to_string();
-  if (halflife.isValid())
+  if (halflife.valid())
     ret += " Halflife=" + halflife.to_string(true);
   if (S.hasFiniteValue())
     ret += " S=" + S.to_string(true);

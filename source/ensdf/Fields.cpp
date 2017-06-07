@@ -11,6 +11,14 @@
 #define RGX_QPARITY "[\\[\\(~]?" RGX_PARITY "[\\]\\)]?"
 #define RGX_SP "^(" RGX_QSPIN ")?(" RGX_QPARITY  ")?$"
 
+#define NUCLIDE "[0-9]+[A-Z]*"
+#define MODE "\\([A-Z0-9]+,[A-Z0-9]+\\)"
+#define HL ":[\\s0-9A-Z]+"
+#define HLU "\\[\\+[0-9]+\\]"
+#define PARENT "^(" NUCLIDE ")(" MODE ")?(" HL ")?(" HLU ")?$"
+
+
+
 using dlim = std::numeric_limits<double>;
 //using d_inf = std::numeric_limits<double>::infinity();
 //using d_NaN = std::numeric_limits<double>::quiet_NaN();
@@ -586,15 +594,23 @@ SpinParity parse_spin_parity(std::string data)
   return ret;
 }
 
-HalfLife parse_halflife(const std::string& record)
+HalfLife parse_halflife(std::string record_orig)
 {
+  record_orig = boost::regex_replace(record_orig, boost::regex("[\\s]{2,}"), " ");
+  boost::trim(record_orig);
+
+  auto record = record_orig;
+
+  bool comqual = common_qualifiers(record);
+  if (comqual)
+    record = strip_qualifiers(record);
+
   std::string value_str;
   std::string units_str;
-  std::string uncert_str;
+  std::string uncert_str = "0";
 
   std::vector<std::string> timeparts;
-  std::string rec_copy = trim_all(record);
-  boost::split(timeparts, rec_copy, boost::is_any_of(" \r\t\n\0"));
+  boost::split(timeparts, record, boost::is_any_of(" \r\t\n\0"));
   if (timeparts.size() >= 1)
     value_str = timeparts[0];
   if (timeparts.size() >= 2)
@@ -602,26 +618,102 @@ HalfLife parse_halflife(const std::string& record)
   if (timeparts.size() >= 3)
     uncert_str = timeparts[2];
 
+//  DBG << "PARSED " << value_str
+//      << " " << units_str
+//      << " " << uncert_str;
+
   Uncert time = parse_val_uncert(value_str, uncert_str);
   if (boost::contains(boost::to_upper_copy(record), "STABLE"))
     time.setValue(dlim::infinity(),
                   Uncert::SignMagnitudeDefined);
-  else if (boost::contains(record, "EV"))
-    time.setValue(dlim::quiet_NaN(),
-                  Uncert::SignMagnitudeDefined);
 
-  return HalfLife(time, units_str).preferred_units();
+//  if (comqual)
+//    time.setUncertainty(0,0,Uncert::Approximately);
+
+  HalfLife ret(time, comqual, units_str);
+
+  std::string compst = record_orig;
+  boost::replace_all(compst, ". ", " ");
+
+  if (hl_to_ensdf(ret) != compst)
+    DBG << "HL parse mismatch \'" << record_orig
+        << "\' != \'" << hl_to_ensdf(ret) << "\'"
+        << " t=" << ret.time().to_string(false)
+        << " v=" << ret.time().value()
+        << " u1=" << ret.time().lowerUncertainty()
+        << " u2=" << ret.time().upperUncertainty()
+        << " units=" << ret.units()
+        << " tent=" << ret.tentative();
+
+
+  return ret.preferred_units();
+}
+
+std::string hl_to_ensdf(HalfLife hl)
+{
+  if (!hl.valid())
+    return "";
+  std::string ret;
+  if (hl.stable())
+    ret = "STABLE";
+  else
+  {
+    ret = hl.time().value_str();
+    if (!hl.units().empty())
+      ret += " " + hl.units();
+    ret += uncert_to_ensdf(hl.time());
+  }
+  if (hl.tentative())
+    ret = "(" + ret + ")";
+  boost::replace_all(ret, "\u00B1", "");
+  return ret;
+}
+
+std::string uncert_to_ensdf(Uncert u)
+{
+  std::string ret;
+  if ((u.uncertaintyType() == Uncert::SymmetricUncertainty)
+      || (u.uncertaintyType() == Uncert::AsymmetricUncertainty))
+  {
+    if (u.symmetric() &&
+        std::isfinite(u.lowerUncertainty())
+        && (0 != u.lowerUncertainty()))
+    {
+      ret = " " + u.sym_uncert_str();
+      boost::replace_all(ret, "\u00B1", "");
+      boost::replace_all(ret, ".", "");
+    }
+    else if (std::isfinite(u.lowerUncertainty()) &&
+             std::isfinite(u.upperUncertainty())
+             && (0 != u.lowerUncertainty())
+             && (0 != u.upperUncertainty()))
+    {
+      ret = " " + u.asym_uncert_str();
+      boost::replace_all(ret, "\u207A", "+");
+      boost::replace_all(ret, "\u208B", "-");
+      for (int i=0; i < k_UTF_subscripts.size(); ++i)
+        boost::replace_all(ret, k_UTF_subscripts[i], std::to_string(i));
+      for (int i=0; i < k_UTF_superscripts.size(); ++i)
+        boost::replace_all(ret, k_UTF_superscripts[i], std::to_string(i));
+    }
+  }
+  else if (u.uncertaintyType() == Uncert::Approximately)
+    return " AP";
+  else if (u.uncertaintyType() == Uncert::GreaterEqual)
+    return " GE";
+  else if (u.uncertaintyType() == Uncert::LessEqual)
+    return " LE";
+  else if (u.uncertaintyType() == Uncert::GreaterThan)
+    return " GT";
+  else if (u.uncertaintyType() == Uncert::LessThan)
+    return " LT";
+  return ret;
 }
 
 DecayMode parse_decay_mode(std::string record)
 {
   DecayMode ret;
   std::string type = boost::to_upper_copy(record);
-  if (boost::contains(type, "INELASTIC SCATTERING"))
-  {
-    ret.set_inelastic_scattering(true);
-    boost::replace_all(type, "INELASTIC SCATTERING", "");
-  }
   if (boost::contains(type, "SF"))
   {
     ret.set_spontaneous_fission(true);
@@ -724,6 +816,80 @@ std::string mode_to_ensdf(DecayMode mode)
   {
     ret += "A";
   }
+  return ret;
+}
+
+DecayInfo parse_decay_info(std::string dsid_orig)
+{
+  DecayInfo ret;
+
+  boost::trim(dsid_orig);
+  auto dsid = dsid_orig;
+  if (!boost::contains(dsid, "DECAY"))
+    return ret;
+  boost::replace_all(dsid, "DECAY", "");
+  boost::replace_all(dsid, ":", "");
+  boost::regex_replace(dsid, boost::regex("[\\s]{2,}"), " ");
+
+  std::vector<std::string> ptokens;
+  int good = 0;
+  boost::split(ptokens, dsid, boost::is_any_of(","));
+  for (auto& t : ptokens)
+  {
+    boost::trim(t);
+    if (t.empty())
+      continue;
+
+    good++;
+
+    std::vector<std::string> tokens;
+    boost::split(tokens, t, boost::is_any_of(" "));
+    if (tokens.size() < 2)
+    {
+      DBG << "Not enough tokens " << dsid_orig;
+      continue;
+    }
+
+    ret.parent = parse_nid(tokens[0]);
+    if (!check_nid_parse(tokens[0], ret.parent))
+    {
+      ERR << "<BasicDecay> Could not parse parent NucID   \""
+//              << boost::trim_copy(nid_to_ensdf(parent)) << "\"  !=  \""
+          << tokens[0] << "\" from \"" << t << "\""
+          << "   in   \"" << dsid_orig << "\"";
+  //    return DecayInfo();
+    }
+
+    auto m = parse_decay_mode(tokens[1]);
+    if (mode_to_ensdf(m) == tokens[1])
+      ret.mode = m;
+    else
+    {
+      ERR << "Decay mode parse failed \'" << tokens[1] << "\' != "
+          << mode_to_ensdf(m) << " or " << m.to_string()
+             << " in \"" << dsid << "\"";
+    }
+
+    if (tokens.size() > 2)
+    {
+      std::vector<std::string> t2(tokens.begin() + 2, tokens.begin() + tokens.size());
+      auto tt = boost::trim_copy(boost::join(t2, " "));
+      ret.hl = parse_halflife(tt);
+    }
+
+//    if (boost::contains(dsid_orig, "EV"))
+    if (good > 1)
+      DBG << " **MULTIPLE** DSID=" << dsid_orig << " --> " << ret.to_string();
+//    else
+//      DBG << "DSID=" << dsid_orig << " --> " << ret.to_string();
+
+  }
+
+//  if (tokens.size() > 3)
+//  {
+//    DBG << "Decay mode DSID=" << dsid << " has extra tokens "
+//        << boost::join(tokens, ",");
+//  }
   return ret;
 }
 

@@ -62,6 +62,20 @@ public:
   std::string to_string(bool prefix_magn, bool with_uncert = true) const;
   std::string to_markup() const; // outputs formatted text
 
+  double val_adjusted() const;
+  bool symmetric() const;
+  int uncert_order() const;
+  int exponent() const;
+  int decimals() const;
+  bool insignificant_uncert() const;
+  bool zero_uncert() const;
+
+  std::string value_str() const;
+  std::string sign_prefix(bool prefix_magn) const;
+  std::string uncert_str() const; // for sym and asym
+  std::string sym_uncert_str() const;
+  std::string asym_uncert_str() const;
+
 private:
   double value_;
   double lower_sigma_, upper_sigma_;

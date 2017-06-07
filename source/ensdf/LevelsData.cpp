@@ -24,7 +24,7 @@ LevelsData::LevelsData(ENSDFData& i)
   //  if (valid())
   //    DBG << debug();
 
-  decay_info_ = DecayInfo(id.extended_dsid);
+  decay_info_ = parse_decay_info(id.extended_dsid);
   reaction_info_ = ReactionInfo(id.extended_dsid, id.nuclide);
   adopted = boost::contains(id.extended_dsid, "ADOPTED LEVELS");
   gammas = boost::contains(id.extended_dsid, "GAMMAS");
@@ -78,7 +78,7 @@ void LevelsData::read_prelims(ENSDFData& i)
       if (pn.valid())
       {
         if (pnorm.valid())
-          i.print("<LevelsData> More than one pnorm", idx, pnorm.debug());
+          i.print("<LevelsData> More than one loose pnorm", idx, pnorm.debug());
         pnorm = pn;
       }
       else
@@ -112,7 +112,12 @@ void LevelsData::read_prelims(ENSDFData& i)
     {
       auto n = NormalizationRecord(++i);
       if (n.valid())
+      {
+        if (norm.size())
+          i.print("<LevelsData> Multiple norm", idx, n.debug());
+
         norm.push_back(n);
+      }
       else
         i.print("<LevelsData> Invalid norm", idx, n.debug());
     }
