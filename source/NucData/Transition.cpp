@@ -72,7 +72,7 @@ std::string Transition::to_string() const
      << std::setw(15) << from_.to_string()
      << " --> "
      << std::setw(15) << to_.to_string()
-     << std::setw(7)  << intensity_string()
+     << std::setw(15)  << intensity_string()
      << std::setw(12) << multipolarity_;
   if (delta_.hasFiniteValue())
     ss << "  delta="  << delta_.to_string(false);

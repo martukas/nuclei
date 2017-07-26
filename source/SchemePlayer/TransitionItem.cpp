@@ -43,7 +43,8 @@ TransitionItem::TransitionItem(Transition transition,
 
   // group origin is set to the start level!
   item = new ActiveGraphicsItemGroup(this);
-  item->setActiveColor(QColor(64, 166, 255, 180));
+  item->setActiveColor(1, QColor(224, 186, 100, 180));
+  item->setActiveColor(2, QColor(64, 166, 255, 180));
 
   arrow_head_ = new QGraphicsPolygonItem(initArrowHead(arrowHeadWidth));
   arrow_head_->setBrush(QBrush(pen_.color()));

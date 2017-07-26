@@ -34,9 +34,15 @@ public:
 
   void clearSelection();
 
+  void set_transition_filter(Energy e);
+
   std::set<Energy> selected_levels() const;
   std::set<Energy> selected_parent_levels() const;
-  std::set<Energy> selected_transistions() const;
+  std::set<Energy> selected_transistions(int level) const;
+
+  void select_levels(const std::set<Energy>&);
+  void select_parent_levels(const std::set<Energy>&);
+  void select_transistions(const std::set<Energy>&, int level=1);
 
   bool parent_selected() const;
   bool daughter_selected() const;
@@ -63,7 +69,6 @@ private:
 
   std::set<Energy> selected_levels_;
   std::set<Energy> selected_parent_levels_;
-  std::set<Energy> selected_transitions_;
   bool parent_selected_ {false};
   bool daughter_selected_ {false};
 
@@ -80,4 +85,7 @@ private:
   void clickedDaughter();
 
   void deselect_all();
+  void deselect_levels();
+  void deselect_nuclides();
+  void deselect_gammas();
 };

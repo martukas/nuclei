@@ -41,6 +41,10 @@ private slots:
     
     void on_actionMerge_adopted_triggered();
 
+    void on_checkFilterTransition_clicked();
+
+    void on_doubleTargetTransition_editingFinished();
+
 protected:
     void closeEvent(QCloseEvent * event);
 
@@ -65,4 +69,6 @@ private:
     QString prep_comments(const json& j,
                           const std::set<std::string>& refs);
     void set_text(const json& jj);
+
+    void reload_selection();
 };

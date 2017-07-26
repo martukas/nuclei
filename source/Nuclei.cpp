@@ -289,12 +289,15 @@ void Nuclei::playerSelectionChanged()
     if (levels.count(nrg))
       comments = levels[nrg].text();
   }
-  else if (decay_viewer_->selected_transistions().size())
+  else if (decay_viewer_->selected_transistions(1).size())
   {
-    auto nrg = *decay_viewer_->selected_transistions().begin();
+    auto nrg = *decay_viewer_->selected_transistions(1).begin();
     auto transitions = current_scheme_.daughterNuclide().transitions();
     if (!transitions.count(nrg))
       return;
+    if (ui->checkFilterTransition->isChecked())
+      decay_viewer_->select_transistions(
+            current_scheme_.daughterNuclide().coincidences(nrg), 2);
     comments = transitions[nrg].text();
   }
   else if (decay_viewer_->parent_selected())
@@ -346,14 +349,34 @@ std::string Nuclei::make_reference_link(std::string ref, int num)
 {
   return "<a href=\"https://www.nndc.bnl.gov/nsr/knum_act.jsp?ofrml=Normal&keylst="
       + ref + "%0D%0A&getkl=Search\"><small>"
-      + std::to_string(num++)
+      + std::to_string(num)
       + "</small></a>";
 }
 
-
-void Nuclei::on_actionMerge_adopted_triggered()
+void Nuclei::reload_selection()
 {
   auto si = ui->decayTreeView->selectionModel()->selectedIndexes();
   if (si.size())
     loadSelectedDecay(*si.begin());
+}
+
+void Nuclei::on_actionMerge_adopted_triggered()
+{
+  reload_selection();
+}
+
+void Nuclei::on_checkFilterTransition_clicked()
+{
+  playerSelectionChanged();
+}
+
+void Nuclei::on_doubleTargetTransition_editingFinished()
+{
+  auto tr = current_scheme_.daughterNuclide().nearest_transition(ui->doubleTargetTransition->value());
+  if (tr.energy().value().hasFiniteValue() && decay_viewer_)
+  {
+    decay_viewer_->clearSelection();
+    decay_viewer_->select_transistions({tr.energy()}, 1);
+    playerSelectionChanged();
+  }
 }
