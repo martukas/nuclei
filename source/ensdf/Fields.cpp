@@ -691,9 +691,11 @@ std::string uncert_to_ensdf(Uncert u)
       ret = " " + u.asym_uncert_str();
       boost::replace_all(ret, "\u207A", "+");
       boost::replace_all(ret, "\u208B", "-");
-      for (int i=0; i < k_UTF_subscripts.size(); ++i)
+      boost::replace_all(ret, "\u00B7", "");
+      boost::replace_all(ret, ".", "");
+      for (size_t i=0; i < k_UTF_subscripts.size(); ++i)
         boost::replace_all(ret, k_UTF_subscripts[i], std::to_string(i));
-      for (int i=0; i < k_UTF_superscripts.size(); ++i)
+      for (size_t i=0; i < k_UTF_superscripts.size(); ++i)
         boost::replace_all(ret, k_UTF_superscripts[i], std::to_string(i));
     }
   }

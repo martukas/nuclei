@@ -75,6 +75,73 @@ void Nuclide::add_level(const Level& level)
     levels_[level.energy()] = level;
 }
 
+Transition Nuclide::nearest_transition(double goal) const
+{
+  Energy best;
+  //  if (transitions_.size())
+  //    best = transitions_.begin()->first;
+  for (const auto& tr : transitions_)
+    if (tr.first.value().hasFiniteValue())
+      best = tr.first;
+  for (const auto& tr : transitions_)
+  {
+    if (std::isfinite(goal) &&
+        tr.first.value().hasFiniteValue() &&
+        (std::abs(goal - tr.first) <
+         std::abs(goal - best)))
+      best = tr.first;
+  }
+  if (transitions_.count(best))
+    return transitions_.at(best);
+  return Transition();
+}
+
+std::set<Energy> Nuclide::coincidences(Energy transition) const
+{
+  std::set<Energy> ret;
+  auto u = upstream(transition);
+  auto d = downstream(transition);
+  ret.insert(u.begin(), u.end());
+  ret.insert(d.begin(), d.end());
+  return ret;
+}
+
+std::set<Energy> Nuclide::upstream(Energy transition) const
+{
+  std::set<Energy> ret;
+  if (!transitions_.count(transition))
+    return ret;
+  Transition x = transitions_.at(transition);
+  if (!levels_.count(x.from()))
+    return ret;
+  Level l = levels_.at(x.from());
+  for (auto pop : l.populatingTransitions())
+  {
+    ret.insert(pop);
+    auto u = upstream(pop);
+    ret.insert(u.begin(), u.end());
+  }
+  return ret;
+}
+
+std::set<Energy> Nuclide::downstream(Energy transition) const
+{
+  std::set<Energy> ret;
+  if (!transitions_.count(transition))
+    return ret;
+  Transition x = transitions_.at(transition);
+  if (!levels_.count(x.to()))
+    return ret;
+  Level l = levels_.at(x.to());
+  for (auto pop : l.depopulatingTransitions())
+  {
+    ret.insert(pop);
+    auto d = downstream(pop);
+    ret.insert(d.begin(), d.end());
+  }
+  return ret;
+}
+
 Energy Nuclide::nearest_level(const Energy& goal,
                               double max_dif,
                               double zero_thresh)
@@ -191,16 +258,6 @@ void Nuclide::removeTransition(const Transition& t)
 {
   if (transitions_.count(t.energy()))
     transitions_.erase(t.energy());
-}
-
-void Nuclide::finalize()
-{
-  for (auto t : transitions_)
-    if (levels_.count(t.second.from()) && levels_.count(t.second.to()))
-      register_transition(t.second);
-//    else
-//      WARN << "Transition cannot be linked to levels: " << t.second.to_string()
-//          << " for " << id_.verboseName();
 }
 
 void Nuclide::cullLevels()

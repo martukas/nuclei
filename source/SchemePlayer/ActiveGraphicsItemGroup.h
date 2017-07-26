@@ -21,10 +21,10 @@ public:
     void setPos(const QPointF & pos);
     void setPos(qreal x, qreal y);
     virtual QPainterPath shape() const;
-    void setActiveColor(const QColor &color);
+    void setActiveColor(int, const QColor &color);
     void setHoverColor(const QColor &color);
-    void setHighlighted(bool active);
-    bool isHighlighted() const;
+    void setHighlighted(int active);
+    int isHighlighted() const;
 
 signals:
     void clicked(ClickableItem *item);
@@ -41,21 +41,21 @@ private:
     void showHighlighting();
     void hideHighlighting();
     void updateHighlightColor();
-    ClickableItem *assocItem;
-    GraphicsDropShadowEffect *shadow {nullptr};
-    mutable QPainterPath *m_shape {nullptr};
-    mutable GraphicsHighlightItem *m_helper {nullptr};
-    bool m_highlighted {false};
-    bool m_hover {false};
-    bool m_shadowenabled {true};
+    ClickableItem *associated_item_;
+    GraphicsDropShadowEffect *shadow_ {nullptr};
+    mutable QPainterPath *shape_ {nullptr};
+    mutable GraphicsHighlightItem *highlight_helper_ {nullptr};
+    int highlighted_ {0};
+    bool hovering_ {false};
+    bool shadow_enabled_ {true};
 
-    QPropertyAnimation *aniHighlight {nullptr};
-    QPropertyAnimation *aniShadow {nullptr};
-    QParallelAnimationGroup *aniGroup {nullptr};
-    QColor activeColor;
-    QColor hoverColor;
+    QPropertyAnimation *highlight_animation_ {nullptr};
+    QPropertyAnimation *shadow_animation_ {nullptr};
+    QParallelAnimationGroup *animation_group_ {nullptr};
+    QMap<int,QColor> active_colors_;
+    QColor hover_color_;
 
-    static const double animationDuration;
-    static const bool animateShadow;
-    static const bool animate;
+    static const double animation_duration_;
+    static const bool animate_shadow_;
+    static const bool animate_;
 };

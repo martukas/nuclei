@@ -45,11 +45,13 @@ HalfLife HalfLife::preferred_units() const
   {
     ret.time_ *= e_units_.at(units_);
     ret.units_ = preferred_e_units(ret.time_.value());
+    ret.time_ *= 1.0 / e_units_.at(ret.units_);
   }
   if (time_units_.count(units_))
   {
     ret.time_ *= time_units_.at(units_);
     ret.units_ = preferred_time_units(ret.time_.value());
+    ret.time_ *= 1.0 / time_units_.at(ret.units_);
   }
   return ret;
 }

@@ -111,7 +111,8 @@ LevelItem::LevelItem(Level level, Type type,
   QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
 
   item = new ActiveGraphicsItemGroup(this);
-  item->setActiveColor(QColor(224, 186, 100, 180));
+  item->setActiveColor(1, QColor(224, 186, 100, 180));
+  item->setActiveColor(2, QColor(64, 166, 255, 180));
 
   line_ = new QGraphicsLineItem(-vis.outerGammaMargin, 0.0, vis.outerGammaMargin, 0.0, item);
   line_->setPen(vis.levelPen);

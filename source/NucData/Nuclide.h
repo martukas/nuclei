@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "nid.h"
 #include "Level.h"
@@ -20,7 +20,6 @@ public:
   bool empty() const;
 
   void add_level(const Level& level);
-  void finalize();
 
   void add_transition_to(Transition trans,
                          double max_dif = kDoubleNaN,
@@ -36,6 +35,10 @@ public:
 
   std::map<Energy, Level> levels() const;
   std::map<Energy, Transition> transitions() const;
+  Transition nearest_transition(double goal) const;
+  std::set<Energy> coincidences(Energy transition) const;
+  std::set<Energy> upstream(Energy transition) const;
+  std::set<Energy> downstream(Energy transition) const;
 
   void setHalflives(const std::vector<HalfLife>& hl);
   void addHalfLife(const HalfLife& hl);
