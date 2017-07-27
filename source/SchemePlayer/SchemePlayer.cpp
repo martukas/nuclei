@@ -20,10 +20,10 @@
 #include "LevelItem.h"
 #include "TransitionItem.h"
 
-
-SchemePlayer::SchemePlayer(DecayScheme scheme, QObject *parent)
+SchemePlayer::SchemePlayer(DecayScheme scheme, double min_intensity, QObject *parent)
   : QObject(parent)
   , scheme_(scheme)
+  , min_intensity_(min_intensity)
 {
   // decide if parent nuclide should be printed on the left side (beta-),
   // on the right side (EC, beta+, alpha) or not at all (isomeric)
@@ -53,12 +53,16 @@ bool SchemePlayer::daughter_selected() const
   return daughter_selected_;
 }
 
-QGraphicsScene* SchemePlayer::levelPlot()
+GraphicsScene *SchemePlayer::levelPlot()
 {
   if (scene_)
     return scene_;
 
-  scene_ = new QGraphicsScene(this);
+  scene_ = new GraphicsScene(this);
+  connect(scene_, SIGNAL(clickedBackground()), this,
+          SLOT(backgroundClicked()));
+
+  //  scene_->setBackgroundBrush(QBrush(Qt::red, Qt::SolidPattern));
 
   if (!scheme_.valid())
     return scene_;
@@ -129,6 +133,8 @@ void SchemePlayer::addParentLevel(Level level, SchemeVisualSettings vis)
 
 void SchemePlayer::addTransition(Transition transition, SchemeVisualSettings vis)
 {
+  if (transition.intensity().value() < min_intensity_)
+    return;
   TransitionItem *transrend = new TransitionItem(transition, vis, scene_);
   connect(this, SIGNAL(enabledShadow(bool)), transrend->graphicsItem(), SLOT(setShadowEnabled(bool)));
   connect(transrend->graphicsItem(), SIGNAL(clicked(ClickableItem*)), this, SLOT(itemClicked(ClickableItem*)));
@@ -344,6 +350,11 @@ QString SchemePlayer::name() const
   return QString::fromStdString(scheme_.name());
 }
 
+void SchemePlayer::backgroundClicked()
+{
+  deselect_all();
+  triggerDataUpdate();
+}
 
 void SchemePlayer::itemClicked(ClickableItem *item)
 {
@@ -369,16 +380,18 @@ void SchemePlayer::clearSelection()
   deselect_all();
 }
 
-void SchemePlayer::select_levels(const std::set<Energy>& s)
+void SchemePlayer::select_levels(const std::set<Energy>& s, int level)
 {
-  selected_levels_ = s;
-  triggerDataUpdate();
+  for (auto t : levels_)
+    if (s.count(t.first))
+      t.second->graphicsItem()->setHighlighted(level);
 }
 
-void SchemePlayer::select_parent_levels(const std::set<Energy>& s)
+void SchemePlayer::select_parent_levels(const std::set<Energy>& s, int level)
 {
-  selected_parent_levels_ = s;
-  triggerDataUpdate();
+  for (auto t : parent_levels_)
+    if (s.count(t.first))
+      t.second->graphicsItem()->setHighlighted(level);
 }
 
 void SchemePlayer::select_transistions(const std::set<Energy>& s, int level)
@@ -386,6 +399,7 @@ void SchemePlayer::select_transistions(const std::set<Energy>& s, int level)
   for (auto t : transitions_)
     if (s.count(t->energy()))
       t->graphicsItem()->setHighlighted(level);
+  highlight_coincidences();
 }
 
 void SchemePlayer::clickedGamma(TransitionItem *g)
@@ -393,16 +407,12 @@ void SchemePlayer::clickedGamma(TransitionItem *g)
   if (!g)
     return;
 
-  if (g->graphicsItem()->isHighlighted())
-  {
-    deselect_all();
+  if (g->graphicsItem()->isHighlighted() == 1)
     g->graphicsItem()->setHighlighted(0);
-  }
   else
-  {
-    deselect_all();
     g->graphicsItem()->setHighlighted(1);
-  }
+
+  highlight_coincidences();
 
   triggerDataUpdate();
 }
@@ -415,11 +425,7 @@ void SchemePlayer::clickedParentLevel(LevelItem *e)
   if (e->graphicsItem()->isHighlighted())
     e->graphicsItem()->setHighlighted(0);
   else
-  {
-    deselect_all();
     e->graphicsItem()->setHighlighted(1);
-    selected_parent_levels_.insert(e->energy());
-  }
 
   triggerDataUpdate();
 }
@@ -432,11 +438,7 @@ void SchemePlayer::clickedDaughterLevel(LevelItem *e)
   if (e->graphicsItem()->isHighlighted())
     e->graphicsItem()->setHighlighted(0);
   else
-  {
-    deselect_all();
     e->graphicsItem()->setHighlighted(1);
-    selected_levels_.insert(e->energy());
-  }
 
   triggerDataUpdate();
 }
@@ -478,8 +480,6 @@ void SchemePlayer::deselect_levels()
     l.second->graphicsItem()->setHighlighted(0);
   for (auto l : parent_levels_)
     l.second->graphicsItem()->setHighlighted(0);
-  selected_levels_.clear();
-  selected_parent_levels_.clear();
 }
 
 void SchemePlayer::deselect_nuclides()
@@ -494,14 +494,22 @@ void SchemePlayer::deselect_gammas()
     l->graphicsItem()->setHighlighted(0);
 }
 
-std::set<Energy> SchemePlayer::selected_levels() const
+std::set<Energy> SchemePlayer::selected_levels(int level) const
 {
-  return selected_levels_;
+  std::set<Energy> str;
+  for (auto t : levels_)
+    if (t.second->graphicsItem()->isHighlighted() == level)
+      str.insert(t.first);
+  return str;
 }
 
-std::set<Energy> SchemePlayer::selected_parent_levels() const
+std::set<Energy> SchemePlayer::selected_parent_levels(int level) const
 {
-  return selected_parent_levels_;
+  std::set<Energy> str;
+  for (auto t : parent_levels_)
+    if (t.second->graphicsItem()->isHighlighted() == level)
+      str.insert(t.first);
+  return str;
 }
 
 std::set<Energy> SchemePlayer::selected_transistions(int level) const
@@ -523,7 +531,21 @@ void SchemePlayer::setStyle(const QFont &fontfamily, unsigned int sizePx)
   visual_settings_.setStyle(fontfamily, sizePx);
 }
 
-void SchemePlayer::set_transition_filter(Energy e)
+void SchemePlayer::set_highlight_cascade(bool h)
 {
-
+  highlight_cascade_ = h;
+  highlight_coincidences();
 }
+
+void SchemePlayer::highlight_coincidences()
+{
+  std::set<Energy> intersect;
+  if (highlight_cascade_)
+    intersect = scheme_.daughterNuclide().coincidences(selected_transistions(1));
+
+  for (auto t : transitions_)
+    if (t->graphicsItem()->isHighlighted() != 1)
+      t->graphicsItem()->setHighlighted(
+            intersect.count(t->energy()) ? 2 : 0);
+}
+
