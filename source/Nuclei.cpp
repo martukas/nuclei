@@ -254,7 +254,7 @@ void Nuclei::loadDecay(DecayScheme decay)
   s.sync();
 
   current_scheme_ = decay;
-  decay_viewer_ = new SchemePlayer(decay, this);
+  decay_viewer_ = new SchemePlayer(decay, ui->doubleMinIntensity->value(), this);
 
   connect(decay_viewer_.data(), SIGNAL(selectionChanged()),
           this, SLOT(playerSelectionChanged()));
@@ -275,16 +275,16 @@ void Nuclei::playerSelectionChanged()
     return;
 
   json comments;
-  if (decay_viewer_->selected_levels().size())
+  if (decay_viewer_->selected_levels(1).size())
   {
-    auto nrg = *decay_viewer_->selected_levels().begin();
+    auto nrg = *decay_viewer_->selected_levels(1).begin();
     auto levels = current_scheme_.daughterNuclide().levels();
     if (levels.count(nrg))
       comments = levels[nrg].text();
   }
-  else if (decay_viewer_->selected_parent_levels().size())
+  else if (decay_viewer_->selected_parent_levels(1).size())
   {
-    auto nrg = *decay_viewer_->selected_parent_levels().begin();
+    auto nrg = *decay_viewer_->selected_parent_levels(1).begin();
     auto levels = current_scheme_.parentNuclide().levels();
     if (levels.count(nrg))
       comments = levels[nrg].text();
@@ -295,9 +295,6 @@ void Nuclei::playerSelectionChanged()
     auto transitions = current_scheme_.daughterNuclide().transitions();
     if (!transitions.count(nrg))
       return;
-    if (ui->checkFilterTransition->isChecked())
-      decay_viewer_->select_transistions(
-            current_scheme_.daughterNuclide().coincidences(nrg), 2);
     comments = transitions[nrg].text();
   }
   else if (decay_viewer_->parent_selected())
@@ -367,7 +364,8 @@ void Nuclei::on_actionMerge_adopted_triggered()
 
 void Nuclei::on_checkFilterTransition_clicked()
 {
-  playerSelectionChanged();
+  if (decay_viewer_)
+    decay_viewer_->set_highlight_cascade(ui->checkFilterTransition->isChecked());
 }
 
 void Nuclei::on_doubleTargetTransition_editingFinished()
@@ -379,4 +377,9 @@ void Nuclei::on_doubleTargetTransition_editingFinished()
     decay_viewer_->select_transistions({tr.energy()}, 1);
     playerSelectionChanged();
   }
+}
+
+void Nuclei::on_doubleMinIntensity_editingFinished()
+{
+  reload_selection();
 }

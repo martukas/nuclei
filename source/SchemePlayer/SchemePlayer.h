@@ -10,7 +10,8 @@
 
 #include "ClickableItem.h"
 
-class QGraphicsScene;
+#include "GraphicsScene.h"
+
 class LevelItem;
 class TransitionItem;
 
@@ -19,10 +20,12 @@ class SchemePlayer : public QObject
   Q_OBJECT
 public:
 
-  explicit SchemePlayer(DecayScheme scheme, QObject *parent = 0);
+  explicit SchemePlayer(DecayScheme scheme,
+                        double min_intensity,
+                        QObject *parent = 0);
 
   void setStyle(const QFont &fontfamily, unsigned int sizePx);
-  QGraphicsScene* levelPlot();
+  GraphicsScene* levelPlot();
 
   void setShadowEnabled(bool enable);
 
@@ -34,18 +37,18 @@ public:
 
   void clearSelection();
 
-  void set_transition_filter(Energy e);
-
-  std::set<Energy> selected_levels() const;
-  std::set<Energy> selected_parent_levels() const;
+  std::set<Energy> selected_levels(int level) const;
+  std::set<Energy> selected_parent_levels(int level) const;
   std::set<Energy> selected_transistions(int level) const;
 
-  void select_levels(const std::set<Energy>&);
-  void select_parent_levels(const std::set<Energy>&);
+  void select_levels(const std::set<Energy>&, int level=1);
+  void select_parent_levels(const std::set<Energy>&, int level=1);
   void select_transistions(const std::set<Energy>&, int level=1);
 
   bool parent_selected() const;
   bool daughter_selected() const;
+
+  void set_highlight_cascade(bool);
 
 signals:
   void enabledShadow(bool enable);
@@ -53,11 +56,12 @@ signals:
 
 private slots:
   void itemClicked(ClickableItem *item);
+  void backgroundClicked();
 
 private:
   DecayScheme scheme_;
 
-  QGraphicsScene *scene_ {nullptr};
+  GraphicsScene *scene_ {nullptr};
 
   SchemeVisualSettings visual_settings_;
 
@@ -67,10 +71,11 @@ private:
   std::map<Energy, LevelItem*> parent_levels_;
   std::list<TransitionItem*> transitions_;
 
-  std::set<Energy> selected_levels_;
-  std::set<Energy> selected_parent_levels_;
   bool parent_selected_ {false};
   bool daughter_selected_ {false};
+  bool highlight_cascade_ {false};
+
+  double min_intensity_;
 
   void alignGraphicsItems();
 
@@ -88,4 +93,6 @@ private:
   void deselect_levels();
   void deselect_nuclides();
   void deselect_gammas();
+
+  void highlight_coincidences();
 };

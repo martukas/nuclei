@@ -36,6 +36,7 @@ public:
   std::map<Energy, Level> levels() const;
   std::map<Energy, Transition> transitions() const;
   Transition nearest_transition(double goal) const;
+  std::set<Energy> coincidences(std::set<Energy> transitions) const;
   std::set<Energy> coincidences(Energy transition) const;
   std::set<Energy> upstream(Energy transition) const;
   std::set<Energy> downstream(Energy transition) const;
