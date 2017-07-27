@@ -96,6 +96,25 @@ Transition Nuclide::nearest_transition(double goal) const
   return Transition();
 }
 
+std::set<Energy> Nuclide::coincidences(std::set<Energy> transitions) const
+{
+  std::set<Energy> intersect;
+  if (transitions.size())
+  {
+    intersect = coincidences(*transitions.begin());
+    for (auto s : transitions)
+    {
+      auto s1 = coincidences(s);
+      auto s2 = intersect;
+      intersect.clear();
+      set_intersection(s1.begin(),s1.end(),s2.begin(),s2.end(),
+                        std::inserter(intersect,intersect.begin()));
+
+    }
+  }
+  return intersect;
+}
+
 std::set<Energy> Nuclide::coincidences(Energy transition) const
 {
   std::set<Energy> ret;

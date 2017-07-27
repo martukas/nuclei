@@ -33,11 +33,11 @@ NuclideItem::NuclideItem(const Nuclide &nuc, Type tp,
                          QGraphicsScene *scene)
   : ClickableItem(tp)
 {
-  if (nuc.empty())
-  {
-    t = ClickableItem::InvalidType;
-    return;
-  }
+//  if (nuc.empty())
+//  {
+//    t = ClickableItem::InvalidType;
+//    return;
+//  }
 
   if ((tp != ParentNuclideType) && (tp != DaughterNuclideType))
     return;
