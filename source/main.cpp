@@ -12,8 +12,7 @@ int main(int argc, char *argv[])
   qRegisterMetaTypeStreamOperators<ENSDFTreeItem>("ENSDFTreeItem");
 
   QApplication a(argc, argv);
-  QCoreApplication::setOrganizationName(QString::fromUtf8("Uni-Göttingen"));
-  QCoreApplication::setOrganizationDomain("physik.uni-goettingen.de");
+  QCoreApplication::setOrganizationName(QString::fromUtf8("ARL"));
   QCoreApplication::setApplicationName("Nuclei");
 
   int retcode = 0;
@@ -24,7 +23,8 @@ int main(int argc, char *argv[])
     retcode = a.exec();
   }
 
-  if (retcode == 6000) {
+  if (retcode == 6000)
+  {
     QProcess::startDetached(qApp->arguments()[0], qApp->arguments());
     return 0;
   }

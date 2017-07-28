@@ -15,12 +15,12 @@
 class LevelItem;
 class TransitionItem;
 
-class SchemePlayer : public QObject
+class SchemeGraphics : public QObject
 {
   Q_OBJECT
 public:
 
-  explicit SchemePlayer(DecayScheme scheme,
+  explicit SchemeGraphics(DecayScheme scheme,
                         double min_intensity,
                         QObject *parent = 0);
 
@@ -79,9 +79,12 @@ private:
 
   void alignGraphicsItems();
 
-  void addLevel(Level level, SchemeVisualSettings vis);
-  void addParentLevel(Level level, SchemeVisualSettings vis);
-  void addTransition(Transition transition, SchemeVisualSettings vis);
+  void addParent(Nuclide nuc);
+  void addDaughter(Nuclide nuc);
+  void addLevel(Level level);
+  void addParentLevel(Level level);
+  void addTransition(Transition transition);
+  void connectItem(ClickableItem* item);
 
   void clickedGamma(TransitionItem *g);
   void clickedParentLevel(LevelItem *e);

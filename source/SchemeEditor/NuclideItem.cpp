@@ -44,6 +44,10 @@ NuclideItem::NuclideItem(const Nuclide &nuc, Type tp,
 
   id_ = nuc.id();
   item = new ActiveGraphicsItemGroup(this);
+  item->setActiveColor(1, QColor(224, 186, 100, 180));
+  item->setActiveColor(2, QColor(64, 166, 255, 180));
+  item->setHoverColor(QColor(64, 166, 255, 100));
+  scene->addItem(item);
 
   double numberToNameDistance = 4.0;
 
@@ -53,14 +57,17 @@ NuclideItem::NuclideItem(const Nuclide &nuc, Type tp,
   QGraphicsSimpleTextItem *granuc = new QGraphicsSimpleTextItem(QString::fromStdString(nuc.id().element()), item);
   granuc->setFont(vis.nucFont);
   granuc->setBrush(QBrush(QColor(64, 166, 255)));
+  item->addToGroup(granuc);
 
   QGraphicsSimpleTextItem *graA = new QGraphicsSimpleTextItem(QString::number(nuc.id().A()), item);
   graA->setFont(vis.nucIndexFont);
   graA->setBrush(QBrush(QColor(64, 166, 255)));
+  item->addToGroup(graA);
 
   QGraphicsSimpleTextItem *graZ = new QGraphicsSimpleTextItem(QString::number(nuc.id().Z()), item);
   graZ->setFont(vis.nucIndexFont);
   graZ->setBrush(QBrush(QColor(64, 166, 255)));
+  item->addToGroup(graZ);
 
   double numberwidth
       = qMax(graA->boundingRect().width(),
@@ -71,6 +78,15 @@ NuclideItem::NuclideItem(const Nuclide &nuc, Type tp,
   graA->setPos(numberwidth - graA->boundingRect().width(), 0.0);
   graZ->setPos(numberwidth - graZ->boundingRect().width(), 1.2*nucIndexFontMetrics.ascent());
 
+  highlight_helper_
+      = new GraphicsHighlightItem(numberwidth - graA->boundingRect().width(),
+                                  0.2*nucIndexFontMetrics.ascent(),
+                                  numberwidth + numberToNameDistance + granuc->boundingRect().width(),
+                                  nucFontMetrics.height());
+  highlight_helper_->setOpacity(0.0);
+  item->addHighlightHelper(highlight_helper_);
+
+
   click_area_
       = new QGraphicsRectItem(numberwidth - graA->boundingRect().width(),
                               0.2*nucIndexFontMetrics.ascent(),
@@ -78,23 +94,10 @@ NuclideItem::NuclideItem(const Nuclide &nuc, Type tp,
                               nucFontMetrics.height());
   click_area_->setPen(Qt::NoPen);
   click_area_->setBrush(Qt::NoBrush);
-
-  highlight_helper_
-      = new GraphicsHighlightItem(numberwidth - graA->boundingRect().width(),
-                                  0.2*nucIndexFontMetrics.ascent(),
-                                  numberwidth + numberToNameDistance + granuc->boundingRect().width(),
-                                  nucFontMetrics.height());
-  item->setHoverColor(QColor(64, 166, 255, 100));
-  highlight_helper_->setOpacity(0.0);
-
+  item->addToGroup(click_area_);
 
   // added in the end to work around a bug in QGraphicsItemGroup:
   //   it does not update boundingRect if contents are moved after adding them
-  item->addHighlightHelper(highlight_helper_);
-  item->addToGroup(granuc);
-  item->addToGroup(graA);
-  item->addToGroup(graZ);
-  item->addToGroup(click_area_);
 
   if (tp == ParentNuclideType)
   {
@@ -108,6 +111,4 @@ NuclideItem::NuclideItem(const Nuclide &nuc, Type tp,
     vertical_arrow_->setPen(vis.feedArrowPen);
     scene->addItem(vertical_arrow_);
   }
-
-  scene->addItem(item);
 }

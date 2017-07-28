@@ -45,18 +45,22 @@ TransitionItem::TransitionItem(Transition transition,
   item = new ActiveGraphicsItemGroup(this);
   item->setActiveColor(1, QColor(224, 186, 100, 180));
   item->setActiveColor(2, QColor(64, 166, 255, 180));
+  scene->addItem(item);
 
   arrow_head_ = new QGraphicsPolygonItem(initArrowHead(arrowHeadWidth));
   arrow_head_->setBrush(QBrush(pen_.color()));
   arrow_head_->setPen(Qt::NoPen);
+  item->addToGroup(arrow_head_);
 
   arrow_base_ = new QGraphicsPolygonItem(initArrowBase(arrowBaseWidth));
   arrow_base_->setBrush(QBrush(pen_.color()));
   arrow_base_->setPen(Qt::NoPen);
   arrow_base_->setPos(0.0, 0.0);
+  item->addToGroup(arrow_base_);
 
   arrow_ = new QGraphicsLineItem;
   arrow_->setPen(pen_);
+  item->addToGroup(arrow_);
 
   QString intensstr;
   if (transition.intensity().defined())
@@ -77,25 +81,19 @@ TransitionItem::TransitionItem(Transition transition,
   min_x_distance_ = std::abs(textheight / std::sin(-textAngle/180.0*M_PI));
   text_->moveBy(0.5*textheight*std::sin(-textAngle/180.0*M_PI)
                 - 0.5*min_x_distance_, 0.0);
+  item->addToGroup(text_);
 
   click_area_ = new QGraphicsRectItem(-0.5*min_x_distance_, 0.0,
                                       min_x_distance_, 0.0);
   click_area_->setPen(Qt::NoPen);
   click_area_->setBrush(Qt::NoBrush);
+  item->addToGroup(click_area_);
 
   highlight_helper_
       = new GraphicsHighlightItem(
         -0.5*highlightWidth, 0.0,
         highlightWidth, 0.0);
-
   item->addHighlightHelper(highlight_helper_);
-  item->addToGroup(arrow_base_);
-  item->addToGroup(text_);
-  item->addToGroup(arrow_);
-  item->addToGroup(arrow_head_);
-  item->addToGroup(click_area_);
-
-  scene->addItem(item);
 
 //  updateArrow();
 }

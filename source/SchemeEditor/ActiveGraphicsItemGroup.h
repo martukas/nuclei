@@ -37,6 +37,8 @@ protected:
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent * event);
     virtual void mousePressEvent(QGraphicsSceneMouseEvent * event);
 
+    void setTextColor(QColor c);
+
 private:
     void showHighlighting();
     void hideHighlighting();
