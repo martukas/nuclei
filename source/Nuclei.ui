@@ -20,7 +20,7 @@
   <property name="dockNestingEnabled">
    <bool>true</bool>
   </property>
-  <widget class="QWidget" name="centralWidget">
+  <widget class="SchemeEditor" name="nuclideBrowser">
    <layout class="QVBoxLayout" name="verticalLayout_3">
     <property name="leftMargin">
      <number>0</number>
@@ -34,161 +34,8 @@
     <property name="bottomMargin">
      <number>0</number>
     </property>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QCheckBox" name="checkFilterTransition">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Filter transitions</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QDoubleSpinBox" name="doubleTargetTransition">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximum">
-         <double>99999.990000000005239</double>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>tolerance</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QDoubleSpinBox" name="doubleTransitionTolerance">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="value">
-         <double>10.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_3">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>minimum intensity</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QDoubleSpinBox" name="doubleMinIntensity">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="decimals">
-         <number>3</number>
-        </property>
-        <property name="maximum">
-         <double>100.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.050000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QSplitter" name="splitter">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <widget class="QGraphicsView" name="decayView">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>1</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-        </widget>
-        <widget class="QTextBrowser" name="textBrowser">
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>17</pointsize>
-          </font>
-         </property>
-        </widget>
-       </widget>
-      </item>
-     </layout>
-    </item>
    </layout>
   </widget>
-  <widget class="QToolBar" name="mainToolBar">
-   <property name="windowTitle">
-    <string>Common Tool Bar</string>
-   </property>
-   <property name="iconSize">
-    <size>
-     <width>32</width>
-     <height>32</height>
-    </size>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionPDF_Export"/>
-   <addaction name="actionSVG_Export"/>
-   <addaction name="separator"/>
-   <addaction name="actionShow_all"/>
-   <addaction name="separator"/>
-  </widget>
-  <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="decaySelectorDock">
    <property name="allowedAreas">
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
@@ -256,6 +103,23 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QToolButton" name="decayOptionsButton">
+         <property name="toolTip">
+          <string>Collapse Tree</string>
+         </property>
+         <property name="text">
+          <string>C</string>
+         </property>
+         <property name="icon">
+          <iconset resource="resources/nuclei.qrc">
+           <normaloff>:/toolbar/configure.png</normaloff>:/toolbar/configure.png</iconset>
+         </property>
+         <property name="autoRaise">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
@@ -274,64 +138,6 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QToolBar" name="extrasBar">
-   <property name="windowTitle">
-    <string>About Tool Bar</string>
-   </property>
-   <property name="iconSize">
-    <size>
-     <width>32</width>
-     <height>32</height>
-    </size>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionPreferences"/>
-   <addaction name="actionMerge_adopted"/>
-  </widget>
-  <action name="actionShow_all">
-   <property name="icon">
-    <iconset resource="resources/nuclei.qrc">
-     <normaloff>:/toolbar/zoom-fit-best.png</normaloff>:/toolbar/zoom-fit-best.png</iconset>
-   </property>
-   <property name="text">
-    <string>Show all</string>
-   </property>
-   <property name="toolTip">
-    <string>Show all</string>
-   </property>
-  </action>
-  <action name="actionSVG_Export">
-   <property name="icon">
-    <iconset resource="resources/nuclei.qrc">
-     <normaloff>:/toolbar/image-svg+xml.png</normaloff>:/toolbar/image-svg+xml.png</iconset>
-   </property>
-   <property name="text">
-    <string>SVG Export</string>
-   </property>
-   <property name="toolTip">
-    <string>Export as SVG File</string>
-   </property>
-  </action>
-  <action name="actionPDF_Export">
-   <property name="icon">
-    <iconset resource="resources/nuclei.qrc">
-     <normaloff>:/toolbar/application-pdf.png</normaloff>:/toolbar/application-pdf.png</iconset>
-   </property>
-   <property name="text">
-    <string>PDF Export</string>
-   </property>
-   <property name="toolTip">
-    <string>Export as PDF File</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+P</string>
-   </property>
-  </action>
   <action name="actionPreferences">
    <property name="icon">
     <iconset resource="resources/nuclei.qrc">
@@ -342,21 +148,6 @@
    </property>
    <property name="toolTip">
     <string>Change application preferences</string>
-   </property>
-  </action>
-  <action name="actionMerge_adopted">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="resources/nuclei.qrc">
-     <normaloff>:/toolbar/checkbox.png</normaloff>:/toolbar/checkbox.png</iconset>
-   </property>
-   <property name="text">
-    <string>Merge adopted</string>
-   </property>
-   <property name="toolTip">
-    <string>Merge adopted levels info</string>
    </property>
   </action>
  </widget>
@@ -371,6 +162,12 @@
    <class>TreeView</class>
    <extends>QTreeView</extends>
    <header>TreeView.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SchemeEditor</class>
+   <extends>QWidget</extends>
+   <header>SchemeEditor.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

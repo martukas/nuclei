@@ -176,12 +176,16 @@ void ActiveGraphicsItemGroup::showHighlighting()
     highlight_helper_->show();
     shadow_->setEnabled(true && shadow_enabled_);
   }
+
+  if (highlighted_ && active_colors_.count(highlighted_))
+    setTextColor(active_colors_[highlighted_]);
 }
 
 void ActiveGraphicsItemGroup::hideHighlighting()
 {
   setZValue(0.0);
-  if (animate_) {
+  if (animate_)
+  {
     animation_group_->stop();
     if (highlight_helper_ && !highlight_animation_->targetObject())
       highlight_animation_->setTargetObject(highlight_helper_);
@@ -195,6 +199,8 @@ void ActiveGraphicsItemGroup::hideHighlighting()
     highlight_helper_->hide();
     shadow_->setEnabled(false);
   }
+
+  setTextColor(Qt::black);
 }
 
 void ActiveGraphicsItemGroup::updateHighlightColor()
@@ -214,6 +220,20 @@ void ActiveGraphicsItemGroup::updateHighlightColor()
   shadow_->setColor(c);
   if (highlight_helper_)
     highlight_helper_->setBrush(c);
+
+  if (highlighted_ && active_colors_.count(highlighted_))
+    setTextColor(active_colors_[highlighted_]);
+}
+
+void ActiveGraphicsItemGroup::setTextColor(QColor c)
+{
+  for (auto i : childItems())
+    if (i->type() == QGraphicsSimpleTextItem::Type)
+    {
+      QGraphicsSimpleTextItem *txt
+          = qgraphicsitem_cast<QGraphicsSimpleTextItem*>(i);
+      txt->setBrush(c);
+    }
 }
 
 void ActiveGraphicsItemGroup::setShadowEnabled(bool enable)

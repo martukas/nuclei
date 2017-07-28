@@ -6,64 +6,22 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>436</width>
-    <height>362</height>
+    <width>335</width>
+    <height>279</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Preferences</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="nuclei.qrc">
+   <iconset resource="resources/nuclei.qrc">
     <normaloff>:/configure.png</normaloff>:/configure.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QGroupBox" name="fontGroupBox">
-     <property name="title">
-      <string>Font Settings</string>
-     </property>
-     <layout class="QFormLayout" name="formLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="fontFamilyLabel">
-        <property name="text">
-         <string>Font Family:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QFontComboBox" name="fontFamily"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="fontSizeLabel">
-        <property name="toolTip">
-         <string>Primary font size in units of the primary line width</string>
-        </property>
-        <property name="text">
-         <string>Font Size:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="fontSize">
-        <property name="toolTip">
-         <string>Primary font size in units of the primary line width</string>
-        </property>
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="value">
-         <number>14</number>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QGroupBox" name="matchingGroupBox">
      <property name="title">
-      <string>Energy Matching</string>
+      <string>Scheme construction</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
       <property name="fieldGrowthPolicy">
@@ -121,6 +79,13 @@
         </property>
        </widget>
       </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="checkMergeAdopted">
+        <property name="text">
+         <string>Merge adopted levels data</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -164,14 +129,14 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Close</set>
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
  <resources>
-  <include location="nuclei.qrc"/>
+  <include location="resources/nuclei.qrc"/>
  </resources>
  <connections>
   <connection>
