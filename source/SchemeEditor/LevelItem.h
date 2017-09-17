@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ClickableItem.h"
+#include "SchemeVisualSettings.h"
 #include "Level.h"
 
 class ActiveGraphicsItemGroup;
