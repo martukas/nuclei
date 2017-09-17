@@ -5,6 +5,7 @@
 #include <QFont>
 #include <QPair>
 #include "ClickableItem.h"
+#include "SchemeVisualSettings.h"
 #include "Nuclide.h"
 
 class QGraphicsItem;

@@ -4,6 +4,7 @@
 #include <QFont>
 #include <QPen>
 #include "ClickableItem.h"
+#include "SchemeVisualSettings.h"
 #include "Transition.h"
 
 class QGraphicsItem;
