@@ -154,9 +154,9 @@ void SchemeGraphics::alignGraphicsItems()
   if (!scheme_.valid())
     return;
 
-  QFontMetrics stdFontMetrics(visual_settings_.stdFont);
-  QFontMetrics stdBoldFontMetrics(visual_settings_.stdBoldFont);
-  QFontMetrics parentHlFontMetrics(visual_settings_.parentHlFont);
+  QFontMetrics stdFontMetrics(visual_settings_.stdFont());
+  QFontMetrics stdBoldFontMetrics(visual_settings_.stdBoldFont());
+  QFontMetrics parentHlFontMetrics(visual_settings_.parentHlFont());
   //  QFontMetrics feedIntensityFontMetrics(feedIntensityFont);
 
   // determine size information
@@ -453,25 +453,23 @@ void SchemeGraphics::clickedDaughterLevel(LevelItem *e)
 
 void SchemeGraphics::clickedParent()
 {
-  if (parent_selected_)
-    parent_selected_ = false;
-  else
-  {
-    deselect_all();
-    parent_selected_ = true;
-  }
+  if (!parent_)
+    return;
+
+  deselect_all();
+  parent_->graphicsItem()->setHighlighted(1);
+  parent_selected_ = true;
   triggerDataUpdate();
 }
 
 void SchemeGraphics::clickedDaughter()
 {
-  if (daughter_selected_)
-    daughter_selected_ = false;
-  else
-  {
-    deselect_all();
-    daughter_selected_ = true;
-  }
+  if (!daughter_)
+    return;
+
+  deselect_all();
+  daughter_->graphicsItem()->setHighlighted(1);
+  daughter_selected_ = true;
   triggerDataUpdate();
 }
 
@@ -492,6 +490,10 @@ void SchemeGraphics::deselect_levels()
 
 void SchemeGraphics::deselect_nuclides()
 {
+  if (daughter_)
+    daughter_->graphicsItem()->setHighlighted(0);
+  if (parent_)
+    parent_->graphicsItem()->setHighlighted(0);
   daughter_selected_ = false;
   parent_selected_ = false;
 }
@@ -534,9 +536,9 @@ void SchemeGraphics::triggerDataUpdate()
   emit selectionChanged();
 }
 
-void SchemeGraphics::setStyle(const QFont &fontfamily, unsigned int sizePx)
+void SchemeGraphics::setStyle(const SchemeVisualSettings &vis)
 {
-  visual_settings_.setStyle(fontfamily, sizePx);
+  visual_settings_ = vis;
 }
 
 void SchemeGraphics::set_highlight_cascade(bool h)

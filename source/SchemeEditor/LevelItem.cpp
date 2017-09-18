@@ -53,7 +53,7 @@ void LevelItem::set_funky_position(double left, double right,
                                    double y,
                                    SchemeVisualSettings vis)
 {
-  QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
+  QFontMetrics stdBoldFontMetrics(vis.stdBoldFont());
   item->removeFromGroup(click_area_);
   item->removeFromGroup(line_);
   item->removeHighlightHelper(highlight_helper_);
@@ -108,11 +108,13 @@ LevelItem::LevelItem(Level level, Type type,
   t = type;
   energy_ = level.energy();
 
-  QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
+  QFontMetrics stdBoldFontMetrics(vis.stdBoldFont());
 
   item = new ActiveGraphicsItemGroup(this);
-  item->setActiveColor(1, QColor(224, 186, 100, 180));
-  item->setActiveColor(2, QColor(64, 166, 255, 180));
+  item->setActiveColor(0, vis.inactive_color());
+  item->setActiveColor(1, vis.selected_color());
+  item->setActiveColor(2, vis.implicated_color());
+  item->setHoverColor(vis.hover_color());
 
   line_ = new QGraphicsLineItem(-vis.outerGammaMargin, 0.0, vis.outerGammaMargin, 0.0, item);
   line_->setPen(vis.levelPen);
@@ -137,12 +139,12 @@ LevelItem::LevelItem(Level level, Type type,
 
   QString etext = QString::fromStdString(energy_.to_string());
   etext_ = new QGraphicsSimpleTextItem(etext, item);
-  etext_->setFont(vis.stdBoldFont);
+  etext_->setFont(vis.stdBoldFont());
   etext_->setPos(0.0, -stdBoldFontMetrics.height());
 
   QString spintext = QString::fromStdString(level.spins().to_pretty_string());
   spintext_ = new QGraphicsSimpleTextItem(spintext, item);
-  spintext_->setFont(vis.stdBoldFont);
+  spintext_->setFont(vis.stdBoldFont());
   spintext_->setPos(0.0, -stdBoldFontMetrics.height());
 
   if (vis.parentpos != NoParent)
@@ -150,7 +152,7 @@ LevelItem::LevelItem(Level level, Type type,
     QString hltext
         = QString::fromStdString(level.halfLife().preferred_units().to_string());
     hltext_ = new QGraphicsSimpleTextItem(hltext, item);
-    hltext_->setFont(vis.stdFont);
+    hltext_->setFont(vis.stdFont());
     hltext_->setPos(0.0, -0.5*stdBoldFontMetrics.height());
     item->addToGroup(hltext_);
   }
@@ -183,7 +185,7 @@ LevelItem::LevelItem(Level level, Type type,
     feedintens_ = new QGraphicsTextItem;
     feedintens_->setHtml(QString("%1 %").arg(QString::fromStdString(level.normalizedFeedIntensity().to_markup())));
     feedintens_->document()->setDocumentMargin(0);
-    feedintens_->setFont(vis.feedIntensityFont);
+    feedintens_->setFont(vis.feedIntensityFont());
     scene->addItem(feedintens_);
   }
 }
@@ -194,8 +196,8 @@ double LevelItem::align(double leftlinelength,
                         double arrowright,
                         SchemeVisualSettings vis)
 {
-  QFontMetrics stdFontMetrics(vis.stdFont);
-  QFontMetrics stdBoldFontMetrics(vis.stdBoldFont);
+  QFontMetrics stdFontMetrics(vis.stdFont());
+  QFontMetrics stdBoldFontMetrics(vis.stdBoldFont());
 
   set_funky_position(-leftlinelength, rightlinelength, 0, vis);
 

@@ -24,7 +24,8 @@ public:
                         double min_intensity,
                         QObject *parent = 0);
 
-  void setStyle(const QFont &fontfamily, unsigned int sizePx);
+  void setStyle(const SchemeVisualSettings& vis);
+
   GraphicsScene* levelPlot();
 
   void setShadowEnabled(bool enable);

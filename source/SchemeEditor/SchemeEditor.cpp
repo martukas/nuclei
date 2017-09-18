@@ -1,6 +1,7 @@
 #include "SchemeEditor.h"
 #include "ui_SchemeEditor.h"
-#include "ui_SchemeEditorPrefs.h"
+
+#include "SchemeEditorPrefs.h"
 
 #include <QSettings>
 #include <QSvgGenerator>
@@ -14,12 +15,8 @@
 SchemeEditor::SchemeEditor(QWidget *parent)
   : QWidget(parent)
   , ui(new Ui::SchemeEditor)
-  , prefsDialog(new QDialog(this))
-  , prefsDialogUi(new Ui::SchemeEditorPrefs)
 {
   ui->setupUi(this);
-
-  prefsDialogUi->setupUi(prefsDialog);
 
   ui->decayView->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
   ui->decayView->setInteractive(true);
@@ -35,8 +32,6 @@ SchemeEditor::SchemeEditor(QWidget *parent)
   QSettings s;
   s.beginGroup("SchemeEditor");
   ui->splitter->restoreState(s.value("splitter").toByteArray());
-  prefsDialogUi->fontFamily->setCurrentFont(QFont(s.value("fontFamily", QFont().family()).toString()));
-  prefsDialogUi->fontSize->setValue(s.value("fontSize", 14).toInt());
 }
 
 SchemeEditor::~SchemeEditor()
@@ -44,8 +39,6 @@ SchemeEditor::~SchemeEditor()
   QSettings s;
   s.beginGroup("SchemeEditor");
   s.setValue("splitter", ui->splitter->saveState());
-
-  delete prefsDialogUi;
   delete ui;
 }
 
@@ -125,17 +118,15 @@ void SchemeEditor::loadDecay(DecayScheme decay)
 void SchemeEditor::refresh_scheme()
 {
   QSettings s;
-  s.beginGroup("SchemeEditor");
-  QFont font = QFont(s.value("fontFamily", QFont().family()).toString());
-  int fontsize = s.value("fontSize", 14).toInt();
-  s.endGroup();
+  auto prefs = SchemeVisualSettings::load(s);
 
   decay_viewer_ = new SchemeGraphics(current_scheme_,
                                    ui->doubleMinIntensity->value(), this);
 
   connect(decay_viewer_.data(), SIGNAL(selectionChanged()),
           this, SLOT(playerSelectionChanged()));
-  decay_viewer_->setStyle(font, fontsize);
+  decay_viewer_->setStyle(prefs);
+  decay_viewer_->set_highlight_cascade(ui->checkFilterTransition->isChecked());
   QGraphicsScene *scene = decay_viewer_->levelPlot();
   ui->decayView->setScene(scene);
   ui->decayView->setSceneRect(scene->sceneRect().adjusted(-20, -20, 20, 20));
@@ -251,14 +242,13 @@ void SchemeEditor::on_doubleMinIntensity_editingFinished()
 
 void SchemeEditor::on_pushPrefs_clicked()
 {
-  if (prefsDialog->exec() == QDialog::Accepted)
+  QSettings s;
+  auto prefs = SchemeVisualSettings::load(s);
+
+  auto prefsDalog = new SchemeEditorPrefs(prefs, this);
+  if (prefsDalog->exec() == QDialog::Accepted)
   {
-    DBG << "Accepted";
-    QSettings s;
-    s.beginGroup("SchemeEditor");
-    s.setValue("fontFamily", prefsDialogUi->fontFamily->currentFont().family());
-    s.setValue("fontSize", prefsDialogUi->fontSize->value());
-    s.endGroup();
+    prefsDalog->prefs().save(s);
     refresh_scheme();
   }
 }

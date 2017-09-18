@@ -44,53 +44,54 @@ NuclideItem::NuclideItem(const Nuclide &nuc, Type tp,
 
   id_ = nuc.id();
   item = new ActiveGraphicsItemGroup(this);
-  item->setActiveColor(1, QColor(224, 186, 100, 180));
-  item->setActiveColor(2, QColor(64, 166, 255, 180));
-  item->setHoverColor(QColor(64, 166, 255, 100));
+  item->setActiveColor(0, vis.nuclide_color());
+  item->setActiveColor(1, vis.selected_color());
+  item->setActiveColor(2, vis.implicated_color());
+  item->setHoverColor(vis.hover_color());
   scene->addItem(item);
 
   double numberToNameDistance = 4.0;
 
-  QFontMetrics nucFontMetrics(vis.nucFont);
-  QFontMetrics nucIndexFontMetrics(vis.nucIndexFont);
+  QFontMetrics nucFontMetrics(vis.nucFont());
+  QFontMetrics nucIndexFontMetrics(vis.nucIndexFont());
 
-  QGraphicsSimpleTextItem *granuc = new QGraphicsSimpleTextItem(QString::fromStdString(nuc.id().element()), item);
-  granuc->setFont(vis.nucFont);
-  granuc->setBrush(QBrush(QColor(64, 166, 255)));
-  item->addToGroup(granuc);
+  auto symbol = new QGraphicsSimpleTextItem(QString::fromStdString(nuc.id().element()), item);
+  symbol->setFont(vis.nucFont());
+  symbol->setBrush(QBrush(vis.nuclide_color()));
+  item->addToGroup(symbol);
 
-  QGraphicsSimpleTextItem *graA = new QGraphicsSimpleTextItem(QString::number(nuc.id().A()), item);
-  graA->setFont(vis.nucIndexFont);
-  graA->setBrush(QBrush(QColor(64, 166, 255)));
-  item->addToGroup(graA);
+  auto A_text = new QGraphicsSimpleTextItem(QString::number(nuc.id().A()), item);
+  A_text->setFont(vis.nucIndexFont());
+  A_text->setBrush(QBrush(vis.nuclide_color()));
+  item->addToGroup(A_text);
 
-  QGraphicsSimpleTextItem *graZ = new QGraphicsSimpleTextItem(QString::number(nuc.id().Z()), item);
-  graZ->setFont(vis.nucIndexFont);
-  graZ->setBrush(QBrush(QColor(64, 166, 255)));
-  item->addToGroup(graZ);
+  auto Z_text = new QGraphicsSimpleTextItem(QString::number(nuc.id().Z()), item);
+  Z_text->setFont(vis.nucIndexFont());
+  Z_text->setBrush(QBrush(vis.nuclide_color()));
+  item->addToGroup(Z_text);
 
   double numberwidth
-      = qMax(graA->boundingRect().width(),
-             graZ->boundingRect().width());
+      = qMax(A_text->boundingRect().width(),
+             Z_text->boundingRect().width());
 
-  granuc->setPos(numberwidth + numberToNameDistance,
+  symbol->setPos(numberwidth + numberToNameDistance,
                  0.2*nucIndexFontMetrics.ascent());
-  graA->setPos(numberwidth - graA->boundingRect().width(), 0.0);
-  graZ->setPos(numberwidth - graZ->boundingRect().width(), 1.2*nucIndexFontMetrics.ascent());
+  A_text->setPos(numberwidth - A_text->boundingRect().width(), 0.0);
+  Z_text->setPos(numberwidth - Z_text->boundingRect().width(), 1.2*nucIndexFontMetrics.ascent());
 
   highlight_helper_
-      = new GraphicsHighlightItem(numberwidth - graA->boundingRect().width(),
+      = new GraphicsHighlightItem(numberwidth - A_text->boundingRect().width(),
                                   0.2*nucIndexFontMetrics.ascent(),
-                                  numberwidth + numberToNameDistance + granuc->boundingRect().width(),
+                                  numberwidth + numberToNameDistance + symbol->boundingRect().width(),
                                   nucFontMetrics.height());
   highlight_helper_->setOpacity(0.0);
   item->addHighlightHelper(highlight_helper_);
 
 
   click_area_
-      = new QGraphicsRectItem(numberwidth - graA->boundingRect().width(),
+      = new QGraphicsRectItem(numberwidth - A_text->boundingRect().width(),
                               0.2*nucIndexFontMetrics.ascent(),
-                              numberwidth + numberToNameDistance + granuc->boundingRect().width(),
+                              numberwidth + numberToNameDistance + symbol->boundingRect().width(),
                               nucFontMetrics.height());
   click_area_->setPen(Qt::NoPen);
   click_area_->setBrush(Qt::NoBrush);
@@ -103,7 +104,7 @@ NuclideItem::NuclideItem(const Nuclide &nuc, Type tp,
   {
     // create half-life label
     halflife_text_ = new QGraphicsSimpleTextItem(QString::fromStdString(nuc.halfLifeAsText()));
-    halflife_text_->setFont(vis.parentHlFont);
+    halflife_text_->setFont(vis.parentHlFont());
     scene->addItem(halflife_text_);
 
     // create vertical arrow component

@@ -43,8 +43,10 @@ TransitionItem::TransitionItem(Transition transition,
 
   // group origin is set to the start level!
   item = new ActiveGraphicsItemGroup(this);
-  item->setActiveColor(1, QColor(224, 186, 100, 180));
-  item->setActiveColor(2, QColor(64, 166, 255, 180));
+  item->setActiveColor(0, vis.inactive_color());
+  item->setActiveColor(1, vis.selected_color());
+  item->setActiveColor(2, vis.implicated_color());
+  item->setHoverColor(vis.hover_color());
   scene->addItem(item);
 
   arrow_head_ = new QGraphicsPolygonItem(initArrowHead(arrowHeadWidth));
@@ -70,7 +72,7 @@ TransitionItem::TransitionItem(Transition transition,
       .arg(intensstr).arg(QString::fromStdString(transition.energy().to_string()))
       .arg(QString::fromStdString(transition.multipolarity()));
   text_ = new QGraphicsTextItem;
-  text_->setFont(vis.gammaFont);
+  text_->setFont(vis.gammaFont());
   text_->document()->setDocumentMargin(0.0);
   text_->setHtml(textstr);
 //  new QGraphicsRectItem(text_->boundingRect(), text_);
