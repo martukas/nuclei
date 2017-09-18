@@ -20,8 +20,6 @@ ActiveGraphicsItemGroup::ActiveGraphicsItemGroup(ClickableItem *associatedItem)
   shadow_->setBlurRadius(15.0);
   shadow_->setOffset(QPointF(0.0, 0.0));
 
-  hover_color_ = QColor(178, 223, 150, 180);
-
   setGraphicsEffect(shadow_);
   setAcceptHoverEvents(true);
 
@@ -200,7 +198,11 @@ void ActiveGraphicsItemGroup::hideHighlighting()
     shadow_->setEnabled(false);
   }
 
-  setTextColor(Qt::black);
+
+  if (active_colors_.count(0))
+    setTextColor(active_colors_[0]);
+  else
+    setTextColor(Qt::black);
 }
 
 void ActiveGraphicsItemGroup::updateHighlightColor()

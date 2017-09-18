@@ -7,7 +7,6 @@
 namespace Ui
 {
 class SchemeEditor;
-class SchemeEditorPrefs;
 }
 
 class SchemeEditor : public QWidget
@@ -34,9 +33,6 @@ private slots:
 private:
 
   Ui::SchemeEditor *ui {nullptr};
-
-  QDialog *prefsDialog {nullptr};
-  Ui::SchemeEditorPrefs *prefsDialogUi {nullptr};
 
   QPointer<SchemeGraphics> decay_viewer_;
   DecayScheme current_scheme_;
