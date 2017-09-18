@@ -29,11 +29,11 @@ SchemeGraphics::SchemeGraphics(DecayScheme scheme, double min_intensity, QObject
   // on the right side (EC, beta+, alpha) or not at all (isomeric)
   if (scheme_.decay_info().mode.isomeric() ||
       !scheme_.decay_info().valid())
-    visual_settings_.parentpos = NoParent;
+    parentpos_ = NoParent;
   else if (scheme_.decay_info().mode.beta_minus())
-    visual_settings_.parentpos = LeftParent;
+    parentpos_ = LeftParent;
   else
-    visual_settings_.parentpos = RightParent;
+    parentpos_ = RightParent;
 
   //  DBG << "Creating scheme player for:\n" << scheme_.to_string();
 }
@@ -69,7 +69,7 @@ GraphicsScene *SchemeGraphics::levelPlot()
 
   addDaughter(scheme_.daughterNuclide());
 
-  if (visual_settings_.parentpos != NoParent)
+  if (parentpos_ != NoParent)
     addParent(scheme_.parentNuclide());
 
   alignGraphicsItems();
@@ -79,11 +79,8 @@ GraphicsScene *SchemeGraphics::levelPlot()
 
 void SchemeGraphics::addParent(Nuclide nuc)
 {
-  auto vis = visual_settings_;
-  vis.parentpos = NoParent;
-
   parent_ = new NuclideItem(nuc, ClickableItem::ParentNuclideType,
-                            vis, scene_);
+                            visual_settings_, scene_);
   connectItem(parent_);
 
   for (auto &level : nuc.levels())
@@ -92,11 +89,8 @@ void SchemeGraphics::addParent(Nuclide nuc)
 
 void SchemeGraphics::addParentLevel(Level level)
 {
-  auto vis = visual_settings_;
-  vis.parentpos = NoParent;
-  LevelItem *levrend = new LevelItem(level,
-                                     LevelItem::ParentLevelType,
-                                     vis, scene_);
+  LevelItem *levrend = new LevelItem(level, LevelItem::ParentLevelType,
+                                     NoParent, visual_settings_, scene_);
   connectItem(levrend);
   parent_levels_[level.energy()] = levrend;
 }
@@ -124,9 +118,8 @@ void SchemeGraphics::addDaughter(Nuclide nuc)
 
 void SchemeGraphics::addLevel(Level level)
 {
-  LevelItem *levrend = new LevelItem(level,
-                                     LevelItem::DaughterLevelType,
-                                     visual_settings_, scene_);
+  LevelItem *levrend = new LevelItem(level, LevelItem::DaughterLevelType,
+                                     parentpos_, visual_settings_, scene_);
   connectItem(levrend);
   levels_[level.energy()] = levrend;
 }
@@ -242,7 +235,7 @@ void SchemeGraphics::alignGraphicsItems()
 
   // determine line length for parent levels
   double pNucLineLength = visual_settings_.parentNuclideLevelLineLength;
-  if (parent_ && (visual_settings_.parentpos != NoParent))
+  if (parent_ && (parentpos_ != NoParent))
   {
     pNucLineLength
         = qMax(visual_settings_.parentNuclideLevelLineLength,
@@ -257,7 +250,7 @@ void SchemeGraphics::alignGraphicsItems()
 
   // determine line length for feeding arrows
   double arrowLineLength = visual_settings_.feedingArrowLineLength;
-  if (visual_settings_.parentpos != NoParent)
+  if (parentpos_ != NoParent)
     for (auto level : levels_)
       arrowLineLength = qMax(arrowLineLength,
                              level.second->feed_intensity_width()
@@ -273,12 +266,12 @@ void SchemeGraphics::alignGraphicsItems()
       + 0.5*gammaspace;
 
   // calculate start and end points of parent level lines
-  double arrowleft = std::floor((visual_settings_.parentpos == RightParent) ? rightlinelength : -leftlinelength - arrowLineLength - visual_settings_.parentNuclideLevelLineExtraLength) - 0.5*visual_settings_.feedArrowPen.widthF();
-  double arrowright = std::ceil((visual_settings_.parentpos == RightParent) ? rightlinelength + arrowLineLength + visual_settings_.parentNuclideLevelLineExtraLength : -leftlinelength) + 0.5*visual_settings_.feedArrowPen.widthF();
-  double activeleft = std::floor((visual_settings_.parentpos == RightParent) ? arrowleft + arrowLineLength - pNucLineLength : arrowleft);
-  double activeright = std::ceil((visual_settings_.parentpos == RightParent) ? arrowright : arrowright - arrowLineLength + pNucLineLength);
-  double normalleft = std::floor((visual_settings_.parentpos == RightParent) ? activeleft : activeleft + visual_settings_.parentNuclideLevelLineExtraLength);
-  double normalright = std::ceil((visual_settings_.parentpos == RightParent) ? activeright - visual_settings_.parentNuclideLevelLineExtraLength : activeright);
+  double arrowleft = std::floor((parentpos_ == RightParent) ? rightlinelength : -leftlinelength - arrowLineLength - visual_settings_.parentNuclideLevelLineExtraLength) - 0.5*visual_settings_.feedArrowPen.widthF();
+  double arrowright = std::ceil((parentpos_ == RightParent) ? rightlinelength + arrowLineLength + visual_settings_.parentNuclideLevelLineExtraLength : -leftlinelength) + 0.5*visual_settings_.feedArrowPen.widthF();
+  double activeleft = std::floor((parentpos_ == RightParent) ? arrowleft + arrowLineLength - pNucLineLength : arrowleft);
+  double activeright = std::ceil((parentpos_ == RightParent) ? arrowright : arrowright - arrowLineLength + pNucLineLength);
+  double normalleft = std::floor((parentpos_ == RightParent) ? activeleft : activeleft + visual_settings_.parentNuclideLevelLineExtraLength);
+  double normalright = std::ceil((parentpos_ == RightParent) ? activeright - visual_settings_.parentNuclideLevelLineExtraLength : activeright);
 
   // set level positions and sizes
   double arrowVEnd = std::numeric_limits<double>::quiet_NaN();
@@ -287,7 +280,7 @@ void SchemeGraphics::alignGraphicsItems()
     double newVEnd
         = level.second->align(leftlinelength, rightlinelength,
                               arrowleft, arrowright,
-                              visual_settings_);
+                              parentpos_, visual_settings_);
     if (boost::math::isnan(arrowVEnd) && !boost::math::isnan(newVEnd))
       arrowVEnd = newVEnd;
   }
@@ -298,7 +291,7 @@ void SchemeGraphics::alignGraphicsItems()
                                       0.3*daughter_->graphicsItem()->boundingRect().height());
 
   // set position of parent nuclide
-  if (parent_ && (visual_settings_.parentpos != NoParent))
+  if (parent_ && (parentpos_ != NoParent))
   {
     double parentY = std::numeric_limits<double>::quiet_NaN();
     if (!levels_.empty())
@@ -337,7 +330,7 @@ void SchemeGraphics::alignGraphicsItems()
 
     double arrowVStart = topMostLevel -
         0.5 * visual_settings_.stableLevelPen.widthF();
-    double arrowX = (visual_settings_.parentpos == RightParent)
+    double arrowX = (parentpos_ == RightParent)
         ? activeright : activeleft;
     parent_->position_arrow(arrowX, arrowVStart, arrowVEnd);
     parent_->position_text(parentcenter,

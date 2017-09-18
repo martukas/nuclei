@@ -106,7 +106,7 @@
        <item>
         <widget class="QToolButton" name="decayOptionsButton">
          <property name="toolTip">
-          <string>Collapse Tree</string>
+          <string>ENSDF Settings</string>
          </property>
          <property name="text">
           <string>C</string>
