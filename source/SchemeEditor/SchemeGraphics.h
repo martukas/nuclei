@@ -65,6 +65,7 @@ private:
   GraphicsScene *scene_ {nullptr};
 
   SchemeVisualSettings visual_settings_;
+  ParentPosition parentpos_ {NoParent};
 
   NuclideItem* parent_ {nullptr};
   NuclideItem* daughter_ {nullptr};

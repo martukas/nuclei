@@ -18,13 +18,14 @@ class LevelItem : public ClickableItem
 {
 public:
   LevelItem() {}
-  LevelItem(Level level, Type type,
+  LevelItem(Level level, Type type, ParentPosition parentpos,
             SchemeVisualSettings vis,
             QGraphicsScene *scene);
 
   //returns feeding arrow height, if any
   double align(double leftlinelength, double rightlinelength,
                double arrowleft, double arrowright,
+               ParentPosition parentpos,
                SchemeVisualSettings vis);
 
   Energy energy() const;

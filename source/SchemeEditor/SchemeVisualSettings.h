@@ -60,7 +60,7 @@ struct SchemeVisualSettings
     double parentNuclideToEnergyLevelsDistance {30.0};
     double highlightWidth {5.0};
 
-    ParentPosition parentpos {NoParent};
+//    ParentPosition parentpos {NoParent};
 
   private:
 

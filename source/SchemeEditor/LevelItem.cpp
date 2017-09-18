@@ -97,7 +97,7 @@ double LevelItem::above_ypos(double offset)
   return std::floor(ypos_ - offset) + 0.5 * line_->pen().widthF();
 }
 
-LevelItem::LevelItem(Level level, Type type,
+LevelItem::LevelItem(Level level, Type type, ParentPosition parentpos,
                      SchemeVisualSettings vis,
                      QGraphicsScene *scene)
   : LevelItem()
@@ -147,7 +147,7 @@ LevelItem::LevelItem(Level level, Type type,
   spintext_->setFont(vis.stdBoldFont());
   spintext_->setPos(0.0, -stdBoldFontMetrics.height());
 
-  if (vis.parentpos != NoParent)
+  if (parentpos != NoParent)
   {
     QString hltext
         = QString::fromStdString(level.halfLife().preferred_units().to_string());
@@ -175,8 +175,8 @@ LevelItem::LevelItem(Level level, Type type,
     // create arrow head
     QPolygonF arrowpol;
     arrowpol << QPointF(0.0, 0.0);
-    arrowpol << QPointF((vis.parentpos == RightParent ? 1.0 : -1.0) * vis.feedingArrowHeadLength, 0.5*vis.feedingArrowHeadWidth);
-    arrowpol << QPointF((vis.parentpos == RightParent ? 1.0 : -1.0) * vis.feedingArrowHeadLength, -0.5*vis.feedingArrowHeadWidth);
+    arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * vis.feedingArrowHeadLength, 0.5*vis.feedingArrowHeadWidth);
+    arrowpol << QPointF((parentpos == RightParent ? 1.0 : -1.0) * vis.feedingArrowHeadLength, -0.5*vis.feedingArrowHeadWidth);
     arrowhead_ = new QGraphicsPolygonItem(arrowpol);
     arrowhead_->setBrush(QColor(feedarrow_->pen().color()));
     arrowhead_->setPen(Qt::NoPen);
@@ -194,6 +194,7 @@ double LevelItem::align(double leftlinelength,
                         double rightlinelength,
                         double arrowleft,
                         double arrowright,
+                        ParentPosition parentpos,
                         SchemeVisualSettings vis)
 {
   QFontMetrics stdFontMetrics(vis.stdFont());
@@ -208,16 +209,16 @@ double LevelItem::align(double leftlinelength,
   item->addToGroup(etext_);
   item->addToGroup(spintext_);
 
-  if (vis.parentpos != NoParent)
+  if (parentpos != NoParent)
     item->removeFromGroup(hltext_);
   double levelHlPos = 0.0;
-  if (vis.parentpos == RightParent && hltext_)
+  if (parentpos == RightParent && hltext_)
     levelHlPos = -leftlinelength
         - vis.levelToHalfLifeDistance
         - stdFontMetrics.width(hltext_->text());
   else
     levelHlPos = rightlinelength + vis.levelToHalfLifeDistance;
-  if (vis.parentpos != NoParent)
+  if (parentpos != NoParent)
     hltext_->setPos(levelHlPos, -0.5*stdBoldFontMetrics.height());
   item->addToGroup(hltext_);
 
@@ -225,11 +226,11 @@ double LevelItem::align(double leftlinelength,
 
   if (feedarrow_)
   {
-    double leftend = (vis.parentpos == RightParent) ? rightlinelength + vis.feedingArrowGap + vis.feedingArrowHeadLength : arrowleft;
-    double rightend = (vis.parentpos == RightParent) ? arrowright : -leftlinelength - vis.feedingArrowGap - vis.feedingArrowHeadLength;
+    double leftend = (parentpos == RightParent) ? rightlinelength + vis.feedingArrowGap + vis.feedingArrowHeadLength : arrowleft;
+    double rightend = (parentpos == RightParent) ? arrowright : -leftlinelength - vis.feedingArrowGap - vis.feedingArrowHeadLength;
     double arrowY = ypos_;
     feedarrow_->setLine(leftend, arrowY, rightend, arrowY);
-    arrowhead_->setPos((vis.parentpos == RightParent) ? rightlinelength + vis.feedingArrowGap : -leftlinelength - vis.feedingArrowGap, arrowY);
+    arrowhead_->setPos((parentpos == RightParent) ? rightlinelength + vis.feedingArrowGap : -leftlinelength - vis.feedingArrowGap, arrowY);
     feedintens_->setPos(leftend + 15.0, arrowY - feedintens_->boundingRect().height());
     return arrowY + 0.5*feedarrow_->pen().widthF();
   }
