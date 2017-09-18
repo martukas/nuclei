@@ -32,8 +32,13 @@ set(CMAKE_AUTOUIC ON)
 find_package(Qt5Widgets REQUIRED)
 #find_package(OpenGL REQUIRED)
 
-file(GLOB_RECURSE ${PROJECT_NAME}_SOURCES *.cpp *.h *.ui *.qrc)
-file(GLOB_RECURSE ${PROJECT_NAME}_HEADERS *.h ${PROJECT_BINARY_DIR}/*.h)
+file(GLOB_RECURSE ${PROJECT_NAME}_UI *.ui)
+file(GLOB_RECURSE ${PROJECT_NAME}_QRC *.qrc)
+file(GLOB ${PROJECT_NAME}_SOURCES *.cpp ensdf/*.cpp ensdf/records/*.cpp
+  NucData/*.cpp SchemeEditor/*.cpp SchemeEditor/Qt-Color-Widgets/src/*.cpp)
+file(GLOB ${PROJECT_NAME}_HEADERS *.h ensdf/*.h ensdf/records/*.h
+  NucData/*.h SchemeEditor/*.h SchemeEditor/Qt-Color-Widgets/include/*.hpp
+  ${PROJECT_BINARY_DIR}/*.h)
 foreach (_headerFile ${${PROJECT_NAME}_HEADERS})
     get_filename_component(_dir ${_headerFile} PATH)
     list (APPEND ${PROJECT_NAME}_INCLUDE_DIRS ${_dir})
@@ -48,7 +53,10 @@ include_directories(
 
 add_executable(
   ${PROJECT_NAME}
+  ${${PROJECT_NAME}_HEADERS}
   ${${PROJECT_NAME}_SOURCES}
+  ${${PROJECT_NAME}_QRC}
+  ${${PROJECT_NAME}_UI}
 )
 
 target_link_libraries(
