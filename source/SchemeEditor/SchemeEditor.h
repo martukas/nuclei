@@ -21,7 +21,7 @@ public:
 
 private slots:
   void playerSelectionChanged();
-  void on_checkFilterTransition_clicked();
+  void on_checkFilterTransitions_clicked();
   void on_doubleTargetTransition_editingFinished();
   void on_doubleMinIntensity_editingFinished();
 

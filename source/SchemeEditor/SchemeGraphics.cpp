@@ -121,7 +121,14 @@ void SchemeGraphics::addLevel(Level level)
   LevelItem *levrend = new LevelItem(level, LevelItem::DaughterLevelType,
                                      parentpos_, visual_settings_, scene_);
   connectItem(levrend);
-  levels_[level.energy()] = levrend;
+  daughter_levels_[level.energy()] = levrend;
+
+  if (level.normalizedFeedIntensity().uncertaintyType() != Uncert::UndefinedType)
+  {
+    FeedingArrow* feed = new FeedingArrow(level, parentpos_, visual_settings_, scene_);
+    connectItem(feed);
+    feeding_arrows_[level.energy()] = feed;
+  }
 }
 
 void SchemeGraphics::addTransition(Transition transition)
@@ -156,7 +163,7 @@ void SchemeGraphics::alignGraphicsItems()
   int maxEnergyLabelWidth {0};
   int maxSpinLabelWidth {0};
 
-  for (auto level : levels_)
+  for (auto level : daughter_levels_)
   {
     maxSpinLabelWidth
         = qMax(maxSpinLabelWidth, level.second->spin_width());
@@ -165,11 +172,11 @@ void SchemeGraphics::alignGraphicsItems()
   }
 
   // determine y coordinates for all levels
-  if (!levels_.empty())
+  if (!daughter_levels_.empty())
   {
     double maxEnergyGap = 0.0;
-    Energy prev_energy = levels_.begin()->first;
-    for (auto i : levels_)
+    Energy prev_energy = daughter_levels_.begin()->first;
+    for (auto i : daughter_levels_)
     {
       double diff = i.first - prev_energy;
       maxEnergyGap = qMax(maxEnergyGap, diff);
@@ -177,9 +184,9 @@ void SchemeGraphics::alignGraphicsItems()
     }
     if (!maxEnergyGap)
       maxEnergyGap = 1;
-    auto prev_level = levels_.begin()->second;
-    prev_energy = levels_.begin()->first;
-    for (auto i : levels_)
+    auto prev_level = daughter_levels_.begin()->second;
+    prev_energy = daughter_levels_.begin()->first;
+    for (auto i : daughter_levels_)
     {
       double minheight
           = 0.5*(i.second->graphicsItem()->boundingRect().height()
@@ -218,19 +225,19 @@ void SchemeGraphics::alignGraphicsItems()
     else
       currentgammapos -= gamma->minimalXDistance();
 
-    if (levels_.count(gamma->from())
-        && levels_.count(gamma->to()))
+    if (daughter_levels_.count(gamma->from())
+        && daughter_levels_.count(gamma->to()))
     {
       double arrowDestY =
-          levels_.at(gamma->to())->ypos()
-          - levels_.at(gamma->from())->ypos();
+          daughter_levels_.at(gamma->to())->ypos()
+          - daughter_levels_.at(gamma->from())->ypos();
       gamma->updateArrow(arrowDestY, max_intensity);
     }
 
-    if (levels_.count(gamma->from()))
+    if (daughter_levels_.count(gamma->from()))
       gamma->graphicsItem()->setPos(
             std::floor(currentgammapos) + 0.5 * gamma->pen().widthF(),
-            levels_.at(gamma->from())->bottom_ypos());
+            daughter_levels_.at(gamma->from())->bottom_ypos());
   }
 
   // determine line length for parent levels
@@ -251,9 +258,9 @@ void SchemeGraphics::alignGraphicsItems()
   // determine line length for feeding arrows
   double arrowLineLength = visual_settings_.feedingArrowLineLength;
   if (parentpos_ != NoParent)
-    for (auto level : levels_)
+    for (auto level : daughter_levels_)
       arrowLineLength = qMax(arrowLineLength,
-                             level.second->feed_intensity_width()
+                             (feeding_arrows_.count(level.first) ? feeding_arrows_[level.first]->intensity_width() : 0)
                              + visual_settings_.parentNuclideLevelLineExtraLength
                              + 2.0 * visual_settings_.feedingArrowTextMargin);
 
@@ -274,13 +281,17 @@ void SchemeGraphics::alignGraphicsItems()
   double normalright = std::ceil((parentpos_ == RightParent) ? activeright - visual_settings_.parentNuclideLevelLineExtraLength : activeright);
 
   // set level positions and sizes
+  for (auto level : daughter_levels_)
+    level.second->align(leftlinelength, rightlinelength,
+                        parentpos_, visual_settings_);
+
+  // adjust feeding arrow positions
   double arrowVEnd = std::numeric_limits<double>::quiet_NaN();
-  for (auto level : levels_)
+  for (auto level : feeding_arrows_)
   {
-    double newVEnd
-        = level.second->align(leftlinelength, rightlinelength,
-                              arrowleft, arrowright,
-                              parentpos_, visual_settings_);
+    feeding_arrows_[level.first]->align(daughter_levels_[level.first]->ypos(),
+        leftlinelength, rightlinelength, arrowleft, arrowright, parentpos_, visual_settings_);
+    double newVEnd = daughter_levels_[level.first]->ypos();
     if (boost::math::isnan(arrowVEnd) && !boost::math::isnan(newVEnd))
       arrowVEnd = newVEnd;
   }
@@ -294,9 +305,9 @@ void SchemeGraphics::alignGraphicsItems()
   if (parent_ && (parentpos_ != NoParent))
   {
     double parentY = std::numeric_limits<double>::quiet_NaN();
-    if (!levels_.empty())
-      parentY = levels_.rbegin()->second->graphicsItem()->y() -
-          levels_.rbegin()->second->graphicsItem()->boundingRect().height() -
+    if (!daughter_levels_.empty())
+      parentY = daughter_levels_.rbegin()->second->graphicsItem()->y() -
+          daughter_levels_.rbegin()->second->graphicsItem()->boundingRect().height() -
           parent_->graphicsItem()->boundingRect().height() - visual_settings_.parentNuclideToEnergyLevelsDistance;
 
     double parentcenter = (normalleft + normalright) / 2.0;
@@ -369,6 +380,8 @@ void SchemeGraphics::itemClicked(ClickableItem *item)
     clickedParent();
   else if (item && (item->type() == ClickableItem::DaughterNuclideType))
     clickedDaughter();
+  else if (item && (item->type() == ClickableItem::FeedingType))
+    clickedFeeding(dynamic_cast<FeedingArrow*>(item));
   else
   {
     deselect_all();
@@ -383,7 +396,14 @@ void SchemeGraphics::clearSelection()
 
 void SchemeGraphics::select_levels(const std::set<Energy>& s, int level)
 {
-  for (auto t : levels_)
+  for (auto t : daughter_levels_)
+    if (s.count(t.first))
+      t.second->graphicsItem()->setHighlighted(level);
+}
+
+void SchemeGraphics::select_feedings(const std::set<Energy>& s, int level)
+{
+  for (auto t : feeding_arrows_)
     if (s.count(t.first))
       t.second->graphicsItem()->setHighlighted(level);
 }
@@ -444,6 +464,19 @@ void SchemeGraphics::clickedDaughterLevel(LevelItem *e)
   triggerDataUpdate();
 }
 
+void SchemeGraphics::clickedFeeding(FeedingArrow* f)
+{
+  if (!f)
+    return;
+
+  if (f->graphicsItem()->isHighlighted())
+    f->graphicsItem()->setHighlighted(0);
+  else
+    f->graphicsItem()->setHighlighted(1);
+
+  triggerDataUpdate();
+}
+
 void SchemeGraphics::clickedParent()
 {
   if (!parent_)
@@ -471,11 +504,18 @@ void SchemeGraphics::deselect_all()
   deselect_levels();
   deselect_nuclides();
   deselect_gammas();
+  deselect_feedings();
+}
+
+void SchemeGraphics::deselect_feedings()
+{
+  for (auto l : feeding_arrows_)
+    l.second->graphicsItem()->setHighlighted(0);
 }
 
 void SchemeGraphics::deselect_levels()
 {
-  for (auto l : levels_)
+  for (auto l : daughter_levels_)
     l.second->graphicsItem()->setHighlighted(0);
   for (auto l : parent_levels_)
     l.second->graphicsItem()->setHighlighted(0);
@@ -497,10 +537,19 @@ void SchemeGraphics::deselect_gammas()
     l->graphicsItem()->setHighlighted(0);
 }
 
+std::set<Energy> SchemeGraphics::selected_feedings(int level) const
+{
+  std::set<Energy> str;
+  for (auto t : feeding_arrows_)
+    if (t.second->graphicsItem()->isHighlighted() == level)
+      str.insert(t.first);
+  return str;
+}
+
 std::set<Energy> SchemeGraphics::selected_levels(int level) const
 {
   std::set<Energy> str;
-  for (auto t : levels_)
+  for (auto t : daughter_levels_)
     if (t.second->graphicsItem()->isHighlighted() == level)
       str.insert(t.first);
   return str;

@@ -32,6 +32,7 @@ SchemeEditor::SchemeEditor(QWidget *parent)
   QSettings s;
   s.beginGroup("SchemeEditor");
   ui->splitter->restoreState(s.value("splitter").toByteArray());
+  ui->checkFilterTransitions->setChecked(s.value("filterTransitions", false).toBool());
 }
 
 SchemeEditor::~SchemeEditor()
@@ -39,6 +40,7 @@ SchemeEditor::~SchemeEditor()
   QSettings s;
   s.beginGroup("SchemeEditor");
   s.setValue("splitter", ui->splitter->saveState());
+  s.setValue("filterTransitions", ui->checkFilterTransitions->isChecked());
   delete ui;
 }
 
@@ -126,7 +128,7 @@ void SchemeEditor::refresh_scheme()
   connect(decay_viewer_.data(), SIGNAL(selectionChanged()),
           this, SLOT(playerSelectionChanged()));
   decay_viewer_->setStyle(prefs);
-  decay_viewer_->set_highlight_cascade(ui->checkFilterTransition->isChecked());
+  decay_viewer_->set_highlight_cascade(ui->checkFilterTransitions->isChecked());
   QGraphicsScene *scene = decay_viewer_->levelPlot();
   ui->decayView->setScene(scene);
   ui->decayView->setSceneRect(scene->sceneRect().adjusted(-20, -20, 20, 20));
@@ -149,6 +151,13 @@ void SchemeEditor::playerSelectionChanged()
     auto levels = current_scheme_.daughterNuclide().levels();
     if (levels.count(nrg))
       comments = levels[nrg].text();
+  }
+  else if (decay_viewer_->selected_feedings(1).size())
+  {
+    auto nrg = *decay_viewer_->selected_feedings(1).begin();
+    auto levels = current_scheme_.parentNuclide().levels();
+    if (levels.count(nrg))
+      comments = levels[nrg].text(); //should be something else
   }
   else if (decay_viewer_->selected_parent_levels(1).size())
   {
@@ -218,10 +227,10 @@ std::string SchemeEditor::make_reference_link(std::string ref, int num)
       + "</small></a>";
 }
 
-void SchemeEditor::on_checkFilterTransition_clicked()
+void SchemeEditor::on_checkFilterTransitions_clicked()
 {
   if (decay_viewer_)
-    decay_viewer_->set_highlight_cascade(ui->checkFilterTransition->isChecked());
+    decay_viewer_->set_highlight_cascade(ui->checkFilterTransitions->isChecked());
 }
 
 void SchemeEditor::on_doubleTargetTransition_editingFinished()

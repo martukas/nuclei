@@ -35,7 +35,7 @@
    <item row="0" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QCheckBox" name="checkFilterTransition">
+      <widget class="QCheckBox" name="checkFilterTransitions">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -146,7 +146,7 @@
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="resources/nuclei.qrc">
+        <iconset resource="../resources/nuclei.qrc">
          <normaloff>:/toolbar/configure.png</normaloff>:/toolbar/configure.png</iconset>
        </property>
        <property name="iconSize">
@@ -178,7 +178,7 @@
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="resources/nuclei.qrc">
+        <iconset resource="../resources/nuclei.qrc">
          <normaloff>:/toolbar/zoom-fit-best.png</normaloff>:/toolbar/zoom-fit-best.png</iconset>
        </property>
        <property name="iconSize">
@@ -210,7 +210,7 @@
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="resources/nuclei.qrc">
+        <iconset resource="../resources/nuclei.qrc">
          <normaloff>:/toolbar/image-svg+xml.png</normaloff>:/toolbar/image-svg+xml.png</iconset>
        </property>
        <property name="iconSize">
@@ -242,7 +242,7 @@
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="resources/nuclei.qrc">
+        <iconset resource="../resources/nuclei.qrc">
          <normaloff>:/toolbar/application-pdf.png</normaloff>:/toolbar/application-pdf.png</iconset>
        </property>
        <property name="iconSize">
@@ -293,7 +293,7 @@
   </layout>
   <action name="actionShow_all">
    <property name="icon">
-    <iconset resource="resources/nuclei.qrc">
+    <iconset resource="../resources/nuclei.qrc">
      <normaloff>:/toolbar/zoom-fit-best.png</normaloff>:/toolbar/zoom-fit-best.png</iconset>
    </property>
    <property name="text">
@@ -305,7 +305,7 @@
   </action>
   <action name="actionSVG_Export">
    <property name="icon">
-    <iconset resource="resources/nuclei.qrc">
+    <iconset resource="../resources/nuclei.qrc">
      <normaloff>:/toolbar/image-svg+xml.png</normaloff>:/toolbar/image-svg+xml.png</iconset>
    </property>
    <property name="text">
@@ -317,7 +317,7 @@
   </action>
   <action name="actionPDF_Export">
    <property name="icon">
-    <iconset resource="resources/nuclei.qrc">
+    <iconset resource="../resources/nuclei.qrc">
      <normaloff>:/toolbar/application-pdf.png</normaloff>:/toolbar/application-pdf.png</iconset>
    </property>
    <property name="text">
@@ -333,7 +333,7 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="resources/nuclei.qrc"/>
+  <include location="../resources/nuclei.qrc"/>
  </resources>
  <connections/>
 </ui>

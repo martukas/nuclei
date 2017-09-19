@@ -14,6 +14,7 @@
 
 class LevelItem;
 class TransitionItem;
+class FeedingArrow;
 
 class SchemeGraphics : public QObject
 {
@@ -38,11 +39,13 @@ public:
 
   void clearSelection();
 
+  std::set<Energy> selected_feedings(int level) const;
   std::set<Energy> selected_levels(int level) const;
   std::set<Energy> selected_parent_levels(int level) const;
   std::set<Energy> selected_transistions(int level) const;
 
   void select_levels(const std::set<Energy>&, int level=1);
+  void select_feedings(const std::set<Energy>&, int level=1);
   void select_parent_levels(const std::set<Energy>&, int level=1);
   void select_transistions(const std::set<Energy>&, int level=1);
 
@@ -68,9 +71,11 @@ private:
   ParentPosition parentpos_ {NoParent};
 
   NuclideItem* parent_ {nullptr};
-  NuclideItem* daughter_ {nullptr};
-  std::map<Energy, LevelItem*> levels_;
   std::map<Energy, LevelItem*> parent_levels_;
+
+  NuclideItem* daughter_ {nullptr};
+  std::map<Energy, LevelItem*> daughter_levels_;
+  std::map<Energy, FeedingArrow*> feeding_arrows_;
   std::list<TransitionItem*> transitions_;
 
   bool parent_selected_ {false};
@@ -91,6 +96,7 @@ private:
   void clickedGamma(TransitionItem *g);
   void clickedParentLevel(LevelItem *e);
   void clickedDaughterLevel(LevelItem *e);
+  void clickedFeeding(FeedingArrow*);
   void clickedParent();
   void clickedDaughter();
 
@@ -98,6 +104,7 @@ private:
   void deselect_levels();
   void deselect_nuclides();
   void deselect_gammas();
+  void deselect_feedings();
 
   void highlight_coincidences();
 };
