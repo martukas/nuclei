@@ -13,7 +13,8 @@ public:
     ParentLevelType,
     DaughterNuclideType,
     DaughterLevelType,
-    GammaTransitionType
+    GammaTransitionType,
+    FeedingType
   };
 
   ClickableItem() {}
