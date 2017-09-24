@@ -1,2 +1,2 @@
 # nuclei
-ensdf viewer &amp; editor
+ensdf viewer
