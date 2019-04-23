@@ -1,11 +1,13 @@
-#include "Comments.h"
-#include "Fields.h"
-#include "custom_logger.h"
+#include <ensdf/records/Comments.h>
+#include <ensdf/Fields.h>
+#include <util/logger.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
+#include <util/lexical_extensions.h>
 #include <algorithm>
 
-#include "Translator.h"
+#include <ensdf/Translator.h>
 
 bool CommentsRecord::match(const std::string& line, std::string rt)
 {

@@ -1,10 +1,10 @@
-#include "LevelRec.h"
-#include "Fields.h"
+#include <ensdf/records/LevelRec.h>
+#include <ensdf/Fields.h>
 
 #include "qpx_util.h"
 #include <boost/algorithm/string/trim_all.hpp>
 #include <boost/regex.hpp>
-#include "custom_logger.h"
+#include <util/logger.h>
 
 #define RE_NUMBER "([\\+-]?[0-9]+\\.?[0-9]*(?:E?[\\+-]?[0-9]*))"
 #define RE_OFFSET "([A-Z]{1,2})"
@@ -40,7 +40,7 @@ LevelRecord::LevelRecord(ENSDFData& i)
   if (line[77] == 'M')
   {
     if (is_number(line.substr(78,1)))
-      isomeric = boost::lexical_cast<uint16_t>(line.substr(78,1));
+      isomeric = std::stoi(line.substr(78,1));
     else
       isomeric = 1;
   }

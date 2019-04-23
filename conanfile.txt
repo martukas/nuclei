@@ -1,0 +1,30 @@
+[requires]
+cmake_findboost_modular/1.67.0@bincrafters/stable
+boost_algorithm/1.67.0@bincrafters/stable
+boost_filesystem/1.67.0@bincrafters/stable
+boost_system/1.67.0@bincrafters/stable
+boost_regex/1.67.0@bincrafters/stable
+date/4b46deb@ess-dmsc/stable
+fmt/5.2.0@bincrafters/stable
+gtest/3121b20-dm3@ess-dmsc/stable
+jsonformoderncpp/3.1.0@vthiery/stable
+Qt-Color-Widgets/a95f72e@ess-dmsc/stable
+spdlog/1.3.1@bincrafters/stable
+
+[generators]
+cmake
+virtualrunenv
+
+[options]
+boost_filesystem:shared=True
+boost_system:shared=True
+boost_regex:shared=True
+gtest:shared=True
+
+[imports]
+bin, cmake -> ./bin
+bin, *.dll -> ./bin
+lib, *.dll -> ./bin
+lib, *.so.* -> ./lib
+lib, *.so -> ./lib
+share, * -> ./share

@@ -1,5 +1,5 @@
-#include "EC.h"
-#include "Fields.h"
+#include <ensdf/records/EC.h>
+#include <ensdf/Fields.h>
 #include <boost/algorithm/string.hpp>
 
 bool ECRecord::match(const std::string& line)

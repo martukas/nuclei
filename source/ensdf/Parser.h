@@ -1,6 +1,6 @@
 #pragma once
 
-#include "NuclideData.h"
+#include <ensdf/NuclideData.h>
 
 class DaughterParser
 {

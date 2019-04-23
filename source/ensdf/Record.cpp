@@ -1,12 +1,12 @@
-#include "Record.h"
-#include "Fields.h"
+#include <ensdf/Record.h>
+#include <ensdf/Fields.h>
 
-#include "custom_logger.h"
+#include <util/logger.h>
 #include "qpx_util.h"
 
 #include <boost/regex.hpp>
 
-#include "Continuation.h"
+#include <ensdf/records/Continuation.h>
 
 #define RGX_NUCLIDE_ID "[\\s0-9A-Za-z]{5}"
 #define RGX_CONTINUATION_ID "[0-9A-Za-z!@#\\$%\\^&\\*-\\+\"]"
@@ -108,7 +108,7 @@ void ENSDFData::print(const std::string& prefix,
 {
   if (idx >= lines.size())
     return;
-  DBG << prefix << " [" << idx << "] " << lines.at(idx)
-      << (suffix.empty() ? " " : "\n") << suffix;
+  DBG("{} [{}] {}{}{}", prefix, idx, lines.at(idx),
+      (suffix.empty() ? " " : "\n"), suffix);
 }
 

@@ -1,5 +1,5 @@
-#include "Parent.h"
-#include "Fields.h"
+#include <ensdf/records/Parent.h>
+#include <ensdf/Fields.h>
 
 bool ParentRecord::match(const std::string& line)
 {

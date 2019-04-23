@@ -15,7 +15,7 @@
 #include "ActiveGraphicsItemGroup.h"
 #include "GraphicsHighlightItem.h"
 
-#include "custom_logger.h"
+#include <util/logger.h>
 
 #include "LevelItem.h"
 #include "TransitionItem.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Comments.h"
+#include <ensdf/records/Comments.h>
 
 enum class RecordType : int
 {

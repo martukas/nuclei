@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DataQuality.h"
+#include <NucData/DataQuality.h>
 
 class Spin : public QualifiedData
 {

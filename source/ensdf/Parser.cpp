@@ -1,13 +1,13 @@
-#include "Parser.h"
-#include "Reference.h"
-#include "Fields.h"
+#include <ensdf/Parser.h>
+#include <ensdf/records/Reference.h>
+#include <ensdf/Fields.h>
 
 #include "qpx_util.h"
 #include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 
-#include "custom_logger.h"
-#include "Translator.h"
+#include <util/logger.h>
+#include <ensdf/Translator.h>
 
 ENSDFParser::ENSDFParser()
 {}
@@ -36,7 +36,7 @@ ENSDFParser::ENSDFParser(std::string directory)
       std::string filename = dir_iter->path().string();
       std::string a_num = filename.substr(filename.size()-3, 3);
       if (is_number(a_num))
-        masses_.insert(boost::lexical_cast<uint16_t>(a_num));
+        masses_.insert(std::stoi(a_num));
     }
 }
 
@@ -418,7 +418,7 @@ void DaughterParser::parse_comments_block(ENSDFData& i,
       comm.push_back(CommentsRecord(++i));
     else
     {
-      DBG << "Unidentified record " << i.read_pop();
+      DBG("Unidentified record {}", i.read_pop());
     }
   }
 }
@@ -433,11 +433,11 @@ void DaughterParser::parse_reference_block(ENSDFData &i)
       if (ref.valid())
         references_[ref.keynum] = ref.reference;
       else
-        DBG << "Invalid reference " << ref.debug();
+        DBG("Invalid reference {}", ref.debug());
     }
     else
     {
-      DBG << "Unidentified record " << i.read_pop();
+      DBG("Unidentified record {}", i.read_pop());
     }
   }
 }
@@ -478,8 +478,7 @@ void DaughterParser::parse(const std::vector<std::string>& lines)
     }
     else
     {
-      DBG << "ID type bad " << header.extended_dsid;
+      DBG("ID type bad {}", header.extended_dsid);
     }
   }
-
 }

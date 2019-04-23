@@ -3,7 +3,7 @@
 
 #include <QSettings>
 
-#include "custom_logger.h"
+#include <util/logger.h>
 
 SchemeEditorPrefs::SchemeEditorPrefs(SchemeVisualSettings prefs, QWidget *parent)
   : QDialog(parent)

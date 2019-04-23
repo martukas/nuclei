@@ -1,7 +1,7 @@
-#include "Gamma.h"
-#include "Fields.h"
+#include <ensdf/records/Gamma.h>
+#include <ensdf/Fields.h>
 #include <boost/algorithm/string.hpp>
-#include "custom_logger.h"
+#include <util/logger.h>
 
 bool GammaRecord::match(const std::string& line)
 {

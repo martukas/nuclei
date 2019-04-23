@@ -1,9 +1,9 @@
-#include "QValue.h"
-#include "Fields.h"
+#include <ensdf/records/QValue.h>
+#include <ensdf/Fields.h>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 
-#include "custom_logger.h"
+#include <util/logger.h>
 
 bool QValueRecord::match(const std::string& line)
 {
@@ -39,7 +39,7 @@ QValueRecord::QValueRecord(ENSDFData& i,
       if (boost::contains(cr.text, "Current evaluation has used the following Q record"))
       {
         if (altcomment)
-          DBG << "<QValueRecord::parse> 2nd altcomment for " << debug();
+          DBG("<QValueRecord::parse> 2nd altcomment for {}", debug());
         altcomment = true;
       }
       else
@@ -54,7 +54,7 @@ QValueRecord::QValueRecord(ENSDFData& i,
         alternative =  std::shared_ptr<QValueRecord>
             (new QValueRecord(alt));
       else
-        DBG << "<QValueRecord::parse> 2nd alt for " << debug();
+        DBG("<QValueRecord::parse> 2nd alt for {}", debug());
     }
     else
       break;

@@ -1,5 +1,5 @@
-#include "Reference.h"
-#include "Fields.h"
+#include <ensdf/records/Reference.h>
+#include <ensdf/Fields.h>
 #include <boost/algorithm/string.hpp>
 
 bool ReferenceRecord::match(const std::string& line)

@@ -1,9 +1,9 @@
-#include "ReactionInfo.h"
-#include "custom_logger.h"
+#include <NucData/ReactionInfo.h>
+#include <util/logger.h>
 #include "qpx_util.h"
 #include <boost/regex.hpp>
 
-#include "Fields.h"
+#include <ensdf/Fields.h>
 
 #define RGX_NUCLIDE "[\\w\\d]+"
 #define RGX_REACTANT "[\\w\\d\\s\\+'-]+"

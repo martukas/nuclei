@@ -1,4 +1,4 @@
-#include "nid.h"
+#include <NucData/nid.h>
 #include "qpx_util.h"
 
 bool NuclideId::valid() const

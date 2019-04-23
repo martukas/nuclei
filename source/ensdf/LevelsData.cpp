@@ -1,8 +1,8 @@
-#include "LevelsData.h"
-#include "Fields.h"
-#include "XRef.h"
+#include <ensdf/LevelsData.h>
+#include <ensdf/Fields.h>
+#include <ensdf/records/XRef.h>
 
-#include "custom_logger.h"
+#include <util/logger.h>
 #include "qpx_util.h"
 
 LevelsData::LevelsData(ENSDFData& i)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Record.h"
+#include <ensdf/Record.h>
 
 struct ParentRecord
 {

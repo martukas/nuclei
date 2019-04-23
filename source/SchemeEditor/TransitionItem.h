@@ -5,7 +5,7 @@
 #include <QPen>
 #include "ClickableItem.h"
 #include "SchemeVisualSettings.h"
-#include "Transition.h"
+#include <NucData/Transition.h>
 
 class QGraphicsItem;
 class ActiveGraphicsItemGroup;

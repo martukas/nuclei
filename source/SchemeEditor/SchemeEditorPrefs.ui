@@ -147,7 +147,7 @@
   <customwidget>
    <class>color_widgets::ColorSelector</class>
    <extends>QWidget</extends>
-   <header>color_selector.hpp</header>
+   <header>QtColorWidgets/color_selector.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -7,10 +7,10 @@
 #include <QSvgGenerator>
 #include <QFileDialog>
 #include <QPrinter>
-
+#include <boost/algorithm/string.hpp>
 #include "ScrollZoomView.h"
 
-#include "custom_logger.h"
+#include <util/logger.h>
 
 SchemeEditor::SchemeEditor(QWidget *parent)
   : QWidget(parent)

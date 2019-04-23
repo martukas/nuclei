@@ -1,4 +1,4 @@
-#include "Energy.h"
+#include <NucData/Energy.h>
 #include "qpx_util.h"
 
 Energy::Energy(const Uncert &v)
@@ -31,7 +31,7 @@ Energy::operator double() const
 
 std::string Energy::to_string() const
 {
-  if (!boost::math::isfinite(value_))
+  if (!std::isfinite(value_))
     return "";
 
   if (value_ >= 10000.0)

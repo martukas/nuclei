@@ -1,9 +1,11 @@
-#include "Fields.h"
+#include <ensdf/Fields.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
-#include "qpx_util.h"
-#include "custom_logger.h"
+#include <util/lexical_extensions.h>
+#include <util/UTF_extensions.h>
+//#include "qpx_util.h"
+#include <util/logger.h>
 
 #define RGX_SPIN "\\d+(?:/\\d+)?"
 #define RGX_QSPIN "[\\[\\(~]?" RGX_SPIN "[\\]\\)]?"
@@ -141,7 +143,7 @@ Uncert parse_val_uncert(std::string val, std::string uncert)
   if (val.empty() || !is_number(val))
     return Uncert();
 
-  Uncert result(boost::lexical_cast<double>(val), sig_digits(val), Uncert::UndefinedSign);
+  Uncert result(std::stod(val), sig_digits(val), Uncert::UndefinedSign);
   double val_order = get_precision(val);
 
   if (boost::contains(val, "+") || boost::contains(val, "-"))
@@ -171,7 +173,7 @@ Uncert parse_val_uncert(std::string val, std::string uncert)
     else {
       // determine significant figure
       if (!uncert.empty() && is_number(uncert))
-        result.setSymmetricUncertainty(val_order * boost::lexical_cast<int16_t>(uncert));
+        result.setSymmetricUncertainty(val_order * std::stoi(uncert));
       else
         result.setUncertainty(dlim::quiet_NaN(),
                               dlim::quiet_NaN(),
@@ -206,12 +208,12 @@ Uncert parse_val_uncert(std::string val, std::string uncert)
     boost::trim(unegstr);
 
     if (!uposstr.empty() && is_number(uposstr))
-      upositive = boost::lexical_cast<int16_t>(uposstr);
+      upositive = std::stoi(uposstr);
     else if (uposstr == "|@")
       upositive = dlim::infinity();
 
     if (!unegstr.empty() && is_number(unegstr))
-      unegative = boost::lexical_cast<int16_t>(unegstr);
+      unegative = std::stoi(unegstr);
     else if (unegstr == "|@")
       unegative = -1 * dlim::infinity();
 
@@ -221,10 +223,8 @@ Uncert parse_val_uncert(std::string val, std::string uncert)
       result.setUncertainty(dlim::quiet_NaN(),
                             dlim::quiet_NaN(),
                             Uncert::Approximately);
-      WARN << "Found asymmetric error of -0+0 in '"
-           << uncert
-           << "' parsed as -" << unegstr << " +" << uposstr
-           << ". Auto-changing to 'approximately'";
+      WARN("Found asymmetric error of -0+0 in '{}' parsed as -{} +{}."
+           "Auto-changing to 'approximately'", uncert, unegstr, uposstr);
     }
     else
       result.setAsymmetricUncertainty(val_order * unegative,
@@ -306,7 +306,7 @@ NuclideId parse_check_nid(std::string nucid)
 {
   auto ret = parse_nid(nucid);
   if (!check_nid_parse(nucid, ret))
-    ERR << "Could not parse daughter NucID  \"" << nucid << "\"";
+    ERR("Could not parse daughter NucID  \"{}\"", nucid);
   return ret;
 }
 
@@ -325,10 +325,10 @@ NuclideId parse_nid(std::string id)
 
     if (!is_number(A))
     {
-      DBG << "<NuclideId> Bad A value from " << id;
+      DBG("<NuclideId> Bad A value from {}", id);
       return NuclideId();
     }
-    return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), Z);
+    return NuclideId::fromAZ(std::stoi(A), Z);
   }
 
   boost::trim(id);
@@ -345,25 +345,25 @@ NuclideId parse_nid(std::string id)
       {
         std::string zstring = "1" + id.substr(3,2);
         if (is_number(zstring))
-          Z = boost::lexical_cast<uint16_t>(zstring);
+          Z = std::stoi(zstring);
         else
-          DBG << "<NuclideId> Bad zstring from " << id;
+          DBG("<NuclideId> Bad zstring from {}", id);
       }
       if (!is_number(A))
       {
-        DBG << "<NuclideId> Bad A value (2) from " << id;
+        DBG("<NuclideId> Bad A value (2) from {}", id);
         return NuclideId();
       }
-      return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(A), Z);
+      return NuclideId::fromAZ(std::stoi(A), Z);
     }
     else
     {
       if (!is_number(id))
       {
-        DBG << "<NuclideId> Bad id value from " << id;
+        DBG("<NuclideId> Bad id value from {}", id);
         return NuclideId();
       }
-      return NuclideId::fromAZ(boost::lexical_cast<uint16_t>(id), 0, true);
+      return NuclideId::fromAZ(std::stoi(id), 0, true);
     }
   }
   else if ((boost::regex_match(id, w_expr)))
@@ -472,7 +472,7 @@ std::string split_spins_type(std::string& s)
   bool sand = boost::contains(s, "&");
   bool sto = boost::contains(s, ":");
   if (std::abs(int(sor) + int(sand) + int(sto)) > 1)
-    DBG << "Bad things " << s;
+    DBG("Bad things {}", s);
   if (sor)
     return ",";
   if (sand)
@@ -636,14 +636,11 @@ HalfLife parse_halflife(std::string record_orig)
   boost::replace_all(compst, ". ", " ");
 
   if (hl_to_ensdf(ret) != compst)
-    DBG << "HL parse mismatch \'" << record_orig
-        << "\' != \'" << hl_to_ensdf(ret) << "\'"
-        << " t=" << ret.time().to_string(false)
-        << " v=" << ret.time().value()
-        << " u1=" << ret.time().lowerUncertainty()
-        << " u2=" << ret.time().upperUncertainty()
-        << " units=" << ret.units()
-        << " tent=" << ret.tentative();
+    DBG("HL parse mismatch '{}' != '{}' t={} v={} u1={} u2={} units={} tent={}",
+        record_orig, hl_to_ensdf(ret), ret.time().to_string(false),
+        ret.time().value(), ret.time().lowerUncertainty(),
+        ret.time().upperUncertainty(), ret.units(),
+        ret.tentative());
 
 
   return ret.preferred_units();
@@ -766,7 +763,7 @@ DecayMode parse_decay_mode(std::string record)
     boost::replace_all(type, "N", "");
     boost::trim(type);
     if (!type.empty() && is_number(type))
-      ret.set_neutrons(boost::lexical_cast<uint16_t>(type));
+      ret.set_neutrons(std::stoi(type));
     else
       ret.set_neutrons(1);
   }
@@ -775,7 +772,7 @@ DecayMode parse_decay_mode(std::string record)
     boost::replace_all(type, "P", "");
     boost::trim(type);
     if (!type.empty() && is_number(type))
-      ret.set_protons(boost::lexical_cast<uint16_t>(type));
+      ret.set_protons(std::stoi(type));
     else
       ret.set_protons(1);
   }
@@ -791,27 +788,27 @@ std::string mode_to_ensdf(DecayMode mode)
     ret += "IT";
   if (mode.beta_minus())
   {
-    ret += (mode.beta_minus() > 1) ? boost::lexical_cast<std::string>(mode.beta_minus()) : "";
+    ret += (mode.beta_minus() > 1) ? std::to_string(mode.beta_minus()) : "";
     ret += "B-";
   }
   if (mode.beta_plus())
   {
-    ret += (mode.beta_plus() > 1) ? boost::lexical_cast<std::string>(mode.beta_plus()) : "";
+    ret += (mode.beta_plus() > 1) ? std::to_string(mode.beta_plus()) : "";
     ret += "B+";
   }
   if (mode.electron_capture())
   {
-    ret += (mode.electron_capture() > 1) ? boost::lexical_cast<std::string>(mode.electron_capture()) : "";
+    ret += (mode.electron_capture() > 1) ? std::to_string(mode.electron_capture()) : "";
     ret += "EC";
   }
   if (mode.protons())
   {
-    ret += (mode.protons() > 1) ? boost::lexical_cast<std::string>(mode.protons()) : "";
+    ret += (mode.protons() > 1) ? std::to_string(mode.protons()) : "";
     ret += "P";
   }
   if (mode.neutrons())
   {
-    ret += (mode.neutrons() > 1) ? boost::lexical_cast<std::string>(mode.neutrons()) : "";
+    ret += (mode.neutrons() > 1) ? std::to_string(mode.neutrons()) : "";
     ret += "N";
   }
   if (mode.alpha())
@@ -848,17 +845,16 @@ DecayInfo parse_decay_info(std::string dsid_orig)
     boost::split(tokens, t, boost::is_any_of(" "));
     if (tokens.size() < 2)
     {
-      DBG << "Not enough tokens " << dsid_orig;
+      DBG("Not enough tokens {}", dsid_orig);
       continue;
     }
 
     ret.parent = parse_nid(tokens[0]);
     if (!check_nid_parse(tokens[0], ret.parent))
     {
-      ERR << "<BasicDecay> Could not parse parent NucID   \""
+      ERR("<BasicDecay> Could not parse parent NucID   \"{}\" from \"{}\"   in   \"{}\"",
+          tokens[0], t, dsid_orig);
 //              << boost::trim_copy(nid_to_ensdf(parent)) << "\"  !=  \""
-          << tokens[0] << "\" from \"" << t << "\""
-          << "   in   \"" << dsid_orig << "\"";
   //    return DecayInfo();
     }
 
@@ -867,9 +863,8 @@ DecayInfo parse_decay_info(std::string dsid_orig)
       ret.mode = m;
     else
     {
-      ERR << "Decay mode parse failed \'" << tokens[1] << "\' != "
-          << mode_to_ensdf(m) << " or " << m.to_string()
-             << " in \"" << dsid << "\"";
+      ERR("Decay mode parse failed '{}' != {} or {} in \"{}\"",
+             tokens[1], mode_to_ensdf(m), m.to_string(), dsid);
     }
 
     if (tokens.size() > 2)
@@ -881,7 +876,7 @@ DecayInfo parse_decay_info(std::string dsid_orig)
 
 //    if (boost::contains(dsid_orig, "EV"))
     if (good > 1)
-      DBG << " **MULTIPLE** DSID=" << dsid_orig << " --> " << ret.to_string();
+      DBG(" **MULTIPLE** DSID={} --> {}", dsid_orig, ret.to_string());
 //    else
 //      DBG << "DSID=" << dsid_orig << " --> " << ret.to_string();
 
@@ -903,7 +898,7 @@ std::string nid_to_ensdf(NuclideId id, bool alt)
   if (id.composition_known())
   {
     if ((id.Z() > 109) && alt)
-      nucid += boost::lexical_cast<std::string>(id.Z() - 100);
+      nucid += std::to_string(id.Z() - 100);
     else
       nucid += boost::to_upper_copy(NuclideId::symbolOf(id.Z()));
   }

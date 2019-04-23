@@ -1,5 +1,5 @@
-#include "XRef.h"
-#include "Fields.h"
+#include <ensdf/records/XRef.h>
+#include <ensdf/Fields.h>
 #include <boost/algorithm/string.hpp>
 
 bool XRefRecord::match(const std::string& line)
