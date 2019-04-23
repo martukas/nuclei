@@ -1,11 +1,12 @@
 ﻿#pragma once
 
-#include "nid.h"
-#include "Level.h"
-#include "Transition.h"
-#include "qpx_util.h"
+#include <NucData/nid.h>
+#include <NucData/Level.h>
+#include <NucData/Transition.h>
 
-#include "json.h"
+#include <util/double_consts.h>
+
+#include <nlohmann/json.hpp>
 using namespace nlohmann;
 
 

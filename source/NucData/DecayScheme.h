@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Nuclide.h"
-#include "DecayInfo.h"
-#include "ReactionInfo.h"
+#include <NucData/Nuclide.h>
+#include <NucData/DecayInfo.h>
+#include <NucData/ReactionInfo.h>
 
-#include "json.h"
+#include <nlohmann/json.hpp>
 using namespace nlohmann;
 
 class DecayScheme

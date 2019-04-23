@@ -166,7 +166,7 @@
   <customwidget>
    <class>SchemeEditor</class>
    <extends>QWidget</extends>
-   <header>SchemeEditor.h</header>
+   <header>SchemeEditor/SchemeEditor.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

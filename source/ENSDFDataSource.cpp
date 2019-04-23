@@ -9,7 +9,7 @@
 #include <QFileDialog>
 #include <QDesktopServices>
 
-#include "custom_logger.h"
+#include <util/logger.h>
 
 const quint32 ENSDFDataSource::magicNumber = 0x4b616945;
 const quint32 ENSDFDataSource::cacheVersion = 5;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Comments.h"
-#include "Continuation.h"
+#include <ensdf/records/Comments.h>
+#include <ensdf/records/Continuation.h>
 
 struct ECRecord
 {

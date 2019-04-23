@@ -1,6 +1,6 @@
 #include "SchemeVisualSettings.h"
 
-#include "custom_logger.h"
+#include <util/logger.h>
 
 SchemeVisualSettings::SchemeVisualSettings()
 {

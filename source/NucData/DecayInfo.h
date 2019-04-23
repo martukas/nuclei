@@ -1,8 +1,8 @@
 #pragma once
 
-#include "nid.h"
+#include <NucData/nid.h>
 #include "DecayMode.h"
-#include "HalfLife.h"
+#include <NucData/HalfLife.h>
 
 struct DecayInfo
 {

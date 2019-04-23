@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Energy.h"
+#include <NucData/Energy.h>
 #include <map>
 #include <vector>
 
-#include "json.h"
+#include <nlohmann/json.hpp>
 using namespace nlohmann;
 
 class Transition

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Comments.h"
-#include "ProductionNorm.h"
+#include <ensdf/records/Comments.h>
+#include <ensdf/records/ProductionNorm.h>
 
 struct NormalizationRecord
 {

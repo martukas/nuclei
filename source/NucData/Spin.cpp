@@ -1,5 +1,5 @@
-#include "Spin.h"
-#include "custom_logger.h"
+#include <NucData/Spin.h>
+#include <util/logger.h>
 
 Spin::Spin(const Spin &spin)
   : QualifiedData(spin)
@@ -101,8 +101,8 @@ void Spin::set(uint16_t num, uint16_t denom)
   numerator_ = num; denominator_ = denom;
   if ( denominator_ < 1 || denominator_ > 2 )
   {
-    WARN << "Spin should be an integer or half an integer!     "
-         << "[" << numerator_ << "/" << denominator_ << "]";
+    WARN("Spin should be an integer or half an integer!     [{}/{}]",
+         numerator_, denominator_);
   }
 }
 

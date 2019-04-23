@@ -1,4 +1,4 @@
-#include "Moment.h"
+#include <NucData/Moment.h>
 
 Moment::Moment(const Moment &p)
   : moment_(p.moment_)

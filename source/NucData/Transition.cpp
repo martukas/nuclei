@@ -1,4 +1,4 @@
-#include "Transition.h"
+#include <NucData/Transition.h>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include "qpx_util.h"
 

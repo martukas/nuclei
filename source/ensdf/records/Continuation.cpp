@@ -1,9 +1,9 @@
 #include "Continuation.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
-#include "custom_logger.h"
-#include "Fields.h"
-#include "qpx_util.h"
+#include <util/logger.h>
+#include <ensdf/Fields.h>
+#include <qpx_util.h>
 
 #define RGX_KEYNUM "\\d{4}\\w{2}[\\w\\d]{2}"
 #define RGX_REF "\\((" RGX_KEYNUM "(?:," RGX_KEYNUM ")*)\\)"
@@ -47,7 +47,7 @@ Continuation::Continuation(std::string s)
       vs = boost::trim_copy(data.substr(found, data.size() - found));
     }
     else
-      DBG << s << " FAILED QV";
+      DBG("{} FAILED QV", s);
 
     boost::split(quants, qs, boost::is_any_of(":"));
     if (((qs == "XREF") || (qs == "FLAG"))
@@ -123,7 +123,7 @@ Continuation::Continuation(std::string s)
 
   }
   else
-    DBG << s << " FAILED REF";
+    DBG("{} FAILED REF", s);
 }
 
 std::string Continuation::key() const

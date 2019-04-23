@@ -1,5 +1,5 @@
-#include "Particle.h"
-#include "Fields.h"
+#include <ensdf/records/Particle.h>
+#include <ensdf/Fields.h>
 #include <boost/algorithm/string.hpp>
 
 bool ParticleRecord::match(const std::string& line)

@@ -1,7 +1,7 @@
-#include "NuclideData.h"
-#include "Fields.h"
+#include <ensdf/NuclideData.h>
+#include <ensdf/Fields.h>
 
-#include "custom_logger.h"
+#include <util/logger.h>
 #include "qpx_util.h"
 
 #include <boost/regex.hpp>
@@ -67,7 +67,7 @@ std::string NuclideData::add(const LevelsData& dec)
     count++;
     if (count > 1)
       disambiguated = base_name + " (alt."
-          + boost::lexical_cast<std::string>(count)
+          + std::to_string(count)
           + ")";
     else
       disambiguated = base_name + " (alt.)";

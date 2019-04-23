@@ -1,5 +1,6 @@
-#include "HalfLife.h"
+#include <NucData/HalfLife.h>
 
+#include <util/double_consts.h>
 #include "qpx_util.h"
 
 HalfLife::HalfLife()
@@ -59,7 +60,7 @@ HalfLife HalfLife::preferred_units() const
 bool HalfLife::valid() const
 {
   //  INFO << "HL " << to_string() << " valid=" << !boost::math::isnan(time_.value());
-  return !boost::math::isnan(time_.value());
+  return !std::isnan(time_.value());
 }
 
 double HalfLife::ev() const
@@ -85,7 +86,7 @@ double HalfLife::seconds() const
 bool HalfLife::stable() const
 {
   //  INFO << "HL " << to_string() << " stable=" << boost::math::isinf(time_.value());
-  return boost::math::isinf(time_.value());
+  return std::isinf(time_.value());
 }
 
 std::string HalfLife::to_string(bool with_uncert) const

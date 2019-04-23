@@ -1,6 +1,6 @@
 #include "GraphicsScene.h"
 
-#include "custom_logger.h"
+#include <util/logger.h>
 #include <QGraphicsSceneMouseEvent>
 
 GraphicsScene::GraphicsScene(QObject *parent)
@@ -19,7 +19,7 @@ void GraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
   QGraphicsItem *gr = mouseGrabberItem();
   if (!gr && (event->scenePos() == prevpos))
   {
-    DBG << "simple empty click";
+    DBG("simple empty click");
     emit clickedBackground();
   }
   QGraphicsScene::mouseReleaseEvent(event);

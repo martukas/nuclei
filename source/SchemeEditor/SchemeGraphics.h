@@ -4,7 +4,7 @@
 #include <QMap>
 #include <QFont>
 #include <QMetaType>
-#include "DecayScheme.h"
+#include <NucData/DecayScheme.h>
 
 #include "NuclideItem.h"
 

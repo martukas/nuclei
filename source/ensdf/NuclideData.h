@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LevelsData.h"
+#include <ensdf/LevelsData.h>
 
 struct NuclideData
 {

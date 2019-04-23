@@ -9,7 +9,7 @@
 #include "DecayCascadeItemModel.h"
 #include "DecayCascadeFilterProxyModel.h"
 
-#include "custom_logger.h"
+#include <util/logger.h>
 
 Nuclei::Nuclei(QWidget *parent)
   : QMainWindow(parent)
@@ -17,7 +17,7 @@ Nuclei::Nuclei(QWidget *parent)
   , preferencesDialog(new QDialog(this))
   , preferencesDialogUi(new Ui::PreferencesDialog)
 {
-  CustomLogger::initLogger(nullptr, "");
+  CustomLogger::initLogger(spdlog::level::debug, "nuclei");
 
   ui->setupUi(this);
   setWindowTitle(QCoreApplication::applicationName() + QString(" ") + QCoreApplication::applicationVersion());
@@ -150,7 +150,7 @@ void Nuclei::on_decayOptionsButton_clicked()
 {
   if (preferencesDialog->exec() == QDialog::Accepted)
   {
-    DBG << "Accepted";
+    DBG("Accepted");
     QSettings s;
     s.setValue("levelTolerance", preferencesDialogUi->levelDiff->value());
     s.setValue("gammaTolerance", preferencesDialogUi->gammaDiff->value());

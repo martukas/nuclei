@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nid.h"
+#include <NucData/nid.h>
 #include <list>
 
 struct Reactants

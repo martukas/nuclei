@@ -1,6 +1,6 @@
-#include "Nuclide.h"
+#include <NucData/Nuclide.h>
 #include "qpx_util.h"
-#include "custom_logger.h"
+#include <util/logger.h>
 
 Nuclide::Nuclide()
 {
@@ -218,8 +218,7 @@ void Nuclide::add_transition_to(Transition trans,
 {
   if (!levels_.count(trans.to()))
   {
-    DBG << "<Nuclide::add_transition_to> no to level "
-        << trans.to_string();
+    DBG("<Nuclide::add_transition_to> no to level ", trans.to_string());
 //    DBG << "  Levels " << levels_.size();
 //    for (auto l : levels_)
 //      DBG << "   " << l.first;
@@ -248,8 +247,7 @@ void Nuclide::add_transition_from(Transition trans,
 {
   if (!levels_.count(trans.from()))
   {
-    DBG << "<Nuclide::add_transition_from> no from level "
-        << trans.to_string();
+    DBG("<Nuclide::add_transition_from> no from level ", trans.to_string());
 //    DBG << "  Levels " << levels_.size();
 //    for (auto l : levels_)
 //      DBG << "   " << l.first;
@@ -308,13 +306,13 @@ std::string Nuclide::to_string() const
   ret += "\n";
   if (levels_.size())
   {
-    ret += "Levels (" + boost::lexical_cast<std::string>(levels_.size()) +")\n";
+    ret += "Levels (" + std::to_string(levels_.size()) +")\n";
     for (auto l : levels_)
       ret += l.second.to_string() +  "\n";
   }
   if (transitions_.size())
   {
-    ret += "Transitions (" + boost::lexical_cast<std::string>(transitions_.size()) + ")\n";
+    ret += "Transitions (" + std::to_string(transitions_.size()) + ")\n";
     for (auto t : transitions_)
       ret += "  " + t.second.to_string() +  "\n";
   }

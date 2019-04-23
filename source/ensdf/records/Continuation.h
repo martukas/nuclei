@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Uncert.h"
-#include "Spin.h"
+#include <NucData/Uncert.h>
+#include <NucData/Spin.h>
 #include <vector>
 #include <map>
 

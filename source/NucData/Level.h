@@ -2,13 +2,12 @@
 
 #include <limits>
 #include <set>
-#include "HalfLife.h"
-#include "Energy.h"
-#include "SpinParity.h"
-#include "Moment.h"
+#include <NucData/HalfLife.h>
+#include <NucData/Energy.h>
+#include <NucData/SpinParity.h>
+#include <NucData/Moment.h>
 
-#include "qpx_util.h"
-#include "json.h"
+#include <nlohmann/json.hpp>
 using namespace nlohmann;
 
 class Level

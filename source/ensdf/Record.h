@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DecayScheme.h"
+#include <NucData/DecayScheme.h>
 #include <list>
 #include <cmath>
 

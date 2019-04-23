@@ -1,6 +1,6 @@
-#include "Translator.h"
-#include "Fields.h"
-#include "custom_logger.h"
+#include <ensdf/Translator.h>
+#include <ensdf/Fields.h>
+#include <util/logger.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 #include <algorithm>
@@ -800,10 +800,10 @@ void Translator::make_dictionary1()
     {"G(2+","g(2+"},
     {"G*T","gT"},
     {"G*W*WIDTHG0","gw|G{-|g0}"},
-    {"G*W*WIDTHG0**2 ","gW|G{-0}\{+2}"},
+    {"G*W*WIDTHG0**2 ","gW|G{-0}\\{+2}"},
     {"G*WIDTH","g|G"},
     {"G*WIDTHG0","g|G{-|g0}"},
-    {"G*WIDTHG0**2","g|G{+2}\{-|g0}"},
+    {"G*WIDTHG0**2","g|G{+2}\\{-|g0}"},
     {"G*WIDTHN","g|G{-n}"},
     {"G+-","|g{+|+}"},
     {"G-FACTOR","g-factor"},
@@ -817,7 +817,7 @@ void Translator::make_dictionary1()
     {"G2*WIDTH","g{-2}|G"},
     {"G=","g="},
     {"GA","|?>"},
-    {"GA2","g{-A}\{+2}"},
+    {"GA2","g{-A}\\{+2}"},
     {"GALLAGHER","Gallagher"},
     {"GAMMA","|g"},
     {"GAMOW","Gamow"},
@@ -1272,7 +1272,7 @@ void Translator::make_dictionary1()
     {"WIDTHA4","|G{-|a4}"},
     {"WIDTHG","|G{-|g}"},
     {"WIDTHG0","|G{-|g0}"},
-    {"WIDTHG0**2","|G{+2}\{-|g0}"},
+    {"WIDTHG0**2","|G{+2}\\{-|g0}"},
     {"WIDTHG1","|G{-|g1}"},
     {"WIDTHN","|G{-n}"},
     {"WIDTHN0","|G{-n0}"},
@@ -1300,8 +1300,8 @@ void Translator::make_dictionary1()
     {"XKB3","K|b{-3} x ray"},
     {"XKB4","K|b{-4} x ray"},
     {"XKB5","K|b{-5} x ray"},
-    {"XKB5I","K|b{-5}\{+I} x ray"},
-    {"XKB5II","K|b{-5}\{+II} x ray"},
+    {"XKB5I","K|b{-5}\\{+I} x ray"},
+    {"XKB5II","K|b{-5}\\{+II} x ray"},
     {"XKG","(K| x ray)|g"},
     {"XKO2","K-O{-2} x ray"},
     {"XKO23","K-O{-23} x ray"},

@@ -1,4 +1,4 @@
-#include "DecayScheme.h"
+#include <NucData/DecayScheme.h>
 
 DecayScheme::DecayScheme(const std::string &name,
                          const Nuclide &parentNuclide,

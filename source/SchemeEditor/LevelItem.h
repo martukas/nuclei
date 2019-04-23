@@ -2,7 +2,7 @@
 
 #include "ClickableItem.h"
 #include "SchemeVisualSettings.h"
-#include "Level.h"
+#include <NucData/Level.h>
 
 class ActiveGraphicsItemGroup;
 class QGraphicsLineItem;
