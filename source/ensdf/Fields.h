@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Uncert.h"
-#include "Level.h"
-#include "DecayInfo.h"
-#include "nid.h"
+#include <NucData/Uncert.h>
+#include <NucData/Level.h>
+#include <NucData/DecayInfo.h>
+#include <NucData/nid.h>
 #include <tuple>
 
 bool is_uncertainty_id(const std::string& str);

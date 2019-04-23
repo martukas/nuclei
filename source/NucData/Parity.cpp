@@ -1,4 +1,4 @@
-#include "Parity.h"
+#include <NucData/Parity.h>
 
 Parity::Parity()
 {

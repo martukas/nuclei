@@ -5,7 +5,7 @@
 #include <QTextItem>
 #include <QGraphicsScene>
 #include <QTextDocument>
-#include "custom_logger.h"
+#include <util/logger.h>
 
 
 FeedingArrow::FeedingArrow(Level level, ParentPosition parentpos,

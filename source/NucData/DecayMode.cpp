@@ -1,4 +1,4 @@
-#include "DecayScheme.h"
+#include <NucData/DecayScheme.h>
 #include <boost/lexical_cast.hpp>
 
 bool DecayMode::valid() const

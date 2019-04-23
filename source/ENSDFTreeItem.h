@@ -6,7 +6,7 @@
 #include <QMetaType>
 #include <QDataStream>
 
-#include "DecayScheme.h"
+#include <NucData/DecayScheme.h>
 
 class ENSDFTreeItem
 {

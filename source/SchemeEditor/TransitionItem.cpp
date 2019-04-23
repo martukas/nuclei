@@ -13,9 +13,9 @@
 //#endif
 
 #include "ActiveGraphicsItemGroup.h"
-#include "Level.h"
+#include <NucData/Level.h>
 #include "GraphicsHighlightItem.h"
-#include "custom_logger.h"
+#include <util/logger.h>
 
 const double TransitionItem::textAngle = -60.0;
 const double TransitionItem::arrowHeadLength = 11.0;

@@ -1,5 +1,5 @@
-#include "ProductionNorm.h"
-#include "Fields.h"
+#include <ensdf/records/ProductionNorm.h>
+#include <ensdf/Fields.h>
 #include "qpx_util.h"
 
 bool ProdNormalizationRecord::match(const std::string& line)

@@ -1,73 +1,79 @@
-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-project(nuclei CXX)
+set(this_target ${PROJECT_NAME})
+set(dir ${CMAKE_CURRENT_SOURCE_DIR})
 
-#===========================================================
-# Internal compiler options
-#===========================================================
-# C++ standard
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-if(NOT CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD LESS 14)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(${this_target}_sources
+  ${dir}/DecayCascadeFilterProxyModel.cpp
+  ${dir}/DecayCascadeItemModel.cpp
+  ${dir}/ENSDFDataSource.cpp
+  ${dir}/ENSDFTreeItem.cpp
+  ${dir}/LineEdit.cpp
+  ${dir}/main.cpp
+  ${dir}/Nuclei.cpp
+  ${dir}/ScrollZoomView.cpp
+  ${dir}/TreeView.cpp
+  )
 
-# the compiler used for C++ files
-MESSAGE( STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER_VERSION} )
+set(${this_target}_headers
+  ${dir}/DecayCascadeFilterProxyModel.h
+  ${dir}/DecayCascadeItemModel.h
+  ${dir}/ENSDFDataSource.h
+  ${dir}/ENSDFTreeItem.h
+  ${dir}/LineEdit.h
+  ${dir}/qpx_util.h
+  ${dir}/Nuclei.h
+  ${dir}/ScrollZoomView.h
+  ${dir}/TreeView.h
+  )
 
-FIND_PACKAGE ( Threads REQUIRED )
+set(${this_target}_ui
+  ${dir}/Nuclei.ui
+  ${dir}/PreferencesDialog.ui
+  )
 
-# Boost
-find_package(Boost COMPONENTS
-  system filesystem thread
-  timer date_time log log_setup
-  regex REQUIRED)
-add_definitions(-DBOOST_LOG_DYN_LINK)
+add_subdirectory(util)
+add_subdirectory(ensdf)
+add_subdirectory(NucData)
+add_subdirectory(SchemeEditor)
 
-# Qt
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-find_package(Qt5Widgets REQUIRED)
-#find_package(OpenGL REQUIRED)
+qt5_add_resources(${this_target}_resources
+  ${dir}/resources/nuclei.qrc)
 
-file(GLOB_RECURSE ${PROJECT_NAME}_UI *.ui)
-file(GLOB_RECURSE ${PROJECT_NAME}_QRC *.qrc)
-file(GLOB ${PROJECT_NAME}_SOURCES *.cpp ensdf/*.cpp ensdf/records/*.cpp
-  NucData/*.cpp SchemeEditor/*.cpp SchemeEditor/Qt-Color-Widgets/src/*.cpp)
-file(GLOB ${PROJECT_NAME}_HEADERS *.h ensdf/*.h ensdf/records/*.h
-  NucData/*.h SchemeEditor/*.h SchemeEditor/Qt-Color-Widgets/include/*.hpp
-  ${PROJECT_BINARY_DIR}/*.h)
-foreach (_headerFile ${${PROJECT_NAME}_HEADERS})
-    get_filename_component(_dir ${_headerFile} PATH)
-    list (APPEND ${PROJECT_NAME}_INCLUDE_DIRS ${_dir})
-endforeach()
-list(REMOVE_DUPLICATES ${PROJECT_NAME}_INCLUDE_DIRS)
-
-include_directories(
-  ${${PROJECT_NAME}_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-#  ${OPENGL_INCLUDE_DIR}
-)
+message(STATUS "sources:   ${${this_target}_sources}")
+message(STATUS "headers:   ${${this_target}_headers}")
+message(STATUS "ui:        ${${this_target}_ui}")
 
 add_executable(
-  ${PROJECT_NAME}
-  ${${PROJECT_NAME}_HEADERS}
-  ${${PROJECT_NAME}_SOURCES}
-  ${${PROJECT_NAME}_QRC}
-  ${${PROJECT_NAME}_UI}
+  ${this_target}
+  ${${this_target}_resources}
+  ${${this_target}_sources}
+  ${${this_target}_headers}
+  ${${this_target}_ui}
+)
+
+target_include_directories(
+  ${this_target}
+  PRIVATE ${PROJECT_SOURCE_DIR}/source
+  PRIVATE ${${this_target}_include_dirs}
+  #  PRIVATE ${CMAKE_BINARY_DIR}/build_info
 )
 
 target_link_libraries(
-  ${PROJECT_NAME}
-  ${Boost_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-#  ${OPENGL_LIBRARIES}
+  ${this_target}
+  PRIVATE Boost::system
+  PRIVATE Boost::filesystem
+  PRIVATE Boost::regex
+  PRIVATE QtColorWidgets-Qt52
+  PRIVATE Qt5::Widgets
+  PRIVATE Qt5::PrintSupport
+  PRIVATE Qt5::Network
+  PRIVATE Qt5::Svg
+  PRIVATE fmt::fmt
+  PRIVATE Threads::Threads
+  PRIVATE ${DATE_LIBRARIES}
+  PRIVATE ${COVERAGE_LIBRARIES}
 )
 
-qt5_use_modules(${PROJECT_NAME} Widgets PrintSupport Svg)
+enable_coverage(${this_target})
 
-if(UNIX)
-  install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-endif()
+#add_dependencies(${this_target} build_time)

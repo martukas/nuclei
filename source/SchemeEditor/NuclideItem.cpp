@@ -6,7 +6,7 @@
 #include <QBrush>
 #include <boost/algorithm/string.hpp>
 #include "GraphicsHighlightItem.h"
-#include "custom_logger.h"
+#include <util/logger.h>
 #include "qpx_util.h"
 
 NuclideItem::NuclideItem()

@@ -6,7 +6,7 @@
 #include <QPair>
 #include "ClickableItem.h"
 #include "SchemeVisualSettings.h"
-#include "Nuclide.h"
+#include <NucData/Nuclide.h>
 
 class QGraphicsItem;
 class QGraphicsItemGroup;

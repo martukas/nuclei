@@ -1,5 +1,6 @@
-#include "Beta.h"
-#include "Fields.h"
+#include <ensdf/records/Beta.h>
+#include <ensdf/Fields.h>
+//#include <util/string_extensions.h>
 #include <boost/algorithm/string.hpp>
 
 bool BetaRecord::match(const std::string& line)

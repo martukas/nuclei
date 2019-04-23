@@ -1,6 +1,6 @@
-#include "Normalization.h"
-#include "Fields.h"
-#include "custom_logger.h"
+#include <ensdf/records/Normalization.h>
+#include <ensdf/Fields.h>
+#include <util/logger.h>
 
 bool NormalizationRecord::match(const std::string& line)
 {
@@ -30,8 +30,8 @@ NormalizationRecord::NormalizationRecord(ENSDFData& i)
     {
       ProdNormalizationRecord pn(++i);
       if (production.valid())
-        DBG << "Production " << nuclide.symbolicName() << " already present "
-            << " will replace with " << pn.debug();
+        DBG("Production {} already present will replace with {}",
+            nuclide.symbolicName(), pn.debug());
       production = pn;
     }
     else

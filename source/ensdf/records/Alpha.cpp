@@ -1,5 +1,6 @@
-#include "Alpha.h"
-#include "Fields.h"
+#include <ensdf/records/Alpha.h>
+#include <ensdf/Fields.h>
+//#include <util/string_extensions.h>
 #include <boost/algorithm/string.hpp>
 
 bool AlphaRecord::match(const std::string& line)

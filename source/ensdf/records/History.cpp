@@ -1,8 +1,8 @@
-#include "History.h"
-#include "Fields.h"
+#include <ensdf/records/History.h>
+#include <ensdf/Fields.h>
 #include <boost/algorithm/string.hpp>
 
-#include "Translator.h"
+#include <ensdf/Translator.h>
 
 bool HistoryRecord::match(const std::string& line)
 {

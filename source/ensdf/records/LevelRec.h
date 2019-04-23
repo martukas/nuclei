@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Alpha.h"
-#include "Beta.h"
-#include "Gamma.h"
-#include "EC.h"
-#include "Particle.h"
+#include <ensdf/records/Alpha.h>
+#include <ensdf/records/Beta.h>
+#include <ensdf/records/Gamma.h>
+#include <ensdf/records/EC.h>
+#include <ensdf/records/Particle.h>
 
 #include "qpx_util.h"
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Parity.h"
-#include "Spin.h"
-#include "Uncert.h"
+#include <NucData/Parity.h>
+#include <NucData/Spin.h>
+#include <NucData/Uncert.h>
 #include <vector>
 #include <set>
 

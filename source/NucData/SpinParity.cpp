@@ -1,6 +1,6 @@
-#include "SpinParity.h"
+#include <NucData/SpinParity.h>
 #include <boost/algorithm/string.hpp>
-#include "Fields.h"
+#include <ensdf/Fields.h>
 
 void SpinParity::set_spin(Spin s)
 {

@@ -1,4 +1,4 @@
-#include "DataQuality.h"
+#include <NucData/DataQuality.h>
 
 std::string add_qualifiers(const std::string& original,
                            const DataQuality& quality,

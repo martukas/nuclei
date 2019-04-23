@@ -1,17 +1,17 @@
 #pragma once
 
-#include "Header.h"
-#include "History.h"
-#include "QValue.h"
-#include "LevelRec.h"
+#include <ensdf/records/Header.h>
+#include <ensdf/records/History.h>
+#include <ensdf/records/QValue.h>
+#include <ensdf/records/LevelRec.h>
 
-#include "Parent.h"
+#include <ensdf/records/Parent.h>
 
-#include "Normalization.h"
-#include "ProductionNorm.h"
+#include <ensdf/records/Normalization.h>
+#include <ensdf/records/ProductionNorm.h>
 
-#include "ReactionInfo.h"
-#include "DecayInfo.h"
+#include <NucData/ReactionInfo.h>
+#include <NucData/DecayInfo.h>
 
 struct LevelsData
 {

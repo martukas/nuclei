@@ -1,12 +1,12 @@
-#include "Header.h"
-#include "Fields.h"
+#include <ensdf/records/Header.h>
+#include <ensdf/Fields.h>
 
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 #include "qpx_util.h"
-#include "ReactionInfo.h"
+#include <NucData/ReactionInfo.h>
 
-#include "custom_logger.h"
+#include <util/logger.h>
 
 bool IdRecord::match(const std::string& line)
 {
@@ -27,17 +27,17 @@ IdRecord::IdRecord(ENSDFData& i)
   if (!boost::trim_copy(year_str).empty())
   {
     if (is_number(boost::trim_copy(year_str)))
-      year = boost::lexical_cast<uint16_t>(boost::trim_copy(year_str));
+      year = std::stoi(boost::trim_copy(year_str));
     else
-      DBG << "<IdRecord> Cannot intepret year " << line;
+      DBG("<IdRecord> Cannot intepret year {}", line);
   }
   std::string month_str = line.substr(78, 2);
   if (!boost::trim_copy(month_str).empty())
   {
     if (is_number(boost::trim_copy(month_str)))
-      month = boost::lexical_cast<uint16_t>(boost::trim_copy(month_str));
+      month = std::stoi(boost::trim_copy(month_str));
     else
-      DBG << "<IdRecord> Cannot intepret month " << line;
+      DBG("<IdRecord> Cannot intepret month {}", line);
   }
 
   while (i.has_more())
