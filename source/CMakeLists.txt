@@ -39,10 +39,6 @@ set(CMAKE_AUTOUIC ON)
 qt5_add_resources(${this_target}_resources
   ${dir}/resources/nuclei.qrc)
 
-message(STATUS "sources:   ${${this_target}_sources}")
-message(STATUS "headers:   ${${this_target}_headers}")
-message(STATUS "ui:        ${${this_target}_ui}")
-
 add_executable(
   ${this_target}
   ${${this_target}_resources}
@@ -54,7 +50,6 @@ add_executable(
 target_include_directories(
   ${this_target}
   PRIVATE ${PROJECT_SOURCE_DIR}/source
-  PRIVATE ${${this_target}_include_dirs}
   #  PRIVATE ${CMAKE_BINARY_DIR}/build_info
 )
 
