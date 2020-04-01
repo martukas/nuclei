@@ -1,5 +1,6 @@
 #include <NucData/Transition.h>
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <iomanip>
 #include "qpx_util.h"
 
 Transition::Transition(Energy energy, Uncert intensity)
