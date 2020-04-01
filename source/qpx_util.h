@@ -2,6 +2,9 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
+#include <cmath>
+#include <iomanip>
 #include <boost/algorithm/string.hpp>
 
 inline std::string trim_all(std::string text)

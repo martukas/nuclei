@@ -1,4 +1,5 @@
 #include <NucData/Level.h>
+#include <iomanip>
 #include "qpx_util.h"
 
 Level::Level(Energy energy, SpinSet spin, HalfLife halfLife, uint16_t isomerNum)
