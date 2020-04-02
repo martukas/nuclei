@@ -3,6 +3,8 @@
 #include "Nuclei.h"
 #include "ENSDFDataSource.h"
 
+#include <QCommandLineParser>
+
 int main(int argc, char *argv[])
 {
 //  qRegisterMetaType<Decay::CascadeIdentifier>("CascadeIdentifier");
@@ -11,16 +13,30 @@ int main(int argc, char *argv[])
   qRegisterMetaType<ENSDFTreeItem>("ENSDFTreeItem");
   qRegisterMetaTypeStreamOperators<ENSDFTreeItem>("ENSDFTreeItem");
 
-  QApplication a(argc, argv);
+  QApplication application(argc, argv);
   QCoreApplication::setOrganizationName(QString::fromUtf8("ARL"));
   QCoreApplication::setApplicationName("Nuclei");
+
+  /// Parse command line
+  QCommandLineParser parser;
+  parser.setApplicationDescription("Interactive ENSDF viewer");
+  parser.addHelpOption();
+  //  parser.addVersionOption();
+  QCommandLineOption dieOption(QStringList() << "d" << "die",
+                               QApplication::translate("main", "Die right away (for testing)"));
+  parser.addOption(dieOption);
+  parser.process(application);
+  bool die_now = parser.isSet(dieOption);
+
+  if (parser.isSet("h") || die_now)
+    return EXIT_SUCCESS;
 
   int retcode = 0;
   {
     Nuclei w;
     w.show();
     
-    retcode = a.exec();
+    retcode = application.exec();
   }
 
   if (retcode == 6000)

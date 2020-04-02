@@ -14,13 +14,8 @@ addons:
       - qt5-default
       - libqt5svg5-dev
 
-before_install:
-  - pip3 install --user cpp-coveralls
-
 install:
   - sudo -H pip3 install conan
-  - sudo -H pip3 install gcovr==3.4
-  - sudo -H pip3 install codecov
   - conan profile new --detect default
   - conan profile update settings.compiler.libcxx=libstdc++11 default
   - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan true
@@ -29,13 +24,8 @@ install:
 before_script:
   - mkdir build
   - cd build
-  - cmake -DCOV=1 ..
+  - cmake ..
 
 script:
   - make
-#  - make coverage
-
-after_success:
-  - cd ..
-  - coveralls --build-root build --gcov-options '\-lp' -E ".*gtest.*" -E ".*CMakeFiles.*" -e build/lib -e build/tests -e build/examples
-  - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+  - ./bin/nuclei -h
