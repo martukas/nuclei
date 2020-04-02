@@ -12,7 +12,7 @@ addons:
       - python3-pip
       - python3-setuptools
       - qt5-default
-      - qtsvg-opensource-src
+      - libqt5svg5-dev
 
 before_install:
   - pip3 install --user cpp-coveralls
