@@ -1,0 +1,31 @@
+language: cpp
+compiler: gcc
+
+sudo: required
+
+dist: bionic
+services:
+  - xvfb
+addons:
+  apt:
+    packages:
+      - python3-pip
+      - python3-setuptools
+      - qt5-default
+      - libqt5svg5-dev
+
+install:
+  - sudo -H pip3 install conan
+  - conan profile new --detect default
+  - conan profile update settings.compiler.libcxx=libstdc++11 default
+  - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+  - conan remote add ess-dmsc https://api.bintray.com/conan/ess-dmsc/conan
+
+before_script:
+  - mkdir build
+  - cd build
+  - cmake ..
+
+script:
+  - make
+  - ./bin/nuclei -h
