@@ -1,4 +1,6 @@
 # Nuclei
+[![Build Status](https://travis-ci.com/martukas/nuclei.svg?branch=master)](https://travis-ci.com/martukas/nuclei)
+
 An Evaluated Nuclear Structure Data
 ([ENSDF](https://www.nndc.bnl.gov/ensdf/))
 parser, viewer and editor.
@@ -33,8 +35,7 @@ Prerequisites:
 Add these conan repositories if needed:
 ```bash
 conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-conan remote add conancommunity https://api.bintray.com/conan/conan-community/conan
-conan remote add conan-transit https://api.bintray.com/conan/conan/conan-transit
+conan remote add ess-dmsc https://api.bintray.com/conan/ess-dmsc/conan true
 ```
 
 Clone code and build:
