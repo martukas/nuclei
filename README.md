@@ -35,7 +35,7 @@ Prerequisites:
 Add these conan repositories if needed:
 ```bash
 conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-conan remote add ess-dmsc https://api.bintray.com/conan/ess-dmsc/conan true
+conan remote add ess-dmsc https://api.bintray.com/conan/ess-dmsc/conan
 ```
 
 Clone code and build:

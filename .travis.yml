@@ -18,8 +18,8 @@ install:
   - sudo -H pip3 install conan
   - conan profile new --detect default
   - conan profile update settings.compiler.libcxx=libstdc++11 default
-  - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan true
-  - conan remote add ess-dmsc https://api.bintray.com/conan/ess-dmsc/conan true
+  - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+  - conan remote add ess-dmsc https://api.bintray.com/conan/ess-dmsc/conan
 
 before_script:
   - mkdir build
