@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += core gui network svg
+QT += core gui network svg widgets printsupport x11extras
 CONFIG += warn_on
 
 mac {
@@ -9,7 +9,7 @@ mac {
     TARGET = nuclei
 }
 
-DEFINES += PRINT_SEARCH_RESULTS
+DEFINES += PRINT_SEARCH_RESULTS QT_DISABLE_DEPRECATED_BEFORE=0x000000
 
 SOURCES += main.cpp\
     Decay.cpp \
@@ -76,11 +76,11 @@ isEmpty(PREFIX) {
 target.path = $$PREFIX/bin/
 INSTALLS = target
 
-INCLUDEPATH += $$PREFIX/include ../libakk
+INCLUDEPATH += $$PREFIX/include ../libakk ../qtftp/include /usr/local/Qxt/include /usr/local/qwt-6.1.5/include
 mac:LIBS += -lakk -L$$PREFIX/lib -L../libakk
-unix:LIBS += -lakk
-unix:release:LIBS += -L../libakk-build-desktop-Qt_aus_PATH_Release/
-unix:debug:LIBS += -L../libakk-build-desktop-Qt_aus_PATH_Debug/
+unix:LIBS += -L../libakk -lakk -L/usr/local/qwt-6.1.5/lib -lqwt -L../qtftp/lib -lQt5Ftp -L/usr/local/Qxt/lib -lQxtWidgets
+#unix:release:LIBS += -L../libakk
+#unix:debug:LIBS += -L../libakk
 
 !win32:LIBS += -lquazip
 
