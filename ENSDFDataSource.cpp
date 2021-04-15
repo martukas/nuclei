@@ -6,7 +6,7 @@
 #include <QApplication>
 #include <QProgressDialog>
 #include <QMutexLocker>
-#include <QDesktopServices>
+#include <QStandardPaths>
 
 #include "ENSDFDownloader.h"
 #include "ENSDFParser.h"
@@ -18,7 +18,7 @@ ENSDFDataSource::ENSDFDataSource(QObject *parent)
     : AbstractDataSource(parent), root(new ENSDFTreeItem(AbstractTreeItem::RootType)), mccache(0)
 {
     // initialize cache path
-    cachePath = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
+    cachePath = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
     if (cachePath.isEmpty())
         cachePath = qApp->applicationDirPath();
 

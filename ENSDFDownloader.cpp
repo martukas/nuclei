@@ -7,9 +7,9 @@
 #include <QMessageBox>
 #include <QFile>
 #include <QFileDialog>
-#include <QFtp>
+#include <QtFtp/QFtp>
 #include <QRegExp>
-#include <QDesktopServices>
+#include <QStandardPaths>
 #include <quazip/JlCompress.h>
 #include <iostream>
 
@@ -20,7 +20,7 @@ ENSDFDownloader::ENSDFDownloader(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    defaultPath = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+    defaultPath = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
     if (defaultPath.isEmpty())
         defaultPath = qApp->applicationDirPath();
     defaultPath.append("/ensdf");
