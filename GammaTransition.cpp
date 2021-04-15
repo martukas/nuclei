@@ -35,7 +35,7 @@ GammaTransition::GammaTransition(Energy energy, double intensity,
       arrow(0), text(0), arrowhead(0), arrowbase(0), clickarea(0), highlightHelper(0), mindist(0.0),
       m_lastFwhm(std::numeric_limits<double>::quiet_NaN()),
       m_lastEmax(std::numeric_limits<double>::quiet_NaN()),
-      m_lastSamples(std::numeric_limits<double>::quiet_NaN())
+      m_lastSamples(std::numeric_limits<int>::quiet_NaN())
 {
     start->m_depopulatingTransitions.append(this);
     dest->m_populatingTransitions.append(this);
