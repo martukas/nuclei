@@ -131,7 +131,7 @@ void SearchThread::run()
 
 #if defined(PRINT_SEARCH_RESULTS)
     QStringList constraintsl(m_constraints.toStringList());
-    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
+    //QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
     std::cout << "# Selected Search Constraints:" << std::endl;
     foreach (const QString &s, constraintsl)
         std::cout << "# " << s.toStdString() << std::endl;
