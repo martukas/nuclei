@@ -1,4 +1,4 @@
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 #include <QProcess>
 #include "Nuclei.h"
 #include "ENSDFDataSource.h"

@@ -1,6 +1,6 @@
 #include "TreeView.h"
 #if !defined(Q_OS_MAC)
-#include <QxtGui/QxtItemDelegate>
+#include <QxtWidgets/QxtItemDelegate>
 #endif
 
 TreeView::TreeView(QWidget *parent) :
