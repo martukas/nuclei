@@ -194,7 +194,7 @@ AbstractTreeItem *SearchThread::getConstraintConformingSubtree(AbstractTreeItem 
 
         // find cascades
         const QMap<Energy, EnergyLevel*> levels = dec->daughterNuclide()->levels();
-        QMap<Energy, EnergyLevel*>::const_iterator li = levels.begin() + 1;
+        QMap<Energy, EnergyLevel*>::const_iterator li = levels.size() ? (levels.begin() + 1) : levels.end();
         QMap<QString, Decay::CascadeIdentifier> cascades;
         while (li != levels.end()) {
             // get this level's gammas
