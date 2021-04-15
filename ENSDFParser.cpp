@@ -588,7 +588,12 @@ UncertainDouble ENSDFParser::parseUncertainty(const QString &value, const QStrin
             else {
                 QRegExp reinv("^\\-([0-9]+)\\+([0-9]+)$");
                 pos = reinv.indexIn(uncertaintyString);
-                Q_ASSERT(pos > -1);
+                if(pos < 0)
+                {
+                    std::cerr << "Unrecognized uncertainty string in '" << uncertaintyString.toStdString() << "'" << std::endl;
+                    result.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::UndefinedType);
+                    return result;
+                }
                 uposstr = reinv.cap(2);
                 unegstr = reinv.cap(1);
             }
