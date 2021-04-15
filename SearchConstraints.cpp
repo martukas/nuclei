@@ -1,6 +1,7 @@
 #include "SearchConstraints.h"
 #include <limits>
 #include <cmath>
+#include <QDataStream>
 #include <boost/math/special_functions/fpclassify.hpp>
 
 SearchConstraints::SearchConstraints()
