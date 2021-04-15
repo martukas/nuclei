@@ -9,7 +9,7 @@
 #include <QTimer>
 #include <QSvgGenerator>
 #include <QFileDialog>
-#include <QPrinter>
+#include <QtPrintSupport/QPrinter>
 #include <QDesktopWidget>
 #include <qwt_plot.h>
 #include <qwt_plot_canvas.h>
