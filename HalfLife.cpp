@@ -55,6 +55,8 @@ QString HalfLife::secsToString(double secs, bool tagUncertain)
     else if (secs > 60.* 2.)
         result = QString("%1 m").arg(secs / 60.);
 
+    else if (secs < 1.E-18)
+        result = QString("%1 zs").arg(secs * 1.E21);
     else if (secs < 1.E-15)
         result = QString("%1 as").arg(secs * 1.E18);
     else if (secs < 1.E-12)

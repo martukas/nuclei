@@ -153,5 +153,8 @@ double HalfLifeSpinBox::unitToFactor(const QString &unit)
     if (unit == "as")
         return 1.E-18;
 
+    if (unit == "zs")
+        return 1.E-18;
+
     return std::numeric_limits<double>::quiet_NaN();
 }
