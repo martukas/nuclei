@@ -388,6 +388,7 @@ Energy ENSDFParser::parseEnsdfEnergy(const QString &estr)
 HalfLife ENSDFParser::parseHalfLife(const QString &hlstr)
 {
     double sec = std::numeric_limits<double>::quiet_NaN();
+    double ev = std::numeric_limits<double>::quiet_NaN();
     bool uncert = false;
 
     QString tstr(hlstr);
@@ -400,7 +401,34 @@ HalfLife ENSDFParser::parseHalfLife(const QString &hlstr)
         sec = std::numeric_limits<double>::infinity();
     }
     else if (tstr.contains("EV")) {
-        sec = std::numeric_limits<double>::quiet_NaN();
+        QLocale clocale("C");
+        bool ok = false;
+        ev = clocale.toDouble(timeparts.at(0), &ok);
+        if (!ok)
+            ev = std::numeric_limits<double>::infinity();
+        else if (timeparts.at(1) == "EV")
+            ev *= 1.;
+        else if (timeparts.at(1) == "MILLI-EV")
+            ev *= 1e-3;
+        else if (timeparts.at(1) == "KEV")
+            ev *= 1e3;
+        else if (timeparts.at(1) == "MEV")
+            ev *= 1e6;
+
+        sec = 6.6260701e-34*M_LN2*M_1_PI/2/1.6021766e-19/ev;
+        //Round it by counting significant digits and relative error
+        QStringList sParts = timeparts.at(0).split('E');
+        QString expo = sParts.size() > 1 ? sParts.at(1) : "0";
+        QString snum = sParts.at(0);
+        int nDigits = 0;
+        for(int s = 0; s < snum.length() ; ++s)
+        {
+            if ( snum[s] != '.')
+            {
+                nDigits++;
+            }
+        }
+        sec = std::stod(QString::number(sec,'g',nDigits).toStdString());
     }
     else if (timeparts.size() >= 2) {
         QLocale clocale("C");
