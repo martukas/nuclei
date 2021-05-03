@@ -77,3 +77,9 @@ Qxt:
 - git checkout dev
 - Open with QtCreator and compile
 - Click on Run
+
+# ENSDF database
+- For the moment the automatic download of the ENSDF database via FTP is broken
+- Instead, download it from https://www.nndc.bnl.gov/ensarchivals/
+- Extract it into the same folder e.g. on /opt/
+- When running, select load from local copy
