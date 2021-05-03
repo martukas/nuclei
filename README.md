@@ -63,6 +63,10 @@ Qxt:
 - ./configure -qmake-bin <QT_DIR>/bin/qmake
 - make
 - sudo make install
+- If some error is found, you might need for nuclei to compile to do this:
+- cd /usr/local/Qxt/include
+- sudo ln -s QxtCore/qxtglobal.h qxtglobal.h
+- sudo ln -s QxtCore/qxtnamespace.h qxtnamespace.h
 
 # Compilation (Ubuntu 19 - Qt5)
 
