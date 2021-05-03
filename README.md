@@ -23,7 +23,7 @@ http://physik2.uni-goettingen.de/research/2_hofs
 # Prerequisites (Ubuntu 19 - Qt5)
 
 Quazip:
-sudo apt install libquazip-dev
+sudo apt install libquazip-dev libgl1-mesa-dev
 
 Libakk:
 
