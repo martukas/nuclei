@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  build-test:
+  build-run:
     machine:
       image: ubuntu-2204:current
     steps:
@@ -11,7 +11,7 @@ jobs:
           command: |
             sudo rm -rf /var/lib/apt/lists/*
             sudo apt-get update
-            sudo apt-get install python3-pip python3-is-python python3-setuptools
+            sudo apt-get install python3-pip python3-setuptools
             sudo apt-get install qt5-default libqt5svg5-dev
             sudo -H pip3 install conan
             conan profile new --detect default
@@ -24,8 +24,9 @@ jobs:
             cd build
             cmake ..
             make -j
+            ./bin/nuclei -h
 
 workflows:
   commit:
     jobs:
-      - build-test
+      - build-run
