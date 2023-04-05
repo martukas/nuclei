@@ -18,13 +18,20 @@ jobs:
             conan profile update settings.compiler.libcxx=libstdc++11 default
             conan remote add ess-dmsc https://artifactory.esss.lu.se/artifactory/api/conan/ecdc-conan-release
       - run:
-          name: Build
+          name: CMake
           command: |
             mkdir build
             cd build
             cmake ..
+      - run:
+          name: Build
+          command: |
+            cd build
             make -j
-            ./bin/nuclei -h
+      - run:
+          name: Run
+          command: |
+            ./build/bin/nuclei -h
 
 workflows:
   commit:

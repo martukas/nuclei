@@ -1,5 +1,5 @@
 # Nuclei
-[![Build Status](https://travis-ci.com/martukas/nuclei.svg?branch=master)](https://travis-ci.com/martukas/nuclei)
+[![CircleCI Build Status](https://circleci.com/gh/martukas/nuclei.svg?style=shield)](https://circleci.com/gh/martukas/nuclei/tree/master)
 
 An Evaluated Nuclear Structure Data
 ([ENSDF](https://www.nndc.bnl.gov/ensdf/)) 
