@@ -29,6 +29,7 @@ This software should build on Linux and macOS.
 Prerequisites:
 * C++ compiler
 * CMake
+* boost (header-only, system, filesystem, regex)
 * Qt5 (from your native package manager)
 * Conan (most likely via pip)
 

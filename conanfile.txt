@@ -1,5 +1,4 @@
 [requires]
-boost/1.81.0
 fmt/9.1.0
 spdlog/1.11.0
 date/3.0.1
@@ -13,9 +12,6 @@ virtualbuildenv
 virtualrunenv
 
 [options]
-boost_filesystem:shared=True
-boost_system:shared=True
-boost_regex:shared=True
 date:use_system_tz_db=True
 
 [imports]
