@@ -1,5 +1,5 @@
 # Nuclei
-[![Build Status](https://travis-ci.com/martukas/nuclei.svg?branch=master)](https://travis-ci.com/martukas/nuclei)
+[![CircleCI Build Status](https://circleci.com/gh/martukas/nuclei.svg?style=shield)](https://circleci.com/gh/martukas/nuclei/tree/master)
 
 An Evaluated Nuclear Structure Data
 ([ENSDF](https://www.nndc.bnl.gov/ensdf/))
@@ -27,16 +27,19 @@ Many of these goals have been partially met, but the project is in need of addit
 This software should build on Linux and macOS.
 
 Prerequisites:
-* C++ compiler
+* C++17 compiler
 * CMake
+* boost (header-only & regex)
 * Qt5 (from your native package manager)
 * Conan (most likely via pip)
 
 Add these conan repositories if needed:
 ```bash
-conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-conan remote add ess-dmsc https://api.bintray.com/conan/ess-dmsc/conan
+conan remote add conancenter https://center.conan.io
+conan remote add ess-dmsc https://artifactory.esss.lu.se/artifactory/api/conan/ecdc-conan-release
 ```
+
+The ESS remote is required for QtColorWidgets. In case of changes to their deployment infrastructure, check for updates [here](https://github.com/ess-dmsc/conan-configuration).
 
 Clone code and build:
 ```bash
@@ -47,6 +50,13 @@ cmake ..
 make
 ```
 
+## Using
+
+You must download the ENSDF database from https://www.nndc.bnl.gov/ensdfarchivals/ and unzip it into a folder of your choice. When you start `nuclei`, you will have to point it to that location.
+
+Caching the database might take a while, but allows for searching and filtering in the UI. You can speed it up by moving some of the data files out of the chosen folder.
+
+Parsing errors will be printed in terminal as the files are loaded.
 
 ## History and progress
 
@@ -55,7 +65,7 @@ This software is primarily based on a
 by M.A.Nagel.
 
 Main changes:
-* refactored to decouple storing, parsing and GUI aspects.
+* refactored to decouple storing, parsing and user interface
 * updated to work with more recent versions of Qt and boost
 * divorced from obsolete libraries (Qwt and libQxt)
 * reliance on qmake replaced with CMake + conan for dependency management

@@ -22,7 +22,8 @@ class ostream_sink final : public spdlog::sinks::base_sink<Mutex>
  protected:
   void sink_it_(const spdlog::details::log_msg& msg) override
   {
-    fmt::memory_buffer formatted;
+    // Changed from fmt::memory_buffer to be able to compile.
+    fmt::basic_memory_buffer<char, 250> formatted;
     spdlog::sinks::base_sink<Mutex>::formatter_->format(msg, formatted);
     (*outStream) << fmt::to_string(formatted);
   }
@@ -93,7 +94,7 @@ void initLogger(const spdlog::level::level_enum& LoggingLevel,
   }
 
   auto combined_logger = std::make_shared<spdlog::logger>
-      ("daquiri_logger", begin(sinks), end(sinks));
+      ("nuclei_logger", begin(sinks), end(sinks));
   combined_logger->set_level(LoggingLevel);
   combined_logger->flush_on(LoggingLevel);
   spdlog::flush_every(std::chrono::seconds(1));
