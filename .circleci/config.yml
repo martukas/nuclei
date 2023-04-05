@@ -1,0 +1,31 @@
+version: 2.1
+
+jobs:
+  build-test:
+    machine:
+      image: ubuntu-2204:current
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            sudo rm -rf /var/lib/apt/lists/*
+            sudo apt-get update
+            sudo apt-get install python3-pip python3-is-python python3-setuptools
+            sudo apt-get install qt5-default libqt5svg5-dev
+            sudo -H pip3 install conan
+            conan profile new --detect default
+            conan profile update settings.compiler.libcxx=libstdc++11 default
+            conan remote add ess-dmsc https://artifactory.esss.lu.se/artifactory/api/conan/ecdc-conan-release
+      - run:
+          name: Build
+          command: |
+            mkdir build
+            cd build
+            cmake ..
+            make -j
+
+workflows:
+  commit:
+    jobs:
+      - build-test
