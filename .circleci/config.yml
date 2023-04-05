@@ -28,7 +28,7 @@ jobs:
           name: Build
           command: |
             cd build
-            make -j
+            make
       - run:
           name: Run
           command: |
