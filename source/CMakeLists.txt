@@ -55,8 +55,6 @@ target_include_directories(
 
 target_link_libraries(
   ${this_target}
-  PRIVATE Boost::system
-  PRIVATE Boost::filesystem
   PRIVATE Boost::regex
   PRIVATE QtColorWidgets
   PRIVATE Qt5::Widgets

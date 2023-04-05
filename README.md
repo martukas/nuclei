@@ -27,9 +27,9 @@ Many of these goals have been partially met, but the project is in need of addit
 This software should build on Linux and macOS.
 
 Prerequisites:
-* C++ compiler
+* C++17 compiler
 * CMake
-* boost (header-only, system, filesystem, regex)
+* boost (header-only & regex)
 * Qt5 (from your native package manager)
 * Conan (most likely via pip)
 

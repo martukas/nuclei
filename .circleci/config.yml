@@ -13,7 +13,7 @@ jobs:
             sudo apt-get update
             sudo apt-get install python3-pip python3-setuptools
             sudo apt-get install qtbase5-dev libqt5svg5-dev
-            sudo apt-get install libboost-dev libboost-filesystem-dev libboost-system-dev libboost-regex-dev            
+            sudo apt-get install libboost-dev libboost-regex-dev            
             sudo -H pip3 install conan==1.59
             conan profile new --detect default
             conan profile update settings.compiler.libcxx=libstdc++11 default
