@@ -4,10 +4,11 @@
 
 #include "qpx_util.h"
 #include <boost/regex.hpp>
-#include <boost/filesystem.hpp>
 
 #include <util/logger.h>
 #include <ensdf/Translator.h>
+#include <fstream>
+#include <filesystem>
 
 ENSDFParser::ENSDFParser()
 {}
@@ -17,20 +18,20 @@ ENSDFParser::ENSDFParser(std::string directory)
   if (directory.empty())
     return;
 
-  boost::system::error_code c;
-  boost::filesystem::path path(directory);
-  bool is_dir = boost::filesystem::is_directory(path, c);
+  std::error_code c;
+  std::filesystem::path path(directory);
+  bool is_dir = std::filesystem::is_directory(path, c);
 
   if (!is_dir)
     return;
 
   directory_ = directory;
 
-  boost::filesystem::directory_iterator end_iter;
+  std::filesystem::directory_iterator end_iter;
 
-  for( boost::filesystem::directory_iterator dir_iter(path);
+  for( std::filesystem::directory_iterator dir_iter(path);
        dir_iter != end_iter ; ++dir_iter)
-    if (boost::filesystem::is_regular_file(dir_iter->status()) &&
+    if (std::filesystem::is_regular_file(dir_iter->status()) &&
         (dir_iter->path().string().size() > 3))
     {
       std::string filename = dir_iter->path().string();
