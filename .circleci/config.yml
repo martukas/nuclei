@@ -12,7 +12,7 @@ jobs:
             sudo rm -rf /var/lib/apt/lists/*
             sudo apt-get update
             sudo apt-get install python3-pip python3-setuptools
-            sudo apt-get install qt5-default libqt5svg5-dev
+            sudo apt-get install qtbase5-dev libqt5svg5-dev
             sudo -H pip3 install conan
             conan profile new --detect default
             conan profile update settings.compiler.libcxx=libstdc++11 default
