@@ -55,20 +55,16 @@ target_include_directories(
 
 target_link_libraries(
   ${this_target}
-  PRIVATE Boost::system
-  PRIVATE Boost::filesystem
   PRIVATE Boost::regex
-  PRIVATE QtColorWidgets-Qt52
+  PRIVATE QtColorWidgets
   PRIVATE Qt5::Widgets
   PRIVATE Qt5::PrintSupport
   PRIVATE Qt5::Network
   PRIVATE Qt5::Svg
   PRIVATE fmt::fmt
+  PRIVATE spdlog::spdlog
   PRIVATE Threads::Threads
   PRIVATE ${DATE_LIBRARIES}
-  PRIVATE ${COVERAGE_LIBRARIES}
 )
-
-enable_coverage(${this_target})
 
 #add_dependencies(${this_target} build_time)
