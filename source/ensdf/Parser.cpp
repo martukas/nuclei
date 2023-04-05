@@ -8,6 +8,7 @@
 
 #include <util/logger.h>
 #include <ensdf/Translator.h>
+#include <fstream>
 
 ENSDFParser::ENSDFParser()
 {}
