@@ -12,7 +12,7 @@ virtualbuildenv
 virtualrunenv
 
 [options]
-date:use_system_tz_db=True
+boost/date:use_system_tz_db=True
 
 [imports]
 bin, cmake -> ./bin
