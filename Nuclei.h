@@ -10,15 +10,9 @@ class PreferencesDialog;
 }
 class QListWidgetItem;
 class QModelIndex;
-class QwtPlot;
-class QwtPlotIntervalCurve;
-class QwtPlotZoomer;
-class QwtIntervalSample;
 class QDoubleSpinBox;
-class SearchDialog;
 class DecayCascadeItemModel;
 class DecayCascadeFilterProxyModel;
-class SearchResultDataSource;
 class QLabel;
 
 class Nuclei : public QMainWindow
@@ -36,7 +30,6 @@ private slots:
     void loadSearchResultCascade(const QModelIndex &index);
 
     void updateDecayData(Decay::DecayDataSet data);
-    void updateEnergySpectrum();
 
     void svgExport();
     void pdfExport();
@@ -46,38 +39,23 @@ private slots:
     void zoomIn();
     void zoomOut();
 
-    void search();
-    void searchFinished(SearchResultDataSource *result);
-
-    void setPlotLin();
-    void setPlotLog();
-
     void showPreferences();
     void showAbout();
     
-    void processTabSelection(int index);
-
 protected:
     void closeEvent(QCloseEvent * event);
 
 private:
-    static QVector<QwtIntervalSample> mergeIntervalData(const QVector<double> &x, const QVector<double> &y1, const QVector<double> &y2);
     void loadDecay(QSharedPointer<Decay> decay);
 
     Ui::NucleiMainWindow *ui;
     QDialog *preferencesDialog;
     Ui::PreferencesDialog *preferencesDialogUi;
 
-    SearchDialog *searchDialog;
-
     DecayCascadeItemModel *decaySelectionModel, *searchResultSelectionModel;
     DecayCascadeFilterProxyModel *decayProxyModel, *searchProxyModel;
     QSharedPointer<Decay> m_decay;
 
-    QDoubleSpinBox *eres;
-    QwtPlot *plot;
-    QwtPlotZoomer *zoomer;
-    QwtPlotIntervalCurve *curve, *g1curve, *g2curve;
     QLabel *ensdfversion;
 };
 

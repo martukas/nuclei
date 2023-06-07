@@ -1,306 +1,489 @@
 #include "UncertainDouble.h"
 
+#include <iostream>
 #include <limits>
 #include <cmath>
-#include <QStringList>
+#include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
+#include "qpx_util.h"
+#include "custom_logger.h"
 
 UncertainDouble::UncertainDouble()
-    : m_val(std::numeric_limits<double>::quiet_NaN()),
-      m_lowerSigma(std::numeric_limits<double>::quiet_NaN()),
-      m_upperSigma(std::numeric_limits<double>::quiet_NaN()),
-      m_sign(UndefinedSign),
-      m_type(UndefinedType)
+  : value_(std::numeric_limits<double>::quiet_NaN())
+  , lower_sigma_(std::numeric_limits<double>::quiet_NaN())
+  , upper_sigma_(std::numeric_limits<double>::quiet_NaN())
+  , sign_(UndefinedSign)
+  , type_(UndefinedType)
+  , sigfigs_(0)
 {
 }
 
-UncertainDouble::UncertainDouble(double d, Sign s)
-    : m_val(d),
-      m_lowerSigma(0.0),
-      m_upperSigma(0.0),
-      m_sign(s),
-      m_type(SymmetricUncertainty)
+UncertainDouble::UncertainDouble(double d, uint16_t sigf, Sign s)
+  : value_(d)
+  , lower_sigma_(0.0)
+  , upper_sigma_(0.0)
+  , sign_(s)
+  , type_(SymmetricUncertainty)
+  , sigfigs_(sigf)
 {
 }
 
-UncertainDouble::UncertainDouble(double d, UncertainDouble::Sign s, double symmetricSigma)
-    : m_val(d),
-      m_lowerSigma(symmetricSigma),
-      m_upperSigma(symmetricSigma),
-      m_sign(s),
-      m_type(SymmetricUncertainty)
+UncertainDouble::UncertainDouble(double d, uint16_t sigf, UncertainDouble::Sign s, double symmetricSigma)
+  : value_(d)
+  , lower_sigma_(symmetricSigma)
+  , upper_sigma_(symmetricSigma)
+  , sign_(s)
+  , type_(SymmetricUncertainty)
+  , sigfigs_(sigf)
 {
 }
 
 UncertainDouble &UncertainDouble::operator =(const UncertainDouble &other)
 {
-    if (this != &other) {
-        m_val = other.m_val;
-        m_lowerSigma = other.m_lowerSigma;
-        m_upperSigma = other.m_upperSigma;
-        m_sign = other.m_sign;
-        m_type = other.m_type;
-    }
-    return *this;
+  if (this != &other) {
+    value_ = other.value_;
+    lower_sigma_ = other.lower_sigma_;
+    upper_sigma_ = other.upper_sigma_;
+    sign_ = other.sign_;
+    type_ = other.type_;
+    sigfigs_ = other.sigfigs_;
+  }
+  return *this;
 }
 
 double UncertainDouble::value() const
 {
-    return m_val;
+  return value_;
 }
 
 double UncertainDouble::lowerUncertainty() const
 {
-    return m_lowerSigma;
+  return lower_sigma_;
 }
 
 double UncertainDouble::upperUncertainty() const
 {
-    return m_upperSigma;
+  return upper_sigma_;
 }
 
 UncertainDouble::UncertaintyType UncertainDouble::uncertaintyType() const
 {
-    return m_type;
+  return type_;
 }
 
 UncertainDouble::Sign UncertainDouble::sign() const
 {
-    return m_sign;
+  return sign_;
+}
+
+uint16_t UncertainDouble::sigfigs() const
+{
+  return sigfigs_;
+}
+
+uint16_t UncertainDouble::sigdec() const
+{
+  int orderOfValue = order_of(value_);
+  if (sigfigs_ > orderOfValue) {
+    return (sigfigs_ - orderOfValue - 1);
+  }
+  else
+    return 0;
 }
 
 void UncertainDouble::setValue(double val, Sign s)
 {
-    m_val = val;
-    m_sign = s;
+  value_ = val;
+  sign_ = s;
 }
 
 void UncertainDouble::setUncertainty(double lower, double upper, UncertainDouble::UncertaintyType type)
 {
-    m_lowerSigma = lower;
-    m_upperSigma = upper;
-    m_type = type;
+  lower_sigma_ = lower;
+  upper_sigma_ = upper;
+  type_ = type;
 }
 
 void UncertainDouble::setSymmetricUncertainty(double sigma)
 {
-    setUncertainty(sigma, sigma, SymmetricUncertainty);
+  setUncertainty(sigma, sigma, SymmetricUncertainty);
 }
 
 void UncertainDouble::setAsymmetricUncertainty(double lowerSigma, double upperSigma)
 {
-    setUncertainty(lowerSigma, upperSigma, AsymmetricUncertainty);
+  setUncertainty(lowerSigma, upperSigma, AsymmetricUncertainty);
 }
 
 void UncertainDouble::setSign(UncertainDouble::Sign s)
 {
-    m_sign = s;
+  sign_ = s;
+}
+
+void UncertainDouble::setSigFigs(uint16_t sig)
+{
+  sigfigs_ = sig;
 }
 
 bool UncertainDouble::hasFiniteValue() const
 {
-    if (    sign() != UncertainDouble::MagnitudeDefined &&
-            sign() != UncertainDouble::SignMagnitudeDefined )
-        return false;
-
-    if (    uncertaintyType() == UncertainDouble::SymmetricUncertainty ||
-            uncertaintyType() == UncertainDouble::AsymmetricUncertainty ||
-            uncertaintyType() == UncertainDouble::Approximately ||
-            uncertaintyType() == UncertainDouble::Calculated ||
-            uncertaintyType() == UncertainDouble::Systematics )
-        return true;
+  if (    sign() != UncertainDouble::MagnitudeDefined &&
+          sign() != UncertainDouble::SignMagnitudeDefined )
     return false;
+  
+  if (    uncertaintyType() == UncertainDouble::SymmetricUncertainty ||
+          uncertaintyType() == UncertainDouble::AsymmetricUncertainty ||
+          uncertaintyType() == UncertainDouble::Approximately ||
+          uncertaintyType() == UncertainDouble::Calculated ||
+          uncertaintyType() == UncertainDouble::Systematics )
+    return true;
+  return false;
 }
-#include <iostream>
-QString UncertainDouble::toString() const
+
+bool UncertainDouble::is_uncert(std::string str)
 {
-    QString signprefix;
-    double val = m_val;
-    if (m_sign == MagnitudeDefined) {
-        signprefix = QString::fromUtf8("± ");
-        val = std::abs(val);
-    }
-    else if (m_sign == UndefinedSign) {
-        signprefix = "? ";
-        val = std::abs(val);
-    }
+  return (str == "LT" ||
+          str == "GT" ||
+          str == "LE" ||
+          str == "GE" ||
+          str == "AP" ||
+          str == "CA" ||
+          str == "SY");
+}
 
-    switch (m_type) {
-    case Systematics:
-        return QString("%1%2 (systematics)").arg(signprefix).arg(val).replace('e', "E");
-    case Calculated:
-        return QString("%1%2 (calculated)").arg(signprefix).arg(val).replace('e', "E");
-    case Approximately:
-        return QString("~ %1%2").arg(signprefix).arg(val, 0, 'g', 3).replace('e', "E");
-    case GreaterEqual:
-        return QString(QString::fromUtf8("≥ %1%2")).arg(signprefix).arg(val).replace('e', "E");
-    case GreaterThan:
-        return QString(QString::fromUtf8("> %1%2")).arg(signprefix).arg(val).replace('e', "E");
-    case LessEqual:
-        return QString(QString::fromUtf8("≤ %1%2")).arg(signprefix).arg(val).replace('e', "E");
-    case LessThan:
-        return QString(QString::fromUtf8("< %1%2")).arg(signprefix).arg(val).replace('e', "E");
-    case SymmetricUncertainty:
-        Q_ASSERT(m_lowerSigma == m_upperSigma);
-    case AsymmetricUncertainty:
-        Q_ASSERT(std::isfinite(m_upperSigma) && m_upperSigma >= 0.0);
-        Q_ASSERT(std::isfinite(m_lowerSigma) && m_lowerSigma >= 0.0);
 
+UncertainDouble UncertainDouble::from_nsdf(std::string val, std::string uncert)
+{
+  boost::trim(val);
+  boost::trim(uncert);
+
+  bool flag_tentative = false;
+  bool flag_theoretical = false;
+  if (boost::contains(val, "(") || boost::contains(val, ")")) //what if sign only?
+  {
+    boost::replace_all(val, "(", "");
+    boost::replace_all(val, ")", "");
+    flag_tentative = true;
+  }
+  else if (boost::contains(val, "[") || boost::contains(val, "]")) //what if sign only?
+  {
+    boost::replace_all(val, "[", "");
+    boost::replace_all(val, "]", "");
+    flag_tentative = true;
+  }
+
+  if (val.empty() || !is_number(val))
+    return UncertainDouble();
+
+  UncertainDouble result(boost::lexical_cast<double>(val), sig_digits(val), UncertainDouble::UndefinedSign);
+  double val_order = get_precision(val);
+
+  if (boost::contains(val, "+") || boost::contains(val, "-"))
+    result.setSign(UncertainDouble::SignMagnitudeDefined);
+  else
+    result.setSign(UncertainDouble::MagnitudeDefined);
+
+  // parse uncertainty
+  // symmetric or special case (consider symmetric if not + and - are both contained in string)
+  if ( !( boost::contains(uncert,"+") && boost::contains(uncert, "-"))
+       || flag_tentative ) {
+    if (uncert == "LT")
+      result.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, UncertainDouble::LessThan);
+    else if (uncert == "GT")
+      result.setUncertainty(0.0, std::numeric_limits<double>::infinity(), UncertainDouble::GreaterThan);
+    else if (uncert == "LE")
+      result.setUncertainty(-std::numeric_limits<double>::infinity(), 0.0, UncertainDouble::LessEqual);
+    else if (uncert == "GE")
+      result.setUncertainty(0.0, std::numeric_limits<double>::infinity(), UncertainDouble::GreaterEqual);
+    else if (uncert == "AP" || uncert.empty() || !is_number(uncert) || flag_tentative)
+      result.setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UncertainDouble::Approximately);
+    else if (uncert == "CA" || flag_theoretical)
+      result.setUncertainty(0.0, 0.0, UncertainDouble::Calculated);
+    else if (uncert == "SY")
+      result.setUncertainty(0.0, 0.0, UncertainDouble::Systematics);
+    else {
+      // determine significant figure
+      if (!uncert.empty() && is_number(uncert))
+        result.setSymmetricUncertainty(val_order * boost::lexical_cast<int16_t>(uncert));
+      else
+        result.setUncertainty(std::numeric_limits<double>::quiet_NaN(),
+                              std::numeric_limits<double>::quiet_NaN(),
+                              UncertainDouble::UndefinedType);
+    }
+  }
+  // asymmetric case
+  else {
+    bool inv = false;
+    std::string uposstr, unegstr;
+    boost::regex expr{"^\\+([0-9]+)\\-([0-9]+)$"};
+    boost::regex inv_expr{"^\\-([0-9]+)\\+([0-9]+)$"};
+    boost::smatch what;
+    if (boost::regex_match(uncert, what, expr) && (what.size() == 3))
     {
-        // return precise numbers without uncertainty
-        if (m_upperSigma == 0.0 && m_lowerSigma == 0.0)
-            return QString("%1%2").arg(signprefix).arg(val, 0, 'g', 4).replace('e', "E");
-
-        // determine orders of magnitude to align uncertainty output
-        int orderOfValue = std::floor(std::log10(std::abs(val)));
-        int orderOfUncert = std::min(std::floor(std::log10(m_lowerSigma)), std::floor(std::log10(m_upperSigma)));
-
-        int precision = 0;
-        QString uncertstr;
-
-        // uncertainty counts below 25 of the least significant figure are printed with two digits
-        // IF the two digit uncertainty and the value both do not end with 0. Else a one digit unvertainty is printed.
-
-        // for asymmetric uncertainties both values need to be checked.
-        if (m_type == AsymmetricUncertainty) {
-            double lowerUncertNumber = m_lowerSigma/pow(10.0, orderOfUncert);
-            double upperUncertNumber = m_upperSigma/pow(10.0, orderOfUncert);
-            if (lowerUncertNumber <= 2.5 && upperUncertNumber <= 2.5 &&
-                    (
-                        qRound(val * pow(10.0, -orderOfUncert+1)) % 10 != 0 ||
-                        qRound(upperUncertNumber*10.0) % 10 != 0 || qRound(lowerUncertNumber*10.0) % 10 != 0
-                    )
-                ) {
-                orderOfUncert--;
-                lowerUncertNumber *= 10.0;
-                upperUncertNumber *= 10.0;
-            }
-            uncertstr = QString("(+%1-%2)").arg(qRound(upperUncertNumber)).arg(qRound(lowerUncertNumber));
-        }
-        // for the symmetric case: check only one value
-        else if (m_type == SymmetricUncertainty) {
-            double uncertNumber = m_lowerSigma/pow(10.0, orderOfUncert);
-            if (uncertNumber <= 2.5 &&
-                    (qRound(val * pow(10.0, -orderOfUncert+1)) % 10 != 0 || qRound(uncertNumber*10.0) % 10 != 0)) {
-                orderOfUncert--;
-                uncertNumber *= 10.0;
-            }
-            uncertstr = QString("(%1)").arg(qRound(uncertNumber));
-        }
-
-        precision = orderOfValue - orderOfUncert;
-
-        QString result;
-        if (precision < 0) {
-            result = QString("(%1)").arg(QString::number(val, 'g', 0));
-        }
-        // use standard notation inside ]10,0.01] OR inside ]1000,0.01] if error is < 10
-        else if ((qAbs(val) < 10.0 && qAbs(val) >= 0.01) || ((orderOfUncert < 1 && qAbs(val) >= 0.01))) {
-            // fix Qt's strange idea of precision...
-            int qtprecision = std::abs(val) < 1.0 ? precision+1 : qMax(0, -orderOfUncert);
-            if (std::abs(val) < 0.1)
-                qtprecision++;
-
-            result = QString::number(val, 'f', qtprecision);
-            result.append(uncertstr);
-        }
-        // use scientific notation for values outside ]10,0.01]
-        else {
-            result = QString::number(val, 'e', precision);
-            result = result.split('e').join(uncertstr + "e");
-        }
-        result = result.replace('e', "E");
-        return signprefix + result;
+      uposstr = what[1];
+      unegstr = what[2];
     }
-    default:
-        return "undefined";
+    else if (boost::regex_match(uncert, what, inv_expr) && (what.size() == 3))
+    {
+      unegstr = what[1];
+      uposstr = what[2];
+      inv = true;
     }
+
+    uint16_t upositive = 0;
+    uint16_t unegative = 0;
+
+    boost::trim(uposstr);
+    boost::trim(unegstr);
+
+    if (!uposstr.empty() && is_number(uposstr))
+      upositive = boost::lexical_cast<int16_t>(uposstr);
+
+    if (!unegstr.empty() && is_number(unegstr))
+      unegative = boost::lexical_cast<int16_t>(unegstr);
+
+    if (inv)
+      DBG << "Inverse asymmetric uncert " << uncert << " expr-> " << uposstr << "," << unegstr
+          << " parsed as " << upositive << "," << unegative;
+
+    // work aournd bad entries with asymmetric uncertainty values of 0.
+    if (upositive == 0.0 || unegative == 0.0)
+    {
+      result.setUncertainty(std::numeric_limits<double>::quiet_NaN(),
+                            std::numeric_limits<double>::quiet_NaN(),
+                            UncertainDouble::Approximately);
+      WARN << "Found asymmetric error of 0 in '"
+           << uncert << "'. Auto-changing to 'approximately'";
+    }
+    else
+      result.setAsymmetricUncertainty(val_order * unegative,
+                                      val_order * upositive);
+  }
+
+//  if (result.type_ == AsymmetricUncertainty)
+//    DBG << std::setw(8) << val << std::setw(7) << uncert
+//        << " finite=" << result.hasFiniteValue()
+//        << " has " << result.sigfigs() << " sigfigs " << " order " << val_order
+//        << " parsed as " << result.value_ << "+" << result.upper_sigma_ << "-" << result.lower_sigma_
+//        << " renders " << result.to_string(false)
+//           ;
+
+  return result;
 }
 
-QString UncertainDouble::toText() const
+
+std::string UncertainDouble::to_string(bool prefix_magn) const
 {
-    QString result(toString());
-    result.replace("(systematics)", "<i>(systematics)</i>");
-    result.replace("(calculated)", "<i>(calculated)</i>");
-    result.replace("(systematics)", "<i>(systematics)</i>");
-    result.replace("<", "&lt;");
-    result.replace(">", "&gt;");
-    //result.replace(QRegExp("e([-+][0-9][0-9])"), QString::fromUtf8("⋅10<sup>\\1</sup>"));
-    return result;
+  std::string plusminus("\u00B1");
+  std::string times_ten("\u00D710");
+
+  std::string signprefix;
+  double val = value_;
+  if (sign_ == MagnitudeDefined) {
+    if (prefix_magn)
+      signprefix = plusminus;
+    val = std::abs(val);
+  }
+  else if (sign_ == UndefinedSign) {
+    signprefix = "?";
+    val = std::abs(val);
+  }
+  
+  switch (type_) {
+  case Systematics:
+    return signprefix + to_str_precision(val) + " (sys)";
+  case Calculated:
+    return signprefix + to_str_precision(val) + " (calc)";
+  case Approximately:
+    return "~" + signprefix + to_str_precision(val);
+  case GreaterEqual:
+    return "≥" + signprefix + to_str_precision(val);
+  case GreaterThan:
+    return ">" + signprefix + to_str_precision(val);
+  case LessEqual:
+    return "≤" + signprefix + to_str_precision(val);
+  case LessThan:
+    return "<" + signprefix + to_str_precision(val);
+  case SymmetricUncertainty:
+  case AsymmetricUncertainty:
+  {
+    // return precise numbers without uncertainty
+    if (upper_sigma_ == 0.0 && lower_sigma_ == 0.0)
+      return signprefix + to_str_precision(val);
+
+    bool symmetric = (type_ == SymmetricUncertainty) || (upper_sigma_ == lower_sigma_);
+    
+    int orderOfValue = order_of(val);
+    int orderOfUncert;
+
+    if (symmetric)
+      orderOfUncert = order_of(lower_sigma_);
+    else
+      orderOfUncert = std::max(order_of(lower_sigma_), order_of(upper_sigma_));
+
+    bool insiginficant = (orderOfValue - orderOfUncert) > 6;
+    bool as_percent = (orderOfValue - orderOfUncert) > 6; //not implemented
+    int targetOrder = orderOfValue;
+    if (orderOfUncert > orderOfValue)
+      targetOrder = orderOfUncert;
+
+    int exponent = 0;
+    if ((targetOrder > 4) || (targetOrder < -3))
+      exponent = targetOrder;
+
+    int decimals = 0;
+    if (sigfigs_ > (orderOfValue - exponent))
+      decimals = sigfigs_ - (orderOfValue - exponent) - 1;
+
+    std::string val_str = to_str_decimals(value_ / pow(10.0, exponent), decimals);
+
+    std::string uncertstr;
+    if (!insiginficant) {
+      if (symmetric) //symmetrical
+      {
+        double unc_shifted = lower_sigma_ / pow(10.0, exponent);
+        std::string unc_str;
+        if (!decimals)
+          unc_str = to_str_precision(unc_shifted);
+        else if (unc_shifted < 1.0)
+          unc_str = to_str_precision(unc_shifted / pow(10.0, -decimals));
+        else
+          unc_str = to_str_decimals(unc_shifted, orderOfUncert - exponent + decimals );
+        if (!unc_str.empty())
+          uncertstr = plusminus + unc_str;
+      }
+      else //asymmetrical
+      {
+        double lower_shifted = lower_sigma_ / pow(10.0, exponent);
+        double upper_shifted = upper_sigma_ / pow(10.0, exponent);
+        std::string unc_str_l, unc_str_u;
+        if (decimals == 0) {
+          unc_str_l = UTF_subscript(lower_shifted);
+          unc_str_u = UTF_superscript(upper_shifted);
+        } else {
+          bool unc_move_decimal = true;
+          if (!symmetric && ((lower_shifted >= 1.0) || (upper_shifted >= 1.0)))
+            unc_move_decimal = false;
+          else if (symmetric &&
+                   (lower_shifted >= 1.0))
+            unc_move_decimal = false;
+          if (unc_move_decimal) {
+            unc_str_l = UTF_subscript(lower_shifted / pow(10.0, -decimals)); // to_str_precision(lower_shifted / pow(10.0, -decimals));
+            unc_str_u = UTF_superscript(upper_shifted / pow(10.0, -decimals)); //to_str_precision(upper_shifted / pow(10.0, -decimals));
+          } else {
+            unc_str_l = UTF_subscript_dbl(lower_shifted,
+                                          orderOfUncert - exponent + decimals ); //to_str_decimals(lower_shifted, uncprecision );
+            unc_str_u = UTF_superscript_dbl(upper_shifted,
+                                            orderOfUncert - exponent + decimals );
+          }
+        }
+
+        if (!unc_str_u.empty())
+          uncertstr += "\u207A" + unc_str_u;
+        if (!unc_str_l.empty())
+          uncertstr += "\u208B" + unc_str_l;
+      }
+    } else
+      uncertstr = "~";
+
+    std::string result = val_str + uncertstr;
+    if (exponent)
+      result = "(" + result + ")" + times_ten + UTF_superscript(exponent);
+
+    //    DBG << "(" << value_ << "-" << lower_sigma_ << "+" << upper_sigma_ << ") = "
+    //        << signprefix << result;
+
+    return signprefix + result;
+  }
+  default:
+    return "undefined";
+  }
+}
+
+std::string UncertainDouble::to_markup() const
+{
+  std::string ret = to_string(true);
+  boost::replace_all(ret, "(sys)", "<i>(sys)</i>");
+  boost::replace_all(ret, "(calc)", "<i>(calc)</i>");
+  boost::replace_all(ret, "<", "&lt;");
+  boost::replace_all(ret, ">", "&gt;");
+  return ret;
 }
 
 UncertainDouble & UncertainDouble::operator*=(double other)
 {
-    setValue(value() * other);
-    if (other >= 0.0 ||
-            uncertaintyType() == SymmetricUncertainty ||
-            uncertaintyType() == Approximately ||
-            uncertaintyType() == Calculated ||
-            uncertaintyType() == Systematics
-            ) {
-        setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, uncertaintyType());
-    }
-    else { // "other" is always negative in this branch!
-        if (uncertaintyType() == AsymmetricUncertainty)
-            setUncertainty(upperUncertainty() * other, lowerUncertainty() * other, uncertaintyType());
-        else if (uncertaintyType() == LessThan)
-            setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, GreaterThan);
-        else if (uncertaintyType() == LessEqual)
-            setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, GreaterEqual);
-        else if (uncertaintyType() == GreaterThan)
-            setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, LessThan);
-        else if (uncertaintyType() == GreaterEqual)
-            setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, LessEqual);
-        else
-            setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, uncertaintyType());
-    }
-
-    return *this;
+  setValue(value() * other);
+  if (other >= 0.0 ||
+      uncertaintyType() == SymmetricUncertainty ||
+      uncertaintyType() == Approximately ||
+      uncertaintyType() == Calculated ||
+      uncertaintyType() == Systematics
+      ) {
+    setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, uncertaintyType());
+  }
+  else { // "other" is always negative in this branch!
+    if (uncertaintyType() == AsymmetricUncertainty)
+      setUncertainty(upperUncertainty() * other, lowerUncertainty() * other, uncertaintyType());
+    else if (uncertaintyType() == LessThan)
+      setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, GreaterThan);
+    else if (uncertaintyType() == LessEqual)
+      setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, GreaterEqual);
+    else if (uncertaintyType() == GreaterThan)
+      setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, LessThan);
+    else if (uncertaintyType() == GreaterEqual)
+      setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, LessEqual);
+    else
+      setUncertainty(lowerUncertainty() * other, upperUncertainty() * other, uncertaintyType());
+  }
+  return *this;
 }
 
 UncertainDouble &UncertainDouble::operator +=(const UncertainDouble &other)
 {
-    setValue(value() + other.value());
-    if (uncertaintyType() == other.uncertaintyType())
-        setUncertainty(lowerUncertainty() + other.lowerUncertainty(), upperUncertainty() + other.upperUncertainty(), uncertaintyType());
-    else
-        setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UndefinedType);
-    return *this;
+  uint16_t sd1 = sigdec();
+  uint16_t sd2 = other.sigdec();
+  setValue(value() + other.value());
+  setSigFigs(std::min(sd1, sd2) + order_of(value_) + 1);
+  if (uncertaintyType() == other.uncertaintyType())
+    setUncertainty(lowerUncertainty() + other.lowerUncertainty(), upperUncertainty() + other.upperUncertainty(), uncertaintyType());
+  else
+    setUncertainty(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), UndefinedType);
+  return *this;
 }
 
-UncertainDouble UncertainDouble::operator +(const UncertainDouble &other)
+UncertainDouble UncertainDouble::operator +(const UncertainDouble &other) const
 {
-    UncertainDouble result(*this);
-    result += other;
-    return result;
+  UncertainDouble result(*this);
+  result += other;
+  return result;
 }
 
 UncertainDouble::operator double() const
 {
-    return m_val;
+  return value_;
 }
 
 
 
-QDataStream &operator <<(QDataStream &out, const UncertainDouble &u)
-{
-    out << u.m_val;
-    out << u.m_lowerSigma;
-    out << u.m_upperSigma;
-    out << int(u.m_sign);
-    out << int(u.m_type);
-    return out;
-}
+//QDataStream &operator <<(QDataStream &out, const UncertainDouble &u)
+//{
+//    out << u.value_;
+//    out << u.lower_sigma_;
+//    out << u.upper_sigma_;
+//    out << int(u.sign_);
+//    out << int(u.type_);
+//    return out;
+//}
 
 
-QDataStream &operator >>(QDataStream &in, UncertainDouble &u)
-{
-    in >> u.m_val;
-    in >> u.m_lowerSigma;
-    in >> u.m_upperSigma;
-    int tmp;
-    in >> tmp;
-    u.m_sign = UncertainDouble::Sign(tmp);
-    in >> tmp;
-    u.m_type = UncertainDouble::UncertaintyType(tmp);
-    return in;
-}
+//QDataStream &operator >>(QDataStream &in, UncertainDouble &u)
+//{
+//    in >> u.value_;
+//    in >> u.lower_sigma_;
+//    in >> u.upper_sigma_;
+//    int tmp;
+//    in >> tmp;
+//    u.sign_ = UncertainDouble::Sign(tmp);
+//    in >> tmp;
+//    u.type_ = UncertainDouble::UncertaintyType(tmp);
+//    return in;
+//}

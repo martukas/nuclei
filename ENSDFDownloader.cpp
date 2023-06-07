@@ -7,20 +7,19 @@
 #include <QMessageBox>
 #include <QFile>
 #include <QFileDialog>
-#include <QtFtp/QFtp>
 #include <QRegExp>
-#include <QStandardPaths>
-#include <quazip/JlCompress.h>
+#include <QDesktopServices>
+//#include <JlCompress.h>
 #include <iostream>
 
 ENSDFDownloader::ENSDFDownloader(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ENSDFDownloader),
-    ftp(new QFtp(this)), pendinghandle(0), ftpOutFile(0)
+    pendinghandle(0), ftpOutFile(0)
 {
     ui->setupUi(this);
 
-    defaultPath = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    defaultPath = QStandardPaths::displayName(QStandardPaths::DataLocation);
     if (defaultPath.isEmpty())
         defaultPath = qApp->applicationDirPath();
     defaultPath.append("/ensdf");
@@ -32,10 +31,13 @@ ENSDFDownloader::ENSDFDownloader(QWidget *parent) :
     connect(ui->localButton, SIGNAL(clicked()), this, SLOT(selectLocal()));
     connect(ui->setupButton, SIGNAL(clicked()), this, SLOT(setupDownload()));
 
-    connect(ftp, SIGNAL(commandFinished(int,bool)), this, SLOT(ftpDispatcher(int,bool)));
-    connect(ftp, SIGNAL(listInfo(QUrlInfo)), this, SLOT(ftpAppendListInfo(QUrlInfo)));
-    connect(ftp, SIGNAL(stateChanged(int)), this, SLOT(ftpProcessState(int)));
-    connect(ftp, SIGNAL(dataTransferProgress(qint64,qint64)), this, SLOT(ftpUpdateProgressBar(qint64,qint64)));
+//    connect(manager, SIGNAL(commandFinished(int,bool)), this, SLOT(ftpDispatcher(int,bool)));
+//    connect(manager, SIGNAL(listInfo(QUrl)), this, SLOT(ftpAppendListInfo(QUrl)));
+//    connect(manager, SIGNAL(stateChanged(int)), this, SLOT(ftpProcessState(int)));
+//    connect(manager, SIGNAL(dataTransferProgress(qint64,qint64)), this, SLOT(ftpUpdateProgressBar(qint64,qint64)));
+
+//    connect(&manager, SIGNAL(finished(QNetworkReply*)),
+//            SLOT(downloadFinished(QNetworkReply*)));
 
     QSettings s;
     // initialize ENSDF path if necessary
@@ -100,7 +102,7 @@ void ENSDFDownloader::download()
     ui->stackedWidget->setCurrentWidget(ui->progressPage);
     ui->downloadButton->setDisabled(true);
 
-    pendinghandle = ftp->connectToHost("ftp.nndc.bnl.gov");
+//    pendinghandle = ftp->connectToHost("ftp.nndc.bnl.gov");
     ftpstate = Connecting;
 }
 
@@ -124,105 +126,105 @@ void ENSDFDownloader::setupDownload()
     connect(setui.okButton, SIGNAL(clicked()), &d, SLOT(accept()));
     connect(setui.cancelButton, SIGNAL(clicked()), &d, SLOT(reject()));
     if (d.exec() == QDialog::Accepted) {
-        ftp->setTransferMode(setui.activeRadio->isChecked() ? QFtp::Active : QFtp::Passive);
-        ftp->setProxy(setui.hostEdit->text(), setui.portEdit->text().toShort());
+//        ftp->setTransferMode(setui.activeRadio->isChecked() ? QFtp::Active : QFtp::Passive);
+//        ftp->setProxy(setui.hostEdit->text(), setui.portEdit->text().toShort());
     }
 }
 
 void ENSDFDownloader::ftpDispatcher(int id, bool error)
 {
-    if (pendinghandle != id)
-        return;
+//    if (pendinghandle != id)
+//        return;
 
-    if (error && (ftpstate != NotConnected)) {
-        resetFtpTransfer();
-        QMessageBox::warning(this, "Connection Error", "An error occured while downloading the database files. Please check your settings and internet connection and try again.", QMessageBox::Ok, QMessageBox::Ok);
-        return;
-    }
+//    if (error && (ftpstate != NotConnected)) {
+//        resetFtpTransfer();
+//        QMessageBox::warning(this, "Connection Error", "An error occured while downloading the database files. Please check your settings and internet connection and try again.", QMessageBox::Ok, QMessageBox::Ok);
+//        return;
+//    }
 
-    pendinghandle = -1;
+//    pendinghandle = -1;
 
-    switch (ftpstate) {
-    case Connecting:
-        pendinghandle = ftp->login("bnlndc");
-        ftpstate = LoggingIn;
-        break;
-    case LoggingIn:
-        pendinghandle = ftp->cd("/outgoing/ensdf");
-        ftpstate = ChangingDirectory;
-        break;
-    case ChangingDirectory:
-        pendinghandle = ftp->list(".");
-        ftpstate = RequestingList;
-        break;
-    case RequestingList:
-        if (!ftpFiles.isEmpty()) {
-            ftpFilesRemaining = ftpFiles;
-            ftpstate = Downloading;
-        }
-        else {
-            resetFtpTransfer();
-            QMessageBox::warning(this, "Database files not found", "Please try again later or download ENSDF manually.", QMessageBox::Ok, QMessageBox::Ok);
-            return;
-        }
-        // NO break here!
-    case Downloading:
-        if (ftpOutFile) {
-            ftpOutFile->close();
-            delete ftpOutFile;
-            ftpOutFile = 0;
-        }
-        if (!ftpFilesRemaining.isEmpty()) {
-            QString fn = ftpFilesRemaining.takeFirst();
-            ui->progressLabel->setText(QString("Downloading File %1 of %2...").arg(ftpFiles.size()-ftpFilesRemaining.size()).arg(ftpFiles.size()));
-            ftpOutFile = new QFile(dest.filePath(fn));
-            ftpOutFile->open(QIODevice::WriteOnly);
-            pendinghandle = ftp->get(fn, ftpOutFile);
-        }
-        else
-            processZipFiles();
-        break;
-    default:
-        break;
-    }
+//    switch (ftpstate) {
+//    case Connecting:
+//        pendinghandle = ftp->login("bnlndc");
+//        ftpstate = LoggingIn;
+//        break;
+//    case LoggingIn:
+//        pendinghandle = ftp->cd("/outgoing/ensdf");
+//        ftpstate = ChangingDirectory;
+//        break;
+//    case ChangingDirectory:
+//        pendinghandle = ftp->list(".");
+//        ftpstate = RequestingList;
+//        break;
+//    case RequestingList:
+//        if (!ftpFiles.isEmpty()) {
+//            ftpFilesRemaining = ftpFiles;
+//            ftpstate = Downloading;
+//        }
+//        else {
+//            resetFtpTransfer();
+//            QMessageBox::warning(this, "Database files not found", "Please try again later or download ENSDF manually.", QMessageBox::Ok, QMessageBox::Ok);
+//            return;
+//        }
+//        // NO break here!
+//    case Downloading:
+//        if (ftpOutFile) {
+//            ftpOutFile->close();
+//            delete ftpOutFile;
+//            ftpOutFile = 0;
+//        }
+//        if (!ftpFilesRemaining.isEmpty()) {
+//            QString fn = ftpFilesRemaining.takeFirst();
+//            ui->progressLabel->setText(QString("Downloading File %1 of %2...").arg(ftpFiles.size()-ftpFilesRemaining.size()).arg(ftpFiles.size()));
+//            ftpOutFile = new QFile(dest.filePath(fn));
+//            ftpOutFile->open(QIODevice::WriteOnly);
+//            pendinghandle = ftp->get(fn, ftpOutFile);
+//        }
+//        else
+//            processZipFiles();
+//        break;
+//    default:
+//        break;
+//    }
 }
 
-void ENSDFDownloader::ftpAppendListInfo(const QUrlInfo &url)
+void ENSDFDownloader::ftpAppendListInfo(const QUrl &url)
 {
-    if (!url.isValid())
-        return;
-    if (!url.isFile() || !url.isReadable())
-        return;
+//    if (!url.isValid())
+//        return;
+//    if (!url.isFile() || !url.isReadable())
+//        return;
 
-    QRegExp rexp("^ensdf_[0-9]{6,6}_[0-9]{3,3}.zip$");
-    if (rexp.exactMatch(url.name())) {
-        ensdfVersion = url.name().mid(6, 6);
-        ftpFiles.append(url.name());
-    }
+//    QRegExp rexp("^ensdf_[0-9]{6,6}_[0-9]{3,3}.zip$");
+//    if (rexp.exactMatch(url.name())) {
+//        ensdfVersion = url.name().mid(6, 6);
+//        ftpFiles.append(url.name());
+//    }
 }
 
 void ENSDFDownloader::ftpProcessState(int state)
 {
-    switch(state) {
-    case QFtp::Unconnected:
-        ui->progressLabel->setText("Unconnected.");
-        break;
-    case QFtp::HostLookup:
-        ui->progressLabel->setText("Looking up host...");
-        break;
-    case QFtp::Connecting:
-        ui->progressLabel->setText("Connecting...");
-        break;
-    case QFtp::Connected:
-        ui->progressLabel->setText("Connected.");
-        break;
-    case QFtp::LoggedIn:
-        ui->progressLabel->setText("Logged in.");
-        break;
-    case QFtp::Closing:
-        ui->progressLabel->setText("Closing down connection...");
-        break;
-    }
+//    switch(state) {
+//    case QFtp::Unconnected:
+//        ui->progressLabel->setText("Unconnected.");
+//        break;
+//    case QFtp::HostLookup:
+//        ui->progressLabel->setText("Looking up host...");
+//        break;
+//    case QFtp::Connecting:
+//        ui->progressLabel->setText("Connecting...");
+//        break;
+//    case QFtp::Connected:
+//        ui->progressLabel->setText("Connected.");
+//        break;
+//    case QFtp::LoggedIn:
+//        ui->progressLabel->setText("Logged in.");
+//        break;
+//    case QFtp::Closing:
+//        ui->progressLabel->setText("Closing down connection...");
+//        break;
+//    }
 }
 
 void ENSDFDownloader::ftpUpdateProgressBar(qint64 done, qint64 total)
@@ -233,27 +235,27 @@ void ENSDFDownloader::ftpUpdateProgressBar(qint64 done, qint64 total)
 
 void ENSDFDownloader::resetFtpTransfer()
 {
-    // update gui
-    ftp->abort();
-    ftp->close();
-    ui->progressBar->setValue(0);
-    ui->stackedWidget->setCurrentWidget(ui->buttonPage);
-    ui->downloadButton->setEnabled(true);
+//    // update gui
+//    ftp->abort();
+//    ftp->close();
+//    ui->progressBar->setValue(0);
+//    ui->stackedWidget->setCurrentWidget(ui->buttonPage);
+//    ui->downloadButton->setEnabled(true);
 
-    // remove downloaded files
-    foreach (QString fn, ftpFiles)
-        if (dest.exists(fn))
-            dest.remove(fn);
+//    // remove downloaded files
+//    foreach (QString fn, ftpFiles)
+//        if (dest.exists(fn))
+//            dest.remove(fn);
 
-    // reset state
-    ftpstate = NotConnected;
-    pendinghandle = -1;
-    ftpFiles.clear();
-    ftpFilesRemaining.clear();
-    if (ftpOutFile)
-        delete ftpOutFile;
-    ftpOutFile = 0;
-            ensdfVersion = "";
+//    // reset state
+//    ftpstate = NotConnected;
+//    pendinghandle = -1;
+//    ftpFiles.clear();
+//    ftpFilesRemaining.clear();
+//    if (ftpOutFile)
+//        delete ftpOutFile;
+//    ftpOutFile = 0;
+//            ensdfVersion = "";
 
 }
 
@@ -262,7 +264,7 @@ void ENSDFDownloader::processZipFiles()
     foreach (QString fn, ftpFiles) {
         ui->progressBar->setRange(0, 0);
         ui->progressLabel->setText(QString("Extracting files..."));
-        JlCompress::extractDir(dest.filePath(fn), dest.absolutePath());
+//        JlCompress::extractDir(dest.filePath(fn), dest.absolutePath());
     }
     ui->progressBar->setRange(0, 100);
     saveENSDFLocation();

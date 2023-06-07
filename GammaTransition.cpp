@@ -35,7 +35,7 @@ GammaTransition::GammaTransition(Energy energy, double intensity,
       arrow(0), text(0), arrowhead(0), arrowbase(0), clickarea(0), highlightHelper(0), mindist(0.0),
       m_lastFwhm(std::numeric_limits<double>::quiet_NaN()),
       m_lastEmax(std::numeric_limits<double>::quiet_NaN()),
-      m_lastSamples(std::numeric_limits<int>::quiet_NaN())
+      m_lastSamples(std::numeric_limits<double>::quiet_NaN())
 {
     start->m_depopulatingTransitions.append(this);
     dest->m_populatingTransitions.append(this);
@@ -143,7 +143,7 @@ ActiveGraphicsItemGroup *GammaTransition::createGammaGraphicsItem(const QFont &g
     QString intensstr = intensityAsText();
     if (!intensstr.isEmpty())
         intensstr += " ";
-    QString textstr = QString("<html><body bgcolor=\"white\">%1<b>%2</b> %3</body></html>").arg(intensstr).arg(energy().toString()).arg(m_mpol);
+    QString textstr = QString("<html><body bgcolor=\"white\">%1<b>%2</b> %3</body></html>").arg(intensstr).arg(QString::fromStdString(energy().to_string())).arg(m_mpol);
     text = new QGraphicsTextItem;
     text->setFont(gammaFont);
     text->document()->setDocumentMargin(0.0);

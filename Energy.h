@@ -1,22 +1,22 @@
 #ifndef ENERGY_H
 #define ENERGY_H
 
-#include <QString>
-#include <QMetaType>
-#include <QDataStream>
+#include <string>
+#include "UncertainDouble.h"
 
 class Energy
 {
 public:
     Energy();
-    explicit Energy(double energy);
+    explicit Energy(double energy, UncertainDouble::Sign s);
+
+    static Energy from_nsdf(std::string record);
 
     bool isValid() const;
 
-    QString toString() const;
+    std::string to_string() const;
 
     Energy & operator=(const Energy &energy);
-    Energy & operator=(double energy);
 
     friend bool operator<(const Energy &left, const Energy &right);
     friend bool operator<(const Energy &left, const double &right);
@@ -25,14 +25,10 @@ public:
     friend bool operator==(const Energy &left, const Energy &right);
     operator double() const;
 
-    friend QDataStream & operator<<(QDataStream &out, const Energy &energy);
-    friend QDataStream & operator>>(QDataStream &in, Energy &energy);
+    Energy operator-(Energy d);
 
 private:
-    double e;
+    UncertainDouble e;
 };
-
-Q_DECLARE_METATYPE(Energy)
-
 
 #endif // ENERGY_H

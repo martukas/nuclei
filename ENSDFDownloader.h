@@ -3,12 +3,12 @@
 
 #include <QDialog>
 #include <QDir>
+#include <QUrl>
+#include <QNetworkAccessManager>
 
 namespace Ui {
 class ENSDFDownloader;
 }
-class QFtp;
-class QUrlInfo;
 
 class ENSDFDownloader : public QDialog
 {
@@ -24,17 +24,20 @@ private slots:
     void setupDownload();
 
     void ftpDispatcher(int id, bool error);
-    void ftpAppendListInfo(const QUrlInfo &url);
+    void ftpAppendListInfo(const QUrl &url);
     void ftpProcessState(int state);
     void ftpUpdateProgressBar(qint64 done, qint64 total);
     void resetFtpTransfer();
+
+//    void downloadFinished(QNetworkReply *reply);
     
 private:
     void processZipFiles();
     void saveENSDFLocation();
     Ui::ENSDFDownloader *ui;
     QString defaultPath;
-    QFtp *ftp;
+    QNetworkAccessManager manager;
+//    QFtp *ftp;
 
     QDir dest;
     enum FtpState {

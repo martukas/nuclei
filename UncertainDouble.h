@@ -1,9 +1,7 @@
 #ifndef UNCERTAINDOUBLE_H
 #define UNCERTAINDOUBLE_H
 
-#include <QString>
-#include <QMetaType>
-#include <QDataStream>
+#include <string>
 
 class UncertainDouble
 {
@@ -29,8 +27,11 @@ public:
     };
 
     UncertainDouble();
-    UncertainDouble(double d, Sign s);
-    UncertainDouble(double d, Sign s, double symmetricSigma);
+    UncertainDouble(double d, uint16_t sigf, Sign s);
+    UncertainDouble(double d, uint16_t sigf, Sign s, double symmetricSigma);
+
+    static UncertainDouble from_nsdf(std::string val, std::string uncert);
+    static bool is_uncert(std::string str);
 
     UncertainDouble & operator=(const UncertainDouble & other);
 
@@ -39,31 +40,35 @@ public:
     double upperUncertainty() const;
     UncertaintyType uncertaintyType() const;
     Sign sign() const;
+    uint16_t sigfigs() const;
+    uint16_t sigdec() const;
 
     void setValue(double val, Sign s = SignMagnitudeDefined);
     void setUncertainty(double lower, double upper, UncertaintyType type);
     void setSymmetricUncertainty(double sigma);
     void setAsymmetricUncertainty(double lowerSigma, double upperSigma);
     void setSign(Sign s);
+    void setSigFigs(uint16_t sig);
 
     bool hasFiniteValue() const;
 
-    QString toString() const;
-    QString toText() const; // outputs formatted text
+    std::string to_string(bool prefix_magn) const;
+    std::string to_markup() const; // outputs formatted text
 
     UncertainDouble & operator*=(double other);
     UncertainDouble & operator+=(const UncertainDouble &other);
-    UncertainDouble operator+(const UncertainDouble &other);
+    UncertainDouble operator+(const UncertainDouble &other) const;
     operator double() const;
 
-    friend QDataStream & operator<<(QDataStream &out, const UncertainDouble &u);
-    friend QDataStream & operator>>(QDataStream &in, UncertainDouble &u);
+//    friend QDataStream & operator<<(QDataStream &out, const UncertainDouble &u);
+//    friend QDataStream & operator>>(QDataStream &in, UncertainDouble &u);
 
 private:
-    double m_val;
-    double m_lowerSigma, m_upperSigma;
-    Sign m_sign;
-    UncertaintyType m_type;
+    double value_;
+    double lower_sigma_, upper_sigma_;
+    Sign sign_;
+    UncertaintyType type_;
+    uint16_t sigfigs_;
 };
 
 #endif // UNCERTAINDOUBLE_H

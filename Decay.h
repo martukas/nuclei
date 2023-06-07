@@ -48,10 +48,6 @@ public:
     Nuclide * parentNuclide() const;
     Nuclide * daughterNuclide() const;
 
-    QVector<double> gammaSpectrumX(double fwhm) const;
-    QVector<double> gammaSpectrumY(double fwhm) const;
-    QVector<double> firstSelectedGammaSpectrumY(double fwhm) const;
-    QVector<double> secondSelectedGammaSpectrumY(double fwhm) const;
 
     struct CascadeIdentifier {
         CascadeIdentifier();
@@ -153,7 +149,7 @@ private:
 
 Q_DECLARE_METATYPE(Decay::CascadeIdentifier)
 
-QDataStream & operator<<(QDataStream &out, const Decay::CascadeIdentifier &ident);
-QDataStream & operator>>(QDataStream &in, Decay::CascadeIdentifier &ident);
+//QDataStream & operator<<(QDataStream &out, const Decay::CascadeIdentifier &ident);
+//QDataStream & operator>>(QDataStream &in, Decay::CascadeIdentifier &ident);
 
 #endif // DECAY_H
