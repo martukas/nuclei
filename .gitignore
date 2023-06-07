@@ -25,6 +25,11 @@ ui_*.h
 Makefile*
 *build-*
 
+debug/*
+release/*
+ui/*
+nuclei
+
 # QtCreator
 
 *.autosave
@@ -32,3 +37,10 @@ Makefile*
 #QtCtreator Qml
 *.qmlproject.user
 *.qmlproject.user.*
+
+*.desktop
+*.user
+*.log
+/ui_*.h
+.*
+!.gitignore
