@@ -7,9 +7,16 @@ parser, viewer and editor.
 
 A future library for native ENSDF access and manipulation in C++.
 
+## Features
+
+Nuclei is a software tool for the displaying of nuclear decay schemes and estimated energy spectra, the calculation of angular γ emission anisotropies, and the automated search for appropriate decay cascade properties.
+
+- Exports decay schemes as pdf or svg file
+- Powerful decay cascade search functionality
+
 ![screenshot](documentation/Ru93EC.png)
 
-## Goals
+## Technical goals
 * Complete and authentic parsing of ENSDF files. Many projects out there neglect some data
 deemed irrelevant to their application, i.e. uncertainties in half-life. The aim is to parse
 all ENSDF information in full.
@@ -39,6 +46,11 @@ conan remote add conancenter https://center.conan.io
 conan remote add ess-dmsc https://artifactory.esss.lu.se/artifactory/api/conan/ecdc-conan-release
 ```
 
+If on Ubuntu 22, install:
+```bash
+sudo apt install libqt5svg5-dev
+```
+
 The ESS remote is required for QtColorWidgets. In case of changes to their deployment infrastructure, check for updates [here](https://github.com/ess-dmsc/conan-configuration).
 
 Clone the code, configure and build 
@@ -63,12 +75,21 @@ Parsing errors will be printed in terminal as the files are loaded.
 
 This software is primarily based on a
 [similar project](https://sourceforge.net/projects/nuclei/)
-by M.A.Nagel.
+by M.A.Nagl, as it can be seen in the git history.
+
+A description of the original Nuclei's functionality and results obtained using its search method was published in Nuclear Instruments and Methods in Physics Research, Section A:
+
+M. Nagl, et al., NIM A 726 (2013), 17-30, [doi:10.1016/j.nima.2013.05.045](https://doi.org/10.1016/j.nima.2013.05.045)
+
+-------------------------
+© 2012-2013, Matthias Nagl, II. Physikalisches Institut, Georg-August-Universität Göttingen
+http://physik2.uni-goettingen.de/research/2_hofs
+-------------------------
 
 Main changes:
 * refactored to decouple storing, parsing and user interface
 * updated to work with more recent versions of Qt and boost
-* divorced from obsolete libraries (Qwt and libQxt)
+* divorced from obsolete libraries (libakk, Qwt and libQxt, QtFtp)
 * reliance on qmake replaced with CMake + conan for dependency management
 * removed calculation of angular correlation coefficients
 * removed generation of synthetic spectra
