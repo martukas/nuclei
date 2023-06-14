@@ -2,7 +2,7 @@
 [![CircleCI Build Status](https://circleci.com/gh/martukas/nuclei.svg?style=shield)](https://circleci.com/gh/martukas/nuclei/tree/master)
 
 An Evaluated Nuclear Structure Data
-([ENSDF](https://www.nndc.bnl.gov/ensdf/))
+([ENSDF](https://www.nndc.bnl.gov/ensdf/)) 
 parser, viewer and editor.
 
 A future library for native ENSDF access and manipulation in C++.
@@ -41,12 +41,15 @@ conan remote add ess-dmsc https://artifactory.esss.lu.se/artifactory/api/conan/e
 
 The ESS remote is required for QtColorWidgets. In case of changes to their deployment infrastructure, check for updates [here](https://github.com/ess-dmsc/conan-configuration).
 
+Changes in conan v2 require the cloning of the [cmake-conan](https://github.com/conan-io/cmake-conan/tree/develop2) repository, and use of the develop2 branch.
+Once the repository is cloned and the develop2 branch checked out, this repo can be configured as shown.
+
 Clone code and build:
 ```bash
 git clone https://github.com/martukas/nuclei.git
 mkdir ./nuclei/build
 cd nuclei/build
-cmake ..
+cmake -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=/path/to/cmake-conan/conan_provider.cmake ..
 make
 ```
 
