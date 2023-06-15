@@ -64,6 +64,9 @@ target_link_libraries(
   PRIVATE fmt::fmt
   PRIVATE spdlog::spdlog
   PRIVATE Threads::Threads
+  PRIVATE nlohmann_json::nlohmann_json
+  PRIVATE date::date-tz
+  PRIVATE qt-color-widgets::qt-color-widgets
   PRIVATE ${DATE_LIBRARIES}
 )
 
