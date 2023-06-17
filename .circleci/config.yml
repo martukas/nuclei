@@ -24,11 +24,12 @@ jobs:
       - run:
           name: CMake
           command: |
-            cmake --preset conan-release
+            cd build
+            cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DCMAKE_BUILD_TYPE=Release
       - run:
           name: Build
           command: |
-            cmake --build --preset conan-release
+            cmake --build ./build
       - run:
           name: Run
           command: |
