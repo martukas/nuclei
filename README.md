@@ -41,16 +41,13 @@ conan remote add ess-dmsc https://artifactory.esss.lu.se/artifactory/api/conan/e
 
 The ESS remote is required for QtColorWidgets. In case of changes to their deployment infrastructure, check for updates [here](https://github.com/ess-dmsc/conan-configuration).
 
-Changes in conan v2 require the cloning of the [cmake-conan](https://github.com/conan-io/cmake-conan/tree/develop2) repository, and use of the develop2 branch.
-Once the repository is cloned and the develop2 branch checked out, this repo can be configured as shown.
-
-Clone code and build:
+Clone code, install dependencies with conan, then configure and build:
 ```bash
 git clone https://github.com/martukas/nuclei.git
-mkdir ./nuclei/build
-cd nuclei/build
-cmake -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=/path/to/cmake-conan/conan_provider.cmake ..
-make
+cd nuclei
+conan install . --output-dir=build --build=missing
+cmake --preset conan-release
+cmake --build --preset conan-release
 ```
 
 ## Using
