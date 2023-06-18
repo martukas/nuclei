@@ -18,14 +18,10 @@ jobs:
             conan profile detect
             conan remote add ess-dmsc https://artifactory.esss.lu.se/artifactory/api/conan/ecdc-conan-release
       - run:
-          name: Conan
-          command: |
-            conan install . --output-folder=build --build=missing
-      - run:
           name: CMake
           command: |
-            cd build
-            cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_POLICY_DEFAULT_CMP0091=NEW -DCMAKE_BUILD_TYPE=Release
+            mkdir build && cd build
+            cmake ..
       - run:
           name: Build
           command: |
