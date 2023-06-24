@@ -17,7 +17,7 @@ cmake-build-*/
 #Conan created files
 CMakeUserPresets.json
 
-#Compilation database used by lsp
+#Compilation database used by lsp (clangd)
 compile_commands.json
 
 #clangd database
