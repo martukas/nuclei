@@ -10,11 +10,9 @@ jobs:
           name: Install dependencies
           command: |
             sudo rm -rf /var/lib/apt/lists/*
-            sudo export NEEDRESTART_MODE=a
-            sudo apt update
-            sudo apt -y install python3-pip python3-setuptools
-            sudo apt -y install qtbase5-dev libqt5svg5-dev
-            sudo apt -y install libboost-dev libboost-regex-dev            
+            export NEEDRESTART_MODE=a
+            sudo -E apt -y update
+            sudo -E apt -y install python3-pip python3-setuptools qtbase5-dev libqt5svg5-dev libboost-dev libboost-regex-dev
             sudo -H pip3 install conan
             conan profile detect
             conan remote add ess-dmsc https://artifactory.esss.lu.se/artifactory/api/conan/ecdc-conan-release
