@@ -10,6 +10,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo rm -rf /var/lib/apt/lists/*
+            sudo export NEEDRESTART_MODE=a
             sudo apt update
             sudo apt -y install python3-pip python3-setuptools
             sudo apt -y install qtbase5-dev libqt5svg5-dev
