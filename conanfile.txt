@@ -3,7 +3,7 @@ fmt/9.1.0
 spdlog/1.11.0
 date/3.0.1
 nlohmann_json/3.11.2
-qt-color-widgets/9f4e052@ess-dmsc/stable
+qt-color-widgets/f72207b@ess-dmsc/stable
 
 [generators]
 CMakeDeps
