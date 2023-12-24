@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include <NucData/DataQuality.h>
 
 class Spin : public QualifiedData

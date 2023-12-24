@@ -10,25 +10,21 @@ jobs:
           name: Install dependencies
           command: |
             sudo rm -rf /var/lib/apt/lists/*
-            sudo apt-get update
-            sudo apt-get install python3-pip python3-setuptools
-            sudo apt-get install qtbase5-dev libqt5svg5-dev
-            sudo apt-get install libboost-dev libboost-regex-dev            
-            sudo -H pip3 install conan==1.59
-            conan profile new --detect default
-            conan profile update settings.compiler.libcxx=libstdc++11 default
+            export NEEDRESTART_MODE=a
+            sudo -E apt -y update
+            sudo -E apt -y install python3-pip python3-setuptools qtbase5-dev libqt5svg5-dev libboost-dev libboost-regex-dev
+            sudo -H pip3 install conan
+            conan profile detect
             conan remote add ess-dmsc https://artifactory.esss.lu.se/artifactory/api/conan/ecdc-conan-release
       - run:
           name: CMake
           command: |
-            mkdir build
-            cd build
+            mkdir build && cd build
             cmake ..
       - run:
           name: Build
           command: |
-            cd build
-            make
+            cmake --build ./build
       - run:
           name: Run
           command: |
