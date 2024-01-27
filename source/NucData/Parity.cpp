@@ -5,11 +5,6 @@ Parity::Parity()
   quality_ = DataQuality::kUnknown;
 }
 
-Parity::Parity(const Parity &other)
-  : QualifiedData(other)
-  , parity_(other.parity_)
-{}
-
 Parity::Parity(const EnumParity& p, const DataQuality& q)
 {
   parity_ = p;

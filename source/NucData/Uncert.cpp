@@ -44,19 +44,6 @@ Uncert::Uncert(double d, uint16_t sigf, Uncert::Sign s, double symmetricSigma)
 {
 }
 
-Uncert &Uncert::operator =(const Uncert &other)
-{
-  if (this != &other) {
-    value_ = other.value_;
-    lower_sigma_ = other.lower_sigma_;
-    upper_sigma_ = other.upper_sigma_;
-    sign_ = other.sign_;
-    type_ = other.type_;
-    sigfigs_ = other.sigfigs_;
-  }
-  return *this;
-}
-
 double Uncert::value() const
 {
   return value_;

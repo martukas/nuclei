@@ -32,7 +32,6 @@ public:
   Uncert(double d, uint16_t sigf, Sign s);
   Uncert(double d, uint16_t sigf, Sign s, double symmetricSigma);
 
-  Uncert & operator=(const Uncert & other);
   Uncert & operator*=(double other);
   Uncert & operator*=(const Uncert &other);
   Uncert & operator+=(const Uncert &other);
