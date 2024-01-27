@@ -21,7 +21,7 @@ class SchemeEditorPrefs : public QDialog
 
   private slots:
 
-    void on_fontFamily_activated(const QString &arg1);
+    void on_fontFamily_activated();
 
     void on_fontSize_editingFinished();
 

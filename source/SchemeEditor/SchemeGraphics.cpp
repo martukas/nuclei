@@ -231,7 +231,7 @@ void SchemeGraphics::alignGraphicsItems()
       double arrowDestY =
           daughter_levels_.at(gamma->to())->ypos()
           - daughter_levels_.at(gamma->from())->ypos();
-      gamma->updateArrow(arrowDestY, max_intensity);
+      gamma->updateArrow(arrowDestY/*, max_intensity*/);
     }
 
     if (daughter_levels_.count(gamma->from()))

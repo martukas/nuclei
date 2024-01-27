@@ -43,7 +43,7 @@ SchemeVisualSettings SchemeEditorPrefs::prefs() const
   return prefs_;
 }
 
-void SchemeEditorPrefs::on_fontFamily_activated(const QString &arg1)
+void SchemeEditorPrefs::on_fontFamily_activated()
 {
   prefs_.setStyle(ui->fontFamily->currentFont().family(),
                   ui->fontSize->value());

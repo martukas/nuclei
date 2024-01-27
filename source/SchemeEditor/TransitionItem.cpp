@@ -126,7 +126,7 @@ Energy TransitionItem::to() const
   return transition_.to();
 }
 
-void TransitionItem::updateArrow(double arrowDestY, double max_intensity)
+void TransitionItem::updateArrow(double arrowDestY /*, double max_intensity*/)
 {
   item->removeFromGroup(click_area_);
   item->removeFromGroup(arrow_head_);
