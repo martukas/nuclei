@@ -1,11 +1,6 @@
 #include <NucData/Spin.h>
 #include <util/logger.h>
 
-Spin::Spin(const Spin &spin)
-  : QualifiedData(spin)
-  , numerator_ (spin.numerator_)
-  , denominator_ (spin.denominator_)
-{}
 
 Spin::Spin(uint16_t num, uint16_t denom, DataQuality q)
 {

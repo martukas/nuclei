@@ -14,7 +14,6 @@ public:
 
 public:
   Parity();
-  Parity(const Parity &other);
   Parity(const EnumParity& p, const DataQuality& q);
 
   bool valid() const;

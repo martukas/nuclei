@@ -43,12 +43,6 @@ std::string Energy::to_string() const
   return value_.to_string(false) + " keV";
 }
 
-Energy & Energy::operator=(const Energy &energy)
-{
-  value_ = energy.value_;
-  return *this;
-}
-
 bool operator<(const Energy &left, const Energy &right)
 {
   return left.value_ < right.value_;

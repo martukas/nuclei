@@ -14,8 +14,6 @@ public:
 
   std::string to_string() const;
 
-  Energy & operator=(const Energy &energy);
-
   friend bool operator<(const Energy &left, const Energy &right);
   friend bool operator<(const Energy &left, const double &right);
   friend bool operator>(const Energy &left, const Energy &right);

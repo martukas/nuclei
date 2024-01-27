@@ -8,7 +8,6 @@ class Spin : public QualifiedData
 {
 public:
   Spin() {}
-  Spin(const Spin &spin);
   Spin(uint16_t num, uint16_t denom, DataQuality q);
 
   bool valid();
