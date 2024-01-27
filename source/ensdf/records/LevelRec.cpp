@@ -147,9 +147,9 @@ void LevelRecord::merge_adopted(const LevelRecord& other,
     S = other.S;
 
   merge_continuations(continuations_,
-                      other.continuations_,
-                      "<Level>(" + nuclide.symbolicName()
-                      + ":" + energy.to_string() + ")");
+                      other.continuations_);
+                      // "<Level>(" + nuclide.symbolicName()
+                      // + ":" + energy.to_string() + ")");
 
 //  for (const auto& com : other.comments)
 //    comments.push_back(com);

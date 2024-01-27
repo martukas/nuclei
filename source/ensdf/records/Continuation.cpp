@@ -222,8 +222,8 @@ parse_continuation(const std::string& crecs)
 }
 
 void merge_continuations(std::map<std::string, Continuation> &to,
-                         const std::map<std::string, Continuation>& from,
-                         const std::string &debug_line)
+                         const std::map<std::string, Continuation>& from)
+                         //const std::string &debug_line)
 {
   for (const auto& cont : from)
   {
@@ -231,18 +231,18 @@ void merge_continuations(std::map<std::string, Continuation> &to,
       continue;
     if (!to.count(cont.first))
       to[cont.first] = cont.second;
-    else
-    {
-      if (to[cont.first].is_uncert()
-          && cont.second.is_uncert())
-      {
+    // else
+    // {
+    //   if (to[cont.first].is_uncert()
+    //       && cont.second.is_uncert())
+    //   {
 
-      }
+    //   }
 //      DBG << debug_line
 //          << " adopted continuation mismatch "
 //          << cont.first
 //          << "  " << to[cont.first]
 //          << "!=" << cont.second;
-    }
+    //}
   }
 }

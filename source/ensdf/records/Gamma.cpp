@@ -66,9 +66,9 @@ void GammaRecord::merge_adopted(const GammaRecord& other)
   }
 
   merge_continuations(continuations_,
-                      other.continuations_,
-                      "<Gamma>(" + nuclide.symbolicName()
-                      + ":" + energy.to_string() + ")");
+                      other.continuations_);
+                      // "<Gamma>(" + nuclide.symbolicName()
+                      // + ":" + energy.to_string() + ")");
 
   for (const auto& com : other.comments)
     comments.push_back(com);
