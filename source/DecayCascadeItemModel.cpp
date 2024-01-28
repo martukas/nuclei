@@ -95,7 +95,7 @@ int DecayCascadeItemModel::rowCount(const QModelIndex &parent) const
 Qt::ItemFlags DecayCascadeItemModel::flags(const QModelIndex &index) const
 {
   if (!index.isValid())
-    return 0;
+    return {};
 
   Qt::ItemFlags result = Qt::ItemIsEnabled;
 
