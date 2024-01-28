@@ -10,6 +10,8 @@
 #include <boost/algorithm/string.hpp>
 #include "ScrollZoomView.h"
 
+#include <qpagelayout.h>
+#include <qpagesize.h>
 #include <util/logger.h>
 
 SchemeEditor::SchemeEditor(QWidget *parent)
@@ -99,9 +101,9 @@ void SchemeEditor::on_pushExportPdf_clicked()
 
   QPrinter p(QPrinter::HighResolution);
   p.setOutputFileName(fn);
-  p.setPageMargins(margin, margin, margin, margin, QPrinter::Millimeter);
+  p.setPageMargins(QMarginsF(margin, margin, margin, margin), QPageLayout::Millimeter);
   p.setOutputFormat(QPrinter::PdfFormat);
-  p.setPaperSize(outrect.toRect().size() / scalefactor, QPrinter::Millimeter);
+  p.setPageSize(QPageSize(QSizeF(outrect.width() / scalefactor, outrect.height() / scalefactor), QPageSize::Millimeter));
   p.setDocName("Decay Level Scheme for the decay " + decay_viewer_->name());
   p.setCreator(QString("%1 %2 (%3)").arg(QCoreApplication::applicationName(), QCoreApplication::applicationVersion(), "SchemeEditorURL"));
 

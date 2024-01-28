@@ -280,7 +280,7 @@ void LevelItem::align(double leftlinelength, double rightlinelength,
   item->removeFromGroup(spintext_);
   item->removeFromGroup(etext_);
   spintext_->setPos(-leftlinelength + vis.outerLevelTextMargin, -stdBoldFontMetrics.height());
-  etext_->setPos(rightlinelength - vis.outerLevelTextMargin - stdBoldFontMetrics.width(etext_->text()), -etext_->boundingRect().height());
+  etext_->setPos(rightlinelength - vis.outerLevelTextMargin - stdBoldFontMetrics.horizontalAdvance(etext_->text()), -etext_->boundingRect().height());
   item->addToGroup(etext_);
   item->addToGroup(spintext_);
 
@@ -290,7 +290,7 @@ void LevelItem::align(double leftlinelength, double rightlinelength,
   if (parentpos == RightParent && hltext_)
     levelHlPos = -leftlinelength
         - vis.levelToHalfLifeDistance
-        - stdFontMetrics.width(hltext_->text());
+        - stdFontMetrics.horizontalAdvance(hltext_->text());
   else
     levelHlPos = rightlinelength + vis.levelToHalfLifeDistance;
   if (parentpos != NoParent)
