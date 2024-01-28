@@ -52,7 +52,7 @@ bool Graphics_view_zoom::eventFilter(QObject *object, QEvent *event)
     QWheelEvent* wheel_event = static_cast<QWheelEvent*>(event);
     if (QApplication::keyboardModifiers() == modifiers_)
     {
-      if (wheel_event->orientation() == Qt::Vertical)
+      if(wheel_event->angleDelta().y() != 0.0)
       {
         double angle = wheel_event->angleDelta().y();
         double factor = qPow(zoom_factor_base_, angle);

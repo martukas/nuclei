@@ -102,7 +102,7 @@ void Nuclei::initialize()
   if (!selectionIndices.isEmpty()) {
     QModelIndex mi = decayProxyModel->index(selectionIndices.at(0).toInt(), 0);
     for (int i=1; i<selectionIndices.size(); i++)
-      mi = mi.child(selectionIndices.at(i).toInt(), 0);
+      mi = decayProxyModel->index(selectionIndices.at(i).toInt(), 0, mi);
     ui->decayTreeView->setCurrentIndex(mi);
     loadSelectedDecay(mi);
   }
