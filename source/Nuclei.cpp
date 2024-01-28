@@ -9,6 +9,8 @@
 #include "DecayCascadeItemModel.h"
 #include "DecayCascadeFilterProxyModel.h"
 
+#include <qguiapplication.h>
+#include <qscreen.h>
 #include <util/logger.h>
 
 Nuclei::Nuclei(QWidget *parent)
@@ -60,10 +62,10 @@ void Nuclei::initialize()
   restoreState(s.value("windowState").toByteArray());
 
   QSize wsize = size();
-  if (wsize.width() > QApplication::desktop()->availableGeometry().width())
-    wsize.setWidth(QApplication::desktop()->availableGeometry().width());
-  if (wsize.height() > QApplication::desktop()->availableGeometry().height())
-    wsize.setHeight(QApplication::desktop()->availableGeometry().width());
+  if (wsize.width() > QGuiApplication::screens()[0]->geometry().width())
+    wsize.setWidth(QGuiApplication::screens()[0]->geometry().width());
+  if (wsize.height() > QGuiApplication::screens()[0]->geometry().height())
+    wsize.setHeight(QGuiApplication::screens()[0]->geometry().width());
   this->resize(wsize);
 
   // initialize settings if necessary
