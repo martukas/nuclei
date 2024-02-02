@@ -146,7 +146,7 @@ QList<uint16_t> ENSDFDataSource::getAvailableDataFileNumbers()
     firsttry = false;
   }
 
-  return QList<uint16_t>::fromStdList(parser.masses());
+  return parser.masses();
 }
 
 

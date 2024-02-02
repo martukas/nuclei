@@ -62,7 +62,9 @@ public:
 
   bool good() const;
 
-  std::list<uint16_t> masses() const;
+  [[nodiscard]]
+  inline QList<uint16_t> masses() const {return QList<uint16_t> {masses_.begin(), masses_.end()};}
+
   std::string directory() const;
 
   DaughterParser get_dp(uint16_t a);
