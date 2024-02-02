@@ -37,5 +37,5 @@ std::map<std::string, Continuation>
 parse_continuation(const std::string&crecs);
 
 void merge_continuations(std::map<std::string, Continuation>& to,
-                         const std::map<std::string, Continuation>& from);
-//const std::string& debug_line);
+                         const std::map<std::string, Continuation>& from,
+                         [[maybe_unused]] const std::string& debug_line);
