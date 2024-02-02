@@ -27,7 +27,7 @@ public:
 
   virtual ~TransitionItem();
 
-  void updateArrow(double arrowDestY /*, double max_intensity*/);
+  void updateArrow(double arrowDestY, [[maybe_unused]] double max_intensity);
   double minimalXDistance() const;
   // Distance between origin and right edge of the bounding rect
   double widthFromOrigin() const;
