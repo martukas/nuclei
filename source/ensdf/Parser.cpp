@@ -46,11 +46,6 @@ bool ENSDFParser::good() const
   return !masses_.empty();
 }
 
-std::list<uint16_t> ENSDFParser::masses() const
-{
-  return std::list<uint16_t>(masses_.begin(), masses_.end());
-}
-
 std::string ENSDFParser::directory() const
 {
   return directory_;

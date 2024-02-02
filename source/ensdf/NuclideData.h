@@ -2,6 +2,8 @@
 
 #include <ensdf/LevelsData.h>
 
+#include <QList>
+
 struct NuclideData
 {
   std::list<HistoryRecord> history;
