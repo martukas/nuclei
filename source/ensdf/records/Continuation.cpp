@@ -233,7 +233,7 @@ void merge_continuations(std::map<std::string, Continuation> &to,
       to[cont.first] = cont.second;
     else
     {
-      //TRC("{} adopted continuation mismatch {} {}!={}", debug_line, cont.first, to[cont.first], cont.second);
+      TRC("{} adopted continuation mismatch {} {}!={}", debug_line, cont.first, to[cont.first], cont.second);
     }
   }
 }
