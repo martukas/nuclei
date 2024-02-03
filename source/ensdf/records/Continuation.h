@@ -2,6 +2,7 @@
 
 #include <NucData/Uncert.h>
 #include <NucData/Spin.h>
+#include <fmt/core.h>
 #include <vector>
 #include <map>
 
@@ -39,3 +40,14 @@ parse_continuation(const std::string&crecs);
 void merge_continuations(std::map<std::string, Continuation>& to,
                          const std::map<std::string, Continuation>& from,
                          [[maybe_unused]] const std::string& debug_line);
+
+// Custom formatter for the Continuation struct
+template <>
+struct fmt::formatter<Continuation> {
+public:
+  constexpr auto parse (format_parse_context& ctx) { return ctx.begin(); }
+  template<typename Context>
+  constexpr auto format(Continuation const& val, Context& ctx) const {
+    return fmt::format_to(ctx.out(), "{}, {}, {}", val.symbols, val.units, val.spin.to_string());
+  }
+};
