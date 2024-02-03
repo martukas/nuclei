@@ -8,6 +8,9 @@
 *.log
 !.gitignore
 
+#Log file
+nuclei.log
+
 #IDE
 CMakeLists.txt.user
 cmake-build-*/
