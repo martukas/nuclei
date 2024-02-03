@@ -19,7 +19,7 @@ Nuclei::Nuclei(QWidget *parent)
   , preferencesDialog(new QDialog(this))
   , preferencesDialogUi(new Ui::PreferencesDialog)
 {
-  CustomLogger::initLogger(spdlog::level::debug, "nuclei");
+  CustomLogger::initLogger(spdlog::level::debug, "nuclei.log");
 
   ui->setupUi(this);
   setWindowTitle(QCoreApplication::applicationName() + QString(" ") + QCoreApplication::applicationVersion());
