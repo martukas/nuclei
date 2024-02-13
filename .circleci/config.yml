@@ -24,7 +24,7 @@ jobs:
       - run:
           name: Build
           command: |
-            cmake --build ./build --parallel
+            cmake --build ./build --parallel 2
       - run:
           name: Run
           command: |
