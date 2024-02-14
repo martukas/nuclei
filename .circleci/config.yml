@@ -2,6 +2,9 @@ version: 2.1
 
 jobs:
   build-run:
+    parameters:
+      build_type:
+        type: string
     machine:
       image: ubuntu-2204:current
     steps:
@@ -17,16 +20,16 @@ jobs:
             conan profile detect
             conan remote add ess-dmsc https://artifactory.esss.lu.se/artifactory/api/conan/ecdc-conan-release
       - run:
-          name: CMake
+          name: CMake-<<parameters.build_type>>
           command: |
             mkdir build && cd build
-            cmake -DCMAKE_BUILD_TYPE=Debug ..
+            cmake -DCMAKE_BUILD_TYPE=<<parameters.build_type>> ..
       - run:
-          name: Build
+          name: Build-<<parameters.build_type>>
           command: |
             cmake --build ./build --parallel 2
       - run:
-          name: Run
+          name: Run-<<parameters.build_type>>
           command: |
             ./build/bin/nuclei -h
 
@@ -34,3 +37,6 @@ workflows:
   commit:
     jobs:
       - build-run
+          matrix:
+            parameters:
+              build_type: ["Debug", "Release"]
