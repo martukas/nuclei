@@ -13,7 +13,7 @@ endif()
 
 set(
   CONAN_ARGS
-  "install" "${CMAKE_SOURCE_DIR}" "--output-folder=${CMAKE_CURRENT_BINARY_DIR}" "--build=missing"
+  "install" "${CMAKE_SOURCE_DIR}" "--output-folder=${CMAKE_CURRENT_BINARY_DIR}" "--build=missing" "--settings=build_type=${CMAKE_BUILD_TYPE}"
   )
 
 execute_process(
