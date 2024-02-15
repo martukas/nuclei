@@ -133,7 +133,7 @@ void SchemeGraphics::addLevel(Level level)
 
 void SchemeGraphics::addTransition(Transition transition)
 {
-  if (transition.intensity().value() < min_intensity_)
+  if (transition.intensity().value() < min_intensity_ || (!transition.energy().valid()))
     return;
   TransitionItem *transrend
       = new TransitionItem(transition, visual_settings_, scene_);
