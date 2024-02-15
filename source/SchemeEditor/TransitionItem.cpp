@@ -34,9 +34,6 @@ TransitionItem::TransitionItem(Transition transition,
                                QGraphicsScene *scene)
   : TransitionItem()
 {
-  if (!transition.energy().valid())
-    return;
-
   transition_ = transition;
 
   pen_ = vis.gammaPen;
