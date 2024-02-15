@@ -5,6 +5,7 @@ jobs:
     parameters:
       build_type:
         type: string
+        default: Release
     machine:
       image: ubuntu-2204:current
     steps:
