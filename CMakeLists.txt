@@ -4,6 +4,11 @@ set(EXTRA_MODULES_DIR ${CMAKE_CURRENT_LIST_DIR}/cmake)
 list(APPEND CMAKE_MODULE_PATH ${EXTRA_MODULES_DIR})
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
 
+#=============================================================================
+# ensure build type before calling ConanConfig
+#=============================================================================
+include(EnsureBuildType)
+
 # This MUST run before the call to project()
 # Otherwise the appropriate variables will not be set
 include(ConanConfig)
@@ -13,12 +18,6 @@ project(nuclei
   LANGUAGES CXX C
   VERSION 0.0.1
   )
-
-#=============================================================================
-# ensure build type first
-#=============================================================================
-
-include(EnsureBuildType)
 
 include(CompilerConfig)
 include(OutputDirConfig)
