@@ -38,6 +38,21 @@ SchemeGraphics::SchemeGraphics(DecayScheme scheme, double min_intensity, QObject
   //  DBG << "Creating scheme player for:\n" << scheme_.to_string();
 }
 
+SchemeGraphics::~SchemeGraphics() {
+  delete daughter_;
+  delete parent_;
+  for (auto &gamma : transitions_)
+    delete gamma;
+  for (auto &it : parent_levels_)
+    delete it.second;
+  for (auto &it : daughter_levels_)
+    delete it.second;
+  for (auto &it : feeding_arrows_)
+    delete it.second;
+
+  delete scene_;
+}
+
 const DecayScheme& SchemeGraphics::scheme() const
 {
   return scheme_;
@@ -79,6 +94,7 @@ GraphicsScene *SchemeGraphics::levelPlot()
 
 void SchemeGraphics::addParent(Nuclide nuc)
 {
+  delete parent_;
   parent_ = new NuclideItem(nuc, ClickableItem::ParentNuclideType,
                             visual_settings_, scene_);
   connectItem(parent_);
@@ -100,6 +116,7 @@ void SchemeGraphics::addDaughter(Nuclide nuc)
   if (nuc.empty())
     return;
 
+  delete daughter_;
   daughter_ = new NuclideItem(nuc, ClickableItem::DaughterNuclideType,
                               visual_settings_, scene_);
   connectItem(daughter_);
@@ -121,12 +138,14 @@ void SchemeGraphics::addLevel(Level level)
   LevelItem *levrend = new LevelItem(level, LevelItem::DaughterLevelType,
                                      parentpos_, visual_settings_, scene_);
   connectItem(levrend);
+  delete daughter_levels_[level.energy()];
   daughter_levels_[level.energy()] = levrend;
 
   if (level.normalizedFeedIntensity().uncertaintyType() != Uncert::UndefinedType)
   {
     FeedingArrow* feed = new FeedingArrow(level, parentpos_, visual_settings_, scene_);
     connectItem(feed);
+    delete feeding_arrows_[level.energy()];
     feeding_arrows_[level.energy()] = feed;
   }
 }

@@ -25,6 +25,8 @@ public:
                         double min_intensity,
                         QObject *parent = 0);
 
+  ~SchemeGraphics();
+
   void setStyle(const SchemeVisualSettings& vis);
 
   GraphicsScene* levelPlot();

@@ -293,9 +293,10 @@ void LevelItem::align(double leftlinelength, double rightlinelength,
         - stdFontMetrics.horizontalAdvance(hltext_->text());
   else
     levelHlPos = rightlinelength + vis.levelToHalfLifeDistance;
-  if (parentpos != NoParent)
+  if (parentpos != NoParent && hltext_)
     hltext_->setPos(levelHlPos, -0.5*stdBoldFontMetrics.height());
-  item->addToGroup(hltext_);
+  if (hltext_)
+      item->addToGroup(hltext_);
 
   item->setPos(0.0, ypos_);
 }

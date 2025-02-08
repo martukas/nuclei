@@ -23,6 +23,7 @@ public:
   NuclideItem(const Nuclide& nuc, Type tp,
               SchemeVisualSettings vis,
               QGraphicsScene *scene);
+  virtual ~NuclideItem() = default;
 
   void position_arrow(double x, double start, double end);
   void position_text(double parent_center_x,
