@@ -21,7 +21,7 @@ class FeedingArrow : public ClickableItem
     FeedingArrow(Level level, ParentPosition parentpos,
                  SchemeVisualSettings vis,
                  QGraphicsScene *scene);
-    virtual ~FeedingArrow() {}
+    virtual ~FeedingArrow() = default;
 
     void align(double arrowY,
                  double leftlinelength, double rightlinelength,
@@ -50,7 +50,7 @@ public:
   LevelItem(Level level, Type type, ParentPosition parentpos,
             SchemeVisualSettings vis,
             QGraphicsScene *scene);
-  virtual ~LevelItem() {}
+  virtual ~LevelItem() = default;
 
   //returns feeding arrow height, if any
   void align(double leftlinelength, double rightlinelength,
